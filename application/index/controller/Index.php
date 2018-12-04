@@ -4,11 +4,10 @@ namespace app\index\controller;
 
 use app\index\MyController;
 use Env;
-use Request;
-use extend\Curl;
+use think\Container;
 use think\Controller;
 
-class Index extends MyController {
+class Index extends Controller {
     protected $beforeActionList = [
 //        'first',//所有方法的前置操作
 //        'second' => ['except' => 'hello'],//除去hello其他方法都进行second前置操作
@@ -20,9 +19,7 @@ class Index extends MyController {
     }
 
     public function hello($name = 'ThinkPHP5') {
-        $curl = new Curl();
-        $curl->get('123');
-//        echo time();die;
+//        echo strlen('a57e2cd760fadff0a60c1f8f0ca3fec2d5f8dd72');die;
         echo hash_hmac('sha1', 'mima123465', '');
         die;
         return 'hello,' . $name;
