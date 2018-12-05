@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
-
+$commandPath = \think\facade\Config::get('console.command_path');
 return [
-    'hello' => 'app\common\console\Hello',
+    'curl' => $commandPath . 'Curl',
 ];

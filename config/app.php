@@ -19,7 +19,7 @@ return [
     // 应用地址
     'app_host'               => '',
     // 应用调试模式
-    'app_debug'              => false,
+    'app_debug'              => Env::get('debug.appDebug', false),
     // 应用Trace
     'app_trace'              => false,
     // 是否支持多模块
@@ -41,7 +41,7 @@ return [
     // 是否开启多语言
     'lang_switch_on'         => false,
     // 默认全局过滤方法 用逗号分隔多个
-    'default_filter'         => '',
+    'default_filter'         => 'htmlspecialchars',
     // 默认语言
     'default_lang'           => 'zh-cn',
     // 应用类库后缀
@@ -56,7 +56,7 @@ return [
     // 默认模块名
     'default_module'         => 'index',
     // 禁止访问模块
-    'deny_module_list'       => ['common'],
+    'deny_module_list'       => ['common', 'console'],
     // 默认控制器名
     'default_controller'     => 'Index',
     // 默认操作名
@@ -103,7 +103,7 @@ return [
     // 路由是否完全匹配
     'route_complete_match'   => false,
     // 使用注解路由
-    'route_annotation'       => false,
+    'route_annotation'       => true,
     // 域名根，如thinkphp.cn
     'url_domain_root'        => '',
     // 是否自动转换URL中的控制器和操作名

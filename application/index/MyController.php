@@ -6,15 +6,19 @@ use think\App;
 use think\Controller;
 use Env;
 use Config;
+use \cache\Phpredis;
 
 class MyController extends Controller {
+    protected $redis;
+
     public function __construct(App $app = null) {
         parent::__construct($app);
+
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
-//            return $checkRes;
         }
+        $this->redis = Phpredis::getConn();
     }
 
     private function checkApi() {
@@ -44,7 +48,6 @@ class MyController extends Controller {
     private function checkSign($sign, $params) {
         unset($params['timestamp']);
         unset($params['sign']);
-//        ksort($params);
         $requestString = '';
         foreach ($params as $k => $v) {
             if (!is_array($v)) {

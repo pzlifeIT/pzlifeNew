@@ -9,13 +9,7 @@
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
 
-// +----------------------------------------------------------------------
-// | 控制台配置
-// +----------------------------------------------------------------------
+// 应用容器绑定定义
 return [
-    'name'      => 'Think Console',
-    'version'   => '0.1',
-    'user'      => null,
-    'auto_path' => env('app_path') . 'command' . DIRECTORY_SEPARATOR,
-    'command_path'=>'app\console\com\\',
+    'user' => app\common\index\User::class,
 ];

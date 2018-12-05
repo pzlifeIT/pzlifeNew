@@ -3,3 +3,4 @@
 .env
 thinkphp/
 public/doc/
+apidoc.json

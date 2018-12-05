@@ -13,9 +13,14 @@ Route::get('think', function () {
     return 'hello,ThinkPHP5!';
 });
 
-Route::get('hello/:name/[:sign]/[:timestamp]', 'index/index/hello');
+//Route::group('index', function () {
+//    Route::rule('hello/:name/[:sign]/[:timestamp]', 'index/index/hello');
+//    Route::rule('curl/:name', 'index/testcurl/index');
+//})->pattern(['name' => '\w+']);
 
-Route::get('admin/hello/[:name]', 'admin/index/hello');
+//Route::rule('hello/:name/[:sign]/[:timestamp]', 'index/index/hello');
+
+//Route::get('admin/hello/[:name]', 'admin/index/hello');
 
 return [
 
