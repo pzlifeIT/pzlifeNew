@@ -17,13 +17,19 @@ class Index extends MyController {
     }
 
     /**
-     * @param string $name
-     * @return string
-     * @route ('hello/:name/[:timestamp]/[:sign]')
+     * @api              {post} / 列表
+     * @apiDescription   hello
+     * @apiGroup         index
+     * @apiName          hello
+     * @apiParam {String} name name
+     * @apiSampleRequest /hello
+     * @route('hello/:name/[:sign]/[:timestamp]')
+     * @author zyr
      */
     public function hello($name = 'ThinkPHP5') {
         $params = $this->request->param();
-//        print_r($params);die;
+        print_r($params);
+        die;
 //        $this->app->user->test();die;
 //        print_r(Config::get('cache.redis'));die;
         return 'hello,' . $name;
