@@ -4,6 +4,9 @@ namespace app\index\controller;
 
 use app\index\MyController;
 use Env;
+use Config;
+use think\Db;
+use \upload\Imageupload;
 
 class Index extends MyController {
     protected $beforeActionList = [
@@ -22,16 +25,39 @@ class Index extends MyController {
      * @apiGroup         index
      * @apiName          hello
      * @apiParam {String} name name
-     * @apiSampleRequest /hello
-     * @route('hello/:name/[:sign]/[:timestamp]')
+     * @apiSampleRequest /index/hello
      * @author zyr
      */
-    public function hello($name = 'ThinkPHP5') {
-        $params = $this->request->param();
-        print_r($params);
+    public function hello() {
+//        print_r(Config::get('database.'));
+//        $a = Db::name('user_relation')->all();
+//        print_r($a);
         die;
-//        $this->app->user->test();die;
-//        print_r(Config::get('cache.redis'));die;
-        return 'hello,' . $name;
+    }
+
+    /**
+     * redis案例
+     */
+    public function redisTest() {
+        $this->redis->set('key', 'test');
+        echo $this->redis->get('key');
+//        $this->redis->rPush('key11111', 'aaa');
+//        echo $this->redis->rPop('key11111');
+        die;
+    }
+
+    /**
+     * 上传案例
+     * @throws \Exception
+     */
+    public function uploadTest() {
+        $file = $this->request->file('img');
+//        print_r(\Reflection::export(new \ReflectionClass($file)));die;
+        $fileInfo = $file->getInfo();
+        $upload   = new Imageupload();
+        $filename = $upload->getNewName($fileInfo['name']);
+        $upload->uploadFile($fileInfo['tmp_name'], $filename);
+//        $upload->deleteImage('head_01.jpg');
+        die;
     }
 }
