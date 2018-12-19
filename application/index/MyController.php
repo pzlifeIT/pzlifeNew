@@ -10,15 +10,60 @@ use \cache\Phpredis;
 
 class MyController extends Controller {
     protected $redis;
+    protected $cryptMethod;
+    protected $cryptKey;
+    protected $cryptIv;
+    protected $iv = '00000000';
 
     public function __construct(App $app = null) {
         parent::__construct($app);
-
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
         }
-        $this->redis = Phpredis::getConn();
+        $this->redis       = Phpredis::getConn();
+        $this->cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
+        $this->cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+        $this->cryptIv     = Env::get('cipher.userAesIv', '11111111');
+    }
+
+    /**
+     *
+     * @param $uid
+     * @return int|string
+     */
+    protected function enUid($uid, $ex = false) {
+        if (strlen($uid) > 15) {
+            return 0;
+        }
+        $iv = $this->iv;
+        if ($ex !== false) {
+            $iv = date('Ymd');
+        }
+        $uid = intval($uid);
+        return $this->encrypt($uid, $iv);
+    }
+
+    protected function deUid($enUid, $ex = false) {
+        $iv = $this->iv;
+        if ($ex !== false) {
+            $iv = date('Ymd');
+        }
+        return $this->decrypt($enUid, $iv);
+    }
+
+    protected function encrypt($str, $iv) {
+        $encrypt = base64_encode(openssl_encrypt($str, $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv));
+        return $encrypt;
+    }
+
+    protected function decrypt($encrypt, $iv) {
+        $decrypt = openssl_decrypt(base64_decode($encrypt), $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv);
+        if ($decrypt) {
+            return $decrypt;
+        } else {
+            return 0;
+        }
     }
 
     private function checkApi() {
