@@ -11,4 +11,5 @@
 $commandPath = \think\facade\Config::get('console.command_path');
 return [
     'curl' => $commandPath . 'Curl',
+    'user' => $commandPath . 'User',
 ];

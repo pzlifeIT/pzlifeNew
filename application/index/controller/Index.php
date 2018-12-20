@@ -2,8 +2,8 @@
 
 namespace app\index\controller;
 
+use app\common\model\Users;
 use app\index\MyController;
-use cache\Phpredis;
 use Env;
 use Config;
 use think\Db;
@@ -44,9 +44,15 @@ class Index extends MyController {
 //        print_r(   str_split(substr(uniqid(), 7, 13), 1)     );die;
 
 //        print_r(Config::get('app.'));die;
-        ini_set('memory_limit', '512M');
+//        ini_set('memory_limit', '512M');
 //        $sql = "select * from pre_member as pm inner join pre_member_relationship as pmr on pm.uid=pmr.uid";
 //        $res = Db::connect(Config::get('pzapidev.'))->query($sql);
+
+        $res = Users::find([1,2]);
+        $res->userRelation;
+//        echo Db::getlastSql();
+//        die;
+        print_r($res->toArray());die;
 
 
         $sql = "select uid,pid from pz_user_relation";
