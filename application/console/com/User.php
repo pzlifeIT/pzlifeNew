@@ -1,6 +1,6 @@
 <?php
 
-namespace app\console\com;
+namespace app\console\controller;
 
 use app\console\Pzlife;
 use Env;
