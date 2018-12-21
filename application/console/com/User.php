@@ -1,12 +1,14 @@
 <?php
 
-namespace app\console\com;
+namespace app\console\controller;
 
 use app\console\Pzlife;
 use Env;
+use Config;
 
 class User extends Pzlife {
     public function api($params) {
-        echo $params;
+        var_dump(Config::get('database.db_config'));
+        die;
     }
 }
