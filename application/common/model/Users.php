@@ -20,23 +20,48 @@ class Users extends Model {
         'brithday'    => 'timestamp:Y-m-d',//用户生日
     ];
 
+    private $sex = [1 => '男', 2 => '女', 3 => '未确认'];
+    private $userIdentity = [1 => '普通会员', 2 => '钻石会员', 3 => '创业店主', 4 => 'boss合伙人'];
+    private $userType = [1 => '普通账户', 2 => '总店账户'];
+
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
     }
 
     public function getSexAttr($value) {
-        $sex = [1 => '男', 2 => '女', 3 => '未确认'];
+        return $this->sex[$value];
+    }
+
+    public function setSexAttr($value) {
+        if (!in_array($value, $this->sex)) {
+            return $value;
+        }
+        $sex = array_flip($this->sex);
         return $sex[$value];
     }
 
     public function getUserIdentityAttr($value) {
-        $userIdentity = [1 => '普通会员', 2 => '钻石会员', 3 => '创业店主', 4 => 'boss合伙人'];
+        return $this->userIdentity[$value];
+    }
+
+    public function setUserIdentityAttr($value) {
+        if (!in_array($value, $this->userIdentity)) {
+            return $value;
+        }
+        $userIdentity = array_flip($this->userIdentity);
         return $userIdentity[$value];
     }
 
     public function getUserTypeAttr($value) {
-        $userType = [1 => '普通账户', 2 => '总店账户'];
+        return $this->userType[$value];
+    }
+
+    public function setUserTypeAttr($value) {
+        if (!in_array($value, $this->userType)) {
+            return $value;
+        }
+        $userType = array_flip($this->userType);
         return $userType[$value];
     }
 

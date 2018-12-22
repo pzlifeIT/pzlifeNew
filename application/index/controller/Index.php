@@ -30,15 +30,6 @@ class Index extends MyController {
         die;
     }
 
-    /**
-     * @api              {post} / 列表
-     * @apiDescription   hello
-     * @apiGroup         index
-     * @apiName          hello
-     * @apiParam {String} name name
-     * @apiSampleRequest /index/hello
-     * @author zyr
-     */
     public function hello() {
 //echo date('ymdHis');die;
 //        print_r(   str_split(substr(uniqid(), 7, 13), 1)     );die;
@@ -48,11 +39,20 @@ class Index extends MyController {
 //        $sql = "select * from pre_member as pm inner join pre_member_relationship as pmr on pm.uid=pmr.uid";
 //        $res = Db::connect(Config::get('pzapidev.'))->query($sql);
 
-        $res = Users::find([1,2]);
-        $res->userRelation;
+//        $user = new Users();
+//        $user->save([
+//            'sex'=>2,
+//            'last_time'=>time(),
+//            'create_time'=>date('Y-m-d H:i:s'),
+//        ]);
+//        die;
+
+//        $res = Users::where('users.id','in',[1,2])->field('user_type,nick_name')->withJoin('userRelation')->select();
+//        $res->userRelation;
 //        echo Db::getlastSql();
 //        die;
-        print_r($res->toArray());die;
+//        print_r($res->toArray());
+//        die;
 
 
         $sql = "select uid,pid from pz_user_relation";
@@ -62,10 +62,6 @@ class Index extends MyController {
         $r       = $phptree->listTree();
 
         print_r($r);
-        die;
-//        print_r(Config::get('database.'));
-//        $a = Db::name('user_relation')->all();
-//        print_r($a);
         die;
     }
 

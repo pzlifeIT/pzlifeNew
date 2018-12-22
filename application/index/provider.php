@@ -11,12 +11,5 @@
 
 // 应用容器绑定定义
 return [
-    /*
-     * common->index
-     */
     'user' => app\common\index\User::class,
-
-    /*
-     * common->admin
-     */
 ];
