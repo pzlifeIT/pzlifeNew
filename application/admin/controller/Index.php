@@ -25,7 +25,7 @@ class Index extends AdminController {
      * @apiGroup         admin_index
      * @apiName          getProvinceCity
      * @apiSuccess (返回) {String} code 200:成功 / 3001:省市区列表有误
-     * @apiSampleRequest http://localadmin.pzlife.com/index/getProvinceCity
+     * @apiSampleRequest /index/getProvinceCity
      * @author zyr
      */
     public function getProvinceCity() {
@@ -41,7 +41,7 @@ class Index extends AdminController {
      * @apiParam (入参) {Number} provinceId 省级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:市列表空 / 3001:省级id不存在 / 3002:省级id只能是数字
      * @apiSuccess (返回) {String} data 结果
-     * @apiSampleRequest http://localadmin.pzlife.com/index/getCity
+     * @apiSampleRequest /index/getCity
      * @author zyr
      */
     public function getCity() {
@@ -61,7 +61,7 @@ class Index extends AdminController {
      * @apiParam (入参) {Number} cityId 市级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:区列表空 / 3001:市级id不存在 / 3002:市级id只能是数字
      * @apiSuccess (返回) {String} data 结果
-     * @apiSampleRequest http://localadmin.pzlife.com/index/getArea
+     * @apiSampleRequest /index/getArea
      * @author zyr
      */
     public function getArea() {
