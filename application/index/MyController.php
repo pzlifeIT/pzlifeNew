@@ -28,8 +28,8 @@ class MyController extends Controller {
     }
 
     /**
-     *
      * @param $uid
+     * @param $ex
      * @return int|string
      */
     protected function enUid($uid, $ex = false) {
@@ -44,6 +44,11 @@ class MyController extends Controller {
         return $this->encrypt($uid, $iv);
     }
 
+    /**
+     * @param $enUid
+     * @param bool $ex
+     * @return int|string
+     */
     protected function deUid($enUid, $ex = false) {
         $iv = $this->iv;
         if ($ex !== false) {

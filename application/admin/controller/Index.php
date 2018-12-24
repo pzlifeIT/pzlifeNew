@@ -8,24 +8,13 @@ use Env;
 
 class Index extends AdminController {
 
-    public function index() {
-        $res = Config::get();
-        print_r($res);
-        die;
-        return json_encode($res);
-    }
-
-    public function hello($name = '') {
-        return 'admin hello ' . $name;
-    }
-
     /**
      * @api              {post} / 省市列表
      * @apiDescription   getProvinceCity
      * @apiGroup         admin_index
      * @apiName          getProvinceCity
      * @apiSuccess (返回) {String} code 200:成功 / 3001:省市区列表有误
-     * @apiSampleRequest /index/getProvinceCity
+     * @apiSampleRequest /admin/index/getProvinceCity
      * @author zyr
      */
     public function getProvinceCity() {
@@ -41,7 +30,7 @@ class Index extends AdminController {
      * @apiParam (入参) {Number} provinceId 省级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:市列表空 / 3001:省级id不存在 / 3002:省级id只能是数字
      * @apiSuccess (返回) {String} data 结果
-     * @apiSampleRequest /index/getCity
+     * @apiSampleRequest /admin/index/getCity
      * @author zyr
      */
     public function getCity() {
@@ -61,7 +50,7 @@ class Index extends AdminController {
      * @apiParam (入参) {Number} cityId 市级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:区列表空 / 3001:市级id不存在 / 3002:市级id只能是数字
      * @apiSuccess (返回) {String} data 结果
-     * @apiSampleRequest /index/getArea
+     * @apiSampleRequest /admin/index/getArea
      * @author zyr
      */
     public function getArea() {
