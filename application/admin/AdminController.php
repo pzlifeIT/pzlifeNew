@@ -16,6 +16,7 @@ class AdminController extends Controller {
 
     public function __construct(App $app = null) {
         parent::__construct($app);
+        header('Access-Control-Allow-Origin:*');
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
