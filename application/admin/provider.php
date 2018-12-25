@@ -12,4 +12,6 @@
 // 应用容器绑定定义
 return [
     'index' => app\common\admin\Index::class,
+    'category' => app\common\admin\Category::class,
+    'spec' => app\common\admin\Spec::class,
 ];
