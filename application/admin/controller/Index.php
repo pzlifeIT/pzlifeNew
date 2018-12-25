@@ -7,13 +7,15 @@ use Config;
 use Env;
 
 class Index extends AdminController {
-
     /**
      * @api              {post} / 省市列表
      * @apiDescription   getProvinceCity
      * @apiGroup         admin_index
      * @apiName          getProvinceCity
      * @apiSuccess (返回) {String} code 200:成功 / 3001:省市区列表有误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
      * @apiSampleRequest /admin/index/getProvinceCity
      * @author zyr
      */
@@ -29,7 +31,9 @@ class Index extends AdminController {
      * @apiName          getCity
      * @apiParam (入参) {Number} provinceId 省级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:市列表空 / 3001:省级id不存在 / 3002:省级id只能是数字
-     * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
      * @apiSampleRequest /admin/index/getCity
      * @author zyr
      */
@@ -38,7 +42,8 @@ class Index extends AdminController {
         if (!is_numeric($provinceId)) {
             return ['3002'];
         }
-        $result = $this->app->index->getArea($provinceId, 2);
+        $provinceId = intval($provinceId);
+        $result     = $this->app->index->getArea($provinceId, 2);
         return $result;
     }
 
@@ -50,6 +55,8 @@ class Index extends AdminController {
      * @apiParam (入参) {Number} cityId 市级id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:区列表空 / 3001:市级id不存在 / 3002:市级id只能是数字
      * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
      * @apiSampleRequest /admin/index/getArea
      * @author zyr
      */
@@ -58,6 +65,7 @@ class Index extends AdminController {
         if (!is_numeric($cityId)) {
             return ['3002'];
         }
+        $cityId = intval($cityId);
         $result = $this->app->index->getArea($cityId, 3);
         return $result;
     }

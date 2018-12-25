@@ -15,6 +15,10 @@ class GoodsAttr extends Model {
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
 
+    protected $type = [
+        'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
+    ];
+
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容

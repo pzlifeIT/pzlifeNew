@@ -14,7 +14,10 @@ class Supplier extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
-
+    protected $type = [
+        'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
+    ];
+    private $types = [1 => '男', 2 => '女', 3 => '未确认'];
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容

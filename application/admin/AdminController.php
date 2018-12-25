@@ -6,6 +6,7 @@ use cache\Phpredis;
 use think\App;
 use think\Controller;
 use Env;
+use Config;
 
 class AdminController extends Controller {
     protected $redis;
@@ -16,7 +17,9 @@ class AdminController extends Controller {
 
     public function __construct(App $app = null) {
         parent::__construct($app);
-        header('Access-Control-Allow-Origin:*');
+        if (Config::get('app.deploy') == 'development') {
+            header('Access-Control-Allow-Origin:*');
+        }
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
@@ -57,11 +60,23 @@ class AdminController extends Controller {
         return $this->decrypt($enUid, $iv);
     }
 
+    /**
+     * 加密
+     * @param $str
+     * @param $iv
+     * @return string
+     */
     protected function encrypt($str, $iv) {
         $encrypt = base64_encode(openssl_encrypt($str, $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv));
         return $encrypt;
     }
 
+    /**
+     * 解密
+     * @param $encrypt
+     * @param $iv
+     * @return int|string
+     */
     protected function decrypt($encrypt, $iv) {
         $decrypt = openssl_decrypt(base64_decode($encrypt), $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv);
         if ($decrypt) {
@@ -71,6 +86,10 @@ class AdminController extends Controller {
         }
     }
 
+    /**
+     * api验证
+     * @return array
+     */
     private function checkApi() {
         $params = $this->request->param();
         if (Env::get('debug.checkTimestamp')) {
@@ -86,6 +105,11 @@ class AdminController extends Controller {
         return ['code' => 200];
     }
 
+    /**
+     * 接口时间戳验证
+     * @param int $timestamp
+     * @return bool
+     */
     private function checkTimestamp($timestamp = 0) {
         $nowTime  = time();
         $timeDiff = bcsub($nowTime, $timestamp, 0);
@@ -95,6 +119,12 @@ class AdminController extends Controller {
         return true;
     }
 
+    /**
+     * 接口签名验证
+     * @param $sign
+     * @param $params
+     * @return bool
+     */
     private function checkSign($sign, $params) {
         unset($params['timestamp']);
         unset($params['sign']);

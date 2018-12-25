@@ -4,8 +4,54 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f228d601894715069a9db1963f881d7d",
+    "content-hash": "4010eb61cf401a16bc399fdb526a5991",
     "packages": [
+        {
+            "name": "jjonline/aliyun-dysms-php-sdk",
+            "version": "v2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jjonline/aliyun-dysms-php-sdk.git",
+                "reference": "4155e585dd1c5668fce1afbbd8ac66c9de48cda8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jjonline/aliyun-dysms-php-sdk/zipball/4155e585dd1c5668fce1afbbd8ac66c9de48cda8",
+                "reference": "4155e585dd1c5668fce1afbbd8ac66c9de48cda8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Aliyun\\": "lib/",
+                    "Aliyun\\Test\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Aliyuncs",
+                    "homepage": "https://www.aliyun.com"
+                }
+            ],
+            "description": "Aliyun SMS SDK for PHP",
+            "homepage": "https://www.aliyun.com/product/sms",
+            "keywords": [
+                "aliyun",
+                "sdk",
+                "sms"
+            ],
+            "time": "2017-08-11T16:26:47+00:00"
+        },
         {
             "name": "qiniu/php-sdk",
             "version": "v7.2.7",
