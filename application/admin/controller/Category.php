@@ -14,7 +14,7 @@ class Category extends AdminController
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {Array} id 分类id / pid 父级ID / type_name 分类名称 / tier 等级 / _child 子分类数据
      * @apiSuccess (_child) {Array} id 分类id / pid 父级ID / type_name 分类名称 / tier 等级 / _child 子分类数据
-     * @apiSampleRequest /category/getcatelist
+     * @apiSampleRequest /admin/category/getcatelist
      * @author wujunjie
      * 2018/12/24-11:43
      */
@@ -30,7 +30,7 @@ class Category extends AdminController
      * @apiName          addCatePage
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (data) {Array} id 分类id / pid 父级ID / type_name 分类名称 / _child 子分类数据 / 只显示前两级
-     * @apiSampleRequest /category/addcatepage
+     * @apiSampleRequest /admin/category/addcatepage
      * @author wujunjie
      * 2018/12/24-13:58
      */
@@ -48,7 +48,7 @@ class Category extends AdminController
      * @apiParam (入参) {String} type_name 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} result 结果
-     * @apiSampleRequest /category/saveaddcate
+     * @apiSampleRequest /admin/category/saveaddcate
      * @author wujunjie
      * 2018/12/24-14:32
      */
@@ -72,7 +72,7 @@ class Category extends AdminController
      * @apiSuccess (返回) {Array} cate_data 当前修改的数据 / cate_list 分类列表
      * @apiSuccess (cate_data) {Array} id 分类id / pid 父级ID/ type_name 分类名称 / tier 层级
      * @apiSuccess (cate_list) {Array} id 分类id / pid 父级ID/ type_name 分类名称 / tier 层级 / _disable 1可选 2不可选
-     * @apiSampleRequest /category/editcatepage
+     * @apiSampleRequest /admin/category/editcatepage
      * @author wujunjie
      * 2018/12/24-14:56
      */
@@ -95,7 +95,7 @@ class Category extends AdminController
      * @apiParam (入参) {String} type_name 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} result 结果
-     * @apiSampleRequest /category/saveeditcate
+     * @apiSampleRequest /admin/category/saveeditcate
      * @author wujunjie
      * 2018/12/24-16:56
      */
@@ -117,7 +117,7 @@ class Category extends AdminController
      * @apiName          delcategory
      * @apiParam (入参) {Number} id 当前分类id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:删除失败 / 3002:参数错误 / 3003:不能删除
-     * @apiSampleRequest /category/delcategory
+     * @apiSampleRequest /admin/category/delcategory
      * @author wujunjie
      * 2018/12/24-17:18
      */
