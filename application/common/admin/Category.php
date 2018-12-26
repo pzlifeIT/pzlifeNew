@@ -15,7 +15,7 @@ class Category
      * 2018/12/24-13:48
      */
     public function getCateList(){
-        $cate = GoodsClass::where("status",1)->where("delete_time",0)->field("id,pid,type_name,tier")->select()->toArray();
+        $cate = GoodsClass::where("status",1)->field("id,pid,type_name,tier")->select()->toArray();
         if (empty($cate)){
             return ["msg"=>"分类数据有误","code"=>3000];
         }
@@ -36,7 +36,7 @@ class Category
      */
     public function addCatePage(){
         //获取前两级分类
-        $data = GoodsClass::where("tier","<=",2)->where("status",1)->where('delete_time',0)->field("id,pid,type_name")->select()->toArray();
+        $data = GoodsClass::where("tier","<=",2)->where("status",1)->field("id,pid,type_name")->select()->toArray();
         if (empty($data)){
             return ["msg"=>"分类数据为空","code"=>3000];
         }
@@ -102,7 +102,7 @@ class Category
         }
         //将要修改的数据的等级存起来
         $level = $result["tier"];
-        $cate_data = GoodsClass::where("tier","<=",2)->where("status",1)->where("delete_time",0)->field("id,type_name,pid,tier")->select()->toArray();
+        $cate_data = GoodsClass::where("tier","<=",2)->where("status",1)->field("id,type_name,pid,tier")->select()->toArray();
         if (empty($cate_data)){
             return ["msg"=>"分类数据为空","code"=>3000];
         }
@@ -165,13 +165,13 @@ class Category
      */
     public function delCategory($id){
         //查找该分类是否有子分类,并且没有删除
-        $res = GoodsClass::where("pid",$id)->where("delete_time",0)->field("id,tier")->find();
+        $res = GoodsClass::where("pid",$id)->field("id,tier")->find();
         if ($res){
             return ["msg"=>"该分类有子分类,请先删除子分类","code"=>3003];
         }
         //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能删除
         if ($res["tier"] == 3){
-            $res = GoodsSpec::where("cate_id",$res["id"])->where("delete_time",0)->field("id")->find();
+            $res = GoodsSpec::where("cate_id",$res["id"])->field("id")->find();
             if ($res){
                 return ["msg"=>"请先解除该分类下的属性关系","code"=>3003];
             }

@@ -18,13 +18,14 @@ class Spec
      */
     public function getSpecList(){
         //根据一级属性表的cate_id招到三级分类，根据id找到对应的二级属性
-        $spec = GoodsSpec::where("delete_time",0)->field("id,cate_id,spe_name")->select()->toArray();
+        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         if (empty($spec)){
             return ["msg"=>"未获取到数据","code"=>3000];
         }
         foreach($spec as $k=>$v){
-            $spec[$k]['category'] = GoodsClass::where("id",$v["cate_id"])->where("delete_time",0)->field("id,type_name")->find()->toArray();
-            $spec[$k]["attr"] = GoodsAttr::where('spec_id',$v['id'])->where("delete_time",0)->field("id,spec_id,attr_name")->select()->toArray();
+            $type_name = GoodsClass::where("id",$v["cate_id"])->field("id,type_name")->find()->toArray();
+            $spec[$k]['category'] = $type_name["type_name"];
+            $spec[$k]["attr"] = GoodsAttr::where('spec_id',$v['id'])->field("id,spec_id,attr_name")->select()->toArray();
         }
         return ["code"=>200,"data"=>$spec];
     }
@@ -40,7 +41,7 @@ class Spec
      */
     public function addSpecPage(){
        //选择分类
-        $cate = GoodsClass::where("tier",3)->where("delete_time",0)->field("id,type_name,pid")->select()->toArray();
+        $cate = GoodsClass::where("tier",3)->field("id,type_name,pid")->select()->toArray();
         if (empty($cate)){
             return ["msg"=>"未获取分类到数据","code"=>3000];
         }
@@ -58,7 +59,7 @@ class Spec
      */
     public function addAttrPage(){
         //可选一级属性
-        $spec = GoodsSpec::where("delete_time",0)->field("id,cate_id,spe_name")->select()->toArray();
+        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         if (empty($spec)){
             return ["msg"=>"未获取到规格数据","code"=>3000];
         }
@@ -142,7 +143,7 @@ class Spec
         if (empty($data)){
             return ["msg"=>"未获取到该条属性数据","code"=>3000];
         }
-        $cate = GoodsClass::where("tier",3)->where("status",1)->where("delete_time",0)->field("id,pid,type_name")->select()->toArray();
+        $cate = GoodsClass::where("tier",3)->where("status",1)->field("id,pid,type_name")->select()->toArray();
         if (empty($cate)){
             return ["msg"=>"未获取到分类数据","code"=>3000];
         }
@@ -164,7 +165,7 @@ class Spec
         if (empty($data)){
             return ["msg"=>"未获取到该条数据","code"=>3000];
         }
-        $spec = GoodsSpec::where("delete_time",0)->field("id,cate_id,spe_name")->select()->toArray();
+        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         if (empty($spec)){
             return ["msg"=>"未获取到一级属性数据","code"=>3000];
         }

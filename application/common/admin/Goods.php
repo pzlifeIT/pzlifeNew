@@ -6,6 +6,15 @@ use app\common\model\Supplier;
 use app\common\model\GoodsClass;
 class Goods
 {
+    /**
+     * 商品列表
+     * @return array
+     * @author wujunjie
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * 2018/12/26-10:25
+     */
     public function goodsList(){
         //查找所有商品数据
         $goods_data = (new G())->field("id,supplier_id,cate_id,goods_name,goods_type,title,subtitle")->select()->toArray();

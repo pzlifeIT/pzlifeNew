@@ -12,9 +12,15 @@ class Spec extends AdminController
      * @apiGroup         admin_spec
      * @apiName          getSpecList
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
-     * @apiSuccess (返回) {Array} attr 二级属性 / category 该分类所属的三级分类
-     * @apiSuccess (attr) {Array} id 二级属性ID / spec_id 一级规格id / attr_name 二级属性名称
-     * @apiSuccess (category) {Array} id 分类ID / type_name 分类名称
+     * @apiSuccess (返回) {Array} data 返回数据
+     * @apiSuccess (data) {Number} id 一级规格id
+     * @apiSuccess (data) {Number} cate_id 三级分类id
+     * @apiSuccess (data) {String} spe_name 一级规格名称
+     * @apiSuccess (data) {String} category 三级分类名称
+     * @apiSuccess (data) {Array} attr 二级属性数据
+     * @apiSuccess (attr) {Number} id 二级属性ID
+     * @apiSuccess (attr) {Number} spec_id 一级规格ID
+     * @apiSuccess (attr) {String} attr_name 二级属性名称
      * @apiSampleRequest /admin/spec/getspeclist
      * @author wujunjie
      * 2018/12/25-10:07
@@ -31,7 +37,9 @@ class Spec extends AdminController
      * @apiName          addSpecPage
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} cate 可选的三级分类
-     * @apiSuccess (cate) {Array} id 可选的三级分类id / type_name 三级分类名称 / pid 父级分类id
+     * @apiSuccess (cate) {Number} id 可选的三级分类id
+     * @apiSuccess (cate) {String} type_name 三级分类名称
+     * @apiSuccess (cate) {Number} pid 父级分类id
      * @apiSampleRequest /admin/spec/getspeclist
      * @author wujunjie
      * 2018/12/25-10:42
@@ -47,8 +55,10 @@ class Spec extends AdminController
      * @apiGroup         admin_spec
      * @apiName          addAttrPage
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
-     * @apiSuccess (返回) {Array} spec 可选的一级属性
-     * @apiSuccess (spec) {Array} id 可选的一级属性id / spe_name 一级属性名称/ cate_id 一级属性所属的三级分类id
+     * @apiSuccess (返回) {Array} spec 可选的一级属性数据
+     * @apiSuccess (spec) {Number} id 可选的一级属性id
+     * @apiSuccess (spec) {String} spe_name 一级属性名称
+     * @apiSuccess (spec) {Number} cate_id 一级属性所属的三级分类id
      * @apiSampleRequest /admin/spec/addattrpage
      * @author wujunjie
      * 2018/12/25-10:52
@@ -111,9 +121,14 @@ class Spec extends AdminController
      * @apiGroup         admin_spec
      * @apiName          editAttrPage
      * @apiSuccess (返回) {String} code 200:成功 / 3000：未获取到数据 /3002 参数错误
-     * @apiSuccess (返回) {Array}  attr 当前需要求改的数据 / spec 可选一级属性数据
-     * @apiSuccess (返回) {attr}  id 二级属性id / spec_id  一级属性id /attr_name 二级属性名称
-     * @apiSuccess (返回) {spec}  id 一级属性id / cate_id 三级分类id /spe_name 一级属性名称
+     * @apiSuccess (返回) {Array}  attr 当前需要求改的数据
+     * @apiSuccess (返回) {Array}  spec 可选一级属性数据
+     * @apiSuccess (attr) {Number} id 二级属性id
+     * @apiSuccess (attr) {Number} spec_id  一级属性id
+     * @apiSuccess (attr) {String} attr_name 二级属性名称
+     * @apiSuccess (spec) {Number}  id 一级属性id
+     * @apiSuccess (spec) {Number}  cate_id 三级分类id
+     * @apiSuccess (spec) {String}  spe_name 一级属性名称
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiSampleRequest /admin/spec/editattrpage
      * @author wujunjie
@@ -134,6 +149,7 @@ class Spec extends AdminController
      * @apiGroup         admin_spec
      * @apiName          saveEditSpecAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} top_id 上级id（type为1时是三级分类id/type为2时是一级属性id）
      * @apiParam (入参) {Number} id 当前属性id
      * @apiParam (入参) {String} sa_name 修改的属性名称（一级属性名称/二级属性名称）
@@ -160,6 +176,7 @@ class Spec extends AdminController
      * @apiGroup         admin_spec
      * @apiName          editAttrPage
      * @apiSuccess (返回) {String} code 200:成功 / 3003：无法删除 /3002 参数错误
+     * @apiSuccess (返回) {String} 返回消息
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiParam (入参) {Number} type 删除类型 1删除一级属性 2删除二级属性
      * @apiSampleRequest /admin/spec/editattrpage
