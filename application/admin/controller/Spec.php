@@ -31,7 +31,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 添加一级属性页面
+     * @api              {post} / 展示三级分类（添加一级规格时选择）
      * @apiDescription   addSpecPage
      * @apiGroup         admin_spec
      * @apiName          addSpecPage
@@ -40,7 +40,7 @@ class Spec extends AdminController
      * @apiSuccess (cate) {Number} id 可选的三级分类id
      * @apiSuccess (cate) {String} type_name 三级分类名称
      * @apiSuccess (cate) {Number} pid 父级分类id
-     * @apiSampleRequest /admin/spec/getspeclist
+     * @apiSampleRequest /admin/spec/addspecpage
      * @author wujunjie
      * 2018/12/25-10:42
      */
@@ -50,7 +50,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 添加二级属性页面
+     * @api              {post} / 展示一级规格（添加二级属性时选择）
      * @apiDescription   addAttrPage
      * @apiGroup         admin_spec
      * @apiName          addAttrPage
@@ -69,7 +69,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 保存添加的属性
+     * @api              {post} / 添加提交
      * @apiDescription   saveSpecAttr
      * @apiGroup         admin_spec
      * @apiName          saveSpecAttr
@@ -93,7 +93,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 编辑一级属性页面
+     * @api              {post} / 编辑一级规格
      * @apiDescription   editSpecPage
      * @apiGroup         admin_spec
      * @apiName          editSpecPage
@@ -116,7 +116,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 编辑二级属性页面
+     * @api              {post} / 编辑二级属性
      * @apiDescription   editAttrPage
      * @apiGroup         admin_spec
      * @apiName          editAttrPage
@@ -144,7 +144,7 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 保存修改的属性
+     * @api              {post} / 提交修改
      * @apiDescription   saveEditSpecAttr
      * @apiGroup         admin_spec
      * @apiName          saveEditSpecAttr
@@ -171,12 +171,12 @@ class Spec extends AdminController
     }
 
     /**
-     * @api              {post} / 删除属性
+     * @api              {post} / 删除
      * @apiDescription   editAttrPage
      * @apiGroup         admin_spec
      * @apiName          editAttrPage
      * @apiSuccess (返回) {String} code 200:成功 / 3003：无法删除 /3002 参数错误
-     * @apiSuccess (返回) {String} 返回消息
+     * @apiSuccess (返回) {String}  msg 返回消息
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiParam (入参) {Number} type 删除类型 1删除一级属性 2删除二级属性
      * @apiSampleRequest /admin/spec/editattrpage

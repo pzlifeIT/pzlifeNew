@@ -34,7 +34,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 添加分类页
+     * @api              {post} / 添加分类
      * @apiDescription   addCatePage
      * @apiGroup         admin_category
      * @apiName          addCatePage
@@ -57,7 +57,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 保存添加的分类
+     * @api              {post} / 提交添加
      * @apiDescription   saveaddcate
      * @apiGroup         admin_category
      * @apiName          saveaddcate
@@ -80,7 +80,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 编辑分类页面
+     * @api              {post} / 编辑分类
      * @apiDescription   editcatepage
      * @apiGroup         admin_category
      * @apiName          editcatepage
@@ -111,7 +111,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 保存编辑后的分类
+     * @api              {post} / 提交编辑
      * @apiDescription   saveeditcate
      * @apiGroup         admin_category
      * @apiName          saveeditcate

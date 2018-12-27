@@ -14,4 +14,5 @@ return [
     'index' => app\common\admin\Index::class,
     'category' => app\common\admin\Category::class,
     'spec' => app\common\admin\Spec::class,
+    'goods'=>\app\common\admin\Goods::class,
 ];
