@@ -12,4 +12,5 @@
 // 应用容器绑定定义
 return [
     'index' => app\common\admin\Index::class,
+    'suppliers' => app\common\admin\Suppliers::class,
 ];

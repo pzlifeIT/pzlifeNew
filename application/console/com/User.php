@@ -48,7 +48,7 @@ class User extends Pzlife
         $member = "SELECT * FROM pre_member   ";
 
         $memberdata = $mysql_connect->query($member);
-        // print_r($memberdata);
+        // print_r($memberdata);die;
         foreach ($memberdata as $key => $value) {
             /* 查出原用户关系 */
             
@@ -66,16 +66,16 @@ class User extends Pzlife
             $hierarchy = json_decode($member_relationship[0]['hierarchy']);
             $new_relation = [];
             if ($hierarchy) {
-                $user_relation['my_boss'] = $hierarchy[0];
+                // $user_relation['my_boss'] = $hierarchy[0];
                 if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $hierarchy[0])) {
-                    do {
+                    /* do { */
                         $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $hierarchy[0]);
                         $new_relation[] = $relationship[0]['uid'];
-                    } while (!$relationship);
+                   /*  } while (!$relationship); */
                 }
 
             } else {
-                $user_relation['my_boss'] = 0;
+                // $user_relation['my_boss'] = 0;
             }
             $hierarchy[] = $value['uid'];
 
@@ -85,7 +85,7 @@ class User extends Pzlife
 
             /* 当用户为BOSS时 */
             if ($value['boss'] == 1) {
-
+                $user_relation['is_boss'] = 1;
                 $shop = $mysql_connect->query('SELECT * FROM pre_shop WHERE `uid` = ' . $value['uid']);
 
                 if ($shop) {
@@ -100,14 +100,14 @@ class User extends Pzlife
                     }
                 }
                 if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid'])) {
-                    do {
+                    /* do { */
                         $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid']);
 
                         if ($relationship) {
                             $new_relation[] = $relationship[0]['uid'];
                         }
 
-                    } while (!$relationship);
+                   /*  } while (!$relationship); */
                 }
 
             }
@@ -135,8 +135,9 @@ class User extends Pzlife
                 $new_user['avatar'] = $value['avatar'];
             }
             
-            $new_user['openid'] = $member_relationship[0]['wx_openid'];
+            $new_user['openid'] = trim($member_relationship[0]['wx_openid']);
             $new_user['bindshop'] = $value['bingshopid'];
+            $new_user['commission_freeze'] = 2;
 
             /* 查询用户积分数据 */
             $member_count = $mysql_connect->query('SELECT * FROM pre_member_count WHERE `uid` = ' . $value['uid']);
@@ -151,7 +152,8 @@ class User extends Pzlife
             if ($new_relation) {
                 $user_relation['relation'] = join(',', $new_relation) . ',' . $user_relation['relation'];
             }
-   
+            $new_user = $this->delDataEmptyKey($new_user);
+            $user_relation = $this->delDataEmptyKey($user_relation);
             // print_r( $member_relationship );
             // print_r( $user_relation );
     
@@ -164,6 +166,7 @@ class User extends Pzlife
                 Db::commit();
             } catch (\Exception $e) {
                 // 回滚事务
+                print_r($e);die;
                 Db::rollback();
             }
             /* 事务提交 */
