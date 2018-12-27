@@ -4,6 +4,7 @@ namespace app\common\admin;
 use app\common\model\Goods as G;
 use app\common\model\Supplier;
 use app\common\model\GoodsClass;
+use think\Db;
 use third\PHPTree;
 
 class Goods
@@ -63,5 +64,14 @@ class Goods
         //同时需要操作goods表，goods_image表，goods_sku表，goods_relation表商品类目关系表
         //goods表images表直接存sku表需要处理，商品类目表需要处理
         //分成多个方法进行处理数据库存储，在一个事务中调用这些方法
+        Db::startTrans();
+        try{
+            (new G())->save([
+                ""
+            ]);
+        }catch (\Exception $e){
+            Db::rollback();
+
+        }
     }
 }

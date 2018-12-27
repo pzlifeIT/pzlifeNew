@@ -14,9 +14,14 @@ class Category
      * @throws \think\exception\DbException
      * 2018/12/24-13:48
      */
-    public function getCateList(){
-        $cate = GoodsClass::where("status",1)->field("id,pid,type_name,tier")->select()->toArray();
-//        halt($cate);
+    public function getCateList($type){
+        if ($type == 1){
+            $cate = GoodsClass::where("status",1)->field("id,pid,type_name,tier,status")->select()->toArray();
+        }elseif ($type == 2){
+            $cate = GoodsClass::where("status",2)->field("id,pid,type_name,tier,status")->select()->toArray();
+        }elseif ($type == 3){
+            $cate = GoodsClass::field("id,pid,type_name,tier,status")->select()->toArray();
+        }
         if (empty($cate)){
             return ["msg"=>"分类数据有误","code"=>3000];
         }
@@ -24,7 +29,6 @@ class Category
         $tree->setParam("pk","id");
         $tree->setParam("pid","pid");
         $cate_tree = $tree->listTree();
-//        halt($cate_tree);
         return ["code"=>200,"data"=>$cate_tree];
     }
 

@@ -61,22 +61,23 @@ class Goods extends AdminController
     }
 
     public function saveAddGoods(){
-        $supplier_id = trim(input("post.supplier_id"));//供应商id
-        $cate_id = trim(input("post.cate_id"));//分类ID
-        $goods_name = trim(input("post.goods_name"));//商品名称
-        $goods_type = trim(input("post.goods_type"));//商品类型 1实物/2虚拟
-        $title = trim(input("post.title"));//商品标题
-        $subtitle = trim(input("post.subtitle"));//商品副标题
-        $title_image = trim(input("post.title_image"));//商品标题图
-        $status = trim(input("post.status"));//上下架状态 1上架/2下架
-        $source_type = trim(input("post.source_type"));//来源 1全部/2pc/3app/4微信
-        $image_type = trim(input("post.image_type"));//图片类型 1详情图 / 2轮播图
-        $image_path = trim(input("post.image_path"));//图片内容
-        if (empty(is_numeric($supplier_id)) || empty(is_numeric($cate_id)) || empty($goods_name) ||empty(is_numeric($goods_type)) || empty($title) || empty($subtitle) || empty($title_image) || empty(is_numeric($status))){
-            return ["msg"=>"参数错误","code"=>"3002"];
-        }
-
+        $post = input("post.");
+//        $supplier_id = trim(input("post.supplier_id"));//供应商id
+//        $cate_id = trim(input("post.cate_id"));//分类ID
+//        $goods_name = trim(input("post.goods_name"));//商品名称
+//        $goods_type = trim(input("post.goods_type"));//商品类型 1实物/2虚拟
+//        $title = trim(input("post.title"));//商品标题
+//        $subtitle = trim(input("post.subtitle"));//商品副标题
+//        $title_image = trim(input("post.title_image"));//商品标题图
+//        $status = trim(input("post.status"));//上下架状态 1上架/2下架
+//        $source_type = trim(input("post.source_type"));//来源 1全部/2pc/3app/4微信
+//        $image_type = trim(input("post.image_type"));//图片类型 1详情图 / 2轮播图
+//        $image_path = trim(input("post.image_path"));//图片内容
+//        if (empty(is_numeric($supplier_id)) || empty(is_numeric($cate_id)) || empty($goods_name) ||empty(is_numeric($goods_type)) || empty($title) || empty($subtitle) || empty($title_image) || empty(is_numeric($status))){
+//            return ["msg"=>"参数错误","code"=>"3002"];
+//        }
         //调用方法存商品表
-
+        $res = $this->app->goods->saveAddGoods($post);
+        return $res;
     }
 }
