@@ -107,24 +107,11 @@ class Category
         if (empty($result)){
             return ["msg"=>"该条数据获取失败","code"=>3000];
         }
-        //将要修改的数据的等级存起来
-        $level = $result["tier"];
-        $cate_data = GoodsClass::where("tier","<=",2)->where("status",1)->field("id,type_name,pid,tier")->select()->toArray();
+        $cate_data = GoodsClass::where("id",$result["pid"])->where("status",1)->field("id,type_name,pid,tier")->select()->toArray();
         if (empty($cate_data)){
             return ["msg"=>"分类数据为空","code"=>3000];
         }
-        //循环所有的数据,只有高于当前要修改的分类一级，才能被选中
-        foreach ($cate_data as $k=>$v){
-            if ($v["tier"] == $level - 1 && $v["tier"] != 0){
-                $cate_data[$k]["_disable"] = 1;
-            }else{
-                $cate_data[$k]["_disable"] = 2;
-            }
-        }
-        $tree = new PHPTree($cate_data);
-        $tree->setParam("pk","id");
-        $res = $tree->listTree();
-        return ["code"=>200,"cate_data"=>$result,"cate_list"=>$res];
+        return ["code"=>200,"cate_data"=>$result,"cate_list"=>$cate_data];
     }
 
     /**

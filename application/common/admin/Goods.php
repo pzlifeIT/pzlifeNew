@@ -6,7 +6,7 @@ use app\common\model\Supplier;
 use app\common\model\GoodsClass;
 use think\Db;
 use third\PHPTree;
-
+use app\common\model\GoodsImage;
 class Goods
 {
     /**
@@ -59,16 +59,36 @@ class Goods
         return ["cate"=>$cate,"supplier"=>$supplier,"code"=>200];
     }
 
-    public function saveAddGoods(){
+    public function saveAddGoods($post){
         //保存添加的商品数据，需要操作多表，进行存储的时候需要开启事务，有一张表失败就回滚
         //同时需要操作goods表，goods_image表，goods_sku表，goods_relation表商品类目关系表
         //goods表images表直接存sku表需要处理，商品类目表需要处理
         //分成多个方法进行处理数据库存储，在一个事务中调用这些方法
         Db::startTrans();
         try{
-            (new G())->save([
-                ""
+            $g = new G();
+            $g->save([
+                "supplier_id"=>$post["supplier_id"],
+                "cate_id"=>$post["cate_id"],
+                "goods_name"=>$post["goods_name"],
+                "goods_type"=>$post["goods_type"],
+                "title"=>$post["title"],
+                "subtitle"=>$post["subtitle"],
+                "image"=>$post["image"],
+                "status"=>$post["status"],
+                "create_time"=>$post["create_time"]
             ]);
+            $goods_id = $g->id;
+            //一张图片对应一条数据
+            for($i=0;$i<count($post["image_path"]);$i++){
+                (new GoodsImage())->save([
+                    "goods_id"=>$goods_id,
+                    "source_type"=>$post["source_type"],
+                    "image_type"=>$post["image_type"],
+                    "image_path"=>$post["image_path"]
+                ]);
+            }
+
         }catch (\Exception $e){
             Db::rollback();
 
