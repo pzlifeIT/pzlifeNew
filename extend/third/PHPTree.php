@@ -26,7 +26,7 @@ class PHPTree {
         }
         foreach ($list as $key => $data) {
             $parentId = $data[$this->pid];// 判断是否存在parent
-            unset($list[$key][$this->pid]);
+            //unset($list[$key][$this->pid]);
             if ($this->root == $parentId) {
                 $tree[] =& $list[$key];
             } else {

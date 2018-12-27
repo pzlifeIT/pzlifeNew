@@ -16,12 +16,15 @@ class Category
      */
     public function getCateList(){
         $cate = GoodsClass::where("status",1)->field("id,pid,type_name,tier")->select()->toArray();
+//        halt($cate);
         if (empty($cate)){
             return ["msg"=>"分类数据有误","code"=>3000];
         }
         $tree = new PHPTree($cate);
         $tree->setParam("pk","id");
+        $tree->setParam("pid","pid");
         $cate_tree = $tree->listTree();
+//        halt($cate_tree);
         return ["code"=>200,"data"=>$cate_tree];
     }
 
