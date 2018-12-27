@@ -142,5 +142,6 @@ return [
     'show_error_msg'         => Env::get('debug.showErrorMsg'),
     // 异常处理handle类 留空使用 \think\exception\Handle
     'exception_handle'       => '',
-
+    //运行环境  development(开发环境)  production(生产环境)
+    'deploy'                 => Env::get('debug.deploy', 'development'),
 ];

@@ -23,6 +23,11 @@ class ComposerStaticInitfaa030ed84d71a09be0027cbe916157a
         array (
             'Qiniu\\' => 6,
         ),
+        'A' => 
+        array (
+            'Aliyun\\Test\\' => 12,
+            'Aliyun\\' => 7,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -37,6 +42,14 @@ class ComposerStaticInitfaa030ed84d71a09be0027cbe916157a
         'Qiniu\\' => 
         array (
             0 => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu',
+        ),
+        'Aliyun\\Test\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jjonline/aliyun-dysms-php-sdk/tests',
+        ),
+        'Aliyun\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jjonline/aliyun-dysms-php-sdk/lib',
         ),
     );
 

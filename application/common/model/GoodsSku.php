@@ -14,6 +14,12 @@ class GoodsSku extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $type = [
+        'presell_start_time' => 'timestamp:Y-m-d H:i:s',//预售价开始时间
+        'presll_end_time'    => 'timestamp:Y-m-d H:i:s',//预售价结束时间
+        'active_start_time'  => 'timestamp:Y-m-d H:i:s',//活动价开始时间
+        'active_end_time'    => 'timestamp:Y-m-d H:i:s',//活动价过期时间
+    ];
 
     // 模型初始化
     protected static function init() {

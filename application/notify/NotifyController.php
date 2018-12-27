@@ -1,15 +1,15 @@
 <?php
 
-namespace app\index;
+namespace app\notify;
 
+use cache\Phpredis;
 use think\App;
+use Config;
 use think\Controller;
 use Env;
-use Config;
-use \cache\Phpredis;
 
-class MyController extends Controller {
-    protected $redis;
+class NotifyController extends Controller {
+    private $redis;
     protected $cryptMethod;
     protected $cryptKey;
     protected $cryptIv;
@@ -40,36 +40,6 @@ class MyController extends Controller {
             return true;
         }
         return false;
-    }
-
-    /**
-     * @param $uid
-     * @param $ex
-     * @return int|string
-     */
-    protected function enUid($uid, $ex = false) {
-        if (strlen($uid) > 15) {
-            return 0;
-        }
-        $iv = $this->iv;
-        if ($ex !== false) {
-            $iv = date('Ymd');
-        }
-        $uid = intval($uid);
-        return $this->encrypt($uid, $iv);
-    }
-
-    /**
-     * @param $enUid
-     * @param bool $ex
-     * @return int|string
-     */
-    protected function deUid($enUid, $ex = false) {
-        $iv = $this->iv;
-        if ($ex !== false) {
-            $iv = date('Ymd');
-        }
-        return $this->decrypt($enUid, $iv);
     }
 
     /**

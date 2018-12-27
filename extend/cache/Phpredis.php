@@ -1,9 +1,4 @@
 <?php
-/**
- * User: zhangyanrong
- * Date: 2018/12/5
- * Time: 11:27 AM
- */
 
 namespace cache;
 
@@ -35,7 +30,7 @@ class Phpredis {
 
     // 获取已存在的redis连接
     static public function getConn() {
-        if (!self::$conn instanceof Phpredis) {
+        if (!self::$conn instanceof Redis) {
             $phpredis = new self();
             $phpredis->connect();
         }

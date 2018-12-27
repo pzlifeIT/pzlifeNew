@@ -14,9 +14,38 @@ class GoodsClass extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $type = [
+        'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
+    ];
+    private $tier = [1 => '一级', 2 => '二级', 3 => '三级',];//层级
+    private $status = [1 => '启用', 2 => '停用',];//1.启用  2.停用
 
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
+    }
+
+    public function getTierAttr($value) {
+        return $this->tier[$value];
+    }
+
+    public function setTierAttr($value) {
+        if (!in_array($value, $this->tier)) {
+            return $value;
+        }
+        $tier = array_flip($this->tier);
+        return $tier[$value];
+    }
+
+    public function getStatusAttr($value) {
+        return $this->status[$value];
+    }
+
+    public function setStatusAttr($value) {
+        if (!in_array($value, $this->status)) {
+            return $value;
+        }
+        $status = array_flip($this->status);
+        return $status[$value];
     }
 }

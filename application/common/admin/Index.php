@@ -10,9 +10,6 @@ class Index {
     /**
      * 省市列表
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author zyr
      */
     public function getProvinceCity() {
@@ -28,12 +25,9 @@ class Index {
 
     /**
      * 通过省id获取省下面的所有市
-     * @param $pid 上级id
-     * @param $level 层级 1.省 2.市 3.区
+     * @param int $pid 上级id
+     * @param int $level 层级 1.省 2.市 3.区
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author zyr
      */
     public function getArea($pid, $level) {

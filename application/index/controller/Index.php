@@ -2,7 +2,6 @@
 
 namespace app\index\controller;
 
-use app\common\model\Users;
 use app\index\MyController;
 use Env;
 use Config;
