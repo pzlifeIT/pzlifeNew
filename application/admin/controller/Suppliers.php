@@ -12,7 +12,7 @@ class Suppliers extends AdminController {
     /**
      * @api              {post} / 获取供应商列表
      * @apiDescription   getSuppliers
-     * @apiGroup         admin_index
+     * @apiGroup         admin_Suppliers
      * @apiName          getSupplier
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
@@ -43,7 +43,7 @@ class Suppliers extends AdminController {
     /**
      * @api              {post} / 获取供应商详情
      * @apiDescription   getSupplierData
-     * @apiGroup         admin_index
+     * @apiGroup         admin_Suppliers
      * @apiName          getSupplierData
      * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
@@ -70,7 +70,7 @@ class Suppliers extends AdminController {
     /**
      * @api              {post} / 获取供应商快递模板
      * @apiDescription   getSupplierFreights
-     * @apiGroup         admin_index
+     * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreights
      * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
@@ -94,7 +94,7 @@ class Suppliers extends AdminController {
     /**
      * @api              {post} / 获取供应商快递模板详情
      * @apiDescription   getSupplierFreightdetail
-     * @apiGroup         admin_index
+     * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreightdetail
      * @apiParam (入参) {Number} supplierFreightId 供应商快递模板ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID只能是数字
