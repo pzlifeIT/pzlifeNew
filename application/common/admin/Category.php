@@ -170,13 +170,25 @@ class Category
     }
     //停用分类
     private function stop($id){
+        //查找该分类是否有子分类,并且没有停用
+        $res = GoodsClass::where("pid",$id)->where("status",1)->field("id,tier")->find();
+        if ($res){
+            return ["msg"=>"该分类有子分类,请先停用子分类","code"=>3003];
+        }
+        //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能停用
+        if ($res["tier"] == 3){
+            $res = GoodsSpec::where("cate_id",$res["id"])->field("id")->find();
+            if ($res){
+                return ["msg"=>"请先解除该分类下的属性关系","code"=>3003];
+            }
+        }
         $res = (new GoodsClass())->save([
             "status"=>2
         ],["id"=>$id]);
         if (empty($res)){
             return ["msg"=>"停用失败","code"=>3001];
         }
-        return $res;
+        return ["msg"=>"停用成功","code"=>200];
     }
     //启用分类
     private function start($id){
@@ -186,7 +198,7 @@ class Category
         if (empty($res)){
             return ["msg"=>"启用失败","code"=>3001];
         }
-        return $res;
+        return ["msg"=>"启用成功","code"=>200];
     }
 
     /**
