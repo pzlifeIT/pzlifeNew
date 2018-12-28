@@ -68,6 +68,7 @@ class Category extends AdminController
      * @apiName          saveaddcate
      * @apiParam (入参) {Number} pid 父级分类id
      * @apiParam (入参) {String} type_name 分类名称
+     * @apiParam (入参) {Number} status 状态 1启用 / 2停用
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 提示信息
      * @apiSampleRequest /admin/category/saveaddcate
@@ -77,10 +78,11 @@ class Category extends AdminController
     public function saveAddCate(){
         $pid = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
-        if (empty(is_numeric($pid)) || empty($type_name)){
+        $status = trim(input("post.status"));
+        if (empty(is_numeric($pid)) || empty($type_name) || empty(is_numeric($status))){
             return ["msg"=>"参数错误","code"=>3002];
         }
-        $result = $this->app->category->saveAddCate($pid,$type_name);
+        $result = $this->app->category->saveAddCate($pid,$type_name,$status);
         return $result;
     }
 

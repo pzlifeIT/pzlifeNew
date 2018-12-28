@@ -64,7 +64,7 @@ class Category
      * @throws \think\exception\DbException
      * 2018/12/24-14:21
      */
-    public function saveAddCate($pid,$type_name){
+    public function saveAddCate($pid,$type_name,$status){
         $cate = new GoodsClass();
         //如果pid等于0说明是一级分类
         if ($pid == 0){
@@ -83,6 +83,7 @@ class Category
             "pid"=>$pid,
             "type_name"=>$type_name,
             "tier"=>$tier,
+            "status"=>$status,
             "create_time"=>time()
         ]);
         if (empty($result)){

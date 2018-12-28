@@ -86,6 +86,7 @@ class Goods
                     "sku_image"=>$post["skus"]["sku_image"]
                 ]);
             }
+
         }catch (\Exception $e){
             Db::rollback();
 
