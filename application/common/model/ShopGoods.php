@@ -24,9 +24,9 @@ class ShopGoods extends Model {
         //TODO:初始化内容
     }
 
-    public function getStatusAttr($value) {
-        return $this->status[$value];
-    }
+//    public function getStatusAttr($value) {
+//        return $this->status[$value];
+//    }
 
     public function setStatusAttr($value) {
         if (!in_array($value, $this->status)) {

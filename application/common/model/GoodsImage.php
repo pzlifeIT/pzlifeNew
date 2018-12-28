@@ -22,9 +22,9 @@ class GoodsImage extends Model {
         //TODO:初始化内容
     }
 
-    public function getSourceTypeAttr($value) {
-        return $this->sourceType[$value];
-    }
+//    public function getSourceTypeAttr($value) {
+//        return $this->sourceType[$value];
+//    }
 
     public function setSourceTypeAttr($value) {
         if (!in_array($value, $this->sourceType)) {
@@ -34,9 +34,9 @@ class GoodsImage extends Model {
         return $sourceType[$value];
     }
 
-    public function getImageTypeAttr($value) {
-        return $this->imageType[$value];
-    }
+//    public function getImageTypeAttr($value) {
+//        return $this->imageType[$value];
+//    }
 
     public function setImageTypeAttr($value) {
         if (!in_array($value, $this->imageType)) {

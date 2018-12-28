@@ -17,9 +17,22 @@ class Supplier extends Model {
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
     ];
-    private $types = [1 => '男', 2 => '女', 3 => '未确认'];
+    private $status = [1 => '启用', 2 => '停用',];
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
     }
+
+//    public function getStatusAttr($value) {
+//        return $this->status[$value];
+//    }
+
+    public function setStatusAttr($value) {
+        if (!in_array($value, $this->status)) {
+            return $value;
+        }
+        $status = array_flip($this->status);
+        return $status[$value];
+    }
+
 }

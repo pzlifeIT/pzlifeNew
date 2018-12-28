@@ -20,9 +20,9 @@ class OrderGoods extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
-    public function getGoodsTypeAttr($value) {
-        return $this->goodsType[$value];
-    }
+//    public function getGoodsTypeAttr($value) {
+//        return $this->goodsType[$value];
+//    }
 
     public function setGoodsTypeAttr($value) {
         if (!in_array($value, $this->goodsType)) {

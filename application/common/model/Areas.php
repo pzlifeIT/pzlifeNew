@@ -24,9 +24,9 @@ class Areas extends Model {
         //TODO:初始化内容
     }
 
-    public function getLevelAttr($value) {
-        return $this->level[$value];
-    }
+//    public function getLevelAttr($value) {
+//        return $this->level[$value];
+//    }
 
     public function setLevelAttr($value) {
         if (!in_array($value, $this->level)) {
