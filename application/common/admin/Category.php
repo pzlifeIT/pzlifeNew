@@ -102,7 +102,7 @@ class Category
      * 2018/12/24-14:52
      */
     public function editCatePage($id){
-        $result = GoodsClass::where("id",$id)->field("id,pid,type_name,tier")->find()->toArray();
+        $result = GoodsClass::where("id",$id)->field("id,pid,type_name,tier,status")->find()->toArray();
         if (empty($result)){
             return ["msg"=>"该条数据获取失败","code"=>3000];
         }
