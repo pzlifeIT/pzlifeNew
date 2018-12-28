@@ -41,7 +41,7 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierData($supplierId){
-        $result = Supplier::where('id',$supplierId)->find()->toArray();
+        $result = Supplier::where('id',$supplierId)->select()->toArray();
         if (empty($result)) {
             return ['code' => '3000'];
         }
