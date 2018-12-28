@@ -107,7 +107,7 @@ class Category
         if (empty($result)){
             return ["msg"=>"该条数据获取失败","code"=>3000];
         }
-        $cate_data = GoodsClass::where("id",$result["pid"])->where("status",1)->field("id,type_name,pid,tier")->select()->toArray();
+        $cate_data = GoodsClass::where("id",$result["pid"])->where("status",1)->field("id,type_name,pid,tier")->find()->toArray();
         if (empty($cate_data)){
             return ["msg"=>"分类数据为空","code"=>3000];
         }
@@ -175,5 +175,44 @@ class Category
             return ["msg"=>"删除失败","code"=>3001];
         }
         return ["msg"=>"删除成功","code"=>200];
+    }
+    //停用分类
+    private function stop($id){
+        $res = (new GoodsClass())->save([
+            "status"=>2
+        ],["id"=>$id]);
+        if (empty($res)){
+            return ["msg"=>"停用失败","code"=>3001];
+        }
+        return $res;
+    }
+    //启用分类
+    private function start($id){
+        $res = (new GoodsClass())->save([
+            "status"=>1
+        ],["id"=>$id]);
+        if (empty($res)){
+            return ["msg"=>"启用失败","code"=>3001];
+        }
+        return $res;
+    }
+
+    /**
+     * 外部调用启用/停用分类
+     * @param $id
+     * @param $type
+     * @return bool
+     * @author wujunjie
+     * 2018/12/28-9:29
+     */
+    public function stopStart($id,$type){
+        switch ($type){
+            case 1:
+                $res = $this->start($id);
+                break;
+            case 2:
+                $res = $this->stop($id);
+        }
+        return $res;
     }
 }

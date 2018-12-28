@@ -39,7 +39,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 添加分类
+     * @api              {post} / 获取前两级分类
      * @apiDescription   addCatePage
      * @apiGroup         admin_category
      * @apiName          addCatePage
@@ -62,7 +62,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 提交添加
+     * @api              {post} / 添加分类
      * @apiDescription   saveaddcate
      * @apiGroup         admin_category
      * @apiName          saveaddcate
@@ -85,7 +85,7 @@ class Category extends AdminController
     }
 
     /**
-     * @api              {post} / 编辑分类
+     * @api              {post} / 获取需要编辑的分类数据
      * @apiDescription   editcatepage
      * @apiGroup         admin_category
      * @apiName          editcatepage
@@ -158,6 +158,29 @@ class Category extends AdminController
             return ["msg"=>"参数错误","code"=>3002];
         }
         $res = $this->app->category->delCategory($id);
+        return $res;
+    }
+
+    /**
+     * @api              {post} / 停用/启用分类
+     * @apiDescription   stopStartCate
+     * @apiGroup         admin_category
+     * @apiName          stopStartCate
+     * @apiParam (入参) {Number} id 当前分类id
+     * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:删除失败 / 3002:参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/category/stopstartcate
+     * @author wujunjie
+     * 2018/12/28-9:32
+     */
+    public function stopStartCate(){
+        $id = trim(input("post.id"));
+        $type = trim(input("post.type"));//类型 1启用 2停用
+        if (empty(is_numeric($id)) || empty(is_numeric($type))){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->category->stopStart($id,$type);
         return $res;
     }
 }
