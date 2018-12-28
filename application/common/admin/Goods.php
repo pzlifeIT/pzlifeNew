@@ -2,6 +2,7 @@
 namespace app\common\admin;
 
 use app\common\model\Goods as G;
+use app\common\model\GoodsSku;
 use app\common\model\Supplier;
 use app\common\model\GoodsClass;
 use think\Db;
@@ -34,31 +35,6 @@ class Goods
         return ["code"=>200,"data"=>$goods_data];
     }
 
-    /**
-     * 添加商品页面
-     * @return array
-     * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     * 2018/12/26-18:03
-     */
-    public function addGoodsPage(){
-        //获取分类数据，获取供应商数据
-        $cate = GoodsClass::where("status",1)->field("id,pid,type_name,tier")->select()->toArray();
-        if (empty($cate)){
-            return ["msg"=>"分类数据未获取到","code"=>3000];
-        }
-        $tree = new PHPTree($cate);
-        $tree->setParam("pk","id");
-        $cate = $tree->listTree();
-        $supplier = Supplier::field("id,name")->select()->toArray();
-        if (empty($supplier)){
-            return ["msg"=>"未获取到供应商数据","code"=>3000];
-        }
-        return ["cate"=>$cate,"supplier"=>$supplier,"code"=>200];
-    }
-
     public function saveAddGoods($post){
         //保存添加的商品数据，需要操作多表，进行存储的时候需要开启事务，有一张表失败就回滚
         //同时需要操作goods表，goods_image表，goods_sku表，goods_relation表商品类目关系表
@@ -79,13 +55,35 @@ class Goods
                 "create_time"=>$post["create_time"]
             ]);
             $goods_id = $g->id;
-            //一张图片对应一条数据
-            for($i=0;$i<count($post["image_path"]);$i++){
+            //一张图片对应一条数据,有多少张图片就存多少条数据
+            //图片还分详情图和轮播图
+            //将详情图和轮播图组合成一个二维数组,每一个数组单元包含type和path
+            for($i=0;$i<count($post["images"]);$i++){
                 (new GoodsImage())->save([
                     "goods_id"=>$goods_id,
                     "source_type"=>$post["source_type"],
-                    "image_type"=>$post["image_type"],
-                    "image_path"=>$post["image_path"]
+                    "image_type"=>$post["images"]["type"],
+                    "image_path"=>$post["images"]["type"]
+                ]);
+            }
+            //sku有多少条数据取决于sku属性
+            for ($i=0;$i<count($post["skus"]);$i++){
+                (new GoodsSku())->save([
+                    "goods_id"=>$goods_id,
+                    "stock"=>$post["skus"]["stock"],
+                    "market_price"=>$post["skus"]["market_price"],
+                    "retail_price"=>$post["skus"]["retail_price"],
+                    "presell_start_time"=>$post["skus"]["presell_start_time"],
+                    "presell_end_time"=>$post["skus"]["presell_end_time"],
+                    "presell_price"=>$post["skus"]["presell_price"],
+                    "active_price"=>$post["skus"]["active_price"],
+                    "active_start_time"=>$post["skus"]["active_start_time"],
+                    "active_end_time"=>$post["skus"]["active_end_time"],
+                    "margin_price"=>$post["skus"]["margin_price"],
+                    "integral_price"=>$post["skus"]["integral_price"],
+                    "integral_active"=>$post["skus"]["integral_active"],
+                    "spec"=>$post["skus"]["spec"],
+                    "sku_image"=>$post["skus"]["sku_image"]
                 ]);
             }
 

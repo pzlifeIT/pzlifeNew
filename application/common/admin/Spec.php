@@ -30,23 +30,7 @@ class Spec
         return ["code"=>200,"data"=>$spec];
     }
 
-    /**
-     * 添加一级属性页面
-     * @return array
-     * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     * 2018/12/25-10:38
-     */
-    public function addSpecPage(){
-       //选择分类
-        $cate = GoodsClass::where("tier",3)->field("id,type_name,pid")->select()->toArray();
-        if (empty($cate)){
-            return ["msg"=>"未获取分类到数据","code"=>3000];
-        }
-        return ["code"=>200,"cate"=>$cate];
-    }
+
 
     /**
      * 添加二级属性页面
@@ -137,13 +121,13 @@ class Spec
      * @throws \think\exception\DbException
      * 2018/12/25-14:27
      */
-    public function editSpecPage($id){
+    private function editSpecPage($id){
         //获取数据
         $data = GoodsSpec::where("id",$id)->field("id,cate_id,spe_name")->find()->toArray();
         if (empty($data)){
             return ["msg"=>"未获取到该条属性数据","code"=>3000];
         }
-        $cate = GoodsClass::where("tier",3)->where("status",1)->field("id,pid,type_name")->select()->toArray();
+        $cate = GoodsClass::where("id",$data["cate_id"])->where("status",1)->field("id,pid,type_name")->find()->toArray();
         if (empty($cate)){
             return ["msg"=>"未获取到分类数据","code"=>3000];
         }
@@ -160,18 +144,39 @@ class Spec
      * @throws \think\exception\DbException
      * 2018/12/25-14:44
      */
-    public function editAttrPage($id){
+    private function editAttrPage($id){
         $data = GoodsAttr::where("id",$id)->field("id,spec_id,attr_name")->find()->toArray();
         if (empty($data)){
             return ["msg"=>"未获取到该条数据","code"=>3000];
         }
-        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
+        $spec = GoodsSpec::where("id",$data["spec_id"])->field("id,spe_name")->select()->toArray();
         if (empty($spec)){
             return ["msg"=>"未获取到一级属性数据","code"=>3000];
         }
         return ["code"=>200,"attr"=>$data,"spec"=>$spec];
     }
 
+    /**
+     * 编辑规格属性
+     * @param $id
+     * @param $type
+     * @return array
+     * @author wujunjie
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * 2018/12/28-9:51
+     */
+    public function getEditData($id,$type){
+        switch ($type){
+            case 1:
+                $res = $this->editSpecPage($id);
+                break;
+            case 2:
+                $res = $this->editAttrPage($id);
+        }
+        return $res;
+    }
     /**
      * 保存修改后的一级属性
      * @param $id
@@ -181,9 +186,8 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:39
      */
-    private function saveEditSpec($id,$top_id,$sa_name){
+    private function saveEditSpec($id,$sa_name){
         $res = (new GoodsSpec())->save([
-            "cate_id"=>$top_id,
             "spe_name"=>$sa_name
         ],["id"=>$id]);
         if (empty($res)){
@@ -201,9 +205,8 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:39
      */
-    private function saveEditAttr($id,$top_id,$sa_name){
+    private function saveEditAttr($id,$sa_name){
         $res = (new GoodsAttr())->save([
-            "spec_id"=>$top_id,
             "attr_name"=>$sa_name
         ],["id"=>$id]);
         if (empty($res)){
@@ -222,13 +225,13 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:40
      */
-    public function saveEditSpecAttr($type,$id,$top_id,$sa_name){
+    public function saveEditSpecAttr($type,$id,$sa_name){
         switch ($type){
             case 1:
-               $res = $this->saveEditSpec($id,$top_id,$sa_name);
+               $res = $this->saveEditSpec($id,$sa_name);
                break;
             case 2:
-                $res = $this->saveEditAttr($id,$top_id,$sa_name);
+                $res = $this->saveEditAttr($id,$sa_name);
                 break;
         }
         return $res;

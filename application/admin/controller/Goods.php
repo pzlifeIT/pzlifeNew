@@ -32,34 +32,6 @@ class Goods extends AdminController
         return $res;
     }
 
-    /**
-     * @api              {post} / 添加商品
-     * @apiDescription   addGoodsPage
-     * @apiGroup         admin_goods
-     * @apiName          addGoodsPage
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
-     * @apiSuccess (返回) {Array} cate 分类数据
-     * @apiSuccess (返回) {Array} supplier 供应商
-     * @apiSuccess (cate) {Number} id 分类ID
-     * @apiSuccess (cate) {Number} pid 父级分类ID
-     * @apiSuccess (cate) {Number} tier 层级 1 一级/ 2 二级/3 三级
-     * @apiSuccess (cate) {String} type_name 分类名称
-     * @apiSuccess (cate) {Array} _child 子分类数据
-     * @apiSuccess (_child) {Number} id 分类ID
-     * @apiSuccess (_child) {Number} pid 父级分类ID
-     * @apiSuccess (_child) {Number} tier 层级 1 一级/ 2 二级/3 三级
-     * @apiSuccess (_child) {String} type_name 分类名称
-     * @apiSuccess (_child) {Array} _child 子分类数据
-     * @apiSuccess (supplier) {Number} id 供应商id
-     * @apiSuccess (supplier) {String} name 供应商名字
-     * @author wujunjie
-     * 2018/12/27-9:52
-     */
-    public function addGoodsPage(){
-        $res = $this->app->goods->addGoodsPage();
-        return $res;
-    }
-
     public function saveAddGoods(){
         $post = input("post.");
 //        $supplier_id = trim(input("post.supplier_id"));//供应商id

@@ -32,7 +32,7 @@ class Category extends AdminController
     public function getCateList(){
         $type = trim(input("post.type"));
         if (empty(is_numeric($type))){
-            return ["msg"=>"参数错误","code"=>3002];
+           $type =1;
         }
         $cate_date = $this->app->category->getCateList($type);
         return $cate_date;
@@ -68,6 +68,7 @@ class Category extends AdminController
      * @apiName          saveaddcate
      * @apiParam (入参) {Number} pid 父级分类id
      * @apiParam (入参) {String} type_name 分类名称
+     * @apiParam (入参) {Number} status 状态 1启用 / 2停用
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 提示信息
      * @apiSampleRequest /admin/category/saveaddcate
@@ -77,10 +78,11 @@ class Category extends AdminController
     public function saveAddCate(){
         $pid = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
-        if (empty(is_numeric($pid)) || empty($type_name)){
+        $status = trim(input("post.status"));
+        if (empty(is_numeric($pid)) || empty($type_name) || empty(is_numeric($status))){
             return ["msg"=>"参数错误","code"=>3002];
         }
-        $result = $this->app->category->saveAddCate($pid,$type_name);
+        $result = $this->app->category->saveAddCate($pid,$type_name,$status);
         return $result;
     }
 
@@ -92,7 +94,7 @@ class Category extends AdminController
      * @apiParam (入参) {Number} id 当前分类id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002:参数错误
      * @apiSuccess (返回) {Array} cate_data 当前修改的数据
-     * @apiSuccess (返回) {Array} cate_list 分类列表
+     * @apiSuccess (返回) {Array} cate_list 父级分类 为空则是顶级分类
      * @apiSuccess (cate_data) {Number} id 分类id
      * @apiSuccess (cate_data) {Number} pid 分类id
      * @apiSuccess (cate_data) {String} type_name 分类名称
@@ -101,7 +103,6 @@ class Category extends AdminController
      * @apiSuccess (cate_list) {Number} pid 父级ID
      * @apiSuccess (cate_list) {String} type_name 分类名称
      * @apiSuccess (cate_list) {Number} tier 层级 1 一级/ 2 二级 / 3 三级
-     * @apiSuccess (cate_list) {Number} _disable 判断分类是否可以作为当前修改的分类的父级 1可选/2不可选
      * @apiSampleRequest /admin/category/editcatepage
      * @author wujunjie
      * 2018/12/24-14:56
@@ -121,7 +122,6 @@ class Category extends AdminController
      * @apiGroup         admin_category
      * @apiName          saveeditcate
      * @apiParam (入参) {Number} id 当前分类id
-     * @apiParam (入参) {Number} pid 当前分类父级id
      * @apiParam (入参) {String} type_name 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 返回消息
@@ -131,12 +131,11 @@ class Category extends AdminController
      */
     public function saveEditCate(){
         $id = trim(input("post.id"));
-        $pid = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
-        if (empty(is_numeric($id)) || empty($type_name) || !is_numeric($pid)){
+        if (empty(is_numeric($id)) || empty($type_name)){
             return ["msg"=>"参数错误","code"=>3002];
         }
-        $result = $this->app->category->saveEditCate($id,$pid,$type_name);
+        $result = $this->app->category->saveEditCate($id,$type_name);
         return $result;
     }
 
@@ -168,7 +167,7 @@ class Category extends AdminController
      * @apiName          stopStartCate
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:删除失败 / 3002:参数错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/stopstartcate
      * @author wujunjie
@@ -181,6 +180,25 @@ class Category extends AdminController
             return ["msg"=>"参数错误","code"=>3002];
         }
         $res = $this->app->category->stopStart($id,$type);
+        return $res;
+    }
+
+    /**
+     * @api              {post} / 获取三级分类
+     * @apiDescription   addSpecPage
+     * @apiGroup         admin_category
+     * @apiName          addSpecPage
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
+     * @apiSuccess (返回) {Array} cate 可选的三级分类
+     * @apiSuccess (cate) {Number} id 可选的三级分类id
+     * @apiSuccess (cate) {String} type_name 三级分类名称
+     * @apiSuccess (cate) {Number} pid 父级分类id
+     * @apiSampleRequest /admin/spec/getthreecate
+     * @author wujunjie
+     * 2018/12/25-10:42
+     */
+    public function getThreeCate(){
+        $res = $this->app->category->getThreeCate();
         return $res;
     }
 }
