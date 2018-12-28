@@ -57,40 +57,52 @@ class Goods
             //一张图片对应一条数据,有多少张图片就存多少条数据
             //图片还分详情图和轮播图
             //将详情图和轮播图组合成一个二维数组,每一个数组单元包含type和path
-            for($i=0;$i<count($post["images"]);$i++){
+            //将传过来的图片数据转成二维数组，循环二维数组，有多少存多少
+            $images = json_decode($post["images"],true);
+            foreach($images as $k=>$v){
                 (new GoodsImage())->save([
                     "goods_id"=>$goods_id,
-                    "source_type"=>$post["images"]["source_type"],
-                    "image_type"=>$post["images"]["type"],
-                    "image_path"=>$post["images"]["path"]
+                    "source_type"=>$v["source_type"],
+                    "image_type"=>$v["type"],
+                    "image_path"=>$v["path"]
                 ]);
             }
             //sku有多少条数据取决于sku属性
-            for ($i=0;$i<count($post["skus"]);$i++){
+            $skus = json_decode($post["skus"],true);
+            foreach ($skus as $k=>$v){
                 (new GoodsSku())->save([
                     "goods_id"=>$goods_id,
-                    "stock"=>$post["skus"]["stock"],
-                    "market_price"=>$post["skus"]["market_price"],
-                    "retail_price"=>$post["skus"]["retail_price"],
-                    "presell_start_time"=>$post["skus"]["presell_start_time"],
-                    "presell_end_time"=>$post["skus"]["presell_end_time"],
-                    "presell_price"=>$post["skus"]["presell_price"],
-                    "active_price"=>$post["skus"]["active_price"],
-                    "active_start_time"=>$post["skus"]["active_start_time"],
-                    "active_end_time"=>$post["skus"]["active_end_time"],
-                    "margin_price"=>$post["skus"]["margin_price"],
-                    "integral_price"=>$post["skus"]["integral_price"],
-                    "integral_active"=>$post["skus"]["integral_active"],
-                    "spec"=>$post["skus"]["spec"],
-                    "sku_image"=>$post["skus"]["sku_image"]
+                    "stock"=>$v["stock"],
+                    "market_price"=>$v["market_price"],
+                    "retail_price"=>$v["retail_price"],
+                    "presell_start_time"=>$v["presell_start_time"],
+                    "presell_end_time"=>$v["presell_end_time"],
+                    "presell_price"=>$v["presell_price"],
+                    "active_price"=>$v["active_price"],
+                    "active_start_time"=>$v["active_start_time"],
+                    "active_end_time"=>$v["active_end_time"],
+                    "margin_price"=>$v["margin_price"],
+                    "integral_price"=>$v["integral_price"],
+                    "integral_active"=>$v["integral_active"],
+                    "spec"=>$v["spec"],
+                    "sku_image"=>$v["sku_image"]
                 ]);
             }
             //直接从前台传过来一个
-            for($i=0;$i<$post["num"];$i++){
+            /**
+            [
+            {spec_id:1,attr_id:1},颜色为红色
+             {spec_id:1,attr_id:2}，颜色为白色
+             {spec_id:2,attr_id:3}，尺寸为x
+             {spec_id:2,attr_id:4}，尺寸为xl
+            ];
+             */
+            $relation = json_decode($post["relation"],true);
+            foreach ($relation as $k=>$v){
                 (new GoodsRelation())->save([
                     "goods_id"=>$goods_id,
-                    "spec_id"=>$post["spec"],
-                    "attr_id"=>$post["attr"]
+                    "spec_id"=>$v["spec_id"],
+                    "attr_id"=>$v["attr_id"]
                 ]);
             }
             //提交事务
