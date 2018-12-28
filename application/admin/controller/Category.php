@@ -120,7 +120,6 @@ class Category extends AdminController
      * @apiGroup         admin_category
      * @apiName          saveeditcate
      * @apiParam (入参) {Number} id 当前分类id
-     * @apiParam (入参) {Number} pid 当前分类父级id
      * @apiParam (入参) {String} type_name 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 返回消息

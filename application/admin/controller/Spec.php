@@ -110,7 +110,6 @@ class Spec extends AdminController
      * @apiName          saveEditSpecAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
-     * @apiParam (入参) {Number} top_id 上级id（type为1时是三级分类id/type为2时是一级属性id）
      * @apiParam (入参) {Number} id 当前属性id
      * @apiParam (入参) {String} sa_name 修改的属性名称（一级属性名称/二级属性名称）
      * @apiParam (入参) {Number} type 提交类型 1是提交保存一级属性，2是提交保存二级属性
@@ -120,13 +119,12 @@ class Spec extends AdminController
      */
     public function saveEditSpecAttr(){
         $id = trim(input("post.id"));
-        $top_id = trim(input("post.top_id"));
         $sa_name = trim(input("post.sa_name"));
         $type = trim(input("post.type"));
-        if (empty(is_numeric($id)) || empty(is_numeric($top_id)) || empty(is_numeric($type)) || empty($sa_name)){
+        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($sa_name)){
             return ["msg"=>"参数错误","code"=>3002];
         }
-        $res = $this->app->spec->saveEditSpecAttr($type,$id,$top_id,$sa_name);
+        $res = $this->app->spec->saveEditSpecAttr($type,$id,$sa_name);
         return $res;
     }
 

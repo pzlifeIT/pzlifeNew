@@ -186,9 +186,8 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:39
      */
-    private function saveEditSpec($id,$top_id,$sa_name){
+    private function saveEditSpec($id,$sa_name){
         $res = (new GoodsSpec())->save([
-            "cate_id"=>$top_id,
             "spe_name"=>$sa_name
         ],["id"=>$id]);
         if (empty($res)){
@@ -206,9 +205,8 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:39
      */
-    private function saveEditAttr($id,$top_id,$sa_name){
+    private function saveEditAttr($id,$sa_name){
         $res = (new GoodsAttr())->save([
-            "spec_id"=>$top_id,
             "attr_name"=>$sa_name
         ],["id"=>$id]);
         if (empty($res)){
@@ -227,13 +225,13 @@ class Spec
      * @author wujunjie
      * 2018/12/25-15:40
      */
-    public function saveEditSpecAttr($type,$id,$top_id,$sa_name){
+    public function saveEditSpecAttr($type,$id,$sa_name){
         switch ($type){
             case 1:
-               $res = $this->saveEditSpec($id,$top_id,$sa_name);
+               $res = $this->saveEditSpec($id,$sa_name);
                break;
             case 2:
-                $res = $this->saveEditAttr($id,$top_id,$sa_name);
+                $res = $this->saveEditAttr($id,$sa_name);
                 break;
         }
         return $res;
