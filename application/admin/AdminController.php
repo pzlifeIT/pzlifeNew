@@ -31,6 +31,18 @@ class AdminController extends Controller {
     }
 
     /**
+     * 验证手机格式
+     * @param $mobile
+     * @return bool
+     */
+    protected function checkMobile($mobile) {
+        if (!empty($mobile) && preg_match('/^1[3-9]{1}\d{9}$/', $mobile)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * @param $uid
      * @param $ex
      * @return int|string
