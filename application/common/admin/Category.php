@@ -43,7 +43,7 @@ class Category
      */
     public function addCatePage(){
         //获取前两级分类
-        $data = GoodsClass::where("tier","<=",2)->where("status",1)->field("id,pid,type_name")->select()->toArray();
+        $data = GoodsClass::where("tier","<=",2)->where("status",1)->field("id,pid,type_name,tier")->select()->toArray();
         if (empty($data)){
             return ["msg"=>"分类数据为空","code"=>3000];
         }
