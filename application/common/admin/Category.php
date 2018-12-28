@@ -102,15 +102,20 @@ class Category
      * 2018/12/24-14:52
      */
     public function editCatePage($id){
-        //修改分类，该分类的父级分类只有两个选择，不能是同级的，三级只能选择顶级和二级，二级只能选择顶级和一级
         $result = GoodsClass::where("id",$id)->field("id,pid,type_name,tier")->find()->toArray();
         if (empty($result)){
             return ["msg"=>"该条数据获取失败","code"=>3000];
         }
-        $cate_data = GoodsClass::where("id",$result["pid"])->where("status",1)->field("id,type_name,pid,tier")->find()->toArray();
-        if (empty($cate_data)){
-            return ["msg"=>"分类数据为空","code"=>3000];
+        //寻找当前分类的父级分类,如果父级分类是0，那就找不到这条数据就是空数组
+        if ($result["pid"] != 0){
+            $cate_data = GoodsClass::where("id",$result["pid"])->where("status",1)->field("id,type_name,pid,tier")->findOrEmpty()->toArray();
+            if (empty($cate_data)){
+                return ["msg"=>"未获取到数据","code"=>3000];
+            }
+        }else{
+            $cate_data =[];
         }
+
         return ["code"=>200,"cate_data"=>$result,"cate_list"=>$cate_data];
     }
 
@@ -126,23 +131,10 @@ class Category
      * @throws \think\exception\DbException
      * 2018/12/24-16:45
      */
-    public function saveEditCate($id,$pid,$type_name){
+    public function saveEditCate($id,$type_name){
         $cate = new GoodsClass();
-        if ($pid == 0){
-            $tier = 1;
-        }else{
-            $res = $cate->where("id",$pid)->field("pid")->find()->toArray();
-            if ($res["pid"] == 0){
-                $tier = 2;
-            }else{
-                $tier = 3;
-            }
-        }
         $res = $cate->save([
-            "pid" => $pid,
-            "type_name"=>$type_name,
-            "create_time"=>time(),
-            "tier"=>$tier
+            "type_name"=>$type_name
         ],["id"=>$id]);
         if (empty($res)){
             return ['msg'=>"保存失败",'code'=>3001];
