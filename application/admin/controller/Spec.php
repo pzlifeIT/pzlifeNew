@@ -30,27 +30,10 @@ class Spec extends AdminController
         return $spec_data;
     }
 
-    /**
-     * @api              {post} / 展示三级分类（添加一级规格时选择）
-     * @apiDescription   addSpecPage
-     * @apiGroup         admin_spec
-     * @apiName          addSpecPage
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
-     * @apiSuccess (返回) {Array} cate 可选的三级分类
-     * @apiSuccess (cate) {Number} id 可选的三级分类id
-     * @apiSuccess (cate) {String} type_name 三级分类名称
-     * @apiSuccess (cate) {Number} pid 父级分类id
-     * @apiSampleRequest /admin/spec/addspecpage
-     * @author wujunjie
-     * 2018/12/25-10:42
-     */
-    public function addSpecPage(){
-        $res = $this->app->spec->addSpecPage();
-        return $res;
-    }
+
 
     /**
-     * @api              {post} / 展示一级规格（添加二级属性时选择）
+     * @api              {post} / 获取一级规格
      * @apiDescription   addAttrPage
      * @apiGroup         admin_spec
      * @apiName          addAttrPage
@@ -106,45 +89,17 @@ class Spec extends AdminController
      * @apiSuccess (cate(spec)) {String}  type_name(spe_name) 分类/规格名称 type为1时是type_name 三级分类名称 type为2时是spe_name规格名称
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiParam (入参) {Number} type 类型 1 一级规格数据 / 2 二级属性数据
-     * @apiSampleRequest /admin/spec/editspecpage
+     * @apiSampleRequest /admin/spec/getEditData
      * @author wujunjie
      * 2018/12/25-14:32
      */
-    public function editSpecPage(){
+    public function getEditData(){
         $id = trim(input("post.id"));
         $type = trim(input("post.type"));
         if (empty(is_numeric($id)) || empty(is_numeric($type))){
             return ["msg"=>"参数错误","code"=>3002];
         }
-        $res = $this->app->spec->editSpecPage($id,$type);
-        return $res;
-    }
-
-    /**
-     * @api              {post} / 获取需要编辑的二级属性
-     * @apiDescription   editAttrPage
-     * @apiGroup         admin_spec
-     * @apiName          editAttrPage
-     * @apiSuccess (返回) {String} code 200:成功 / 3000：未获取到数据 /3002 参数错误
-     * @apiSuccess (返回) {Array}  attr 当前需要求改的数据
-     * @apiSuccess (返回) {Array}  spec 可选一级属性数据
-     * @apiSuccess (attr) {Number} id 二级属性id
-     * @apiSuccess (attr) {Number} spec_id  一级属性id
-     * @apiSuccess (attr) {String} attr_name 二级属性名称
-     * @apiSuccess (spec) {Number}  id 一级属性id
-     * @apiSuccess (spec) {Number}  cate_id 三级分类id
-     * @apiSuccess (spec) {String}  spe_name 一级属性名称
-     * @apiParam (入参) {Number} id 需要修改的数据的id
-     * @apiSampleRequest /admin/spec/editattrpage
-     * @author wujunjie
-     * 2018/12/25-14:51
-     */
-    public function editAttrPage(){
-        $id = trim(input("post.id"));
-        if (empty(is_numeric($id))){
-            return ["msg"=>"参数错误","code"=>3002];
-        }
-        $res = $this->app->spec->editAttrPage($id);
+        $res = $this->app->spec->getEditData($id,$type);
         return $res;
     }
 

@@ -92,7 +92,7 @@ class Category extends AdminController
      * @apiParam (入参) {Number} id 当前分类id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002:参数错误
      * @apiSuccess (返回) {Array} cate_data 当前修改的数据
-     * @apiSuccess (返回) {Array} cate_list 分类列表
+     * @apiSuccess (返回) {Array} cate_list 父级分类 为空则是顶级分类
      * @apiSuccess (cate_data) {Number} id 分类id
      * @apiSuccess (cate_data) {Number} pid 分类id
      * @apiSuccess (cate_data) {String} type_name 分类名称
@@ -101,7 +101,6 @@ class Category extends AdminController
      * @apiSuccess (cate_list) {Number} pid 父级ID
      * @apiSuccess (cate_list) {String} type_name 分类名称
      * @apiSuccess (cate_list) {Number} tier 层级 1 一级/ 2 二级 / 3 三级
-     * @apiSuccess (cate_list) {Number} _disable 判断分类是否可以作为当前修改的分类的父级 1可选/2不可选
      * @apiSampleRequest /admin/category/editcatepage
      * @author wujunjie
      * 2018/12/24-14:56
@@ -180,6 +179,25 @@ class Category extends AdminController
             return ["msg"=>"参数错误","code"=>3002];
         }
         $res = $this->app->category->stopStart($id,$type);
+        return $res;
+    }
+
+    /**
+     * @api              {post} / 获取三级分类
+     * @apiDescription   addSpecPage
+     * @apiGroup         admin_category
+     * @apiName          addSpecPage
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
+     * @apiSuccess (返回) {Array} cate 可选的三级分类
+     * @apiSuccess (cate) {Number} id 可选的三级分类id
+     * @apiSuccess (cate) {String} type_name 三级分类名称
+     * @apiSuccess (cate) {Number} pid 父级分类id
+     * @apiSampleRequest /admin/spec/getthreecate
+     * @author wujunjie
+     * 2018/12/25-10:42
+     */
+    public function getThreeCate(){
+        $res = $this->app->category->getThreeCate();
         return $res;
     }
 }

@@ -207,4 +207,21 @@ class Category
         }
         return $res;
     }
+    /**
+     * 展示三级分类
+     * @return array
+     * @author wujunjie
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * 2018/12/25-10:38
+     */
+    public function getThreeCate(){
+        //选择分类
+        $cate = GoodsClass::where("tier",3)->where("status",1)->field("id,type_name,pid")->select()->toArray();
+        if (empty($cate)){
+            return ["msg"=>"未获取分类到数据","code"=>3000];
+        }
+        return ["code"=>200,"cate"=>$cate];
+    }
 }
