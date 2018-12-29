@@ -37,9 +37,9 @@ class Orders extends Model {
         //TODO:初始化内容
     }
 
-    public function getOrderStatusAttr($value) {
-        return $this->orderStatus[$value];
-    }
+//    public function getOrderStatusAttr($value) {
+//        return $this->orderStatus[$value];
+//    }
 
     public function setOrderStatusAttr($value) {
         if (!in_array($value, $this->orderStatus)) {
@@ -49,9 +49,9 @@ class Orders extends Model {
         return $orderStatus[$value];
     }
 
-    public function getPayTypeAttr($value) {
-        return $this->payType[$value];
-    }
+//    public function getPayTypeAttr($value) {
+//        return $this->payType[$value];
+//    }
 
     public function setPayTypeAttr($value) {
         if (!in_array($value, $this->payType)) {

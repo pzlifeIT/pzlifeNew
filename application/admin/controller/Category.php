@@ -79,7 +79,7 @@ class Category extends AdminController
         $pid = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
         $status = trim(input("post.status"));
-        if (empty(is_numeric($pid)) || empty($type_name) || empty(is_numeric($status))){
+        if ( empty($type_name) || empty(is_numeric($status))){
             return ["msg"=>"参数错误","code"=>3002];
         }
         $result = $this->app->category->saveAddCate($pid,$type_name,$status);

@@ -27,9 +27,9 @@ class Goods extends Model {
         //TODO:初始化内容
     }
 
-    public function getGoodsTypeAttr($value) {
-        return $this->goodsType[$value];
-    }
+//    public function getGoodsTypeAttr($value) {
+//        return $this->goodsType[$value];
+//    }
 
     public function setGoodsTypeAttr($value) {
         if (!in_array($value, $this->goodsType)) {
@@ -39,9 +39,9 @@ class Goods extends Model {
         return $goodsType[$value];
     }
 
-    public function getStatusAttr($value) {
-        return $this->status[$value];
-    }
+//    public function getStatusAttr($value) {
+//        return $this->status[$value];
+//    }
 
     public function setStatusAttr($value) {
         if (!in_array($value, $this->status)) {

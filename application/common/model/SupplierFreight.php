@@ -24,9 +24,9 @@ class SupplierFreight extends Model {
         //TODO:初始化内容
     }
 
-    public function getStypeAttr($value) {
-        return $this->stype[$value];
-    }
+//    public function getStypeAttr($value) {
+//        return $this->stype[$value];
+//    }
 
     public function setStypeAttr($value) {
         if (!in_array($value, $this->stype)) {

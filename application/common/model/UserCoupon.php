@@ -26,9 +26,9 @@ class UserCoupon extends Model {
         //TODO:初始化内容
     }
 
-    public function getStypeAttr($value) {
-        return $this->stype[$value];
-    }
+//    public function getStypeAttr($value) {
+//        return $this->stype[$value];
+//    }
 
     public function setStypeAttr($value) {
         if (!in_array($value, $this->stype)) {
@@ -38,9 +38,9 @@ class UserCoupon extends Model {
         return $stype[$value];
     }
 
-    public function getIsUseAttr($value) {
-        return $this->isUse[$value];
-    }
+//    public function getIsUseAttr($value) {
+//        return $this->isUse[$value];
+//    }
 
     public function setIsUseAttr($value) {
         if (!in_array($value, $this->isUse)) {

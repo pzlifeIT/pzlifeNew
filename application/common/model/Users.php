@@ -23,6 +23,8 @@ class Users extends Model {
     private $sex = [1 => '男', 2 => '女', 3 => '未确认'];
     private $userIdentity = [1 => '普通会员', 2 => '钻石会员', 3 => '创业店主', 4 => 'boss合伙人'];
     private $userType = [1 => '普通账户', 2 => '总店账户'];
+    private $balanceFreeze = [1 => '冻结', 2 => '未冻结'];
+    private $commissionFreeze = [1 => '冻结', 2 => '未冻结'];
 
     // 模型初始化
     protected static function init() {
@@ -63,6 +65,30 @@ class Users extends Model {
         }
         $userType = array_flip($this->userType);
         return $userType[$value];
+    }
+
+    public function setBalanceFreezeAttr($value) {
+        return $this->balanceFreeze[$value];
+    }
+
+    public function getBalanceFreezeAttr($value) {
+        if (!in_array($value, $this->balanceFreeze)) {
+            return $value;
+        }
+        $balanceFreeze = array_flip($this->balanceFreeze);
+        return $balanceFreeze[$value];
+    }
+
+    public function setCommissionFreezeAttr($value) {
+        return $this->commissionFreeze[$value];
+    }
+
+    public function getCommissionFreezeAttr($value) {
+        if (!in_array($value, $this->commissionFreeze)) {
+            return $value;
+        }
+        $commissionFreeze = array_flip($this->commissionFreeze);
+        return $commissionFreeze[$value];
     }
 
     /**
