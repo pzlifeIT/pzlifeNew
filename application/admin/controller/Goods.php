@@ -48,7 +48,7 @@ class Goods extends AdminController
      * @apiParam (入参) {String} subtitle 副标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiParam (入参) {Number} status 上下架状态 1上架 2下架
-     * @apiParam (入参) {Array} images 商品图片(一个数组单元是一个json字符串，有几张图片就有几个数组单元)
+     * @apiParam (入参) {Array} images 商品图片(一个数组单元是一个json字符串，有几张图片就有几个数组单元,下面有样式)
      * @apiParamExample (images) {Array} 商品图片
      * [
      * {"source_type":1,"image_type":1,"image_path":""},

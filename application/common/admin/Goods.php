@@ -107,11 +107,11 @@ class Goods
             }
             //提交事务
             Db::commit();
-            return true;
+            return ["msg"=>"添加成功","code"=>200];
         }catch (\Exception $e){
             //回滚事务
             Db::rollback();
-            return false;
+            return ["msg"=>"添加失败","code"=>3001];
         }
     }
 }
