@@ -99,16 +99,16 @@ class User extends Pzlife
                         $new_user['user_identity'] = 4;
                     }
                 }
-                if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid'])) {
-                    /* do { */
-                        $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid']);
+                // if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid'])) {
+                //     /* do { */
+                //         $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid']);
 
-                        if ($relationship) {
-                            $new_relation[] = $relationship[0]['uid'];
-                        }
+                //         if ($relationship) {
+                //             $new_relation[] = $relationship[0]['uid'];
+                //         }
 
-                   /*  } while (!$relationship); */
-                }
+                //    /*  } while (!$relationship); */
+                // }
 
             }
 
@@ -116,7 +116,7 @@ class User extends Pzlife
             elseif ($value['label'] == 'diamondvip') {
                 $new_user['user_identity'] = 2;
                 $new_user['mobile'] = $value['mobile'];
-                $diamondvip = $mysql_connect->query('SELECT * FROM pre_diamondvip_get WHERE `uid` = ' . $value['uid'] . ' AND `status`=1 LIMIT 1');
+                $diamondvip = $mysql_connect->query('SELECT * FROM pre_diamondvip_get WHERE `uid` = ' . $value['uid'] . ' AND `status`= 1 ORDER BY `gdid` DESC LIMIT 1');
                 if ($diamondvip) {
                     $new_user['true_name'] = $diamondvip[0]['linkman'];
                 }

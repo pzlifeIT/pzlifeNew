@@ -41,11 +41,29 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierData($supplierId){
-        $result = Supplier::where('id',$supplierId)->select()->toArray();
+        $result = Supplier::where('id',$supplierId)->findOrEmpty()->toArray();
         if (empty($result)) {
             return ['code' => '3000'];
         }
         return ['code' => '200','data' => $result];
+    }
+
+    /**
+     * 新增供应商
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * @author rzc
+     */
+    public function addSupplier($data){
+        $data['create_time'] = time();        
+        $add = Supplier::insert($data);
+        if ($add) {
+            return ['code' => '200','msg'=>'添加成功'];
+        } else {
+            return ['code' => '3004','msg'=>'添加失败'];
+        }
     }
 
     /**
