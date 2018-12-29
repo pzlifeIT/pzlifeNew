@@ -30,6 +30,12 @@ class Index extends MyController {
     }
 
     public function hello() {
+//        $dividend = new Dividend(5);
+//        $a        = $dividend->getBoss();
+//        print_r($a);
+//        die;
+
+
 //echo date('ymdHis');die;
 //        print_r(   str_split(substr(uniqid(), 7, 13), 1)     );die;
 

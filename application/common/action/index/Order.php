@@ -1,6 +1,6 @@
 <?php
 
-namespace app\common\index;
+namespace app\common\action\index;
 
 use \cache\Phpredis;
 

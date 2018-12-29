@@ -11,9 +11,10 @@
 
 // 应用容器绑定定义
 return [
-    'index' => app\common\admin\Index::class,
-    'suppliers' => app\common\admin\Suppliers::class,
-    'category' => app\common\admin\Category::class,
-    'spec' => app\common\admin\Spec::class,
-    'goods'=>\app\common\admin\Goods::class,
+    'provinces' => app\common\action\admin\Provinces::class,
+    'suppliers' => app\common\action\admin\Suppliers::class,
+    'category' => app\common\action\admin\Category::class,
+    'spec' => app\common\action\admin\Spec::class,
+    'goods'=>\app\common\action\admin\Goods::class,
+    'dividend'=>app\common\action\index\Dividend::class,
 ];

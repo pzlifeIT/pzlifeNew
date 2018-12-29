@@ -11,5 +11,5 @@
 
 // 应用容器绑定定义
 return [
-    'user' => app\common\index\User::class,
+    'user'     => app\common\action\index\User::class,
 ];

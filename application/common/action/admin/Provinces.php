@@ -1,11 +1,11 @@
 <?php
 
-namespace app\common\admin;
+namespace app\common\action\admin;
 
-use app\common\model\Areas;
+use app\facade\DbProvinces;
 use third\PHPTree;
 
-class Index {
+class Provinces {
 
     /**
      * 省市列表
@@ -13,7 +13,11 @@ class Index {
      * @author zyr
      */
     public function getProvinceCity() {
-        $result = Areas::where('level', 'in', [1, 2])->field('id,area_name,pid')->select()->toArray();
+        $field  = 'id,area_name,pid';
+        $where  = [
+            'level' => [1, 2],
+        ];
+        $result = DbProvinces::getAreaInfo($field, $where);
         if (empty($result)) {
             return ['code' => '3001'];
         }
@@ -31,11 +35,20 @@ class Index {
      * @author zyr
      */
     public function getArea($pid, $level) {
-        $province = Areas::where('id', '=', $pid)->where('level', '=', ($level - 1))->field('id,area_name')->findOrEmpty()->toArray();
+        $field    = 'id,area_name,pid';
+        $where    = [
+            'id'    => $pid,
+            'level' => $level - 1,
+        ];
+        $province = DbProvinces::getAreaInfo($field, $where);
         if (empty($province)) {//判断省市是否存在
             return ['code' => '3001'];
         }
-        $result = Areas::where('pid', '=', $pid)->where('level', '=', $level)->field('id,area_name,pid')->select()->toArray();
+        $where2 = [
+            'pid'   => $pid,
+            'level' => $level,
+        ];
+        $result = DbProvinces::getAreaInfo($field, $where2);
         if (empty($result)) {//获取下级列表
             return ['code' => '3000'];
         }

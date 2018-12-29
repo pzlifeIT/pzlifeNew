@@ -1,6 +1,6 @@
 <?php
 
-namespace app\common\admin;
+namespace app\common\action\admin;
 
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsClass;

@@ -1,5 +1,5 @@
 <?php
-namespace app\common\admin;
+namespace app\common\action\admin;
 
 use app\common\model\Goods as G;
 use app\common\model\GoodsRelation;

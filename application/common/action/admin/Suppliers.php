@@ -1,6 +1,6 @@
 <?php
 
-namespace app\common\admin;
+namespace app\common\action\admin;
 
 use app\common\model\SupplierFreight;
 use app\common\model\Supplier;

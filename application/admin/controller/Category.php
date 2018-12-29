@@ -11,7 +11,7 @@ class Category extends AdminController
      * @apiGroup         admin_category
      * @apiName          getCateList
      * @apiParam (入参) {Number} type 类型 1,启用的 / 2，停用的 / 3，所有的
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.参数错误
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {Number} id 分类id
      * @apiSuccess (data) {Number}  pid 父级ID / type_name 分类名称 / tier 等级 / _child 子分类数据
@@ -31,8 +31,11 @@ class Category extends AdminController
      */
     public function getCateList(){
         $type = trim(input("post.type"));
-        if (empty(is_numeric($type))){
-           $type =1;
+        if(!isset($type)){
+            $type = 1;
+        }
+        if (!is_numeric($type)){
+           return ['code'=>3002];
         }
         $cate_date = $this->app->category->getCateList($type);
         return $cate_date;
