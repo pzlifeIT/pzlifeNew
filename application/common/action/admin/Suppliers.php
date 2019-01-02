@@ -2,8 +2,7 @@
 
 namespace app\common\action\admin;
 
-use app\common\model\SupplierFreight;
-use app\common\model\Supplier;
+use app\facade\DbGoods;
 use third\PHPTree;
 
 class Suppliers {
@@ -22,9 +21,11 @@ class Suppliers {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        
-        $result = Supplier::limit($offset,$pagenum)->order('id', 'asc')->select()->toArray();
-        $totle = Supplier::count();
+        $field = 'id,tel,name,status,image,title,desc';
+        $order = 'id,desc';
+        $limit = $offset.','.$pagenum;
+        $result =DbGoods::getSupplier($field,$order,$limit);
+        $totle = DbGoods::getSupplierCount();
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -41,11 +42,24 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierData($supplierId){
-        $result = Supplier::where('id',$supplierId)->findOrEmpty()->toArray();
+        $field = 'id,tel,name,status,image,title,desc';
+        $result = DbGoods::getSupplierData($field,$supplierId);
         if (empty($result)) {
             return ['code' => '3000'];
         }
         return ['code' => '200','data' => $result];
+    }
+
+    /**
+     * 查询供应商表中某值
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * @author rzc
+     */
+    public function getSupplierWhereFile($field,$value){
+        return DbGoods::getSupplierWhereFile($field,$value);
     }
 
     /**
@@ -57,12 +71,30 @@ class Suppliers {
      * @author rzc
      */
     public function addSupplier($data){
-        $data['create_time'] = time();        
-        $add = Supplier::insert($data);
+        $data['create_time'] = time();
+       
+        $add = DbGoods::insert($data);
         if ($add) {
-            return ['code' => '200','msg'=>'添加成功'];
+            return ['code' => '200','msg' => '添加成功'];
         } else {
-            return ['code' => '3004','msg'=>'添加失败'];
+            return ['code' => '3004','msg' => '添加失败'];
+        }
+    }
+
+    /**
+     * 修改供应商
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * @author rzc
+     */
+    public function updateSupplier($data,$id){ 
+        $update = DbGoods::updateSupplier($data,$id);
+        if ($update) {
+            return ['code'=> '200','msg' => '添加成功'];
+        } else {
+            return ['code' => '3004','msg' => '添加失败'];
         }
     }
 
@@ -75,7 +107,8 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreights($supid){
-        $result = SupplierFreight::where('supid',$supid)->select()->toArray();
+        $field = 'id,supid,stype,title,desc';
+        $result = DbGoods::getSupplierFreights($field,$supid);
         if (empty($result)) {
             return ['code' => '3000'];
         }
