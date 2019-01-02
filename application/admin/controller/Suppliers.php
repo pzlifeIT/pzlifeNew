@@ -42,9 +42,12 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSuppliers() {
-        $page = !empty($this->request->post('page')) ? 1 : 1;
-        $pagenum = !empty($this->request->post('pagenum')) ? 10 : 10;
-        if(!is_numeric($page) || !is_numeric($pagenum)){
+        $page = trim($this->request->post('page')) ;
+        $pagenum = trim($this->request->post('pagenum'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 1;
+
+        if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['3002'];
         }
 
@@ -151,7 +154,7 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {file} image 图片
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:未提交供应商ID / 3007:名字不能重复
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:供应商ID必须是数字 / 3007:名字不能重复
      * @apiSuccess (data) {Array} data 结果
      * @apiSampleRequest /admin/suppliers/updateSupplier
      * @author rzc
@@ -164,7 +167,7 @@ class Suppliers extends AdminController {
         $desc = trim($this->request->post('desc'));
         $image = $this->request->file('image');
         /* 参数判断 */
-        if (!$id) {
+        if (!is_numeric($id)) {
             return ['3006'];
         }
         if (!$this->checkMobile($tel)) {
@@ -203,6 +206,22 @@ class Suppliers extends AdminController {
             return ['3005'];
         }
     }
+
+    /**
+     * @api              {post} / 弃用或启用供应商
+     * @apiDescription   addSupplier
+     * @apiGroup         admin_Suppliers
+     * @apiName          addSupplier
+     * @apiParam (入参) {String} tel 联系方式
+     * @apiParam (入参) {String} name 名称
+     * @apiParam (入参) {file} image 图片
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {String} desc 详情
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:名字不能重复
+     * @apiSuccess (data) {Array} data 结果
+     * @apiSampleRequest /admin/suppliers/addsupplier
+     * @author rzc
+     */
 
     /**
      * @api              {post} / 获取供应商快递模板
