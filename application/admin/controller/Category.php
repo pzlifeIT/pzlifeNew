@@ -16,6 +16,7 @@ class Category extends AdminController {
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {Number} tier 当前分类层级
+     * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {String} type_name 分类名称
      * @apiSampleRequest /admin/category/getcatelist

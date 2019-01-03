@@ -2,8 +2,6 @@
 
 namespace app\common\action\admin;
 
-use app\common\model\GoodsClass;
-use app\common\model\GoodsSpec;
 use app\facade\DbGoods;
 use third\PHPTree;
 
@@ -19,10 +17,12 @@ class Category {
      * 2018/12/24-13:48
      */
     public function getCateList(int $type, int $pid, int $page, int $pageNum) {
-        $tier = 1;//默认一级
+        $tier      = 1;//默认一级
+        $type_name = '';
         if ($pid !== 0) {
-            $res  = DbGoods::getTier($pid);
-            $tier = $res['tier'] + 1;
+            $res       = DbGoods::getTier($pid);
+            $tier      = $res['tier'] + 1;
+            $type_name = $res['type_name'];
         }
         $field  = "type_name,create_time";
         $where  = ['pid' => $pid, 'status' => $type];
@@ -36,7 +36,7 @@ class Category {
 //        $tree->setParam("pk", "id");
 //        $tree->setParam("pid", "pid");
 //        $cate_tree = $tree->listTree();
-        return ["code" => 200, 'tier' => $tier, 'type_name' => $res['type_name'], 'total' => $total, "data" => $cate];
+        return ["code" => 200, 'tier' => $tier, 'type_name' => $type_name, 'total' => $total, "data" => $cate];
     }
 
     /**
