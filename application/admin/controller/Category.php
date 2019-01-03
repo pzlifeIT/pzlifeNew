@@ -16,6 +16,7 @@ class Category extends AdminController {
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {Number} tier 当前分类层级
+     * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {String} type_name 分类名称
      * @apiSampleRequest /admin/category/getcatelist
@@ -195,15 +196,15 @@ class Category extends AdminController {
 
     /**
      * @api              {post} / 获取三级分类
-     * @apiDescription   addSpecPage
+     * @apiDescription   getThreeCate
      * @apiGroup         admin_category
-     * @apiName          addSpecPage
+     * @apiName          getThreeCate
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} cate 可选的三级分类
      * @apiSuccess (cate) {Number} id 可选的三级分类id
      * @apiSuccess (cate) {String} type_name 三级分类名称
      * @apiSuccess (cate) {Number} pid 父级分类id
-     * @apiSampleRequest /admin/spec/getthreecate
+     * @apiSampleRequest /admin/category/getthreecate
      * @author wujunjie
      * 2018/12/25-10:42
      */
