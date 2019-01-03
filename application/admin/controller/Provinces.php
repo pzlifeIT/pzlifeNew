@@ -21,6 +21,7 @@ class Provinces extends AdminController {
      */
     public function getProvinceCity() {
         $result = $this->app->provinces->getProvinceCity();
+//        $this->addLog($result['code'],__function__);//接口请求日志
         return $result;
     }
 
@@ -68,5 +69,15 @@ class Provinces extends AdminController {
         $cityId = intval($cityId);
         $result = $this->app->provinces->getArea($cityId, 3);
         return $result;
+    }
+
+    /**
+     * 写入api日志
+     * @param $code 接口返回code
+     * @param $func 调用的接口方法
+     * @param string $name
+     */
+    private function addLog($code,$func, $name = '') {
+        $this->app->adminLog->apiRequestLog($this->classBasename(__class__) . '/' . $func, $code, $this->controllerBaseName(__FILE__), $name);
     }
 }

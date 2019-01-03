@@ -14,6 +14,7 @@ class GoodsClass extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
     ];
