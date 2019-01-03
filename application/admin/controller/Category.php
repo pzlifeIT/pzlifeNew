@@ -186,11 +186,10 @@ class Category extends AdminController {
     public function stopStartCate() {
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));//类型 1启用 2停用
-        $type_name = trim(input("post.type_name"));
-        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($type_name)) {
+        if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->category->stopStart($id, $type, $type_name);
+        $res = $this->app->category->stopStart($id, $type);
         return $res;
     }
 

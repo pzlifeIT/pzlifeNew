@@ -124,7 +124,7 @@ class Spec extends AdminController
      * @apiParam (入参) {Number} id 当前属性id
      * @apiParam (入参) {String} sa_name 修改的属性名称（一级属性名称/二级属性名称）
      * @apiParam (入参) {Number} type 提交类型 1是提交保存一级属性，2是提交保存二级属性
-     * @apiSampleRequest /admin/spec/savespecattr
+     * @apiSampleRequest /admin/spec/saveEditSpecAttr
      * @author wujunjie
      * 2018/12/25-15:47
      */
@@ -141,14 +141,14 @@ class Spec extends AdminController
 
     /**
      * @api              {post} / 删除
-     * @apiDescription   editAttrPage
+     * @apiDescription   delSpecAttr
      * @apiGroup         admin_spec
-     * @apiName          editAttrPage
+     * @apiName          delSpecAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3003：无法删除 /3002 参数错误
      * @apiSuccess (返回) {String}  msg 返回消息
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiParam (入参) {Number} type 删除类型 1删除一级属性 2删除二级属性
-     * @apiSampleRequest /admin/spec/editattrpage
+     * @apiSampleRequest /admin/spec/delspecattr
      * @author wujunjie
      * 2018/12/25-16:25
      */

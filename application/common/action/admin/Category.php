@@ -26,7 +26,7 @@ class Category {
         }
         $field  = "type_name,create_time";
         if ($type == 3){
-            $where = [];
+            $where = ["pid" => $pid];
         }else{
             $where  = ['pid' => $pid, 'status' => $type];
         }
@@ -74,7 +74,7 @@ class Category {
      */
     public function saveAddCate($pid, $type_name, $status) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
-        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+        $where = [["type_name", "=", $type_name]];
         $field = "id,type_name";
         $res   = DbGoods::getOneCate($where, $field);
         if ($res) {
@@ -236,14 +236,7 @@ class Category {
     }
 
     //启用分类
-    private function start($id, $type_name) {
-        //启用分类之前需要判断是否已经存在该名称
-        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
-        $field = "id,type_name";
-        $res   = DbGoods::getOneCate($where, $field);
-        if ($res) {
-            return ["msg" => "该分类名称已经存在", "code" => 3005];
-        }
+    private function start($id) {
         $data = [
             "status" => 1
         ];
@@ -262,10 +255,10 @@ class Category {
      * @author wujunjie
      * 2018/12/28-9:29
      */
-    public function stopStart($id, $type, $type_name) {
+    public function stopStart($id, $type) {
         switch ($type) {
             case 1:
-                $res = $this->start($id, $type_name);
+                $res = $this->start($id);
                 break;
             case 2:
                 $res = $this->stop($id);
