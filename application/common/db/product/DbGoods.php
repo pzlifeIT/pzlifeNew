@@ -146,7 +146,10 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-14:47
      */
-    public function getSpecList($field, $offset, $pageNum) {
+    public function getSpecList($field, $offset = 0, $pageNum = 0) {
+        if ($offset == 0 && $pageNum == 0){
+            return GoodsSpec::field($field)->select()->toArray();
+        }
         return GoodsSpec::limit($offset, $pageNum)->field($field)->select()->toArray();
     }
 

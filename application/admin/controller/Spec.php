@@ -27,8 +27,13 @@ class Spec extends AdminController
      * 2018/12/25-10:07
      */
     public function getSpecList(){
-        $page = trim(input("post.page")) ? : 1;
-        $pageNum = trim(input("post.page_num")) ? : 10;
+        $page = trim(input("post.page"));
+        $page = empty($page) ? 1 : intval($page);
+        $pageNum = trim(input("post.page_num"));
+        $pageNum = empty($pageNum) ? 10 : intval($pageNum);
+        if (!is_numeric($page) || !is_numeric($pageNum)){
+            return ["msg"=>"参数错误","code"=>3001];
+        }
         $spec_data = $this->app->spec->getSpecList($page,$pageNum);
         return $spec_data;
     }
@@ -71,6 +76,9 @@ class Spec extends AdminController
         $top_id = trim(input("post.top_id"));
         $name = trim(input("post.sa_name"));
         $type = trim(input("post.type"));
+        if ($top_id == 0){
+            return ["msg"=>"top_id不能为0","code"=>3002];
+        }
         if (empty(is_numeric($top_id)) || empty($name) || empty(is_numeric($type))){
             return ["msg"=>"参数错误","code"=>3002];
         }
