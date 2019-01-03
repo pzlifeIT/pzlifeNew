@@ -11,7 +11,6 @@ use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
-use app\common\action\admin\Suppliers;
 
 class DbGoods {
 
