@@ -48,7 +48,7 @@ class Spec
      * 添加二级属性页面
      * @return array
      * @author wujunjie
-     * 2018/12/25-10:51
+     * 2018/12/25-10:51 
      */
     public function addAttrPage(){
         //可选一级属性
