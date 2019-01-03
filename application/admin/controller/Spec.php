@@ -10,6 +10,8 @@ class Spec extends AdminController
      * @apiDescription   getSpecList
      * @apiGroup         admin_spec
      * @apiName          getSpecList
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {Number} page_num 每页条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 一级规格id
