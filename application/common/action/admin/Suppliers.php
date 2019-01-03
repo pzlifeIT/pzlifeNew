@@ -63,6 +63,18 @@ class Suppliers {
     }
 
     /**
+     * 查询供应商表中某条数据并且ID不为此ID的值
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * @author rzc
+     */
+    public function getSupplierWhereFileByID($field,$value,$id){
+        return DbGoods::getSupplierWhereFileByID($field,$value,$id);
+    }
+
+    /**
      * 新增供应商
      * @return array
      * @throws \think\db\exception\DataNotFoundException
@@ -82,7 +94,7 @@ class Suppliers {
     }
 
     /**
-     * 修改供应商
+     * 修改供应商信息
      * @return array
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
@@ -113,5 +125,17 @@ class Suppliers {
             return ['code' => '3000'];
         }
         return ['code' => 0,'data'=>$result];
+    }
+
+    /**
+     * 启用或者停用供应商快递模板
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     * @author rzc
+     */
+    public function updateSupplierFreights($status,$supid){
+        $result = DbGoods::updateSupplierFreights($status,$supid);
     }
 }

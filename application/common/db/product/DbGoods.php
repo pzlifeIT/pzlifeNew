@@ -93,11 +93,11 @@ class DbGoods {
      * @return bool
      */
     public function getSupplierFreights($field,$supid){
-        return SupplierFreight::file($field)->where('supid',$supid)->select()->toArray();
+        return SupplierFreight::field($field)->where('supid',$supid)->select()->toArray();
     }
 
     /**
-     * 查询供应商信息
+     * 查询某字段的供应商信息（精确查询）
      * @param $field
      * @param $value
      * @return bool
@@ -105,5 +105,26 @@ class DbGoods {
     public function getSupplierWhereFile($field,$value)
     {
         return Supplier::where($field,$value)->findOrEmpty()->toArray();
+    }
+
+    /**
+     * 查询某字段的供应商信息且ID不等传入ID（精确查询）
+     * @param $field
+     * @param $value
+     * @param $id
+     * @return bool
+     */
+    public function getSupplierWhereFileByID($field,$value,$id){
+        return Supplier::where($field,$value)->where('id','<>',$id)->findOrEmpty()->toArray();
+    }
+
+    /**
+     * 停用或者启用供应商模板
+     * @param $status
+     * @param $supid
+     * @return bool
+     */
+    public function updateSupplierFreights($status,$supid){
+        return SupplierFreight::where('supid',$supid)->update(['status'=>$status]);
     }
 }
