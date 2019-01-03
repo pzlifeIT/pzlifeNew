@@ -10,25 +10,34 @@ use third\PHPTree;
 class Category {
     /**
      * 获取分类列表
+     * @param $type
+     * @param $pid
      * @return array
      * @author wujunjie
      * 2018/12/24-13:48
      */
-    public function getCateList($type) {
-        $field = "id,pid,type_name,tier,status";
-        if ($type == 3) {
-            $cate = DbGoods::getGoodsClassAll($field);
-        }else{
-            $cate = DbGoods::getGoodsClassByStatus($field, $type);
+    public function getCateList(int $type, int $pid) {
+        $tier = 1;//默认一级
+        if ($pid !== 0) {
+            $res  = DbGoods::getTier($pid);
+            $tier = $res['tier'] + 1;
         }
+        $field = "type_name,create_time";
+//        if ($type == 3) {
+//            $cate = DbGoods::getGoodsClassAll($field);
+//        } else {
+//            $cate = DbGoods::getGoodsClassByStatus($field, $type);
+//        }
+        $where = ['pid' => $pid, 'status' => $type];
+        $cate  = DbGoods::getGoodsClass($field, $where);
         if (empty($cate)) {
             return ["msg" => "分类数据有误", "code" => 3000];
         }
-        $tree = new PHPTree($cate);
-        $tree->setParam("pk", "id");
-        $tree->setParam("pid", "pid");
-        $cate_tree = $tree->listTree();
-        return ["code" => 200, "data" => $cate_tree];
+//        $tree = new PHPTree($cate);
+//        $tree->setParam("pk", "id");
+//        $tree->setParam("pid", "pid");
+//        $cate_tree = $tree->listTree();
+        return ["code" => 200, 'tier' => $tier, "data" => $cate];
     }
 
     /**

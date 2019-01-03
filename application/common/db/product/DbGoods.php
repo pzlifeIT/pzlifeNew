@@ -9,6 +9,10 @@ use app\common\action\admin\Suppliers;
 
 class DbGoods {
 
+    public function getTier($id){
+        return GoodsClass::field('tier')->findOrEmpty($id)->toArray();
+    }
+
     /**
      * 根据status条件查询商品分类
      * @param $field 要获取的字段
