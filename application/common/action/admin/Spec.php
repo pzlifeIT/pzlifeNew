@@ -2,9 +2,6 @@
 
 namespace app\common\action\admin;
 
-use app\common\model\GoodsSpec;
-use app\common\model\GoodsClass;
-use app\common\model\GoodsAttr;
 use app\facade\DbGoods;
 class Spec
 {
@@ -93,8 +90,6 @@ class Spec
      * 2018/12/25-11:26
      */
     private function saveAttr($spec_id,$attr_name){
-        $attr = new GoodsAttr();
-        $res = $attr->save();
         $data = [
             "spec_id"=>$spec_id,
             "attr_name"=>$attr_name,
