@@ -10,26 +10,25 @@ use third\PHPTree;
 class Category {
     /**
      * 获取分类列表
-     * @param $type
-     * @param $pid
+     * @param int $type
+     * @param int $pid
+     * @param int $page
+     * @param int $pageNum
      * @return array
      * @author wujunjie
      * 2018/12/24-13:48
      */
-    public function getCateList(int $type, int $pid) {
+    public function getCateList(int $type, int $pid, int $page, int $pageNum) {
         $tier = 1;//默认一级
         if ($pid !== 0) {
             $res  = DbGoods::getTier($pid);
             $tier = $res['tier'] + 1;
         }
-        $field = "type_name,create_time";
-//        if ($type == 3) {
-//            $cate = DbGoods::getGoodsClassAll($field);
-//        } else {
-//            $cate = DbGoods::getGoodsClassByStatus($field, $type);
-//        }
-        $where = ['pid' => $pid, 'status' => $type];
-        $cate  = DbGoods::getGoodsClass($field, $where);
+        $field  = "type_name,create_time";
+        $where  = ['pid' => $pid, 'status' => $type];
+        $offset = $offset = $pageNum * ($page - 1);;
+        $cate  = DbGoods::getGoodsClass($field, $where, $offset, $pageNum);
+        $total = DbGoods::getGoodsClassAllNum($where);
         if (empty($cate)) {
             return ["msg" => "分类数据有误", "code" => 3000];
         }
@@ -37,7 +36,7 @@ class Category {
 //        $tree->setParam("pk", "id");
 //        $tree->setParam("pid", "pid");
 //        $cate_tree = $tree->listTree();
-        return ["code" => 200, 'tier' => $tier, "data" => $cate];
+        return ["code" => 200, 'tier' => $tier, 'type_name' => $res['type_name'], 'total' => $total, "data" => $cate];
     }
 
     /**
@@ -51,7 +50,7 @@ class Category {
         //获取前两级分类
 //        $data = GoodsClass::where("tier", "<=", 2)->where("status", 1)->field("id,pid,type_name,tier")->select()->toArray();
         $where = [['tier', '<=', 2], ['status', '=', 1],];
-        $data  = DbGoods::getGoodsClass($field, $where);
+        $data  = DbGoods::getGoodsClass($field, $where, "select");
         if (empty($data)) {
             return ["msg" => "分类数据为空", "code" => 3000];
         }
@@ -67,33 +66,39 @@ class Category {
      * @param $type_name 分类名称
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/24-14:21
      */
     public function saveAddCate($pid, $type_name, $status) {
-        $cate = new GoodsClass();
+        //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
+        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+        $field = "id,type_name";
+        $res   = DbGoods::getOneCate($where, $field);
+        if ($res) {
+            return ["msg" => "该分类名称已经存在", "code" => 3005];
+        }
         //如果pid等于0说明是一级分类
         if ($pid == 0) {
             $tier = 1;
         } else {
             //如果pid不是0，那就找pid这个分类的pid是不是0
             //找到当前添加的这个分类的父级的pid
-            $data = $cate->where("id", $pid)->field("pid")->find()->toArray();
+            $field = "pid";
+            $where = [["id", "=", $pid]];
+            $data  = DbGoods::getOneCate($where, $field);
             if ($data["pid"] == 0) {//如果pid等于0那就是二级
                 $tier = 2;
             } else {
                 $tier = 3;
             }
         }
-        $result = $cate->save([
+        $data   = [
             "pid"         => $pid,
             "type_name"   => $type_name,
             "tier"        => $tier,
             "status"      => $status,
             "create_time" => time()
-        ]);
+        ];
+        $result = DbGoods::addCate($data);
         if (empty($result)) {
             return ["msg" => "保存失败", "code" => "3001"];
         }
@@ -105,19 +110,21 @@ class Category {
      * @param $id 当前分类id
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/24-14:52
      */
     public function editCatePage($id) {
-        $result = GoodsClass::where("id", $id)->field("id,pid,type_name,tier,status")->find()->toArray();
+        $field  = "id,pid,type_name,tier,status";
+        $where  = [["id", "=", $id]];
+        $result = DbGoods::getOneCate($where, $field);
         if (empty($result)) {
             return ["msg" => "该条数据获取失败", "code" => 3000];
         }
         //寻找当前分类的父级分类,如果父级分类是0，那就找不到这条数据就是空数组
         if ($result["pid"] != 0) {
-            $cate_data = GoodsClass::where("id", $result["pid"])->where("status", 1)->field("id,type_name,pid,tier")->findOrEmpty()->toArray();
+//            $cate_data = GoodsClass::where("id", $result["pid"])->where("status", 1)->field("id,type_name,pid,tier")->findOrEmpty()->toArray();
+            $field     = "id,type_name,pid,tier";
+            $where     = [["id", "=", $result["pid"]], ["status", "=", 1]];
+            $cate_data = DbGoods::getOneCate($where, $field);
             if (empty($cate_data)) {
                 return ["msg" => "未获取到数据", "code" => 3000];
             }
@@ -135,16 +142,20 @@ class Category {
      * @param $type_name 分类名称
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/24-16:45
      */
     public function saveEditCate($id, $type_name) {
-        $cate = new GoodsClass();
-        $res  = $cate->save([
+        //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
+        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+        $field = "id,type_name";
+        $res   = DbGoods::getOneCate($where, $field);
+        if ($res) {
+            return ["msg" => "该分类名称已经存在", "code" => 3005];
+        }
+        $data = [
             "type_name" => $type_name
-        ], ["id" => $id]);
+        ];
+        $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {
             return ['msg' => "保存失败", 'code' => 3001];
         }
@@ -160,18 +171,23 @@ class Category {
      */
     public function delCategory($id) {
         //查找该分类是否有子分类,并且没有删除
-        $res = GoodsClass::where("pid", $id)->field("id,tier")->find();
+        $where = [["pid", "=", $id]];
+        $field = "id,tier";
+        $res   = DbGoods::getOneCate($where, $field);
         if ($res) {
             return ["msg" => "该分类有子分类,请先删除子分类", "code" => 3003];
         }
         //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能删除
         if ($res["tier"] == 3) {
-            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
+//            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
+            $where = [["cate_id", "=", $res["id"]]];
+            $field = "id";
+            $res   = DbGoods::getOneSpec($where, $field);
             if ($res) {
                 return ["msg" => "请先解除该分类下的属性关系", "code" => 3003];
             }
         }
-        $res = GoodsClass::destroy($id);
+        $res = DbGoods::delCate($id);
         if (empty($res)) {
             return ["msg" => "删除失败", "code" => 3001];
         }
@@ -181,20 +197,25 @@ class Category {
     //停用分类
     private function stop($id) {
         //查找该分类是否有子分类,并且没有停用
-        $res = GoodsClass::where("pid", $id)->where("status", 1)->field("id,tier")->find();
+        $where = [["pid", "=", $id], ["status", "=", 1]];
+        $field = "id,tier";
+        $res   = DbGoods::getOneCate($where, $field);
         if ($res) {
             return ["msg" => "该分类有子分类,请先停用子分类", "code" => 3003];
         }
         //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能停用
         if ($res["tier"] == 3) {
-            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
+            $where = [["cate_id", "=", $res["id"]]];
+            $field = "id";
+            $res   = DbGoods::getOneSpec($where, $field);
             if ($res) {
                 return ["msg" => "请先解除该分类下的属性关系", "code" => 3003];
             }
         }
-        $res = (new GoodsClass())->save([
+        $data = [
             "status" => 2
-        ], ["id" => $id]);
+        ];
+        $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {
             return ["msg" => "停用失败", "code" => 3001];
         }
@@ -202,10 +223,18 @@ class Category {
     }
 
     //启用分类
-    private function start($id) {
-        $res = (new GoodsClass())->save([
+    private function start($id, $type_name) {
+        //启用分类之前需要判断是否已经存在该名称,不能是停用的,删除的
+        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+        $field = "id,type_name";
+        $res   = DbGoods::getOneCate($where, $field);
+        if ($res) {
+            return ["msg" => "该分类名称已经存在", "code" => 3005];
+        }
+        $data = [
             "status" => 1
-        ], ["id" => $id]);
+        ];
+        $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {
             return ["msg" => "启用失败", "code" => 3001];
         }
@@ -220,10 +249,10 @@ class Category {
      * @author wujunjie
      * 2018/12/28-9:29
      */
-    public function stopStart($id, $type) {
+    public function stopStart($id, $type, $type_name) {
         switch ($type) {
             case 1:
-                $res = $this->start($id);
+                $res = $this->start($id, $type_name);
                 break;
             case 2:
                 $res = $this->stop($id);
@@ -235,14 +264,14 @@ class Category {
      * 展示三级分类
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-10:38
      */
     public function getThreeCate() {
         //选择分类
-        $cate = GoodsClass::where("tier", 3)->where("status", 1)->field("id,type_name,pid")->select()->toArray();
+//        $cate = GoodsClass::where("tier", 3)->where("status", 1)->field("id,type_name,pid")->select()->toArray();
+        $field = "id,type_name,pid";
+        $where = [["tier", "=", 3], ["status", "=", 1]];
+        $cate  = DbGoods::getGoodsClass($field, $where);
         if (empty($cate)) {
             return ["msg" => "未获取分类到数据", "code" => 3000];
         }

@@ -12,6 +12,8 @@ class Category extends AdminController {
      * @apiName          getCateList
      * @apiParam (入参) {Number} [type] 类型 1,启用的 / 2，停用的 / 3，所有的 (默认:1)
      * @apiParam (入参) {Number} [pid] 父级id (默认:0)
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {Number} tier 当前分类层级
      * @apiSuccess (返回) {Array} data 分类数据
@@ -23,20 +25,20 @@ class Category extends AdminController {
     public function getCateList() {
         $typeArr = [1, 2, 3];
         $type    = trim(input("post.type"));
-        if (empty($type)) {
-            $type = 1;
-        }
+        $type    = empty($type) ? 1 : intval($type);
         if (!in_array($type, $typeArr)) {
             return ['code' => 3002];
         }
         $pid = trim(input("post.pid"));
-        if (empty($pid)) {
-            $pid = 0;
-        }
+        $pid = empty($pid) ? 0 : intval($pid);
         if (!is_numeric($pid)) {
             return ['code' => 3003];
         }
-        $cate_date = $this->app->category->getCateList(intval($type), intval($pid));
+        $page      = trim(input("post.page")) ?: 1;//页码
+        $page      = empty($page) ? 1 : intval($page);
+        $pageNum   = trim(input("post.page_num"));
+        $pageNum   = empty($pageNum) ? 10 : intval($pageNum);//每页条数
+        $cate_date = $this->app->category->getCateList($type, $pid, $page, $pageNum);
         return $cate_date;
     }
 
@@ -169,6 +171,7 @@ class Category extends AdminController {
      * @apiName          stopStartCate
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
+     * @apiParam (入参) {String} type_name 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/stopstartcate
@@ -181,7 +184,12 @@ class Category extends AdminController {
         if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->category->stopStart($id, $type);
+        $res       = $this->app->category->stopStart($id, $type);
+        $type_name = trim(input("post.type_name"));//类型 1启用 2停用
+        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($type_name)) {
+            return ["msg" => "参数错误", "code" => 3002];
+        }
+        $res = $this->app->category->stopStart($id, $type, $type_name);
         return $res;
     }
 

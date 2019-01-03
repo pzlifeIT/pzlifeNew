@@ -25,7 +25,9 @@ class Spec extends AdminController
      * 2018/12/25-10:07
      */
     public function getSpecList(){
-        $spec_data = $this->app->spec->getSpecList();
+        $page = trim(input("post.page")) ? : 1;
+        $pageNum = trim(input("post.page_num")) ? : 10;
+        $spec_data = $this->app->spec->getSpecList($page,$pageNum);
         return $spec_data;
     }
 

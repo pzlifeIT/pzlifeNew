@@ -5,45 +5,58 @@ namespace app\common\action\admin;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsClass;
 use app\common\model\GoodsAttr;
+use app\facade\DbGoods;
 class Spec
 {
     /**
      * 获取属性列表
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-9:59
      */
-    public function getSpecList(){
+    public function getSpecList($page,$pageNum){
+        $offset = $pageNum * ($page - 1);
+        if ($offset < 0){
+            return ["3000"];
+        }
         //根据一级属性表的cate_id招到三级分类，根据id找到对应的二级属性
-        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
+//        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
+        $field = "id,cate_id,spe_name";
+        $spec = DbGoods::getSpecList($field,$offset,$pageNum);
         if (empty($spec)){
             return ["msg"=>"未获取到数据","code"=>3000];
         }
         foreach($spec as $k=>$v){
-            $type_name = GoodsClass::where("id",$v["cate_id"])->field("id,type_name")->find()->toArray();
+//            $type_name = GoodsClass::where("id",$v["cate_id"])->field("id,type_name")->find()->toArray();
+            $whereCate = [["id","=",$v["cate_id"]]];
+            $fieldCate = "id,type_name";
+            $type_name = DbGoods::getOneCate($whereCate,$fieldCate);
+            if (empty($type_name)){
+                return ["code"=>"3000"];
+            }
             $spec[$k]['category'] = $type_name["type_name"];
-            $spec[$k]["attr"] = GoodsAttr::where('spec_id',$v['id'])->field("id,spec_id,attr_name")->select()->toArray();
+            //查找二级属性
+            $whereAttr = [["spec_id","=",$v["id"]]];
+            $fieldAttr = "id,spec_id,attr_name";
+            $res  = DbGoods::getAttrList($whereAttr,$fieldAttr);
+            if (empty($res)){
+                return ["code"=>"3000"];
+            }
+            $spec[$k]["attr"] = $res;
         }
         return ["code"=>200,"data"=>$spec];
     }
-
-
 
     /**
      * 添加二级属性页面
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-10:51
      */
     public function addAttrPage(){
         //可选一级属性
-        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
+        $field = "id,cate_id,spe_name";
+        $spec = DbGoods::getSpecList($field);
         if (empty($spec)){
             return ["msg"=>"未获取到规格数据","code"=>3000];
         }
@@ -59,12 +72,12 @@ class Spec
      * 2018/12/25-11:26
      */
     private function saveSpec($cate_id,$spec_name){
-        $spec = new GoodsSpec();
-        $res = $spec->save([
+        $data = [
             "cate_id"=>$cate_id,
             "spe_name"=>$spec_name,
             "create_time"=>time()
-        ]);
+        ];
+        $res = DbGoods::addSpec($data);
         if (empty($res)){
             return ["msg"=>"保存失败","code"=>3001];
         }
@@ -81,11 +94,13 @@ class Spec
      */
     private function saveAttr($spec_id,$attr_name){
         $attr = new GoodsAttr();
-        $res = $attr->save([
+        $res = $attr->save();
+        $data = [
             "spec_id"=>$spec_id,
             "attr_name"=>$attr_name,
             "create_time"=>time()
-        ]);
+        ];
+        $res = DbGoods::addAttr($data);
         if (empty($res)){
             return ["msg"=>"保存失败","code"=>3001];
         }
@@ -116,22 +131,17 @@ class Spec
      * @param $id
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-14:27
      */
     private function editSpecPage($id){
         //获取数据
-        $data = GoodsSpec::where("id",$id)->field("id,cate_id,spe_name")->find()->toArray();
+        $field = "id,cate_id,spe_name";
+        $where = [["id","=",$id]];
+        $data = DbGoods::getOneSpec($where,$field);
         if (empty($data)){
             return ["msg"=>"未获取到该条属性数据","code"=>3000];
         }
-        $cate = GoodsClass::where("id",$data["cate_id"])->where("status",1)->field("id,pid,type_name")->find()->toArray();
-        if (empty($cate)){
-            return ["msg"=>"未获取到分类数据","code"=>3000];
-        }
-        return ["code"=>200,"spec"=>$data,"cate"=>$cate];
+        return ["code"=>200,"spec"=>$data];
     }
 
     /**
@@ -139,21 +149,16 @@ class Spec
      * @param $id
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-14:44
      */
     private function editAttrPage($id){
-        $data = GoodsAttr::where("id",$id)->field("id,spec_id,attr_name")->find()->toArray();
+        $where  = [["id","=",$id]];
+        $field = "id,spec_id,attr_name";
+        $data = DbGoods::getOneAttr($where,$field);
         if (empty($data)){
             return ["msg"=>"未获取到该条数据","code"=>3000];
         }
-        $spec = GoodsSpec::where("id",$data["spec_id"])->field("id,spe_name")->select()->toArray();
-        if (empty($spec)){
-            return ["msg"=>"未获取到一级属性数据","code"=>3000];
-        }
-        return ["code"=>200,"attr"=>$data,"spec"=>$spec];
+        return ["code"=>200,"attr"=>$data];
     }
 
     /**
@@ -180,16 +185,16 @@ class Spec
     /**
      * 保存修改后的一级属性
      * @param $id
-     * @param $top_id
      * @param $sa_name
      * @return array
      * @author wujunjie
      * 2018/12/25-15:39
      */
     private function saveEditSpec($id,$sa_name){
-        $res = (new GoodsSpec())->save([
+        $data = [
             "spe_name"=>$sa_name
-        ],["id"=>$id]);
+        ];
+        $res = DbGoods::editSpec($data,$id);
         if (empty($res)){
             return ["msg"=>"保存失败","code"=>3001];
         }
@@ -206,9 +211,10 @@ class Spec
      * 2018/12/25-15:39
      */
     private function saveEditAttr($id,$sa_name){
-        $res = (new GoodsAttr())->save([
+        $data = [
             "attr_name"=>$sa_name
-        ],["id"=>$id]);
+        ];
+        $res = DbGoods::editAttr($data,$id);
         if (empty($res)){
             return ["msg"=>"保存失败","code"=>3001];
         }
@@ -219,7 +225,6 @@ class Spec
      * 外部调用保存修改的属性
      * @param $type
      * @param $id
-     * @param $top_id
      * @param $sa_name
      * @return array
      * @author wujunjie
@@ -242,20 +247,17 @@ class Spec
      * @param $id
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-16:23
      */
     private function delSpec($id){
         //删除一级属性的时候需要判断有没有二级属性
-        $res = GoodsAttr::where("spec_id",$id)->field("id")->find()->toArray();
+        $where = [["spec_id","=",$id]];
+        $field = "id";
+        $res = DbGoods::getOneAttr($where,$field);
         if ($res){
             return ["msg"=>"请先删除二级属性","code"=>3003];
         }
-        $res = (new GoodsSpec())->save([
-            "delete_time"=>time()
-        ],["id"=>$id]);
+        $res = DbGoods::delSpec($id);
         if (empty($res)){
             return ["msg"=>"删除失败","code"=>3001];
         }
@@ -270,9 +272,7 @@ class Spec
      * 2018/12/25-16:23
      */
     private function delAttr($id){
-        $res = (new GoodsAttr())->save([
-            "delete_time"=>time()
-        ],["id"=>$id]);
+        $res = DbGoods::delAttr($id);
         if (empty($res)){
             return ["msg"=>"删除失败","code"=>3001];
         }
@@ -284,9 +284,6 @@ class Spec
      * @param $type
      * @param $id
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2018/12/25-16:23
      */
     public function delSpecAttr($type,$id){
@@ -298,5 +295,6 @@ class Spec
                 $res = $this->delAttr($id);
                 break;
         }
+        return $res;
     }
 }

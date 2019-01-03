@@ -6,6 +6,7 @@ use app\admin\AdminController;
 use Config;
 use Env;
 use \upload\Imageupload;
+use think\Db;
 
 class Suppliers extends AdminController {
 
@@ -45,12 +46,12 @@ class Suppliers extends AdminController {
         $page = trim($this->request->post('page')) ;
         $pagenum = trim($this->request->post('pagenum'));
         $page = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
 
         if (!is_numeric($page) || !is_numeric($pagenum)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
-
+        
         $result = $this->app->suppliers->getSuppliers($page,$pagenum);
         return $result;
     }
@@ -76,7 +77,7 @@ class Suppliers extends AdminController {
     public function getSupplierData(){
         $supplierId = trim($this->request->post('supplierId'));
         if (!is_numeric($supplierId)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         $result = $this->app->suppliers->getSupplierData($supplierId);
         return $result;
@@ -107,16 +108,16 @@ class Suppliers extends AdminController {
 
         /* 参数判断 */
         if (!$this->checkMobile($tel)) {
-            return ['3001'];
+            return ['code'=>'3001'];
         }
         if (!$name || !$title || !$desc) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         if (!$image) {
-            return ['3003'];
+            return ['code'=>'3003'];
         }
         if ($this->app->suppliers->getSupplierWhereFile('name',$name)) {
-            return ['3006'];
+            return ['code'=>'3006'];
         }
         $fileInfo = $image->getInfo();
         
@@ -138,7 +139,7 @@ class Suppliers extends AdminController {
             return $result;
 
         } else {
-            return ['3005'];
+            return ['code'=>'3005'];
         }
 
     }
@@ -168,60 +169,100 @@ class Suppliers extends AdminController {
         $image = $this->request->file('image');
         /* 参数判断 */
         if (!is_numeric($id)) {
-            return ['3006'];
+            return ['code'=>'3006'];
         }
         if (!$this->checkMobile($tel)) {
-            return ['3001'];
+            return ['code'=>'3001'];
         }
         if (!$name || !$title || !$desc) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
-        if (!$image){
-            return ['3003'];
-        }
-        if ($this->app->suppliers->getSupplierWhereFile('name',$name)) {
-            return ['3007'];
-        }
-        /* 图片上传 */
-        $fileInfo = $image->getInfo();
         
-        $upload   = new Imageupload();
-        /* 文件名重命名 */
-        $filename = $upload->getNewName($fileInfo['name']);
-        
-        $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], $filename);
-        /* 上传成功 */
-        if ($uploadimage) {
-            /* 初始化数组 */
+        /* 判断是否存在 */
+        if ($this->app->suppliers->getSupplierWhereFileByID('name',$name,$id)) {
+            return ['code'=>'3007'];
+        }
+        /* 有图片执行图片上传 */
+        if ($image){
+            /* 图片上传 */
+            $fileInfo = $image->getInfo();
+            
+            $upload   = new Imageupload();
+            /* 文件名重命名 */
+            $filename = $upload->getNewName($fileInfo['name']);
+            
+            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], $filename);
+            if ($uploadimage) {
+                /* 初始化数组 */
+                $new_supplier = [];
+                $new_supplier['tel'] = $tel;
+                $new_supplier['name'] = $name;
+                $new_supplier['title'] = $title;
+                $new_supplier['desc'] = $desc;
+                $new_supplier['image'] = $filename;
+                $result = $this->app->suppliers->updateSupplier($new_supplier,$id);
+                return $result;
+            }
+            else {
+                return ['code'=>'3005'];
+            }
+        }
+        /* 没有图片，修改其他 */
+        else{
             $new_supplier = [];
             $new_supplier['tel'] = $tel;
             $new_supplier['name'] = $name;
             $new_supplier['title'] = $title;
             $new_supplier['desc'] = $desc;
-            $new_supplier['image'] = $filename;
             $result = $this->app->suppliers->updateSupplier($new_supplier,$id);
             return $result;
-
-        } else {
-            return ['3005'];
         }
     }
 
     /**
-     * @api              {post} / 弃用或启用供应商
-     * @apiDescription   addSupplier
+     * @api              {post} / 停用或启用供应商
+     * @apiDescription   issetSupplier
      * @apiGroup         admin_Suppliers
-     * @apiName          addSupplier
-     * @apiParam (入参) {String} tel 联系方式
-     * @apiParam (入参) {String} name 名称
-     * @apiParam (入参) {file} image 图片
-     * @apiParam (入参) {String} title 标题
-     * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:名字不能重复
+     * @apiName          issetSupplier
+     * @apiParam (入参) {Number} status 状态 1：启用 / 2：弃用
+     * @apiParam (入参) {Number} id 供应商ID 
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:状态参数和ID必须是数字 / 3002:已启用供应商无法再次启用 / 3003:已停用供应商无法再次停用 / 3004:操作失败 
      * @apiSuccess (data) {Array} data 结果
-     * @apiSampleRequest /admin/suppliers/addsupplier
+     * @apiSampleRequest /admin/suppliers/issetSupplier
      * @author rzc
      */
+    public function issetSupplier()
+    {
+        /* 参数处理及判断 */
+        $status = trim($this->request->post('status'));
+        $id = trim($this->request->post('id'));
+        if(!is_numeric($status) || !is_numeric($id)){
+            return ['code'=>'3001'];
+        }
+        $supplier = $this->app->suppliers->getSupplierWhereFile('id',$id);
+        /* 已启用供应商 */
+        if ($status == 1 && $status == $supplier['status']){
+            return ['code'=>'3002'];
+        }
+        /* 已停用供应商 */
+        elseif ($status == 2 && $status == $supplier['status']){
+            return ['code'=>'3003'];
+        }
+         /* 启动事务 */
+        Db::startTrans();
+        try {
+            $this->app->suppliers->updateSupplier(['status'=>$status],$id);
+            $this->app->suppliers->updateSupplierFreights($status,$id);
+            /* 提交事务 */
+            Db::commit();
+            return ['code' => '200','msg' => '操作成功'];
+        } catch (\Exception $e) {
+             /* 回滚事务 */
+            Db::rollback();
+            return ['code' => '3004','msg' => '操作失败'];
+        }
+       
+    }
 
     /**
      * @api              {post} / 获取供应商快递模板
@@ -243,7 +284,7 @@ class Suppliers extends AdminController {
         $supid = trim($this->request->post('supplierId'));
         /* 判断值 */
         if (!is_numeric($supid)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         /* 获取返回结果 */
         $result = $this->app->suppliers->getSupplierFreights($supid);
@@ -264,7 +305,7 @@ class Suppliers extends AdminController {
     public function getSupplierFreightdetail(){
         $supplierFreightId = trim($this->request->post('supplierFreightId'));
         if (!is_numeric($supplierFreightId)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         $result = $this->app->suppliers->getSupplierFreightdetail($supplierFreightId);
         return $result;
