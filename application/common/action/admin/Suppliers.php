@@ -10,9 +10,6 @@ class Suppliers {
     /**
      * 供应商列表
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function getSuppliers($page,$pagenum) {
@@ -36,9 +33,6 @@ class Suppliers {
     /**
      * 供应商详情
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function getSupplierData($supplierId){
@@ -53,9 +47,6 @@ class Suppliers {
     /**
      * 查询供应商表中某值
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function getSupplierWhereFile($field,$value){
@@ -65,9 +56,6 @@ class Suppliers {
     /**
      * 查询供应商表中某条数据并且ID不为此ID的值
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function getSupplierWhereFileByID($field,$value,$id){
@@ -77,15 +65,12 @@ class Suppliers {
     /**
      * 新增供应商
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function addSupplier($data){
         $data['create_time'] = time();
        
-        $add = DbGoods::insert($data);
+        $add = DbGoods::addSupplier($data);
         if ($add) {
             return ['code' => '200','msg' => '添加成功'];
         } else {
@@ -96,9 +81,6 @@ class Suppliers {
     /**
      * 修改供应商信息
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function updateSupplier($data,$id){ 
@@ -113,9 +95,6 @@ class Suppliers {
     /**
      * 供应商快递模板列表
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function getSupplierFreights($supid){
@@ -131,9 +110,6 @@ class Suppliers {
     /**
      * 启用或者停用供应商快递模板
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * @author rzc
      */
     public function updateSupplierFreights($status,$supid){

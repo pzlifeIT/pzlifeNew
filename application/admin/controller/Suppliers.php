@@ -10,7 +10,7 @@ use think\Db;
 
 class Suppliers extends AdminController {
 
-    
+
     /**
      * @api              {post} / 获取供应商列表
      * @apiDescription   getSuppliers
@@ -51,7 +51,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code'=>'3002'];
         }
-        
+
         $result = $this->app->suppliers->getSuppliers($page,$pagenum);
         return $result;
     }
@@ -120,11 +120,11 @@ class Suppliers extends AdminController {
             return ['code'=>'3006'];
         }
         $fileInfo = $image->getInfo();
-        
+
         $upload   = new Imageupload();
         /* 文件名重命名 */
         $filename = $upload->getNewName($fileInfo['name']);
-        
+
         $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], $filename);
 
         if ($uploadimage) {
@@ -177,7 +177,7 @@ class Suppliers extends AdminController {
         if (!$name || !$title || !$desc) {
             return ['code'=>'3002'];
         }
-        
+
         /* 判断是否存在 */
         if ($this->app->suppliers->getSupplierWhereFileByID('name',$name,$id)) {
             return ['code'=>'3007'];
@@ -186,12 +186,12 @@ class Suppliers extends AdminController {
         if ($image){
             /* 图片上传 */
             $fileInfo = $image->getInfo();
-            
+
             $upload   = new Imageupload();
             /* 文件名重命名 */
             $filename = $upload->getNewName($fileInfo['name']);
-            
-            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], $filename);
+
+            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], 'supplier/'.$filename);
             if ($uploadimage) {
                 /* 初始化数组 */
                 $new_supplier = [];
@@ -225,8 +225,8 @@ class Suppliers extends AdminController {
      * @apiGroup         admin_Suppliers
      * @apiName          issetSupplier
      * @apiParam (入参) {Number} status 状态 1：启用 / 2：弃用
-     * @apiParam (入参) {Number} id 供应商ID 
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:状态参数和ID必须是数字 / 3002:已启用供应商无法再次启用 / 3003:已停用供应商无法再次停用 / 3004:操作失败 
+     * @apiParam (入参) {Number} id 供应商ID
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:状态参数和ID必须是数字 / 3002:已启用供应商无法再次启用 / 3003:已停用供应商无法再次停用 / 3004:操作失败
      * @apiSuccess (data) {Array} data 结果
      * @apiSampleRequest /admin/suppliers/issetSupplier
      * @author rzc
@@ -261,7 +261,7 @@ class Suppliers extends AdminController {
             Db::rollback();
             return ['code' => '3004','msg' => '操作失败'];
         }
-       
+
     }
 
     /**
