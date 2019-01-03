@@ -6,6 +6,7 @@ use app\admin\AdminController;
 use Config;
 use Env;
 use \upload\Imageupload;
+use think\Db;
 
 class Suppliers extends AdminController {
 
@@ -28,15 +29,29 @@ class Suppliers extends AdminController {
      * @apiSuccess (data) {String} desc 详情
      * @apiSuccess (data) {String} create_time 创建时间
      * @apiSampleRequest /admin/suppliers/getsuppliers
+     * @apiParamExample (data) {Array} 返回供应商列表
+     * [
+     * "code":"200",返回code码
+     * "totle":"82",总记录条数
+     *  {"id":9,"tel":15502123212,
+     *   "name":"喜蓝葡萄酒",
+     *   "status":"1",
+     *   "image":"","title":"",
+     *   "desc":"江浙沪皖任意2瓶包邮，其他地区参考实际支付运费"
+     *  },
+     * ]
      * @author rzc
      */
     public function getSuppliers() {
-        $page = !empty($this->request->post('page')) ? 1 : 1;
-        $pagenum = !empty($this->request->post('pagenum')) ? 10 : 10;
-        if(!is_numeric($page) || !is_numeric($pagenum)){
-            return ['3002'];
-        }
+        $page = trim($this->request->post('page')) ;
+        $pagenum = trim($this->request->post('pagenum'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
 
+        if (!is_numeric($page) || !is_numeric($pagenum)) {
+            return ['code'=>'3002'];
+        }
+        
         $result = $this->app->suppliers->getSuppliers($page,$pagenum);
         return $result;
     }
@@ -62,7 +77,7 @@ class Suppliers extends AdminController {
     public function getSupplierData(){
         $supplierId = trim($this->request->post('supplierId'));
         if (!is_numeric($supplierId)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         $result = $this->app->suppliers->getSupplierData($supplierId);
         return $result;
@@ -78,7 +93,7 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {file} image 图片
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:名字不能重复
      * @apiSuccess (data) {Array} data 结果
      * @apiSampleRequest /admin/suppliers/addsupplier
      * @author rzc
@@ -93,13 +108,16 @@ class Suppliers extends AdminController {
 
         /* 参数判断 */
         if (!$this->checkMobile($tel)) {
-            return ['3001'];
+            return ['code'=>'3001'];
         }
         if (!$name || !$title || !$desc) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         if (!$image) {
-            return ['3003'];
+            return ['code'=>'3003'];
+        }
+        if ($this->app->suppliers->getSupplierWhereFile('name',$name)) {
+            return ['code'=>'3006'];
         }
         $fileInfo = $image->getInfo();
         
@@ -121,9 +139,129 @@ class Suppliers extends AdminController {
             return $result;
 
         } else {
-            return ['3005'];
+            return ['code'=>'3005'];
         }
 
+    }
+
+    /**
+     * @api              {post} / 修改供应商
+     * @apiDescription   updateSupplier
+     * @apiGroup         admin_Suppliers
+     * @apiName          updateSupplier
+     * @apiParam (入参) {Number} id 供应商ID
+     * @apiParam (入参) {String} tel 联系方式
+     * @apiParam (入参) {String} name 名称
+     * @apiParam (入参) {file} image 图片
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {String} desc 详情
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:供应商ID必须是数字 / 3007:名字不能重复
+     * @apiSuccess (data) {Array} data 结果
+     * @apiSampleRequest /admin/suppliers/updateSupplier
+     * @author rzc
+     */
+    public function updateSupplier(){
+        $id = trim($this->request->post('id'));
+        $tel = trim($this->request->post('tel'));
+        $name = trim($this->request->post('name'));
+        $title = trim($this->request->post('title'));
+        $desc = trim($this->request->post('desc'));
+        $image = $this->request->file('image');
+        /* 参数判断 */
+        if (!is_numeric($id)) {
+            return ['code'=>'3006'];
+        }
+        if (!$this->checkMobile($tel)) {
+            return ['code'=>'3001'];
+        }
+        if (!$name || !$title || !$desc) {
+            return ['code'=>'3002'];
+        }
+        
+        /* 判断是否存在 */
+        if ($this->app->suppliers->getSupplierWhereFileByID('name',$name,$id)) {
+            return ['code'=>'3007'];
+        }
+        /* 有图片执行图片上传 */
+        if ($image){
+            /* 图片上传 */
+            $fileInfo = $image->getInfo();
+            
+            $upload   = new Imageupload();
+            /* 文件名重命名 */
+            $filename = $upload->getNewName($fileInfo['name']);
+            
+            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], $filename);
+            if ($uploadimage) {
+                /* 初始化数组 */
+                $new_supplier = [];
+                $new_supplier['tel'] = $tel;
+                $new_supplier['name'] = $name;
+                $new_supplier['title'] = $title;
+                $new_supplier['desc'] = $desc;
+                $new_supplier['image'] = $filename;
+                $result = $this->app->suppliers->updateSupplier($new_supplier,$id);
+                return $result;
+            }
+            else {
+                return ['code'=>'3005'];
+            }
+        }
+        /* 没有图片，修改其他 */
+        else{
+            $new_supplier = [];
+            $new_supplier['tel'] = $tel;
+            $new_supplier['name'] = $name;
+            $new_supplier['title'] = $title;
+            $new_supplier['desc'] = $desc;
+            $result = $this->app->suppliers->updateSupplier($new_supplier,$id);
+            return $result;
+        }
+    }
+
+    /**
+     * @api              {post} / 停用或启用供应商
+     * @apiDescription   issetSupplier
+     * @apiGroup         admin_Suppliers
+     * @apiName          issetSupplier
+     * @apiParam (入参) {Number} status 状态 1：启用 / 2：弃用
+     * @apiParam (入参) {Number} id 供应商ID 
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:状态参数和ID必须是数字 / 3002:已启用供应商无法再次启用 / 3003:已停用供应商无法再次停用 / 3004:操作失败 
+     * @apiSuccess (data) {Array} data 结果
+     * @apiSampleRequest /admin/suppliers/issetSupplier
+     * @author rzc
+     */
+    public function issetSupplier()
+    {
+        /* 参数处理及判断 */
+        $status = trim($this->request->post('status'));
+        $id = trim($this->request->post('id'));
+        if(!is_numeric($status) || !is_numeric($id)){
+            return ['code'=>'3001'];
+        }
+        $supplier = $this->app->suppliers->getSupplierWhereFile('id',$id);
+        /* 已启用供应商 */
+        if ($status == 1 && $status == $supplier['status']){
+            return ['code'=>'3002'];
+        }
+        /* 已停用供应商 */
+        elseif ($status == 2 && $status == $supplier['status']){
+            return ['code'=>'3003'];
+        }
+         /* 启动事务 */
+        Db::startTrans();
+        try {
+            $this->app->suppliers->updateSupplier(['status'=>$status],$id);
+            $this->app->suppliers->updateSupplierFreights($status,$id);
+            /* 提交事务 */
+            Db::commit();
+            return ['code' => '200','msg' => '操作成功'];
+        } catch (\Exception $e) {
+             /* 回滚事务 */
+            Db::rollback();
+            return ['code' => '3004','msg' => '操作失败'];
+        }
+       
     }
 
     /**
@@ -142,10 +280,13 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreights(){
+        /* 获取提交参数 */
         $supid = trim($this->request->post('supplierId'));
+        /* 判断值 */
         if (!is_numeric($supid)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
+        /* 获取返回结果 */
         $result = $this->app->suppliers->getSupplierFreights($supid);
         return $result;
     }
@@ -164,7 +305,7 @@ class Suppliers extends AdminController {
     public function getSupplierFreightdetail(){
         $supplierFreightId = trim($this->request->post('supplierFreightId'));
         if (!is_numeric($supplierFreightId)) {
-            return ['3002'];
+            return ['code'=>'3002'];
         }
         $result = $this->app->suppliers->getSupplierFreightdetail($supplierFreightId);
         return $result;
@@ -186,7 +327,7 @@ class Suppliers extends AdminController {
      */
 
      public function addSupplierFreight(){
-
+        return [];
      }
 
 
