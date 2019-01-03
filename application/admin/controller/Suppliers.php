@@ -46,12 +46,12 @@ class Suppliers extends AdminController {
         $page = trim($this->request->post('page')) ;
         $pagenum = trim($this->request->post('pagenum'));
         $page = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
 
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code'=>'3002'];
         }
-
+        
         $result = $this->app->suppliers->getSuppliers($page,$pagenum);
         return $result;
     }

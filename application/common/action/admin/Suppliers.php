@@ -124,7 +124,7 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => 0,'data'=>$result];
+        return ['code' => '200','data'=>$result];
     }
 
     /**
@@ -136,6 +136,20 @@ class Suppliers {
      * @author rzc
      */
     public function updateSupplierFreights($status,$supid){
-        $result = DbGoods::updateSupplierFreights($status,$supid);
+        return DbGoods::updateSupplierFreights($status,$supid);
+    }
+
+    /**
+     * 获取供应商快递模板详情
+     * @return array
+     * @author rzc
+     */
+    public function getSupplierFreightdetail($id){
+        $field = 'id,supid,stype,status,title,desc';
+        $supplierfreight = DbGoods::getSupplierFreightdetail($field,$id);
+        if (empty($supplierfreight)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','supplierfreight'=>$supplierfreight];
     }
 }

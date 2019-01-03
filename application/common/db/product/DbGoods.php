@@ -97,6 +97,16 @@ class DbGoods {
     }
 
     /**
+     * 获取供应商快递模板列表详情
+     * @param $field
+     * @param $supid
+     * @return bool
+     */
+    public function getSupplierFreightdetail($field,$id){
+        return SupplierFreight::field($field)->where('id',$id)->findOrEmpty()->toArray();
+    }
+
+    /**
      * 查询某字段的供应商信息（精确查询）
      * @param $field
      * @param $value
