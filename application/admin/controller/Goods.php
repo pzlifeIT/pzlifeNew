@@ -14,6 +14,7 @@ class Goods extends AdminController
      * @apiGroup         admin_goods
      * @apiName          getGoodsList
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
+     * @apiSuccess (返回) {Number} total 条数
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 商品id
      * @apiSuccess (data) {Number} supplier_id 供应商id
@@ -30,7 +31,14 @@ class Goods extends AdminController
      * 2018/12/26-18:04
      */
     public function getGoodsList(){
-        $res = $this->app->goods->goodsList();
+        $page = trim(input("post.page"));
+        $page = empty($page) ? 1 : intval($page);
+        $pageNum = trim(input("post.pageNum"));
+        $pageNum = empty($pageNum) ? 10 : intval($pageNum);
+        if (!is_numeric($page) || !is_numeric($pageNum)){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->goods->goodsList($page,$pageNum);
         return $res;
     }
 

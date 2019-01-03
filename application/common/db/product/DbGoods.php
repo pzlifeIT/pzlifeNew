@@ -100,10 +100,19 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field) {
-        return $goods_data = Goods::field($field)->select()->toArray();
+    public function getGoodsList($field,$offset,$pageNum) {
+        return Goods::limit($offset,$pageNum)->field($field)->select()->toArray();
     }
 
+    /**
+     * 获取商品条数
+     * @return float|string
+     * @author wujunjie
+     * 2019/1/3-19:08
+     */
+    public function getGoodsListNum(){
+        return Goods::count();
+    }
     /**
      * 获取一条分类数据
      * @param $where
@@ -153,6 +162,14 @@ class DbGoods {
         return GoodsSpec::limit($offset, $pageNum)->field($field)->select()->toArray();
     }
 
+    /**
+     * 获取一级规格数据条数
+     * @author wujunjie
+     * 2019/1/3-18:57
+     */
+    public function getSpecListNum(){
+        return GoodsSpec::count();
+    }
     /**
      * 获取二级属性列表
      * @param $where

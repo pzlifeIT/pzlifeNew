@@ -20,6 +20,7 @@ class Spec
 //        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         $field = "id,cate_id,spe_name";
         $spec = DbGoods::getSpecList($field,$offset,$pageNum);
+        $total = DbGoods::getSpecListNum();
         if (empty($spec)){
             return ["msg"=>"未获取到数据","code"=>3000];
         }
@@ -37,7 +38,7 @@ class Spec
             $fieldAttr = "id,spec_id,attr_name";
             $spec[$k]["attr"] = DbGoods::getAttrList($whereAttr,$fieldAttr);
         }
-        return ["code"=>200,"data"=>$spec];
+        return ["code"=>200,"total"=>$total,"data"=>$spec];
     }
 
     /**
