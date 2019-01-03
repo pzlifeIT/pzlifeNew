@@ -12,7 +12,7 @@ class Category extends AdminController {
      * @apiName          getCateList
      * @apiParam (入参) {Number} [type] 类型 1,启用的 / 2，停用的 / 3，所有的 (默认:1)
      * @apiParam (入参) {Number} [pid] 父级id (默认:0)
-     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {Number} [page] 页码
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {Number} tier 当前分类层级
@@ -35,7 +35,7 @@ class Category extends AdminController {
         if (!is_numeric($pid)) {
             return ['code' => 3003];
         }
-        $page      = trim(input("post.page")) ?: 1;//页码
+        $page      = trim(input("post.page"));//页码
         $page      = empty($page) ? 1 : intval($page);
         $pageNum   = trim(input("post.page_num"));
         $pageNum   = empty($pageNum) ? 10 : intval($pageNum);//每页条数
@@ -84,6 +84,7 @@ class Category extends AdminController {
         $pid       = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
         $status    = trim(input("post.status"));
+        $status = empty($status) ? 1 : intval($status);
         if (empty($type_name) || empty(is_numeric($status))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
@@ -128,6 +129,7 @@ class Category extends AdminController {
      * @apiName          saveeditcate
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {String} type_name 分类名称
+     * @apiParam (入参) {Number} status 状态 1启用 2停用
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/saveeditcate
@@ -137,10 +139,12 @@ class Category extends AdminController {
     public function saveEditCate() {
         $id        = trim(input("post.id"));
         $type_name = trim(input("post.type_name"));
+        $status = trim(input("post.status"));
+        $status = empty($status) ? 1 : intval($status);
         if (empty(is_numeric($id)) || empty($type_name)) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $result = $this->app->category->saveEditCate($id, $type_name);
+        $result = $this->app->category->saveEditCate($id, $type_name,$status);
         return $result;
     }
 
@@ -182,11 +186,7 @@ class Category extends AdminController {
     public function stopStartCate() {
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));//类型 1启用 2停用
-        if (empty(is_numeric($id)) || empty(is_numeric($type))) {
-            return ["msg" => "参数错误", "code" => 3002];
-        }
-        $res       = $this->app->category->stopStart($id, $type);
-        $type_name = trim(input("post.type_name"));//类型 1启用 2停用
+        $type_name = trim(input("post.type_name"));
         if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($type_name)) {
             return ["msg" => "参数错误", "code" => 3002];
         }
