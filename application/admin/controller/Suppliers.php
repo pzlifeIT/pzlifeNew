@@ -79,6 +79,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($supplierId)) {
             return ['code'=>'3002'];
         }
+        
         $result = $this->app->suppliers->getSupplierData($supplierId);
         return $result;
     }
@@ -265,7 +266,7 @@ class Suppliers extends AdminController {
     }
 
     /**
-     * @api              {post} / 获取供应商快递模板
+     * @api              {post} / 获取供应商快递模板列表
      * @apiDescription   getSupplierFreights
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreights
@@ -298,7 +299,12 @@ class Suppliers extends AdminController {
      * @apiName          getSupplierFreightdetail
      * @apiParam (入参) {Number} supplierFreightId 供应商快递模板ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID只能是数字
-     * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (data) {String} id ID
+     * @apiSuccess (data) {String} supid 供应商ID
+     * @apiSuccess (data) {String} stype 计价方式1.件数 2.重量 3.体积
+     * @apiSuccess (data) {String} status 1.启用 2.停用
+     * @apiSuccess (data) {String} title 标题
+     * @apiSuccess (data) {String} desc 详情
      * @apiSampleRequest /admin/suppliers/getsupplierfreightdetail
      * @author rzc
      */

@@ -4,6 +4,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbGoods;
 use third\PHPTree;
+use Config;
 
 class Suppliers {
 
@@ -46,6 +47,9 @@ class Suppliers {
         $result = DbGoods::getSupplierData($field,$supplierId);
         if (empty($result)) {
             return ['code' => '3000'];
+        }
+        if ($result['image']) {
+            $result['image']=Config::get('qiniu.domain').'/'.$result['image'];
         }
         return ['code' => '200','data' => $result];
     }
@@ -124,7 +128,7 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','data'=>$result];
+        return ['code' => '200','data' => $result];
     }
 
     /**
@@ -150,6 +154,8 @@ class Suppliers {
         if (empty($supplierfreight)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','supplierfreight'=>$supplierfreight];
+        $detail_field = 'id,freight_id,area_id,price,after_price,total_price';
+        
+        return ['code' => '200','data' => $supplierfreight];
     }
 }
