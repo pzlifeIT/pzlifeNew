@@ -25,7 +25,11 @@ class Category {
             $type_name = $res['type_name'];
         }
         $field  = "type_name,create_time";
-        $where  = ['pid' => $pid, 'status' => $type];
+        if ($type == 3){
+            $where = [];
+        }else{
+            $where  = ['pid' => $pid, 'status' => $type];
+        }
         $offset = $offset = $pageNum * ($page - 1);;
         $cate  = DbGoods::getGoodsClass($field, $where, $offset, $pageNum);
         $total = DbGoods::getGoodsClassAllNum($where);
@@ -144,7 +148,7 @@ class Category {
      * @author wujunjie
      * 2018/12/24-16:45
      */
-    public function saveEditCate($id, $type_name) {
+    public function saveEditCate($id, $type_name,$status) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
         $where = [["type_name", "=", $type_name], ["status", "=", 1]];
         $field = "id,type_name";
@@ -153,7 +157,8 @@ class Category {
             return ["msg" => "该分类名称已经存在", "code" => 3005];
         }
         $data = [
-            "type_name" => $type_name
+            "type_name" => $type_name,
+            "status" => $status
         ];
         $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {
@@ -224,7 +229,7 @@ class Category {
 
     //启用分类
     private function start($id, $type_name) {
-        //启用分类之前需要判断是否已经存在该名称,不能是停用的,删除的
+        //启用分类之前需要判断是否已经存在该名称
         $where = [["type_name", "=", $type_name], ["status", "=", 1]];
         $field = "id,type_name";
         $res   = DbGoods::getOneCate($where, $field);
