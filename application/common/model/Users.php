@@ -31,9 +31,9 @@ class Users extends Model {
         //TODO:初始化内容
     }
 
-    public function getSexAttr($value) {
-        return $this->sex[$value];
-    }
+//    public function getSexAttr($value) {
+//        return $this->sex[$value];
+//    }
 
     public function setSexAttr($value) {
         if (!in_array($value, $this->sex)) {
@@ -43,9 +43,9 @@ class Users extends Model {
         return $sex[$value];
     }
 
-    public function getUserIdentityAttr($value) {
-        return $this->userIdentity[$value];
-    }
+//    public function getUserIdentityAttr($value) {
+//        return $this->userIdentity[$value];
+//    }
 
     public function setUserIdentityAttr($value) {
         if (!in_array($value, $this->userIdentity)) {
@@ -55,9 +55,9 @@ class Users extends Model {
         return $userIdentity[$value];
     }
 
-    public function getUserTypeAttr($value) {
-        return $this->userType[$value];
-    }
+//    public function getUserTypeAttr($value) {
+//        return $this->userType[$value];
+//    }
 
     public function setUserTypeAttr($value) {
         if (!in_array($value, $this->userType)) {
@@ -67,11 +67,11 @@ class Users extends Model {
         return $userType[$value];
     }
 
-    public function setBalanceFreezeAttr($value) {
-        return $this->balanceFreeze[$value];
-    }
+//    public function getBalanceFreezeAttr($value) {
+//        return $this->balanceFreeze[$value];
+//    }
 
-    public function getBalanceFreezeAttr($value) {
+    public function setBalanceFreezeAttr($value) {
         if (!in_array($value, $this->balanceFreeze)) {
             return $value;
         }
@@ -79,11 +79,11 @@ class Users extends Model {
         return $balanceFreeze[$value];
     }
 
-    public function setCommissionFreezeAttr($value) {
-        return $this->commissionFreeze[$value];
-    }
+//    public function getCommissionFreezeAttr($value) {
+//        return $this->commissionFreeze[$value];
+//    }
 
-    public function getCommissionFreezeAttr($value) {
+    public function setCommissionFreezeAttr($value) {
         if (!in_array($value, $this->commissionFreeze)) {
             return $value;
         }

@@ -124,6 +124,7 @@ class Suppliers {
      */
     public function getSupplierFreights($supid){
         $field = 'id,supid,stype,title,desc';
+        echo 123;die;
         $result = DbGoods::getSupplierFreights($field,$supid);
         if (empty($result)) {
             return ['code' => '3000'];

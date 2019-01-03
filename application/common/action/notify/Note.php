@@ -1,6 +1,6 @@
 <?php
 
-namespace app\common\notify;
+namespace app\common\action\notify;
 
 use third\AliSms;
 

@@ -7,7 +7,7 @@ use Env;
 use Config;
 use think\Db;
 use \upload\Imageupload;
-
+use third\Zthy;
 use \third\PHPTree;
 
 class Index extends MyController {
@@ -30,6 +30,7 @@ class Index extends MyController {
     }
 
     public function hello() {
+//        Phpredis::getConn()->delete('index:user:userinfo:1');die;
 //        $dividend = new Dividend(5);
 //        $a        = $dividend->getBoss();
 //        print_r($a);
@@ -67,6 +68,22 @@ class Index extends MyController {
         $r       = $phptree->listTree();
 
         print_r($r);
+        die;
+    }
+
+    /**
+     * 助通短信发送案例
+     */
+    public function smsSend() {
+        $zt       = new Zthy();
+        $data     = array(
+            'content' => '【圆善科技】测试短信内容',//短信内容
+            'mobile'  => '13761423387',//手机号码
+            'xh'      => '111'//小号
+        );
+        $zt->data = $data;
+        $res      = $zt->sendSMS(1);
+        var_dump($res);
         die;
     }
 

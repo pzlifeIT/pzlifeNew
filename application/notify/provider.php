@@ -11,5 +11,5 @@
 
 // 应用容器绑定定义
 return [
-    'note' => app\common\notify\Note::class,
+    'note' => app\common\action\notify\Note::class,
 ];
