@@ -1,14 +1,8 @@
 <?php
 namespace app\common\action\admin;
 
-use app\common\model\Goods as G;
-use app\common\model\GoodsRelation;
-use app\common\model\GoodsSku;
-use app\common\model\Supplier;
-use app\common\model\GoodsClass;
 use think\Db;
 use third\PHPTree;
-use app\common\model\GoodsImage;
 use app\facade\DbGoods;
 class Goods
 {
@@ -19,7 +13,6 @@ class Goods
      * 2018/12/26-10:25
      */
     public function goodsList(){
-
         //查找所有商品数据
         $field = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
         $goods_data = DbGoods::getGoodsList($field);
