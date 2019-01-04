@@ -6,6 +6,23 @@ use app\facade\DbGoods;
 use third\PHPTree;
 
 class Category {
+    public function allCateList(int $status) {
+        $where = [];
+        if ($status == 3) {
+            $where = ['status' => $status];
+        }
+        $field = "id,pid,tier,type_name";
+        $cate  = DbGoods::getGoodsClass($field, $where);
+        if (empty($cate)) {
+            return ['code' => 3000];
+        }
+        $tree = new PHPTree($cate);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        return ['code' => '200', 'data' => $cate_tree];
+    }
+
     /**
      * 获取分类列表
      * @param int $type
@@ -24,11 +41,11 @@ class Category {
             $tier      = $res['tier'] + 1;
             $type_name = $res['type_name'];
         }
-        $field  = "type_name,create_time";
-        if ($type == 3){
+        $field = "type_name,create_time";
+        if ($type == 3) {
             $where = ["pid" => $pid];
-        }else{
-            $where  = ['pid' => $pid, 'status' => $type];
+        } else {
+            $where = ['pid' => $pid, 'status' => $type];
         }
         $offset = $offset = $pageNum * ($page - 1);;
         $cate  = DbGoods::getGoodsClass($field, $where, $offset, $pageNum);
@@ -148,7 +165,7 @@ class Category {
      * @author wujunjie
      * 2018/12/24-16:45
      */
-    public function saveEditCate($id, $type_name,$status) {
+    public function saveEditCate($id, $type_name, $status) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
         $where = [["type_name", "=", $type_name], ["status", "=", 1]];
         $field = "id,type_name";
@@ -158,7 +175,7 @@ class Category {
         }
         $data = [
             "type_name" => $type_name,
-            "status" => $status
+            "status"    => $status,
         ];
         $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {

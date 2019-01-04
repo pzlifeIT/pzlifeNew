@@ -18,4 +18,5 @@ return [
     'goods'     => \app\common\action\admin\Goods::class,
     'dividend'  => app\common\action\index\Dividend::class,
     'adminLog'  => app\common\action\admin\AdminLog::class,
+    'Upload'    => app\common\action\admin\Upload::class,
 ];
