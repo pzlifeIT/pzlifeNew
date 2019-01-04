@@ -263,9 +263,9 @@ class Suppliers extends AdminController {
 
     /**
      * @api              {post} / 获取供应商快递模板详情
-     * @apiDescription   getSupplierFreightdetail
+     * @apiDescription   getSupplierFreight
      * @apiGroup         admin_Suppliers
-     * @apiName          getSupplierFreightdetail
+     * @apiName          getSupplierFreight
      * @apiParam (入参) {Number} supplierFreightId 供应商快递模板ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID只能是数字
      * @apiSuccess (data) {String} id ID
@@ -274,15 +274,15 @@ class Suppliers extends AdminController {
      * @apiSuccess (data) {String} status 1.启用 2.停用
      * @apiSuccess (data) {String} title 标题
      * @apiSuccess (data) {String} desc 详情
-     * @apiSampleRequest /admin/suppliers/getsupplierfreightdetail
+     * @apiSampleRequest /admin/suppliers/getSupplierFreight
      * @author rzc
      */
-    public function getSupplierFreightdetail() {
+    public function getSupplierFreight() {
         $supplierFreightId = trim($this->request->post('supplierFreightId'));
         if (!is_numeric($supplierFreightId)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->suppliers->getSupplierFreightdetail($supplierFreightId);
+        $result = $this->app->suppliers->getSupplierFreight($supplierFreightId);
         return $result;
     }
 
@@ -340,5 +340,44 @@ class Suppliers extends AdminController {
 
      }
 
+     /**
+     * @api              {post} / 修改供应商快递模板
+     * @apiDescription   updateSupplierFreight
+     * @apiGroup         admin_Suppliers
+     * @apiName          updateSupplierFreight
+     * @apiParam (入参) {Number} supplier_freight_Id 快递模版ID
+     * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {String} desc 详情
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSampleRequest /admin/suppliers/updateSupplierFreight
+     * @author rzc
+     */
+    public function updateSupplierFreight(){
+        $supplier_freight_Id = trim($this->request->post('supplier_freight_Id'));
+        $stype = trim($this->request->post('stype'));
+        $title = trim($this->request->post('title'));
+        $desc = trim($this->request->post('desc'));
+        $result = $this->app->suppliers->updateSupplierFreight($supplier_freight_Id,$stype,$title,$desc);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取供应商快递模板运费详情
+     * @apiDescription   getSupplierFreightdetail
+     * @apiGroup         admin_Suppliers
+     * @apiName          getSupplierFreightdetail
+     * @apiParam (入参) {Number} sfd_id 快递模版ID
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSampleRequest /admin/suppliers/getSupplierFreightdetail
+     * @author rzc
+     */
+    public function getSupplierFreightdetail(){
+        $sfd_id = trim($this->request->post('sfd_id'));
+        $result = $this->app->suppliers->getSupplierFreightdetail($sfd_id);
+        return $result;
+    }
 
 }
