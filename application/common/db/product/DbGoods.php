@@ -70,7 +70,7 @@ class DbGoods {
      */
     public function getGoodsClass($field, $where, $offset = 0, $pageNum = 0) {
         $obj = GoodsClass::field($field);
-        if(!empty($where)){
+        if (!empty($where)) {
             $obj = $obj->where($where);
         }
         if ($offset == 0 && $pageNum == 0) {
@@ -165,9 +165,11 @@ class DbGoods {
      * 2019/1/2-14:47
      */
     public function getSpecList($field, $offset = 0, $pageNum = 0) {
+        //只获取不分页
         if ($offset == 0 && $pageNum == 0) {
             return GoodsSpec::field($field)->select()->toArray();
         }
+        //获取并分页
         return GoodsSpec::limit($offset, $pageNum)->field($field)->select()->toArray();
     }
 
