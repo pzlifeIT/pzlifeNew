@@ -4,7 +4,6 @@ namespace app\common\action\admin;
 
 use app\facade\DbGoods;
 use app\facade\DbProvinces;
-use third\PHPTree;
 use app\facade\DbImage;
 use think\Db;
 use Config;
@@ -61,7 +60,7 @@ class Suppliers {
      */
     public function addSupplier($tel, $name, $title, $desc, $image) {
         $image    = filtraImage(Config::get('qiniu.domain'), $image);
-        $logImage = DbImage::getLogImage($image);//判断时候有未完成的图片
+        $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
         if (empty($logImage)) {//图片不存在
             return ['code' => '3005'];//图片没有上传过
         }
@@ -85,6 +84,47 @@ class Suppliers {
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3004', 'msg' => '添加失败'];
+        }
+    }
+
+    public function editSupplier($id, $tel, $name, $title, $desc, $image) {
+        /* 初始化数组 */
+        $oldLogImage  = [];
+        $logImage     = [];
+        $new_supplier = [];
+        if (!empty($image)) {//提交了图片
+            $image    = filtraImage(Config::get('qiniu.domain'), $image);
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
+            $oldImage = DbGoods::getOneSupplier(['id' => $id], 'image');
+            $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage['image']);
+            if (!empty($oldImage)) {//之前有图片
+                if (stripos($oldImage, 'http') === false) {//新版本图片
+                    $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
+                }
+            }
+            $new_supplier['image'] = $image;
+        }
+        $new_supplier['tel']   = $tel;
+        $new_supplier['name']  = $name;
+        $new_supplier['title'] = $title;
+        $new_supplier['desc']  = $desc;
+        Db::startTrans();
+        try {
+            DbGoods::updateSupplier($new_supplier, $id);
+            if (!empty($logImage)) {
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($oldLogImage)) {
+                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+            }
+            Db::commit();
+            return ['code' => '200', 'msg' => '更新成功'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3004', 'msg' => '更新失败'];
         }
     }
 
@@ -208,6 +248,8 @@ class Suppliers {
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
         $supplierfreight['desc'] = $desc;
+//        DbGoods::addSupplierFreight($data);
+        return ['code'=>'200'];
         DbGoods::addSupplierFreight($supplierfreight);
         return ['code' => '200'];
     }

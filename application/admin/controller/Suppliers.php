@@ -126,12 +126,12 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {Number} id 供应商ID
      * @apiParam (入参) {String} tel 联系方式
      * @apiParam (入参) {String} name 名称
-     * @apiParam (入参) {file} image 图片
+     * @apiParam (入参) {String} image 图片
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
      * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:供应商ID必须是数字 / 3007:名字不能重复
      * @apiSuccess (data) {Array} data 结果
-     * @apiSampleRequest /admin/suppliers/updateSupplier
+     * @apiSampleRequest /admin/suppliers/updatesupplier
      * @author rzc
      */
     public function updateSupplier() {
@@ -140,7 +140,7 @@ class Suppliers extends AdminController {
         $name  = trim($this->request->post('name'));
         $title = trim($this->request->post('title'));
         $desc  = trim($this->request->post('desc'));
-        $image = $this->request->file('image');
+        $image = trim($this->request->post('image'));
         /* 参数判断 */
         if (!is_numeric($id)) {
             return ['code' => '3006'];
@@ -151,44 +151,7 @@ class Suppliers extends AdminController {
         if (!$name || !$title || !$desc) {
             return ['code' => '3002'];
         }
-
-        /* 判断是否存在 */
-        if ($this->app->suppliers->getSupplierWhereFileByID('name', $name, $id)) {
-            return ['code' => '3007'];
-        }
-        /* 有图片执行图片上传 */
-        if ($image) {
-            /* 图片上传 */
-            $fileInfo = $image->getInfo();
-
-            $upload = new Imageupload();
-            /* 文件名重命名 */
-            $filename = $upload->getNewName($fileInfo['name']);
-
-            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], 'supplier/' . $filename);
-            if ($uploadimage) {
-                /* 初始化数组 */
-                $new_supplier          = [];
-                $new_supplier['tel']   = $tel;
-                $new_supplier['name']  = $name;
-                $new_supplier['title'] = $title;
-                $new_supplier['desc']  = $desc;
-                $new_supplier['image'] = $filename;
-                $result                = $this->app->suppliers->updateSupplier($new_supplier, $id);
-                return $result;
-            } else {
-                return ['code' => '3005'];
-            }
-        } /* 没有图片，修改其他 */
-        else {
-            $new_supplier          = [];
-            $new_supplier['tel']   = $tel;
-            $new_supplier['name']  = $name;
-            $new_supplier['title'] = $title;
-            $new_supplier['desc']  = $desc;
-            $result                = $this->app->suppliers->updateSupplier($new_supplier, $id);
-            return $result;
-        }
+        return $this->app->suppliers->editSupplier(intval($id), $tel, $name,$title, $desc, $image);
     }
 
     /**

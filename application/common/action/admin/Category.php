@@ -41,7 +41,7 @@ class Category {
             $tier      = $res['tier'] + 1;
             $type_name = $res['type_name'];
         }
-        $field = "type_name,create_time";
+        $field = "id,status,type_name,create_time";
         if ($type == 3) {
             $where = ["pid" => $pid];
         } else {
