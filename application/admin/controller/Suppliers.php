@@ -6,7 +6,6 @@ use app\admin\AdminController;
 use Env;
 use \upload\Imageupload;
 use think\Db;
-use app\common\action\admin\Suppliers;
 
 class Suppliers extends AdminController {
     /**
