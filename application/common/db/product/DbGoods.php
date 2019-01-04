@@ -498,7 +498,7 @@ class DbGoods {
      * @param $supid
      * @return bool
      */
-    public function getSupplierFreightdetail($field, $id) {
+    public function getSupplierFreight($field, $id) {
         return SupplierFreight::field($field)->where('id', $id)->findOrEmpty()->toArray();
     }
 
@@ -564,5 +564,16 @@ class DbGoods {
     public function addSupplierFreight($data) {
         $SupplierFreightDetail = new SupplierFreightDetail;
         return $SupplierFreightDetail->save($data);
+    }
+
+    /**
+     * 修改供应商快递模板
+     * @param $data
+     * @param $id
+     * @return bool
+     */
+    public function updateSupplierFreight($data,$id){
+        $SupplierFreightDetail = new SupplierFreightDetail;
+        return $SupplierFreightDetail->save($data,['id'=>$id]);
     }
 }

@@ -191,9 +191,9 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreightdetail($id) {
+    public function getSupplierFreight($id) {
         $field           = 'id,supid,stype,status,title,desc';
-        $supplierfreight = DbGoods::getSupplierFreightdetail($field, $id);
+        $supplierfreight = DbGoods::getSupplierFreight($field, $id);
         if (empty($supplierfreight)) {
             return ['code' => '3000'];
         }
@@ -252,5 +252,43 @@ class Suppliers {
         $supplierfreight['desc'] = $desc;
 //        DbGoods::addSupplierFreight($data);
         return ['code'=>'200'];
+        DbGoods::addSupplierFreight($supplierfreight);
+        return ['code' => '200'];
+    }
+
+    /**
+     * 修改供应商快递模板
+     * @return array
+     * @author rzc
+     */
+    public function updateSupplierFreight($supplier_freight_Id,$stype,$title,$desc){
+        if (!is_numeric($supplier_freight_Id) || !is_numeric($stype)) {
+            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
+        }
+        if (!$title || !$desc) {
+            return ['code' => '3002']; /* 标题和详情不能为空 */
+        }
+        $supplierfreight = [];
+        $supplierfreight['stype'] = $stype;
+        $supplierfreight['title'] = $title;
+        $supplierfreight['desc'] = $desc;
+        DbGoods::updateSupplierFreight($supplierfreight,$supplier_freight_Id);
+        return ['code' => '200'];
+    }
+
+    /**
+     * 获取供应商快递模板运费详情
+     * @return array
+     * @author rzc
+     */
+    public function getSupplierFreightdetail($id){
+        if (!is_numeric($id)) {
+            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
+        }
+        // $result = DbGoods::getSupplierFreightdetail($id);
+        if (empty($result)) {
+            return ['code' => '3000']; /* 不能为空 */
+        }
+        return ['code' => '200' , $result];
     }
 }
