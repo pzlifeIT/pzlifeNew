@@ -30,11 +30,12 @@ class DbImage {
     /**
      * 查找该图片是否有未完成的
      * @param $name
+     * @param $status
      * @return array
      * @author zyr
      */
-    public function getLogImage($name) {
-        return LogImage::field('id')->where(['image_path' => $name, 'status' => 2])->findOrEmpty()->toArray();
+    public function getLogImage($name, $status) {
+        return LogImage::field('id')->where(['image_path' => $name, 'status' => $status])->findOrEmpty()->toArray();
     }
 
     /**
@@ -44,7 +45,7 @@ class DbImage {
      * @return bool
      */
     public function updateLogImageStatus($id, $status) {
-        return $this->logImage->save(['status' => $status], ['id' => $id]);
+        return $this->logImage->save(['status' => $status], $id);
     }
 
 }

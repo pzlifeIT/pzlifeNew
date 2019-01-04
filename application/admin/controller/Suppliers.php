@@ -76,7 +76,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($supplierId)) {
             return ['code' => '3002'];
         }
-        
+
         $result = $this->app->suppliers->getSupplierData($supplierId);
         return $result;
     }
@@ -126,12 +126,12 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {Number} id 供应商ID
      * @apiParam (入参) {String} tel 联系方式
      * @apiParam (入参) {String} name 名称
-     * @apiParam (入参) {file} image 图片
+     * @apiParam (入参) {String} image 图片
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
      * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:供应商ID必须是数字 / 3007:名字不能重复
      * @apiSuccess (data) {Array} data 结果
-     * @apiSampleRequest /admin/suppliers/updateSupplier
+     * @apiSampleRequest /admin/suppliers/updatesupplier
      * @author rzc
      */
     public function updateSupplier() {
@@ -140,7 +140,7 @@ class Suppliers extends AdminController {
         $name  = trim($this->request->post('name'));
         $title = trim($this->request->post('title'));
         $desc  = trim($this->request->post('desc'));
-        $image = $this->request->file('image');
+        $image = trim($this->request->post('image'));
         /* 参数判断 */
         if (!is_numeric($id)) {
             return ['code' => '3006'];
@@ -151,44 +151,7 @@ class Suppliers extends AdminController {
         if (!$name || !$title || !$desc) {
             return ['code' => '3002'];
         }
-
-        /* 判断是否存在 */
-        if ($this->app->suppliers->getSupplierWhereFileByID('name', $name, $id)) {
-            return ['code' => '3007'];
-        }
-        /* 有图片执行图片上传 */
-        if ($image) {
-            /* 图片上传 */
-            $fileInfo = $image->getInfo();
-
-            $upload = new Imageupload();
-            /* 文件名重命名 */
-            $filename = $upload->getNewName($fileInfo['name']);
-
-            $uploadimage = $upload->uploadFile($fileInfo['tmp_name'], 'supplier/' . $filename);
-            if ($uploadimage) {
-                /* 初始化数组 */
-                $new_supplier          = [];
-                $new_supplier['tel']   = $tel;
-                $new_supplier['name']  = $name;
-                $new_supplier['title'] = $title;
-                $new_supplier['desc']  = $desc;
-                $new_supplier['image'] = $filename;
-                $result                = $this->app->suppliers->updateSupplier($new_supplier, $id);
-                return $result;
-            } else {
-                return ['code' => '3005'];
-            }
-        } /* 没有图片，修改其他 */
-        else {
-            $new_supplier          = [];
-            $new_supplier['tel']   = $tel;
-            $new_supplier['name']  = $name;
-            $new_supplier['title'] = $title;
-            $new_supplier['desc']  = $desc;
-            $result                = $this->app->suppliers->updateSupplier($new_supplier, $id);
-            return $result;
-        }
+        return $this->app->suppliers->editSupplier(intval($id), $tel, $name,$title, $desc, $image);
     }
 
     /**
@@ -286,7 +249,7 @@ class Suppliers extends AdminController {
         return $result;
     }
 
-     /**
+    /**
      * @api              {post} / 获取供应商快递模板运费列表
      * @apiDescription   getSupplierFreightdetailList
      * @apiGroup         admin_Suppliers
@@ -299,18 +262,18 @@ class Suppliers extends AdminController {
      * @apiSampleRequest /admin/suppliers/getSupplierFreightdetailList
      * @author rzc
      */
-    public function getSupplierFreightdetailList(){
-        $page = trim($this->request->post('page')) ;
-        $pagenum = trim($this->request->post('pagenum'));
+    public function getSupplierFreightdetailList() {
+        $page       = trim($this->request->post('page'));
+        $pagenum    = trim($this->request->post('pagenum'));
         $freight_id = trim($this->request->post('freight_id'));
-        $page = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 10;
+        $page       = $page ? $page : 1;
+        $pagenum    = $pagenum ? $pagenum : 10;
 
         if (!is_numeric($page) || !is_numeric($pagenum) || !is_numeric($freight_id)) {
-            return ['code'=>'3002'];
+            return ['code' => '3002'];
         }
 
-        $result = $this->app->suppliers->getSupplierFreightdetailList($freight_id,$page,$pagenum);
+        $result = $this->app->suppliers->getSupplierFreightdetailList($freight_id, $page, $pagenum);
         return $result;
     }
 
@@ -330,15 +293,15 @@ class Suppliers extends AdminController {
      * @author rzc
      */
 
-     public function addSupplierFreight(){
+    public function addSupplierFreight() {
         $supplierId = $this->request->post('supplierId');
-        $stype = $this->request->post('stype');
-        $title = $this->request->post('title');
-        $desc = $this->request->post('desc');
-        $result = $this->app->suppliers->addSupplierFreight($supplierId,$stype,$title,$desc);
+        $stype      = $this->request->post('stype');
+        $title      = $this->request->post('title');
+        $desc       = $this->request->post('desc');
+        $result     = $this->app->suppliers->addSupplierFreight($supplierId, $stype, $title, $desc);
         return $result;
 
-     }
+    }
 
 
 }

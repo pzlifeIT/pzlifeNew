@@ -154,7 +154,7 @@ class DbGoods {
      * 2019/1/2-10:46
      */
     public function getOneSupplier($where, $field) {
-        return Supplier::where($where)->field($field)->find()->toArray();
+        return Supplier::where($where)->field($field)->findOrEmpty()->toArray();
     }
 
     /**
@@ -478,7 +478,8 @@ class DbGoods {
      * @return bool
      */
     public function updateSupplier($data, $id) {
-        return Supplier::where('id', $id)->update($data);
+//        return Supplier::where('id', $id)->update($data);
+        return $this->supplier->save($data, ['id' => $id]);
     }
 
     /**
@@ -541,8 +542,8 @@ class DbGoods {
      * @param $order
      * @return bool
      */
-    public function getSupplierFreightdetailList($field,$limit,$freight_id){
-        return SupplierFreightDetail::field($field)->where('freight_id',$freight_id)->order('id','desc')->limit($limit)->select()->toArray();
+    public function getSupplierFreightdetailList($field, $limit, $freight_id) {
+        return SupplierFreightDetail::field($field)->where('freight_id', $freight_id)->order('id', 'desc')->limit($limit)->select()->toArray();
     }
 
     /**
@@ -551,8 +552,8 @@ class DbGoods {
      * @param $supid
      * @return bool
      */
-    public function getSupplierFreightdetailCount($freight_id){
-        return SupplierFreightDetail::count()->where('freight_id',$freight_id);
+    public function getSupplierFreightdetailCount($freight_id) {
+        return SupplierFreightDetail::count()->where('freight_id', $freight_id);
     }
 
     /**
@@ -560,7 +561,7 @@ class DbGoods {
      * @param $data
      * @return bool
      */
-    public function addSupplierFreight($data){
+    public function addSupplierFreight($data) {
         $SupplierFreightDetail = new SupplierFreightDetail;
         return $SupplierFreightDetail->save($data);
     }
