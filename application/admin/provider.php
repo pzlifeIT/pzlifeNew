@@ -15,8 +15,9 @@ return [
     'suppliers' => app\common\action\admin\Suppliers::class,
     'category'  => app\common\action\admin\Category::class,
     'spec'      => app\common\action\admin\Spec::class,
-    'goods'     => \app\common\action\admin\Goods::class,
+    'goods'     => app\common\action\admin\Goods::class,
     'dividend'  => app\common\action\index\Dividend::class,
     'adminLog'  => app\common\action\admin\AdminLog::class,
+    'subject'   => app\common\action\admin\Subject::class,
     'Upload'    => app\common\action\admin\Upload::class,
 ];
