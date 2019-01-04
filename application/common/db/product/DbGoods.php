@@ -575,4 +575,14 @@ class DbGoods {
         $SupplierFreightDetail = new SupplierFreightDetail;
         return $SupplierFreightDetail->save($data,['id'=>$id]);
     }
+
+    /**
+     * 获取供应商快递模板运费详情
+     * @param $field
+     * @param $id
+     * @return bool
+     */
+    public function getSupplierFreightdetail($field,$id){
+        return SupplierFreightDetail::field($field)->where('id',$id)->findOrEmpty()->toArray();
+    }
 }

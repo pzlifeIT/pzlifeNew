@@ -127,8 +127,6 @@ class Suppliers {
      */
     public function getSupplierFreights($supid) {
         $field = 'id,supid,stype,title,desc';
-        echo 123;
-        die;
         $result = DbGoods::getSupplierFreights($field, $supid);
         if (empty($result)) {
             return ['code' => '3000'];
@@ -243,10 +241,34 @@ class Suppliers {
         if (!is_numeric($id)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
-        // $result = DbGoods::getSupplierFreightdetail($id);
+        $filed = 'id,freight_id,area_id,price,after_price,total_price';
+        $result = DbGoods::getSupplierFreightdetail($field,$id);
         if (empty($result)) {
             return ['code' => '3000']; /* 不能为空 */
         }
         return ['code' => '200' , $result];
+    }
+
+    /**
+     * 添加供应商快递模板运费
+     * @return array
+     * @author rzc
+     */
+    public function addSupplierFreightdetail($freight_id,$area_id,$price,$after_price,$total_price){
+        if (!is_numeric($freight_id) || !is_numeric($area_id)) {
+            return ['code' => '3001'];
+        }
+        if (!$price || !$after_price || !$total_price) {
+            return ['code' => '3002'];
+        }
+        /* 查询该运费模板ID是否添加过此区域 */
+        $supplier_freight_detail = [];
+        $supplier_freight_detail['freight_id'] = $freight_id;
+        $supplier_freight_detail['area_id'] = $area_id;
+        $supplier_freight_detail['price'] = $price;
+        $supplier_freight_detail['after_price'] = $after_price;
+        $supplier_freight_detail['total_price'] = $total_price;
+
+        $result = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
     }
 }
