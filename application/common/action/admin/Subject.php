@@ -1,7 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/1/4
- * Time: 11:22
- */
+namespace app\common\action\admin;
+
+class Subject{
+
+}

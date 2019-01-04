@@ -61,7 +61,8 @@ class Imageupload {
 
     public function getNewName($filename) {
         $suffix = $this->getSuffix($filename);
-        return uniqid() . $suffix;
+        $name   = uniqid(md5(time() . $filename));
+        return $name . $suffix;
     }
 
     public function getSuffix($filename) {
@@ -83,29 +84,7 @@ class Imageupload {
     public function uploadFile($fileContent, $fileName) {
 //        $fileSuffix = substr($fileOldName, strripos($fileOldName, '.', 0));//文件后缀名
         $uploadMgr = new UploadManager();// 初始化 UploadManager 对象并进行文件的上传
-        list($ret, $err) = $uploadMgr->put($this->token, $fileName, $fileContent);// 调用 UploadManager 的 putFile 方法进行文件的上传
-        if ($err !== null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-
-    /**
-     * @desc 本地文件上传
-     * @author zyr
-     * @param $filePath 文件自定义路径
-     * @param $fileName  文件名称
-     * @throws
-     * @return boolean
-     */
-    public function setUpload($filePath, $fileName) {
-        if (empty($filePath) || empty($fileName)) {
-            return false;
-        }
-        $uploadMgr = new UploadManager();// 初始化 UploadManager 对象并进行文件的上传
-        list($ret, $err) = $uploadMgr->putFile($this->token, $filePath, $fileName);// 调用 UploadManager 的 putFile 方法进行文件的上传
+        list($ret, $err) = $uploadMgr->putFile($this->token, $fileName, $fileContent);// 调用 UploadManager 的 putFile 方法进行文件的上传
         if ($err !== null) {
             return false;
         } else {

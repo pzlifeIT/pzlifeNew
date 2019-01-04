@@ -4,6 +4,7 @@ namespace app\common\model;
 
 use think\Model;
 use think\model\concern\SoftDelete;
+use Config;
 
 class Supplier extends Model {
     use SoftDelete;
@@ -14,10 +15,12 @@ class Supplier extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
     ];
     private $status = [1 => '启用', 2 => '停用',];
+
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
@@ -33,6 +36,13 @@ class Supplier extends Model {
         }
         $status = array_flip($this->status);
         return $status[$value];
+    }
+
+    public function getImageAttr($value) {
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
     }
 
 }
