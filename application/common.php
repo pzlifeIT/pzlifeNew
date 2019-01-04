@@ -10,3 +10,12 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
+
+/**
+ * 过滤图片路径的http域名
+ * @param $image
+ * @return mixed
+ */
+function filtraImage($domain, $image) {
+    return str_replace($domain . '/', '', $image);
+}

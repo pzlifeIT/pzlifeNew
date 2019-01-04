@@ -12,10 +12,12 @@ class Goods
      * @author wujunjie
      * 2018/12/26-10:25
      */
-    public function goodsList(){
+    public function goodsList($page,$pageNum){
+        $offset = $pageNum * ($page - 1);
         //查找所有商品数据
         $field = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
-        $goods_data = DbGoods::getGoodsList($field);
+        $goods_data = DbGoods::getGoodsList($field,$offset,$pageNum);
+        $total = DbGoods::getGoodsList();
         if (empty($goods_data)){
             return ["msg"=>"商品数据不存在","code"=>3000];
         }
@@ -37,7 +39,7 @@ class Goods
             }
             $goods_data[$k]["cate"] = $cate["type_name"];
         }
-        return ["code"=>200,"data"=>$goods_data];
+        return ["code"=>200,"total"=>$total,"data"=>$goods_data];
     }
 
     /**

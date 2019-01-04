@@ -14,6 +14,11 @@ use app\common\model\SupplierFreight;
 use app\common\model\SupplierFreightDetail;
 
 class DbGoods {
+    private $supplier;
+
+    public function __construct() {
+        $this->supplier = new Supplier();
+    }
 
     public function getTier($id) {
         return GoodsClass::field('type_name,tier')->findOrEmpty($id)->toArray();
@@ -65,7 +70,10 @@ class DbGoods {
      * @return array
      */
     public function getGoodsClass($field, $where, $offset = 0, $pageNum = 0) {
-        $obj = GoodsClass::where($where)->field($field);
+        $obj = GoodsClass::field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
         if ($offset == 0 && $pageNum == 0) {
             return $obj->select()->toArray();
         }
@@ -101,8 +109,18 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field) {
-        return $goods_data = Goods::field($field)->select()->toArray();
+    public function getGoodsList($field, $offset, $pageNum) {
+        return Goods::limit($offset, $pageNum)->field($field)->select()->toArray();
+    }
+
+    /**
+     * 获取商品条数
+     * @return float|string
+     * @author wujunjie
+     * 2019/1/3-19:08
+     */
+    public function getGoodsListNum() {
+        return Goods::count();
     }
 
     /**
@@ -147,8 +165,22 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-14:47
      */
-    public function getSpecList($field, $offset, $pageNum) {
+    public function getSpecList($field, $offset = 0, $pageNum = 0) {
+        //只获取不分页
+        if ($offset == 0 && $pageNum == 0) {
+            return GoodsSpec::field($field)->select()->toArray();
+        }
+        //获取并分页
         return GoodsSpec::limit($offset, $pageNum)->field($field)->select()->toArray();
+    }
+
+    /**
+     * 获取一级规格数据条数
+     * @author wujunjie
+     * 2019/1/3-18:57
+     */
+    public function getSpecListNum() {
+        return GoodsSpec::count();
     }
 
     /**
@@ -436,7 +468,7 @@ class DbGoods {
      * @return bool
      */
     public function addSupplier($data) {
-        return Supplier::insert($data);
+        return $this->supplier->save($data);
     }
 
     /**
@@ -473,10 +505,11 @@ class DbGoods {
      * 查询某字段的供应商信息（精确查询）
      * @param $field
      * @param $value
-     * @return bool
+     * @param $getField
+     * @return array
      */
-    public function getSupplierWhereFile($field, $value) {
-        return Supplier::where($field, $value)->findOrEmpty()->toArray();
+    public function getSupplierWhereFile($field, $value, $getField = '*') {
+        return Supplier::field($getField)->where($field, $value)->findOrEmpty()->toArray();
     }
 
     /**

@@ -27,8 +27,13 @@ class Spec extends AdminController
      * 2018/12/25-10:07
      */
     public function getSpecList(){
-        $page = trim(input("post.page")) ? : 1;
-        $pageNum = trim(input("post.page_num")) ? : 10;
+        $page = trim(input("post.page"));
+        $page = empty($page) ? 1 : intval($page);
+        $pageNum = trim(input("post.page_num"));
+        $pageNum = empty($pageNum) ? 10 : intval($pageNum);
+        if (!is_numeric($page) || !is_numeric($pageNum)){
+            return ["msg"=>"参数错误","code"=>3001];
+        }
         $spec_data = $this->app->spec->getSpecList($page,$pageNum);
         return $spec_data;
     }
@@ -71,6 +76,9 @@ class Spec extends AdminController
         $top_id = trim(input("post.top_id"));
         $name = trim(input("post.sa_name"));
         $type = trim(input("post.type"));
+        if ($top_id == 0){
+            return ["msg"=>"top_id不能为0","code"=>3002];
+        }
         if (empty(is_numeric($top_id)) || empty($name) || empty(is_numeric($type))){
             return ["msg"=>"参数错误","code"=>3002];
         }
@@ -116,7 +124,7 @@ class Spec extends AdminController
      * @apiParam (入参) {Number} id 当前属性id
      * @apiParam (入参) {String} sa_name 修改的属性名称（一级属性名称/二级属性名称）
      * @apiParam (入参) {Number} type 提交类型 1是提交保存一级属性，2是提交保存二级属性
-     * @apiSampleRequest /admin/spec/savespecattr
+     * @apiSampleRequest /admin/spec/saveEditSpecAttr
      * @author wujunjie
      * 2018/12/25-15:47
      */
@@ -133,14 +141,14 @@ class Spec extends AdminController
 
     /**
      * @api              {post} / 删除
-     * @apiDescription   editAttrPage
+     * @apiDescription   delSpecAttr
      * @apiGroup         admin_spec
-     * @apiName          editAttrPage
+     * @apiName          delSpecAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3003：无法删除 /3002 参数错误
      * @apiSuccess (返回) {String}  msg 返回消息
      * @apiParam (入参) {Number} id 需要修改的数据的id
      * @apiParam (入参) {Number} type 删除类型 1删除一级属性 2删除二级属性
-     * @apiSampleRequest /admin/spec/editattrpage
+     * @apiSampleRequest /admin/spec/delspecattr
      * @author wujunjie
      * 2018/12/25-16:25
      */

@@ -6,6 +6,23 @@ use app\facade\DbGoods;
 use third\PHPTree;
 
 class Category {
+    public function allCateList(int $status) {
+        $where = [];
+        if ($status == 3) {
+            $where = ['status' => $status];
+        }
+        $field = "id,pid,tier,type_name";
+        $cate  = DbGoods::getGoodsClass($field, $where);
+        if (empty($cate)) {
+            return ['code' => 3000];
+        }
+        $tree = new PHPTree($cate);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        return ['code' => '200', 'data' => $cate_tree];
+    }
+
     /**
      * 获取分类列表
      * @param int $type
@@ -24,11 +41,11 @@ class Category {
             $tier      = $res['tier'] + 1;
             $type_name = $res['type_name'];
         }
-        $field  = "type_name,create_time";
-        if ($type == 3){
-            $where = [];
-        }else{
-            $where  = ['pid' => $pid, 'status' => $type];
+        $field = "type_name,create_time";
+        if ($type == 3) {
+            $where = ["pid" => $pid];
+        } else {
+            $where = ['pid' => $pid, 'status' => $type];
         }
         $offset = $offset = $pageNum * ($page - 1);;
         $cate  = DbGoods::getGoodsClass($field, $where, $offset, $pageNum);
@@ -74,7 +91,7 @@ class Category {
      */
     public function saveAddCate($pid, $type_name, $status) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
-        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+        $where = [["type_name", "=", $type_name]];
         $field = "id,type_name";
         $res   = DbGoods::getOneCate($where, $field);
         if ($res) {
@@ -148,7 +165,7 @@ class Category {
      * @author wujunjie
      * 2018/12/24-16:45
      */
-    public function saveEditCate($id, $type_name,$status) {
+    public function saveEditCate($id, $type_name, $status) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
         $where = [["type_name", "=", $type_name], ["status", "=", 1]];
         $field = "id,type_name";
@@ -158,7 +175,7 @@ class Category {
         }
         $data = [
             "type_name" => $type_name,
-            "status" => $status
+            "status"    => $status,
         ];
         $res  = DbGoods::editCate($data, $id);
         if (empty($res)) {
@@ -183,6 +200,10 @@ class Category {
             return ["msg" => "该分类有子分类,请先删除子分类", "code" => 3003];
         }
         //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能删除
+        //判断当前分类是不是三级分类
+        $where = [["id", "=", $id]];
+        $field = "id,tier";
+        $res   = DbGoods::getOneCate($where, $field);
         if ($res["tier"] == 3) {
 //            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
             $where = [["cate_id", "=", $res["id"]]];
@@ -209,6 +230,10 @@ class Category {
             return ["msg" => "该分类有子分类,请先停用子分类", "code" => 3003];
         }
         //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能停用
+        //判断该分类是不是三级分类
+        $where = [["id", "=", $id]];
+        $field = "id,tier";
+        $res   = DbGoods::getOneCate($where, $field);
         if ($res["tier"] == 3) {
             $where = [["cate_id", "=", $res["id"]]];
             $field = "id";
@@ -228,14 +253,7 @@ class Category {
     }
 
     //启用分类
-    private function start($id, $type_name) {
-        //启用分类之前需要判断是否已经存在该名称
-        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
-        $field = "id,type_name";
-        $res   = DbGoods::getOneCate($where, $field);
-        if ($res) {
-            return ["msg" => "该分类名称已经存在", "code" => 3005];
-        }
+    private function start($id) {
         $data = [
             "status" => 1
         ];
@@ -254,10 +272,10 @@ class Category {
      * @author wujunjie
      * 2018/12/28-9:29
      */
-    public function stopStart($id, $type, $type_name) {
+    public function stopStart($id, $type) {
         switch ($type) {
             case 1:
-                $res = $this->start($id, $type_name);
+                $res = $this->start($id);
                 break;
             case 2:
                 $res = $this->stop($id);

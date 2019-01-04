@@ -16,6 +16,7 @@ class Category extends AdminController {
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {Number} tier 当前分类层级
+     * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {String} type_name 分类名称
@@ -84,7 +85,7 @@ class Category extends AdminController {
         $pid       = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
         $status    = trim(input("post.status"));
-        $status = empty($status) ? 1 : intval($status);
+        $status    = empty($status) ? 1 : intval($status);
         if (empty($type_name) || empty(is_numeric($status))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
@@ -139,12 +140,12 @@ class Category extends AdminController {
     public function saveEditCate() {
         $id        = trim(input("post.id"));
         $type_name = trim(input("post.type_name"));
-        $status = trim(input("post.status"));
-        $status = empty($status) ? 1 : intval($status);
+        $status    = trim(input("post.status"));
+        $status    = empty($status) ? 1 : intval($status);
         if (empty(is_numeric($id)) || empty($type_name)) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $result = $this->app->category->saveEditCate($id, $type_name,$status);
+        $result = $this->app->category->saveEditCate($id, $type_name, $status);
         return $result;
     }
 
@@ -186,11 +187,10 @@ class Category extends AdminController {
     public function stopStartCate() {
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));//类型 1启用 2停用
-        $type_name = trim(input("post.type_name"));
-        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($type_name)) {
+        if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->category->stopStart($id, $type, $type_name);
+        $res = $this->app->category->stopStart($id, $type);
         return $res;
     }
 
@@ -211,5 +211,32 @@ class Category extends AdminController {
     public function getThreeCate() {
         $res = $this->app->category->getThreeCate();
         return $res;
+    }
+
+
+    /**
+     * @api              {post} / 所有商品分类
+     * @apiDescription   allCateList
+     * @apiGroup         admin_category
+     * @apiName          allCateList
+     * @apiParam (入参) {Number} [status] 类型 1,启用的 / 2，停用的 / 3，所有的 (默认:1)
+     * @apiSuccess (返回) {Number} code 200:成功 / 3000:未获取到数据 / 3001.status参数错误
+     * @apiSuccess (返回) {Array}  data 分类数据
+     * @apiSuccess (data) {Number} id 当前分类层级
+     * @apiSuccess (data) {Number} pid 上级id
+     * @apiSuccess (data) {Number} tier 层级
+     * @apiSuccess (data) {String} type_name 名称
+     * @apiSuccess (data) {Array} _child 下级分类
+     * @apiSampleRequest /admin/category/allCateList
+     * @return array
+     */
+    public function allCateList() {
+        $statusArr = [1, 2, 3];
+        $status    = trim(input("post.status"));
+        $status    = empty($status) ? 1 : intval($status);
+        if (!in_array($status, $statusArr)) {
+            return ['code' => 3001];
+        }
+        return $this->app->category->allCateList($status);
     }
 }

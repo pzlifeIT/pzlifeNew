@@ -20,35 +20,32 @@ class Spec
 //        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         $field = "id,cate_id,spe_name";
         $spec = DbGoods::getSpecList($field,$offset,$pageNum);
+        $total = DbGoods::getSpecListNum();
         if (empty($spec)){
             return ["msg"=>"未获取到数据","code"=>3000];
         }
         foreach($spec as $k=>$v){
-//            $type_name = GoodsClass::where("id",$v["cate_id"])->field("id,type_name")->find()->toArray();
+            // 查找分类
             $whereCate = [["id","=",$v["cate_id"]]];
             $fieldCate = "id,type_name";
             $type_name = DbGoods::getOneCate($whereCate,$fieldCate);
-            if (empty($type_name)){
-                return ["code"=>"3000"];
+            if (!empty($type_name)){
+                $spec[$k]['category'] = $type_name["type_name"];
             }
-            $spec[$k]['category'] = $type_name["type_name"];
+
             //查找二级属性
             $whereAttr = [["spec_id","=",$v["id"]]];
             $fieldAttr = "id,spec_id,attr_name";
-            $res  = DbGoods::getAttrList($whereAttr,$fieldAttr);
-            if (empty($res)){
-                return ["code"=>"3000"];
-            }
-            $spec[$k]["attr"] = $res;
+            $spec[$k]["attr"] = DbGoods::getAttrList($whereAttr,$fieldAttr);
         }
-        return ["code"=>200,"data"=>$spec];
+        return ["code"=>200,"total"=>$total,"data"=>$spec];
     }
 
     /**
      * 添加二级属性页面
      * @return array
      * @author wujunjie
-     * 2018/12/25-10:51 
+     * 2018/12/25-10:51
      */
     public function addAttrPage(){
         //可选一级属性
@@ -56,6 +53,15 @@ class Spec
         $spec = DbGoods::getSpecList($field);
         if (empty($spec)){
             return ["msg"=>"未获取到规格数据","code"=>3000];
+        }
+        foreach ($spec as $k=>$v){
+            // 查找分类
+            $whereCate = [["id","=",$v["cate_id"]]];
+            $fieldCate = "id,type_name";
+            $type_name = DbGoods::getOneCate($whereCate,$fieldCate);
+            if (!empty($type_name)){
+                $spec[$k]['category'] = $type_name["type_name"];
+            }
         }
         return ["code"=>200,"spec"=>$spec];
     }
@@ -69,6 +75,13 @@ class Spec
      * 2018/12/25-11:26
      */
     private function saveSpec($cate_id,$spec_name){
+        //判断传过来的是不是分类id
+        $where = [["id","=",$cate_id]];
+        $field = "type_name";
+        $res = DbGoods::getOneCate($where,$field);
+        if (empty($res)){
+            return ["msg"=>"分类id错误","code"=>3002];
+        }
         $data = [
             "cate_id"=>$cate_id,
             "spe_name"=>$spec_name,
