@@ -7,6 +7,7 @@ use Config;
 use Env;
 use \upload\Imageupload;
 use think\Db;
+use app\common\action\admin\Suppliers;
 
 class Suppliers extends AdminController {
 
@@ -317,12 +318,41 @@ class Suppliers extends AdminController {
         return $result;
     }
 
+     /**
+     * @api              {post} / 获取供应商快递模板运费列表
+     * @apiDescription   getSupplierFreightdetailList
+     * @apiGroup         admin_Suppliers
+     * @apiName          getSupplierFreightdetailList
+     * @apiParam (入参) {Number} freight_id 供应商快递模板ID
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {Number} pagenum 每页条数
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID和页码和每页条数只能是数字
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSampleRequest /admin/suppliers/getSupplierFreightdetailList
+     * @author rzc
+     */
+    public function getSupplierFreightdetailList(){
+        $page = trim($this->request->post('page')) ;
+        $pagenum = trim($this->request->post('pagenum'));
+        $freight_id = trim($this->request->post('freight_id'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
+
+        if (!is_numeric($page) || !is_numeric($pagenum) || !is_numeric($freight_id)) {
+            return ['code'=>'3002'];
+        }
+
+        $result = $this->app->suppliers->getSupplierFreightdetailList($freight_id,$page,$pagenum);
+        return $result;
+    }
+
+
     /**
      * @api              {post} / 新建供应商快递模板
      * @apiDescription   addSupplierFreight
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplierFreight
-     * @apiParam (入参) {Number} supplierId 供应商快递模板ID
+     * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
@@ -333,7 +363,13 @@ class Suppliers extends AdminController {
      */
 
      public function addSupplierFreight(){
-        return [];
+        $supplierId = $this->request->post('supplierId');
+        $stype = $this->request->post('stype');
+        $title = $this->request->post('title');
+        $desc = $this->request->post('desc');
+        $result = $this->app->suppliers->addSupplierFreight($supplierId,$stype,$title,$desc);
+        return $result;
+
      }
 
 

@@ -11,6 +11,7 @@ use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
+use app\common\model\SupplierFreightDetail;
 
 class DbGoods {
 
@@ -401,7 +402,7 @@ class DbGoods {
     }
 
     /**
-     * 获取所有供应商分类
+     * 获取供应商列表
      * @param $field
      * @param $order
      * @param $limit
@@ -497,5 +498,37 @@ class DbGoods {
      */
     public function updateSupplierFreights($status, $supid) {
         return SupplierFreight::where('supid', $supid)->update(['status' => $status]);
+    }
+
+    /**
+     * 获取供应商某一快递模板运费列表
+     * @param $field
+     * @param $limit
+     * @param $freight_id
+     * @param $order
+     * @return bool
+     */
+    public function getSupplierFreightdetailList($field,$limit,$freight_id){
+        return SupplierFreightDetail::field($field)->where('freight_id',$freight_id)->order('id','desc')->limit($limit)->select()->toArray();
+    }
+
+    /**
+     * 获取供应商某一快递模板运费总记录条数
+     * @param $status
+     * @param $supid
+     * @return bool
+     */
+    public function getSupplierFreightdetailCount($freight_id){
+        return SupplierFreightDetail::count()->where('freight_id',$freight_id);
+    }
+
+    /**
+     * 新建供应商快递模板
+     * @param $data
+     * @return bool
+     */
+    public function addSupplierFreight($data){
+        $SupplierFreightDetail = new SupplierFreightDetail;
+        return $SupplierFreightDetail->save($data);
     }
 }

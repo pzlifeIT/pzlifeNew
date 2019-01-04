@@ -16,4 +16,13 @@ class DbProvinces {
         return Areas::where($where)->field($field)->select()->toArray();
     }
 
+    /**
+     * 获取单条省市区信息
+     * @param $field 查询字段
+     * @param $where 条件
+     * @return array
+     */
+    public function getAreaOne($field,$where){
+        return Areas::where($where)->field($field)->findOrEmpty()->toArray();
+    }
 }

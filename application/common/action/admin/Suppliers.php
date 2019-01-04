@@ -3,6 +3,7 @@
 namespace app\common\action\admin;
 
 use app\facade\DbGoods;
+use app\facade\DbProvinces;
 use third\PHPTree;
 use Config;
 
@@ -131,8 +132,60 @@ class Suppliers {
         if (empty($supplierfreight)) {
             return ['code' => '3000'];
         }
-        $detail_field = 'id,freight_id,area_id,price,after_price,total_price';
-        
         return ['code' => '200','data' => $supplierfreight];
+    }
+
+    /**
+     * 获取供应商快递模板运费列表
+     * @return array
+     * @author rzc
+     */
+    public function  getSupplierFreightdetailList($freight_id,$page,$pagenum){
+        $field = 'id,freight_id,area_id,price,after_price,total_price';
+        $offset = $pagenum * ($page - 1);
+        if ($offset < 0) {
+            return ['code' => '3000'];
+        }
+        
+        $limit = $offset.','.$pagenum;
+        $result = DbGoods::getSupplierFreightdetailList($field,$limit,$freight_id);
+        if (empty($result)) {
+            return ['code'=> '3000'];
+        }
+        /* 获取每条数据的上级省市名称 */
+        foreach ($result as $key => $value) {
+            $parent = DbProvinces::getAreaOne('area_name,pid',['id' => $value['area_id']]);
+            $pid = $parent['pid'];
+            $areaname = $parent['area_name'];
+            do {
+                $area = DbProvinces::getAreaOne('area_name,pid',['id'=>$pid]);
+                $pid = $area['pid'];
+                $areaname = $area['area_name'].$areaname;
+            } while ($pid);
+            $result[$key]['areaname'] = $areaname;
+        }
+        $count = DbGoods::getSupplierFreightdetailCount($freight_id);
+        return ['code' => '200','totle' => $count,'data' => $result];
+    }
+
+    /**
+     * 新建供应商快递模板
+     * @return array
+     * @author rzc
+     */
+    public function addSupplierFreight($supplierId,$stype,$title,$desc){
+        if (!is_numeric($supplierId) || !is_numeric($stype)) {
+            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
+        }
+        if (!$title || !$desc) {
+            return ['code' => '3002']; /* 标题和详情不能为空 */
+        }
+        $supplierfreight = [];
+        $supplierfreight['supid'] = $supplierId;
+        $supplierfreight['stype'] = $stype;
+        $supplierfreight['title'] = $title;
+        $supplierfreight['desc'] = $desc;
+        DbGoods::addSupplierFreight($data);
+        return ['code'=>'200'];
     }
 }
