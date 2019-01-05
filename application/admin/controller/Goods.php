@@ -33,7 +33,7 @@ class Goods extends AdminController
     public function getGoodsList(){
         $page = trim(input("post.page"));
         $page = empty($page) ? 1 : intval($page);
-        $pageNum = trim(input("post.pageNum"));
+        $pageNum = trim(input("post.page_num"));
         $pageNum = empty($pageNum) ? 10 : intval($pageNum);
         if (!is_numeric($page) || !is_numeric($pageNum)){
             return ["msg"=>"参数错误","code"=>3002];

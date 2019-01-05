@@ -17,7 +17,7 @@ class Goods
         //查找所有商品数据
         $field = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
         $goods_data = DbGoods::getGoodsList($field,$offset,$pageNum);
-        $total = DbGoods::getGoodsList();
+        $total = DbGoods::getGoodsListNum();
         if (empty($goods_data)){
             return ["msg"=>"商品数据不存在","code"=>3000];
         }
