@@ -42,10 +42,7 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        if ($result['image']) {
-            $result['image']=Config::get('qiniu.domain').'/'.$result['image'];
-        }
-        return ['code' => '200','data' => $result];
+        return ['code' => '200', 'data' => $result];
     }
 
     /**
@@ -59,14 +56,16 @@ class Suppliers {
      * @author zyr
      */
     public function addSupplier($tel, $name, $title, $desc, $image) {
-        $image    = filtraImage(Config::get('qiniu.domain'), $image);
-        $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-        if (empty($logImage)) {//图片不存在
-            return ['code' => '3005'];//图片没有上传过
-        }
         $supplier = DbGoods::getSupplierWhereFile('name', $name, 'id');
         if (!empty($supplier)) {
             return ['code' => '3006'];//供应商名字不能重复
+        }
+        $image = filtraImage(Config::get('qiniu.domain'), $image);
+        if (!empty($image)) {
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
         }
         /* 初始化数组 */
         $new_supplier          = [];
@@ -88,18 +87,26 @@ class Suppliers {
     }
 
     public function editSupplier($id, $tel, $name, $title, $desc, $image) {
+        $supplierRes = DbGoods::getOneSupplier(['id' => $id], 'image');
+        if (empty($supplierRes)) {
+            return ['code' => '3006'];//供应商id不存在
+        }
+        $supplierName = DbGoods::getOneSupplier([['name', '=', $name], ['id', '<>', $id]], 'id');
+        if (empty($supplierName)) {
+            return ['code' => '3007'];//供应商名称不能重复
+        }
         /* 初始化数组 */
         $oldLogImage  = [];
         $logImage     = [];
         $new_supplier = [];
+        $image    = filtraImage(Config::get('qiniu.domain'), $image);
         if (!empty($image)) {//提交了图片
-            $image    = filtraImage(Config::get('qiniu.domain'), $image);
             $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3005'];//图片没有上传过
             }
-            $oldImage = DbGoods::getOneSupplier(['id' => $id], 'image');
-            $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage['image']);
+            $oldImage = $supplierRes['image'];
+            $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
             if (!empty($oldImage)) {//之前有图片
                 if (stripos($oldImage, 'http') === false) {//新版本图片
                     $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
@@ -173,7 +180,7 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','data' => $result];
+        return ['code' => '200', 'data' => $result];
         return ['code' => '200', 'data' => $result];
     }
 
@@ -197,7 +204,7 @@ class Suppliers {
         if (empty($supplierfreight)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','data' => $supplierfreight];
+        return ['code' => '200', 'data' => $supplierfreight];
     }
 
     /**
@@ -205,32 +212,32 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function  getSupplierFreightdetailList($freight_id,$page,$pagenum){
-        $field = 'id,freight_id,area_id,price,after_price,total_price';
+    public function getSupplierFreightdetailList($freight_id, $page, $pagenum) {
+        $field  = 'id,freight_id,area_id,price,after_price,total_price';
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        
-        $limit = $offset.','.$pagenum;
-        $result = DbGoods::getSupplierFreightdetailList($field,$limit,$freight_id);
+
+        $limit  = $offset . ',' . $pagenum;
+        $result = DbGoods::getSupplierFreightdetailList($field, $limit, $freight_id);
         if (empty($result)) {
-            return ['code'=> '3000'];
+            return ['code' => '3000'];
         }
         /* 获取每条数据的上级省市名称 */
         foreach ($result as $key => $value) {
-            $parent = DbProvinces::getAreaOne('area_name,pid',['id' => $value['area_id']]);
-            $pid = $parent['pid'];
+            $parent   = DbProvinces::getAreaOne('area_name,pid', ['id' => $value['area_id']]);
+            $pid      = $parent['pid'];
             $areaname = $parent['area_name'];
             do {
-                $area = DbProvinces::getAreaOne('area_name,pid',['id'=>$pid]);
-                $pid = $area['pid'];
-                $areaname = $area['area_name'].$areaname;
+                $area     = DbProvinces::getAreaOne('area_name,pid', ['id' => $pid]);
+                $pid      = $area['pid'];
+                $areaname = $area['area_name'] . $areaname;
             } while ($pid);
             $result[$key]['areaname'] = $areaname;
         }
         $count = DbGoods::getSupplierFreightdetailCount($freight_id);
-        return ['code' => '200','totle' => $count,'data' => $result];
+        return ['code' => '200', 'totle' => $count, 'data' => $result];
     }
 
     /**
@@ -238,20 +245,20 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function addSupplierFreight($supplierId,$stype,$title,$desc){
+    public function addSupplierFreight($supplierId, $stype, $title, $desc) {
         if (!is_numeric($supplierId) || !is_numeric($stype)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
         if (!$title || !$desc) {
             return ['code' => '3002']; /* 标题和详情不能为空 */
         }
-        $supplierfreight = [];
+        $supplierfreight          = [];
         $supplierfreight['supid'] = $supplierId;
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
-        $supplierfreight['desc'] = $desc;
+        $supplierfreight['desc']  = $desc;
 //        DbGoods::addSupplierFreight($data);
-        return ['code'=>'200'];
+        return ['code' => '200'];
         DbGoods::addSupplierFreight($supplierfreight);
         return ['code' => '200'];
     }
@@ -261,18 +268,18 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function updateSupplierFreight($supplier_freight_Id,$stype,$title,$desc){
+    public function updateSupplierFreight($supplier_freight_Id, $stype, $title, $desc) {
         if (!is_numeric($supplier_freight_Id) || !is_numeric($stype)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
         if (!$title || !$desc) {
             return ['code' => '3002']; /* 标题和详情不能为空 */
         }
-        $supplierfreight = [];
+        $supplierfreight          = [];
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
-        $supplierfreight['desc'] = $desc;
-        DbGoods::updateSupplierFreight($supplierfreight,$supplier_freight_Id);
+        $supplierfreight['desc']  = $desc;
+        DbGoods::updateSupplierFreight($supplierfreight, $supplier_freight_Id);
         return ['code' => '200'];
     }
 
@@ -281,7 +288,7 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreightdetail($id){
+    public function getSupplierFreightdetail($id) {
         if (!is_numeric($id)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
@@ -289,6 +296,6 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000']; /* 不能为空 */
         }
-        return ['code' => '200' , $result];
+        return ['code' => '200', $result];
     }
 }

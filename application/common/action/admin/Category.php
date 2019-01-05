@@ -3,7 +3,10 @@
 namespace app\common\action\admin;
 
 use app\facade\DbGoods;
+use app\facade\DbImage;
+use think\Db;
 use third\PHPTree;
+use Config;
 
 class Category {
     public function allCateList(int $status) {
@@ -85,11 +88,13 @@ class Category {
      * 保存添加的分类
      * @param $pid 父级分类id
      * @param $type_name 分类名称
+     * @param $status 1.启用  2.停用
+     * @param $image 图片
      * @return array
      * @author wujunjie
      * 2018/12/24-14:21
      */
-    public function saveAddCate($pid, $type_name, $status) {
+    public function saveAddCate($pid, $type_name, $status, $image) {
         //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
         $where = [["type_name", "=", $type_name]];
         $field = "id,type_name";
@@ -112,18 +117,33 @@ class Category {
                 $tier = 3;
             }
         }
-        $data   = [
-            "pid"         => $pid,
-            "type_name"   => $type_name,
-            "tier"        => $tier,
-            "status"      => $status,
-            "create_time" => time()
+        $data     = [
+            "pid"       => $pid,
+            "type_name" => $type_name,
+            "tier"      => $tier,
+            "status"    => $status,
         ];
-        $result = DbGoods::addCate($data);
-        if (empty($result)) {
+        $logImage = [];
+        $image    = filtraImage(Config::get('qiniu.domain'), $image);
+        if ($image) {
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3003'];//图片没有上传过
+            }
+        }
+        Db::startTrans();
+        try {
+            $newClassId = DbGoods::addCate($data);
+            if (!empty($logImage)) {
+                DbGoods::addClassImage(['class_id' => $newClassId, 'image_path' => $image]);//添加分类图片
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            Db::commit();
+            return ["msg" => "保存成功", "code" => 200];
+        } catch (\Exception $e) {
+            Db::rollback();
             return ["msg" => "保存失败", "code" => "3001"];
         }
-        return ["msg" => "保存成功", "code" => 200];
     }
 
     /**
@@ -159,29 +179,62 @@ class Category {
     /**
      * 保存编辑后的分类
      * @param $id 分类ID
-     * @param $pid 父级ID
      * @param $type_name 分类名称
+     * @param $status
+     * @param $image 分类图片
      * @return array
      * @author wujunjie
      * 2018/12/24-16:45
      */
-    public function saveEditCate($id, $type_name, $status) {
-        //保存提交的分类之前需要判断是否已经存在该名称,不能是停用的,删除的
-        $where = [["type_name", "=", $type_name], ["status", "=", 1]];
+    public function saveEditCate($id, $type_name, $status, $image) {
+        //保存提交的分类之前需要判断是否已经存在该名称,删除的
+        $cateRes = DbGoods::getOneCate(['id' => $id], 'id');
+        if (empty($cateRes)) {
+            return ['code' => '3004'];//分类id不存在
+        }
+        $where = [["type_name", "=", $type_name], ['id', "<>", $id]];
         $field = "id,type_name";
         $res   = DbGoods::getOneCate($where, $field);
         if ($res) {
-            return ["msg" => "该分类名称已经存在", "code" => 3005];
+            return ["msg" => "该分类名称已经存在", "code" => '3005'];
         }
-        $data = [
-            "type_name" => $type_name,
-            "status"    => $status,
-        ];
-        $res  = DbGoods::editCate($data, $id);
-        if (empty($res)) {
-            return ['msg' => "保存失败", 'code' => 3001];
+        /* 初始化数组 */
+        $oldLogImage = [];
+        $logImage    = [];
+        if (!empty($image)) {//提交了图片
+            $image    = filtraImage(Config::get('qiniu.domain'), $image);
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3006'];//图片没有上传过
+            }
+            $oldClassImage = DbGoods::getClassImage(['class_id' => $id], 'image_path');
+            $oldImage      = $oldClassImage['image_path'];
+            $oldImage      = filtraImage(Config::get('qiniu.domain'), $oldImage);
+            if (!empty($oldImage)) {//之前有图片
+                if (stripos($oldImage, 'http') === false) {//新版本图片
+                    $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
+                }
+            }
+//            $data['image'] = $image;
         }
-        return ["msg" => "保存成功", "code" => 200];
+        $data['type_name'] = $type_name;
+        $data['status']    = $status;
+        Db::startTrans();
+        try {
+            DbGoods::editCate($data, $id);
+            if (!empty($logImage)) {
+                DbGoods::updateClassImage(['image_path' => $image], ['class_id' => $id]);//更新分类图片
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($oldLogImage)) {
+                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+            }
+            Db::commit();
+            return ['code' => '200', 'msg' => '更新成功'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3001', 'msg' => '更新失败'];
+        }
     }
 
     /**

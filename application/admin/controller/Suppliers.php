@@ -4,7 +4,6 @@ namespace app\admin\controller;
 
 use app\admin\AdminController;
 use Env;
-use \upload\Imageupload;
 use think\Db;
 
 class Suppliers extends AdminController {
@@ -129,7 +128,7 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {String} image 图片
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:未选择图片 / 3004:新建失败 / 3005:图片上传失败 / 3006:供应商ID必须是数字 / 3007:名字不能重复
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:手机号码格式错误 / 3002:提交数据不完整 / 3003:供应商ID必须是数字 / 3004:更新失败 / 3005:图片没有上传过 / 3006:供应商id不存在 / 3007:供应商名称不能重复
      * @apiSuccess (data) {Array} data 结果
      * @apiSampleRequest /admin/suppliers/updatesupplier
      * @author rzc
@@ -143,7 +142,7 @@ class Suppliers extends AdminController {
         $image = trim($this->request->post('image'));
         /* 参数判断 */
         if (!is_numeric($id)) {
-            return ['code' => '3006'];
+            return ['code' => '3003'];
         }
         if (!$this->checkMobile($tel)) {
             return ['code' => '3001'];
@@ -151,7 +150,7 @@ class Suppliers extends AdminController {
         if (!$name || !$title || !$desc) {
             return ['code' => '3002'];
         }
-        return $this->app->suppliers->editSupplier(intval($id), $tel, $name,$title, $desc, $image);
+        return $this->app->suppliers->editSupplier(intval($id), $tel, $name, $title, $desc, $image);
     }
 
     /**
@@ -303,7 +302,7 @@ class Suppliers extends AdminController {
 
     }
 
-     /**
+    /**
      * @api              {post} / 修改供应商快递模板
      * @apiDescription   updateSupplierFreight
      * @apiGroup         admin_Suppliers
@@ -317,12 +316,12 @@ class Suppliers extends AdminController {
      * @apiSampleRequest /admin/suppliers/updateSupplierFreight
      * @author rzc
      */
-    public function updateSupplierFreight(){
+    public function updateSupplierFreight() {
         $supplier_freight_Id = trim($this->request->post('supplier_freight_Id'));
-        $stype = trim($this->request->post('stype'));
-        $title = trim($this->request->post('title'));
-        $desc = trim($this->request->post('desc'));
-        $result = $this->app->suppliers->updateSupplierFreight($supplier_freight_Id,$stype,$title,$desc);
+        $stype               = trim($this->request->post('stype'));
+        $title               = trim($this->request->post('title'));
+        $desc                = trim($this->request->post('desc'));
+        $result              = $this->app->suppliers->updateSupplierFreight($supplier_freight_Id, $stype, $title, $desc);
         return $result;
     }
 
@@ -337,7 +336,7 @@ class Suppliers extends AdminController {
      * @apiSampleRequest /admin/suppliers/getSupplierFreightdetail
      * @author rzc
      */
-    public function getSupplierFreightdetail(){
+    public function getSupplierFreightdetail() {
         $sfd_id = trim($this->request->post('sfd_id'));
         $result = $this->app->suppliers->getSupplierFreightdetail($sfd_id);
         return $result;

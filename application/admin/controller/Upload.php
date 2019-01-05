@@ -11,13 +11,16 @@ class Upload extends AdminController {
      * @apiGroup         admin_upload
      * @apiName          uploadFilee
      * @apiParam (入参) {file} image 图片
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:上传的不是图片 / 3002:上传图片不能超过2M / 3003:上传失败
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:上传的不是图片 / 3002:上传图片不能超过2M / 3003:上传失败 / 3004:上传文件不能为空
      * @apiSuccess (data) {Array} data 结果
      * @apiSampleRequest /admin/upload/uploadfile
      * @author rzc
      */
     public function uploadFile() {
         $image    = $this->request->file('image');
+        if(empty($image)){
+            return ['code'=>'3004'];
+        }
         $fileInfo = $image->getInfo();
         $fileType = explode('/', $fileInfo['type']);
         if ($fileType[0] != 'image') {

@@ -4,6 +4,7 @@ namespace app\common\db\product;
 
 use app\common\model\GoodsClass;
 use app\common\model\Goods;
+use app\common\model\GoodsClassImage;
 use app\common\model\GoodsImage;
 use app\common\model\GoodsRelation;
 use app\common\model\GoodsSku;
@@ -15,9 +16,13 @@ use app\common\model\SupplierFreightDetail;
 
 class DbGoods {
     private $supplier;
+    private $goodsClassImage;
+    private $goodsClass;
 
     public function __construct() {
-        $this->supplier = new Supplier();
+        $this->supplier        = new Supplier();
+        $this->goodsClassImage = new GoodsClassImage();
+        $this->goodsClass      = new GoodsClass();
     }
 
     public function getTier($id) {
@@ -88,7 +93,8 @@ class DbGoods {
      * 2019/1/2-17:51
      */
     public function addCate($data) {
-        return (new GoodsClass())->save($data);
+        $this->goodsClass->save($data);
+        return $this->goodsClass->id;
     }
 
     /**
@@ -572,8 +578,39 @@ class DbGoods {
      * @param $id
      * @return bool
      */
-    public function updateSupplierFreight($data,$id){
+    public function updateSupplierFreight($data, $id) {
         $SupplierFreightDetail = new SupplierFreightDetail;
-        return $SupplierFreightDetail->save($data,['id'=>$id]);
+        return $SupplierFreightDetail->save($data, ['id' => $id]);
+    }
+
+    /**
+     * 添加分类图片
+     * @param $data
+     * @return mixed
+     */
+    public function addClassImage($data) {
+        $this->goodsClassImage->save($data);
+        return $this->goodsClassImage->id;
+    }
+
+    /**
+     * 更新分类图片
+     * @param $data
+     * @param $classId
+     * @return bool
+     */
+    public function updateClassImage($data, $classId) {
+        return $this->goodsClassImage->save($data, ['class_id' => $classId]);
+    }
+
+
+    /**
+     * 获取分类的图片
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getClassImage($where, $field) {
+        return $this->goodsClassImage->where($where)->field($field)->findOrEmpty()->toArray();
     }
 }

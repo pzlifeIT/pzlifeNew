@@ -14,11 +14,11 @@ class Goods extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
         'update_time' => 'timestamp:Y-m-d H:i:s',//最后更新时间
     ];
-
     private $goodsType = [1 => '普通商品', 2 => '虚拟商品',];//1.普通(正常发货)商品 2.虚拟商品
     private $status = [1 => '上架', 2 => '下架',];//1.上架 2.下架
 
