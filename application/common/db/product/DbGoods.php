@@ -613,4 +613,14 @@ class DbGoods {
     public function getClassImage($where, $field) {
         return $this->goodsClassImage->where($where)->field($field)->findOrEmpty()->toArray();
     }
+
+    /**
+     * 获取供应商快递模板运费详情
+     * @param $field
+     * @param $id
+     * @return bool
+     */
+    public function getSupplierFreightdetail($field,$id){
+        return SupplierFreightDetail::field($field)->where('id',$id)->findOrEmpty()->toArray();
+    }
 }

@@ -342,4 +342,29 @@ class Suppliers extends AdminController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 新增供应商快递模板运费
+     * @apiDescription   addSupplierFreightdetail
+     * @apiGroup         admin_Suppliers
+     * @apiName          addSupplierFreightdetail
+     * @apiParam (入参) {Number} freight_id 运费模版模版ID
+     * @apiParam (入参) {Number} area_id 区域id
+     * @apiParam (入参) {decimal} price 邮费单价
+     * @apiParam (入参) {decimal} after_price 续件价格
+     * @apiParam (入参) {decimal} total_price 包邮价格
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSampleRequest /admin/suppliers/addSupplierFreightdetail
+     * @author rzc
+     */
+    public function addSupplierFreightdetail(){
+        $freight_id = trim($this->request->post('freight_id'));
+        $area_id = trim($this->request->post('area_id'));
+        $price = trim($this->request->post('price'));
+        $after_price = trim($this->request->post('after_price'));
+        $total_price = trim($this->request->post('total_price'));
+        $result = $this->app->suppliers->addSupplierFreightdetail($freight_id,$area_id,$price,$after_price,$total_price);
+        return $result;
+    }
+
 }
