@@ -623,4 +623,8 @@ class DbGoods {
     public function getSupplierFreightdetail($field,$id){
         return SupplierFreightDetail::field($field)->where('id',$id)->findOrEmpty()->toArray();
     }
+
+    public function getCateImage(){
+
+    }
 }
