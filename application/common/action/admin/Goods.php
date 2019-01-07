@@ -50,6 +50,15 @@ class Goods
      * 2019/1/3-9:27
      */
     public function saveAddGoods($post){
+        //判断分类，供应商，属性是否存在
+        $where = [["id","=",$post["cate_id"]]];
+        $field = "id";
+        $cate = DbGoods::getOneSpec($where,$field);
+        $field = "id";
+        $supplier = DbGoods::getSupplierData($field,$post["supplier_id"]);
+        if (empty($cate) || empty($supplier)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
         //开启事务
         Db::startTrans();
         try{
@@ -164,6 +173,18 @@ class Goods
      * 2019/1/2-18:49
      */
     public function editGoods($post){
+        $where = [["id","=",$post["id"]]];
+        $field = "id";
+        $res = DbGoods::getOneGoods($where,$field);
+        $where = [["id","=",$post["cate_id"]]];
+        $field = "id";
+        $cate = DbGoods::getOneSpec($where,$field);
+        $field = "id";
+        $supplier = DbGoods::getSupplierData($field,$post["supplier_id"]);
+        if (empty($cate) || empty($supplier) || empty($res)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
+
         //开启事务
         Db::startTrans();
         try{

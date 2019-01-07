@@ -12,4 +12,5 @@
 // 应用容器绑定定义
 return [
     'user'     => app\common\action\index\User::class,
+    'category' => \app\common\action\index\Category::class,
 ];

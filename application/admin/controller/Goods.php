@@ -112,26 +112,6 @@ class Goods extends AdminController
         $res = $this->app->goods->saveAddGoods($post);
         return $res;
     }
-
-    /**
-     * 上传图片
-     * @return array
-     * @author wujunjie
-     * @throws \Exception
-     * 2019/1/2-15:51
-     */
-    public function uploadImage(){
-        $image = $this->request->file("image");
-        $imageInfo = $image->getInfo();
-        $upload = new Imageupload();
-        $fileName = $upload->getNewName($imageInfo["name"]);
-        $uploadImage = $upload->uploadFile($imageInfo["tmp_name"],$fileName);
-        if (empty($uploadImage)){
-            return ["msg"=>"图片上传失败","coed"=>3004];
-        }
-        return ["msg"=>"上传成功","code"=>200];
-    }
-
     /**
      * @api              {post} / 获取一个商品数据
      * @apiDescription   getOneGoods
@@ -157,13 +137,13 @@ class Goods extends AdminController
 
     /**
      * @api              {post} / 保存编辑后的商品
-     * @apiDescription   saveAddGoods
+     * @apiDescription   editGoods
      * @apiGroup         admin_goods
-     * @apiName          saveAddGoods
+     * @apiName          editGoods
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
-     * @apiParam (入参) {Number} [id] 商品id 必传
-     * @apiParam (入参) {Number} [supplier_id] 供应商id
+     * @apiParam (入参) {Number} id 商品id 必传
+     * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} goods_type 商品类型 1普通商品 2 虚拟商品
@@ -183,7 +163,7 @@ class Goods extends AdminController
      * @apiParam (images) {Number} image_type 图片类型 1详情图 / 2轮播图
      * @apiParam (images) {String} image_path 图片内容
      * @apiParam (入参) {Array} skus sku数据 （一个数组单元是一个json字符串）
-     * @apiParamExample (skus) {Array} 商品图片
+     * @apiParamExample (skus) {Array} sku
      * [
      * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
      * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
@@ -212,7 +192,7 @@ class Goods extends AdminController
      *{"spec_id":2,"attr_id":3}，尺寸为x
      *{"spec_id":2,"attr_id":4}，尺寸为xl
      * ]
-     * @apiSampleRequest /admin/goods/saveaddgoods
+     * @apiSampleRequest /admin/goods/editGoods
      * @author wujunjie
      * 2019/1/2-17:02
      */

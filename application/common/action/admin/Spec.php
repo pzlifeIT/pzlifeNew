@@ -80,7 +80,7 @@ class Spec
         $field = "type_name";
         $res = DbGoods::getOneCate($where,$field);
         if (empty($res)){
-            return ["msg"=>"分类id错误","code"=>3002];
+            return ["msg"=>"分类不存在","code"=>3002];
         }
         $data = [
             "cate_id"=>$cate_id,
@@ -103,6 +103,13 @@ class Spec
      * 2018/12/25-11:26
      */
     private function saveAttr($spec_id,$attr_name){
+        //判断传过来的是不是一级属性id
+        $where = [["id","=",$spec_id]];
+        $field = "id";
+        $res = DbGoods::getOneSpec($where,$field);
+        if (empty($res)){
+            return ["msg"=>"一级属性不存在","code"=>3002];
+        }
         $data = [
             "spec_id"=>$spec_id,
             "attr_name"=>$attr_name,
@@ -199,6 +206,13 @@ class Spec
      * 2018/12/25-15:39
      */
     private function saveEditSpec($id,$sa_name){
+        //判断传过来的id是不是表中的数据
+        $where = [["id","=",$id]];
+        $field = "id";
+        $res = DbGoods::getOneSpec($where,$field);
+        if (empty($res)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
         $data = [
             "spe_name"=>$sa_name
         ];
@@ -219,6 +233,13 @@ class Spec
      * 2018/12/25-15:39
      */
     private function saveEditAttr($id,$sa_name){
+        //判断传过来的id是不是表中的数据
+        $where = [["id","=",$id]];
+        $field = "id";
+        $res = DbGoods::getOneAttr($where,$field);
+        if (empty($res)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
         $data = [
             "attr_name"=>$sa_name
         ];
