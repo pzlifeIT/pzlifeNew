@@ -161,4 +161,25 @@ class Spec extends AdminController
         $res = $this->app->spec->delSpecAttr($type,$id);
         return $res;
     }
+
+    /**
+     * @api              {post} / 获取二级属性
+     * @apiDescription   getAttr
+     * @apiGroup         admin_spec
+     * @apiName          getAttr
+     * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiParam (入参) {Number} spec_id 一级规格id
+     * @apiSampleRequest /admin/spec/getAttr
+     * @author wujunjie
+     * 2019/1/7-18:11
+     */
+    public function getAttr(){
+        $id = trim(input("post.spec_id"));
+        if (empty(is_numeric($id))){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->spec->getAttr($id);
+        return $res;
+    }
 }

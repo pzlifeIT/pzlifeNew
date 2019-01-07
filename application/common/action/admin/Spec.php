@@ -326,4 +326,27 @@ class Spec
         }
         return $res;
     }
+
+    /**
+     * 根据一级规格id获取二级属性
+     * @param $spec_id
+     * @author wujunjie
+     * 2019/1/7-18:00
+     */
+    public function getAttr($spec_id){
+        //判断传过来的id是否有效
+        $where = [["id","=",$spec_id]];
+        $field = "id";
+        $res = DbGoods::getOneSpec($where,$field);
+        if (empty($res)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
+        $where = [["spec_id","=",$spec_id]];
+        $field = "id,attr_name,spec_id";
+        $res = DbGoods::getAttrList($where,$field);
+        if (empty($res)){
+            return ["msg"=>"二级属性获取失败","code"=>3000];
+        }
+        return ["code"=>200,"attr"=>$res];
+    }
 }

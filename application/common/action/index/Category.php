@@ -16,9 +16,9 @@ class Category{
         }
         return ["code"=>200,"data"=>$res];
     }
-
-    public function getSecondCate(){
-        $where = [["status","=",1],["tier","=",2]];
+    //根据传过来的一级分类id找到对应的二级分类
+    public function getSecondCate($id){
+        $where = [["status","=",1],["pid","=",$id]];
         $field = "id,pid,type_name";
         $cate = DbGoods::getGoodsClass($field,$where);
 //        halt($res);
