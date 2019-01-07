@@ -9,12 +9,15 @@ class Category{
     //获取一级分类
     public function getFirstCate(){
         $where = [["status","=",1]];
-        $field = "id,pid,type_name";
+        $field = "id,pid,type_name,tier";
         $res = DbGoods::getGoodsClass($field,$where);
         foreach ($res as $k=>$v){
-            $where = [["class_id","=",$v["id"]]];
-            $field = "id,image_path";
-            $res[$k]["image"] = DbGoods::getClassImage($where,$field);
+            if ($v["tier"] == 3){
+                $where = [["class_id","=",$v["id"]]];
+                $field = "id,image_path";
+                $res[$k]["image"] = DbGoods::getClassImage($where,$field);
+            }
+
         }
 //        halt($res);
         if (empty($res)){
