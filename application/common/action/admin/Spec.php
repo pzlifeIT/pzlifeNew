@@ -347,7 +347,6 @@ class Spec
         if (empty($res)){
             return ["msg"=>"二级属性获取失败","code"=>3000];
         }
-        $res["spec_name"] = $spec['spe_name'];
-        return ["code"=>200,"attr"=>$res];
+        return ["code"=>200,"attr"=>$res,"spec_name"=>$spec["spe_name"]];
     }
 }

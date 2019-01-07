@@ -671,4 +671,8 @@ class DbGoods {
     public function addSupplierFreightArea($data) {
         return $this->supplierFreightArea->saveAll($data);
     }
+
+    public function getCateImage(){
+
+    }
 }

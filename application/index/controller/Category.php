@@ -21,13 +21,4 @@ class Category extends MyController
         $res = $this->app->category->getFirstCate();
         return $res;
     }
-
-    public function getSecondCate(){
-        $id = trim(input("post.id"));
-        if (empty(is_numeric($id))){
-            return ["msg"=>"参数错误","code"=>200];
-        }
-        $res = $this->app->category->getSecondCate($id);
-        return $res;
-    }
 }
