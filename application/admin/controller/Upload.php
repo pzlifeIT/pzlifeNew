@@ -29,6 +29,6 @@ class Upload extends AdminController {
         if ($fileInfo['size'] > 1024 * 1024 * 2) {
             return ['3002'];//上传图片不能超过2M
         }
-        return $this->app->Upload->uploadFile($fileInfo);
+        return $this->app->upload->uploadFile($fileInfo);
     }
 }

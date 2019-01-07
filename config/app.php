@@ -144,4 +144,6 @@ return [
     'exception_handle'       => '',
     //运行环境  development(开发环境)  production(生产环境)
     'deploy'                 => Env::get('debug.deploy', 'development'),
+    //用户密码加密方式
+    'cipher_algo'            => 'sha3-256',
 ];

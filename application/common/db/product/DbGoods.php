@@ -12,17 +12,24 @@ use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
+use app\common\model\SupplierFreightArea;
 use app\common\model\SupplierFreightDetail;
 
 class DbGoods {
     private $supplier;
     private $goodsClassImage;
     private $goodsClass;
+    private $supplierFreight;
+    private $supplierFreightDetail;
+    private $supplierFreightArea;
 
     public function __construct() {
-        $this->supplier        = new Supplier();
-        $this->goodsClassImage = new GoodsClassImage();
-        $this->goodsClass      = new GoodsClass();
+        $this->supplier              = new Supplier();
+        $this->goodsClassImage       = new GoodsClassImage();
+        $this->goodsClass            = new GoodsClass();
+        $this->supplierFreight       = new SupplierFreight();
+        $this->supplierFreightDetail = new SupplierFreightDetail();
+        $this->supplierFreightArea   = new SupplierFreightArea();
     }
 
     public function getTier($id) {
@@ -568,8 +575,8 @@ class DbGoods {
      * @return bool
      */
     public function addSupplierFreight($data) {
-        $SupplierFreightDetail = new SupplierFreightDetail;
-        return $SupplierFreightDetail->save($data);
+        $this->supplierFreight->save($data);
+        return $this->supplierFreight->id;
     }
 
     /**
@@ -579,8 +586,7 @@ class DbGoods {
      * @return bool
      */
     public function updateSupplierFreight($data, $id) {
-        $SupplierFreightDetail = new SupplierFreightDetail;
-        return $SupplierFreightDetail->save($data, ['id' => $id]);
+        return $this->supplierFreight->save($data, ['id' => $id]);
     }
 
     /**
@@ -620,7 +626,49 @@ class DbGoods {
      * @param $id
      * @return bool
      */
-    public function getSupplierFreightdetail($field,$id){
-        return SupplierFreightDetail::field($field)->where('id',$id)->findOrEmpty()->toArray();
+    public function getSupplierFreightdetailRow($field, $id) {
+        return SupplierFreightDetail::field($field)->where('id', $id)->findOrEmpty()->toArray();
+    }
+
+    /**
+     * 添加运费模版价格详情
+     * @param $data
+     * @return mixed
+     */
+    public function addSupplierFreightdetail($data) {
+        $this->supplierFreightDetail->save($data);
+        return $this->supplierFreightDetail->id;
+    }
+
+    /**
+     * 获取运费模版价格详情列表
+     * @param $where
+     * @param string $field
+     * @return array
+     */
+    public function getSupplierFreightDetail($where, $field = '*') {
+        $obj = $this->supplierFreightDetail->field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        return $obj->select()->toArray();
+    }
+
+    /**
+     * 获取运费详情地区价格关系
+     * @param $where
+     * @param string $field
+     * @return array
+     */
+    public function getSupplierFreightArea($where, $field = '*') {
+        $obj = $this->supplierFreightArea->field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        return $obj->select()->toArray();
+    }
+
+    public function addSupplierFreightArea($data) {
+        return $this->supplierFreightArea->saveAll($data);
     }
 }
