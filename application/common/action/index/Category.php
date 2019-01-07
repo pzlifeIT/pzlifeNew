@@ -21,11 +21,15 @@ class Category{
         $where = [["status","=",1],["pid","=",$id]];
         $field = "id,pid,type_name";
         $cate = DbGoods::getGoodsClass($field,$where);
-//        halt($res);
         if (empty($cate)){
             return ["msg"=>"未获取到数据","code"=>3000];
         }
-
+        //根据二级分类获取对应的三级
+        foreach ($cate as $k=>$v){
+            $where = [["status","=",1],["pid","=",$v["id"]]];
+            $field = "id,pid,type_name";
+            $cate[$k]["_child"] = DbGoods::getGoodsClass($field,$where);
+        }
         return ["code"=>200,"data"=>$cate];
     }
 }
