@@ -169,6 +169,8 @@ class Spec extends AdminController
      * @apiName          getAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSuccess (返回) {Array} data 二级属性
+     * @apiSuccess (data) {string} spec_name 一级规格名
      * @apiParam (入参) {Number} spec_id 一级规格id
      * @apiSampleRequest /admin/spec/getAttr
      * @author wujunjie
