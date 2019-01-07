@@ -29,4 +29,9 @@ class Category extends MyController
         $res = $this->app->category->getFirstCate();
         return $res;
     }
+
+    public function getSecondCate(){
+        $res = $this->app->category->getSecondCate();
+        return $res;
+    }
 }

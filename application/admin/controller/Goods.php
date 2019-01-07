@@ -117,6 +117,7 @@ class Goods extends AdminController
      * @apiDescription   getOneGoods
      * @apiGroup         admin_goods
      * @apiName          getOneGoods
+     * @apiParam (入参) {Number} id 商品id
      * @apiSuccess (返回) {String} code 200:成功 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
@@ -128,7 +129,7 @@ class Goods extends AdminController
      */
     public function getOneGoods(){
         $id = trim(input("post.id"));
-        if (empty($id)){
+        if (!is_numeric($id)){
             return ["msg"=>"参数错误","code"=>3002];
         }
         $res = $this->app->goods->getOneGoodsImage($id);
