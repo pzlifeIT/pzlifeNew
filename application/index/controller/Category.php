@@ -21,7 +21,7 @@ class Category extends MyController
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {String} type_name 分类名称
-     * @apiSampleRequest /admin/category/getFirstCate
+     * @apiSampleRequest /index/category/getFirstCate
      * @author wujunjie
      * 2019/1/7-9:47
      */
