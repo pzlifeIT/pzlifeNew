@@ -477,12 +477,23 @@ class DbGoods {
     /**
      * 获取供应商列表
      * @param $field
+     * @param $where
      * @param $order
      * @param $limit
      * @return array
      */
-    public function getSupplier($field, $order, $limit) {
-        return Supplier::field($field)->order($order)->limit($limit)->select()->toArray();
+    public function getSupplier($field, array $where = [], $order = '', $limit = '') {
+        $obj = Supplier::field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        if (!empty($order)) {
+            $obj = $obj->order($order);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        return $obj->select()->toArray();
     }
 
     /**

@@ -24,12 +24,24 @@ class Suppliers {
         $field  = 'id,tel,name,status,image,title,desc';
         $order  = 'id,desc';
         $limit  = $offset . ',' . $pagenum;
-        $result = DbGoods::getSupplier($field, $order, $limit);
+        $result = DbGoods::getSupplier($field, [], $order, $limit);
         $totle  = DbGoods::getSupplierCount();
         if (empty($result)) {
             return ['code' => '3000'];
         }
         return ['code' => '200', 'totle' => $totle, 'data' => $result];
+    }
+
+    /**
+     * 获取所有供应商
+     * @return array
+     * @author zyr
+     */
+    public function getSuppliersAll() {
+        $field  = 'id,name';
+        $where  = ['status' => 1];
+        $result = DbGoods::getSupplier($field, $where, 'id');
+        return ['code' => '200', 'data' => $result];
     }
 
     /**

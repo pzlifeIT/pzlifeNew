@@ -53,6 +53,23 @@ class Suppliers extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取所有供应商
+     * @apiDescription   getSuppliersAll
+     * @apiGroup         admin_Suppliers
+     * @apiName          getSuppliersAll
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:供应商列表空
+     * @apiSuccess (返回) {object_array} data 结果
+     * @apiSuccess (data) {String} id 供应商ID
+     * @apiSuccess (data) {String} name 名称
+     * @apiSampleRequest /admin/suppliers/getsuppliersall
+     * @author zyr
+     */
+    public function getSuppliersAll(){
+        $result = $this->app->suppliers->getSuppliersAll();
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取供应商详情
      * @apiDescription   getSupplierData
      * @apiGroup         admin_Suppliers
