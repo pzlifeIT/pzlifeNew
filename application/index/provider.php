@@ -13,5 +13,5 @@
 return [
     'user'     => app\common\action\index\User::class,
     'category' => \app\common\action\index\Category::class,
-    'collect'  => \app\common\action\index\Collect::class,
+//    'collect'  => \app\common\action\index\Collect::class,
 ];
