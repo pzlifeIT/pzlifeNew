@@ -19,12 +19,29 @@ class DbImage {
      * @author zyr
      */
     public function saveLogImage($image_path, $username = '') {
-
         $data = [
             'username'   => $username,
             'image_path' => $image_path,
         ];
         return $this->logImage->save($data);
+    }
+
+    /**
+     * 批量写入上传日志
+     * @param $imagePathList
+     * @param string $username
+     * @return \think\Collection
+     * @throws \Exception
+     */
+    public function saveLogImageList($imagePathList, $username = '') {
+        $data = [];
+        foreach ($imagePathList as $val) {
+            array_push($data, [
+                'username'   => $username,
+                'image_path' => $val,
+            ]);
+        }
+        return $this->logImage->saveAll($data);
     }
 
     /**
