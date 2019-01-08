@@ -11,7 +11,7 @@ class Goods extends MyController
      * @apiDescription   getCategoryGoods
      * @apiGroup         index_Goods
      * @apiName          getCategoryGoods
-     * @apiParam (入参) {Number} [cate_id] 对应商品三级分类id
+     * @apiParam (入参) {Number} cate_id 对应商品三级分类id
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
@@ -43,8 +43,8 @@ class Goods extends MyController
      * @apiDescription   getGoods
      * @apiGroup         index_Goods
      * @apiName          getGoods
-     * @apiParam (入参) {Number} [goods_id] 对应商品id
-     * @apiParam (入参) {Number} [source] 来源 1.全部 2.pc 3.app 4.微信
+     * @apiParam (入参) {Number} goods_id 对应商品id
+     * @apiParam (入参) {Number} source 来源 1.全部 2.pc 3.app 4.微信
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} goods_data 商品数据
@@ -69,9 +69,9 @@ class Goods extends MyController
      * @apiSuccess (goods_spec) {String} id 类目id
      * @apiSuccess (goods_spec) {String} cate_id 商品三级分类
      * @apiSuccess (goods_spec) {String} spe_name 类目名称
-     * @apiSuccess (goods_spec['list']) {String} id 二级规格属性ID
-     * @apiSuccess (goods_spec['list']) {String} spec_id 商品一级类目
-     * @apiSuccess (goods_spec['list']) {String} attr_name 商品一级类目
+     * @apiSuccess (goods_spec[list]) {String} id 二级规格属性ID
+     * @apiSuccess (goods_spec[list]) {String} spec_id 商品一级类目
+     * @apiSuccess (goods_spec[list]) {String} attr_name 商品二级类目名称
      * @apiSuccess (goods_sku) {String} id 商品skuid
      * @apiSuccess (goods_sku) {String} goods_id 商品skuid
      * @apiSuccess (goods_sku) {String} stock 库存

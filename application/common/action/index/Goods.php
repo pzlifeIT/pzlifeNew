@@ -115,18 +115,29 @@ class Goods
         if ($goods_first_spec) {
             $field = 'id,cate_id,spe_name';
             foreach ($goods_first_spec as $key => $value) {
-                $where = ['id', '=', $value['spec_id']];
+                $where = ['id' => $value['spec_id']];
                 $result = DbGoods::getOneSpec($where, $field);
+
                 $goods_attr_field = 'attr_id';
-                $goods_attr_where = ['id', '=', $goods_id];
+                $goods_attr_where = ['goods_id' => $goods_id, 'spec_id' => $value['spec_id']];
                 $goods_first_attr = DbGoods::getOneGoodsSpec($goods_attr_where, $goods_attr_field);
+                $attr_where = [];
+                foreach ($goods_first_attr as $goods => $attr) {
+                    $attr_where[] = $attr['attr_id'];
+                    
+                }
+              
                 $attr_field = 'id,spec_id,attr_name';
-                $attr_where = ['id', 'in', join(',', $goods_first_attr)];
-                $result['list'] = DbGoods::getAttrList($where, $field);
+                $attr_where = [['id', 'in', $attr_where],['spec_id','=',$value['spec_id']]];
+                
+                $result['list'] = DbGoods::getAttrList($attr_where, $attr_field);
+                
                 $goods_spec[] = $result;
             }
-
+         
         }
+         
+        
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
         $where = [["goods_id", "=", $goods_id]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
