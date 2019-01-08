@@ -627,7 +627,7 @@ class DbGoods {
      * @return bool
      */
     public function getSupplierFreightdetailCount($freight_id) {
-        return SupplierFreightDetail::count()->where('freight_id', $freight_id);
+        return SupplierFreightDetail::where('freight_id', $freight_id)->count();
     }
 
     /**
