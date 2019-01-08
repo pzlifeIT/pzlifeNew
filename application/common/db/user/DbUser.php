@@ -15,4 +15,22 @@ class DbUser {
         $user = Users::where($where)->field($field, true)->findOrEmpty()->toArray();
         return $user;
     }
+
+    /**
+     * 获取多个用户信息
+     * @param $field
+     * @return array
+     */
+    public function getUsers($field, $order, $limit){
+        $users = Users::field($field)->order($order,'desc')->limit($limit)->select()->toArray();
+        return $users;
+    }
+
+    /**
+     * 获取用户表中总记录条数
+     * @return num
+     */
+    public function getUsersCount(){
+        return Users::count();
+    }
 }

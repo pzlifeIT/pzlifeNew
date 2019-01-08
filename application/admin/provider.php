@@ -20,4 +20,5 @@ return [
     'adminLog'  => app\common\action\admin\AdminLog::class,
     'subject'   => app\common\action\admin\Subject::class,
     'Upload'    => app\common\action\admin\Upload::class,
+    'user'    => app\common\action\admin\User::class,
 ];
