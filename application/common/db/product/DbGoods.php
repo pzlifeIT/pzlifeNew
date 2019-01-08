@@ -22,6 +22,7 @@ class DbGoods {
     private $supplierFreight;
     private $supplierFreightDetail;
     private $supplierFreightArea;
+    private $goods;
 
     public function __construct() {
         $this->supplier              = new Supplier();
@@ -30,6 +31,7 @@ class DbGoods {
         $this->supplierFreight       = new SupplierFreight();
         $this->supplierFreightDetail = new SupplierFreightDetail();
         $this->supplierFreightArea   = new SupplierFreightArea();
+        $this->goods                 = new Goods();
     }
 
     public function getTier($id) {
@@ -178,9 +180,9 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-14:47
      */
-    public function getSpecList($field,$where,$offset = 0, $pageNum = 0) {
+    public function getSpecList($field, $where, $offset = 0, $pageNum = 0) {
         $obj = GoodsSpec::field($field);
-        if (!empty($where)){
+        if (!empty($where)) {
             $obj = $obj->where($where);
         }
         //获取不分页
@@ -188,7 +190,7 @@ class DbGoods {
             return $obj->select()->toArray();
         }
         //获取并分页
-        return $obj->limit($offset,$pageNum)->select()->toArray();
+        return $obj->limit($offset, $pageNum)->select()->toArray();
     }
 
     /**
@@ -348,9 +350,11 @@ class DbGoods {
      * 2019/1/2-18:46
      */
     public function addGoods($data) {
-        $g = new Goods();
-        $g->save($data);
-        return $g->id;
+        $res = $this->goods->save($data);
+        if ($res) {
+            return $this->goods->id;
+        }
+        return $res;
     }
 
     /**
@@ -395,7 +399,7 @@ class DbGoods {
      * 2019/1/3-9:42
      */
     public function editGoods($data, $id) {
-        return (new Goods())->save($data, ["id" => $id]);
+        return $this->goods->save($data, ["id" => $id]);
     }
 
     /**

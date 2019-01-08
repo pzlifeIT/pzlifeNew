@@ -2,12 +2,9 @@
 
 namespace app\admin\controller;
 
-use think\Controller;
 use app\admin\AdminController;
-use upload\Imageupload;
 
-class Goods extends AdminController
-{
+class Goods extends AdminController {
     /**
      * @api              {post} / 商品列表
      * @apiDescription   getGoodsList
@@ -30,88 +27,136 @@ class Goods extends AdminController
      * @author wujunjie
      * 2018/12/26-18:04
      */
-    public function getGoodsList(){
-        $page = trim(input("post.page"));
-        $page = empty($page) ? 1 : intval($page);
+    public function getGoodsList() {
+        $page    = trim(input("post.page"));
+        $page    = empty($page) ? 1 : intval($page);
         $pageNum = trim(input("post.page_num"));
         $pageNum = empty($pageNum) ? 10 : intval($pageNum);
-        if (!is_numeric($page) || !is_numeric($pageNum)){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->goods->goodsList($page,$pageNum);
+        $res = $this->app->goods->goodsList($page, $pageNum);
         return $res;
     }
 
 
     /**
-     * @api              {post} / 添加商品
+     * @api              {post} / 添加商品基础信息
      * @apiDescription   saveAddGoods
      * @apiGroup         admin_goods
      * @apiName          saveAddGoods
-     * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
-     * @apiParam (入参) {Number} goods_type 商品类型 1普通商品 2 虚拟商品
-     * @apiParam (入参) {String} title 主标题
-     * @apiParam (入参) {String} subtitle 副标题
+     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
-     * @apiParam (入参) {Number} status 上下架状态 1上架 2下架
-     * @apiParam (入参) {Array} images 商品图片(一个数组单元是一个json字符串，有几张图片就有几个数组单元,下面有样式)
-     * @apiParamExample (images) {Array} 商品图片
-     * [
-     * {"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     * ]
-     * @apiParam (images) {Number} source_type 来源 1全部 / 2pc / 3app / 4微信
-     * @apiParam (images) {Number} image_type 图片类型 1详情图 / 2轮播图
-     * @apiParam (images) {String} image_path 图片内容
-     * @apiParam (入参) {Array} skus sku数据 （一个数组单元是一个json字符串）
-     * @apiParamExample (skus) {Array} sku
-     * [
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * ]
-     * @apiParam (skus) {Number} stock 库存
-     * @apiParam (skus) {double} market_price 市场价
-     * @apiParam (skus) {double} retail_price 零售价
-     * @apiParam (skus) {Int} presell_start_time 预售价开始时间
-     * @apiParam (skus) {Int} presell_end_time 预售价结束时间
-     * @apiParam (skus) {double} presell_price 预售价
-     * @apiParam (skus) {double} active_price 活动价
-     * @apiParam (skus) {Int} active_start_time 活动价开始时间
-     * @apiParam (skus) {Int} active_end_time 活动价过期时间
-     * @apiParam (skus) {double} margin_price 毛利
-     * @apiParam (skus) {double} integral_price 积分售价
-     * @apiParam (skus) {double} integral_active 积分赠送
-     * @apiParam (skus) {Array} spec sku属性 {1:1,1:2}键名是一级规格id，键值是二级属性id
-     * @apiParam (skus) {String} sku_image 规格图
-     * @apiParam (入参) {Array} relation 规格属性 （一个数组单元是一个json字符串）
-     * @apiParamExample (relation) {Array} 规格属性数据样式:
-     * [
-     * {"spec_id":1,"attr_id":1},颜色为红色
-     *{"spec_id":1,"attr_id":2}，颜色为白色
-     *{"spec_id":2,"attr_id":3}，尺寸为x
-     *{"spec_id":2,"attr_id":4}，尺寸为xl
-     * ]
      * @apiSampleRequest /admin/goods/saveaddgoods
-     * @author wujunjie
-     * 2018/12/28-16:54
+     * @return array
+     * @author zyr
      */
-    public function saveAddGoods(){
-        $post = input("post.");
-        if (empty($post)){
-            return ["msg"=>"参数错误","code"=>3002];
+    public function saveAddGoods() {
+        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
+        $cateId       = trim($this->request->post('cate_id'));//分类id
+        $goodsName    = trim($this->request->post('goods_name'));//商品名称
+        $goodsType    = trim($this->request->post('goods_type'));//商品类型
+        $subtitle     = trim($this->request->post('subtitle'));//标题
+        $image        = trim($this->request->post('image'));//商品标题图
+        $goodsTypeArr = [1, 2];
+        if (!is_numeric($supplierId)) {
+            return ['code' => '3001'];//供应商id只能为数字
+        }
+        if (!is_numeric($cateId)) {
+            return ['code' => '3002'];//分类id只能为数字
+        }
+        if (empty($goodsName)) {
+            return ['code' => '3003'];//商品名称不能空
+        }
+        if (empty($image)) {
+            return ['code' => '3004'];//标题图不能空
+        }
+        if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
+            return ['code' => '3005'];//商品类型只能为数字
+        }
+        $data = [
+            'supplier_id' => intval($supplierId),
+            'cate_id'     => intval($cateId),
+            'goods_name'  => $goodsName,
+        ];
+        if (!empty($image)) {
+            $data['image'] = $image;
+        }
+        if (!empty($goodsType)) {
+            $data['goods_type'] = intval($goodsType);
+        }
+        if (!empty($subtitle)) {
+            $data['subtitle'] = $subtitle;
         }
         //调用方法存商品表
-        $res = $this->app->goods->saveAddGoods($post);
+        $res = $this->app->goods->saveGoods($data);
         return $res;
     }
+
+    /**
+     * @api              {post} / 修改商品基础信息
+     * @apiDescription   saveUpdateGoods
+     * @apiGroup         admin_goods
+     * @apiName          saveUpdateGoods
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {Number} supplier_id 供应商id
+     * @apiParam (入参) {Number} cate_id 三级分类id
+     * @apiParam (入参) {String} goods_name 商品名称
+     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {String} [subtitle] 标题
+     * @apiParam (入参) {String} [image] 商品标题图
+     * @apiSampleRequest /admin/goods/saveupdategoods
+     * @return array
+     * @author zyr
+     */
+    public function saveUpdateGoods() {
+        $goodsId      = trim($this->request->post('goods_id'));//商品id
+        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
+        $cateId       = trim($this->request->post('cate_id'));//分类id
+        $goodsName    = trim($this->request->post('goods_name'));//商品名称
+        $goodsType    = trim($this->request->post('goods_type'));//商品类型
+        $subtitle     = trim($this->request->post('subtitle'));//标题
+        $image        = trim($this->request->post('image'));//商品标题图
+        $goodsTypeArr = [1, 2];
+        if (!is_numeric($supplierId)) {
+            return ['code' => '3001'];//供应商id只能为数字
+        }
+        if (!is_numeric($cateId)) {
+            return ['code' => '3002'];//分类id只能为数字
+        }
+        if (empty($goodsName)) {
+            return ['code' => '3003'];//商品名称不能空
+        }
+        if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
+            return ['code' => '3005'];//商品类型只能为数字
+        }
+        $data = [
+            'supplier_id' => intval($supplierId),
+            'cate_id'     => intval($cateId),
+            'goods_name'  => $goodsName,
+        ];
+        if (!empty($goodsType)) {
+            $data['goods_type'] = intval($goodsType);
+        }
+        if (!empty($image)) {
+            $data['image'] = $image;
+        }
+        if (!empty($subtitle)) {
+            $data['subtitle'] = $subtitle;
+        }
+        //调用方法存商品表
+        $res = $this->app->goods->saveGoods($data, $goodsId);
+        return $res;
+    }
+
     /**
      * @api              {post} / 获取一个商品数据
      * @apiDescription   getOneGoods
@@ -127,82 +172,12 @@ class Goods extends AdminController
      * @author wujunjie
      * 2019/1/2-16:48
      */
-    public function getOneGoods(){
+    public function getOneGoods() {
         $id = trim(input("post.id"));
-        if (!is_numeric($id)){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (!is_numeric($id)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->goods->getOneGoodsImage($id);
-        return $res;
-    }
-
-    /**
-     * @api              {post} / 保存编辑后的商品
-     * @apiDescription   editGoods
-     * @apiGroup         admin_goods
-     * @apiName          editGoods
-     * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
-     * @apiSuccess (返回) {String} msg 返回消息
-     * @apiParam (入参) {Number} id 商品id 必传
-     * @apiParam (入参) {Number} supplier_id 供应商id
-     * @apiParam (入参) {Number} cate_id 三级分类id
-     * @apiParam (入参) {String} goods_name 商品名称
-     * @apiParam (入参) {Number} goods_type 商品类型 1普通商品 2 虚拟商品
-     * @apiParam (入参) {String} title 主标题
-     * @apiParam (入参) {String} subtitle 副标题
-     * @apiParam (入参) {String} image 商品标题图
-     * @apiParam (入参) {Number} status 上下架状态 1上架 2下架
-     * @apiParam (入参) {Array} images 商品图片(一个数组单元是一个json字符串，有几张图片就有几个数组单元,下面有样式)
-     * @apiParamExample (images) {Array} 商品图片
-     * [
-     * {"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     *{"source_type":1,"image_type":1,"image_path":""},
-     * ]
-     * @apiParam (images) {Number} source_type 来源 1全部 / 2pc / 3app / 4微信
-     * @apiParam (images) {Number} image_type 图片类型 1详情图 / 2轮播图
-     * @apiParam (images) {String} image_path 图片内容
-     * @apiParam (入参) {Array} skus sku数据 （一个数组单元是一个json字符串）
-     * @apiParamExample (skus) {Array} sku
-     * [
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
-     * ]
-     * @apiParam (skus) {Number} stock 库存
-     * @apiParam (skus) {double} market_price 市场价
-     * @apiParam (skus) {double} retail_price 零售价
-     * @apiParam (skus) {Int} presell_start_time 预售价开始时间
-     * @apiParam (skus) {Int} presell_end_time 预售价结束时间
-     * @apiParam (skus) {double} presell_price 预售价
-     * @apiParam (skus) {double} active_price 活动价
-     * @apiParam (skus) {Int} active_start_time 活动价开始时间
-     * @apiParam (skus) {Int} active_end_time 活动价过期时间
-     * @apiParam (skus) {double} margin_price 毛利
-     * @apiParam (skus) {double} integral_price 积分售价
-     * @apiParam (skus) {double} integral_active 积分赠送
-     * @apiParam (skus) {Array} spec sku属性 {1:1,1:2}键名是一级规格id，键值是二级属性id
-     * @apiParam (skus) {String} sku_image 规格图
-     * @apiParam (入参) {Array} relation 规格属性 （一个数组单元是一个json字符串）
-     * @apiParamExample (relation) {Array} 规格属性数据样式:
-     * [
-     * {"spec_id":1,"attr_id":1},颜色为红色
-     *{"spec_id":1,"attr_id":2}，颜色为白色
-     *{"spec_id":2,"attr_id":3}，尺寸为x
-     *{"spec_id":2,"attr_id":4}，尺寸为xl
-     * ]
-     * @apiSampleRequest /admin/goods/editGoods
-     * @author wujunjie
-     * 2019/1/2-17:02
-     */
-    public function editGoods(){
-        $post = trim(input("post."));
-        if (empty($post["id"]) || empty($post)){
-            return ['msg'=>'参数有误',"code"=>"3000"];
-        }
-        $res = $this->app->goods->editGoods($post);
         return $res;
     }
 
@@ -217,10 +192,10 @@ class Goods extends AdminController
      * @author wujunjie
      * 2019/1/3-10:21
      */
-    public function delGoods(){
+    public function delGoods() {
         $id = trim(input("post.id"));
-        if (!is_numeric($id)){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (!is_numeric($id)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->goods->delGoods($id);
         return $res;
@@ -238,11 +213,11 @@ class Goods extends AdminController
      * @author wujunjie
      * 2019/1/8-10:13
      */
-    public function upDownGoods(){
-        $id = trim(input("post.id"));
+    public function upDownGoods() {
+        $id   = trim(input("post.id"));
         $type = trim(input("post.type"));
-        if (!is_numeric($id) || !is_numeric($type)){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (!is_numeric($id) || !is_numeric($type)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->goods->upDown($id);
         return $res;
