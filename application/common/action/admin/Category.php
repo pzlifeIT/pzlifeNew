@@ -14,7 +14,7 @@ class Category {
         if ($status == 3) {
             $where = ['status' => $status];
         }
-        $field = "id,pid,tier,type_name";
+        $field = "id,pid,tier,type_name,status";
         $cate  = DbGoods::getGoodsClass($field, $where);
         if (empty($cate)) {
             return ['code' => 3000];

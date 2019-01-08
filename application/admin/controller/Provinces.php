@@ -12,7 +12,7 @@ class Provinces extends AdminController {
      * @apiDescription   getProvinceCity
      * @apiGroup         admin_provinces
      * @apiName          getProvinceCity
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:省市区列表有误
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
      * @apiSuccess (返回) {Array} data 结果
      * @apiSuccess (data) {String} area_name 名称
      * @apiSuccess (data) {Number} pid 父级id
@@ -72,12 +72,34 @@ class Provinces extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取运费模版的剩余可选省市列表
+     * @apiDescription   getProvinceCityByfreight
+     * @apiGroup         admin_provinces
+     * @apiName          getProvinceCityByfreight
+     * @apiParam (入参) {Number} freight_id 运费模版详情id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:运费模版Id必须为数字 /
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /admin/provinces/getprovincecitybyfreight
+     * @author zyr
+     */
+    public function getProvinceCityByFreight() {
+        $freightId = $this->request->post('freight_id');
+        if (!is_numeric($freightId)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->provinces->getProvinceCityByFreight(intval($freightId));
+        return $result;
+    }
+
+    /**
      * 写入api日志
      * @param $code 接口返回code
      * @param $func 调用的接口方法
      * @param string $name
      */
-    private function addLog($code,$func, $name = '') {
+    private function addLog($code, $func, $name = '') {
         $this->app->adminLog->apiRequestLog($this->classBasename(__class__) . '/' . $func, $code, $this->controllerBaseName(__FILE__), $name);
     }
 }

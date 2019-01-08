@@ -53,6 +53,23 @@ class Suppliers extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取所有供应商
+     * @apiDescription   getSuppliersAll
+     * @apiGroup         admin_Suppliers
+     * @apiName          getSuppliersAll
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:供应商列表空
+     * @apiSuccess (返回) {object_array} data 结果
+     * @apiSuccess (data) {String} id 供应商ID
+     * @apiSuccess (data) {String} name 名称
+     * @apiSampleRequest /admin/suppliers/getsuppliersall
+     * @author zyr
+     */
+    public function getSuppliersAll(){
+        $result = $this->app->suppliers->getSuppliersAll();
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取供应商详情
      * @apiDescription   getSupplierData
      * @apiGroup         admin_Suppliers
@@ -286,18 +303,28 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3001:供应商id必须是数字 / 3002:供应商ID只能是数字 / 3003:标题和详情不能为空
      * @apiSuccess (返回) {String} data 结果
      * @apiSampleRequest /admin/suppliers/addsupplierfreight
      * @author rzc
      */
 
     public function addSupplierFreight() {
-        $supplierId = $this->request->post('supplierId');
-        $stype      = $this->request->post('stype');
-        $title      = $this->request->post('title');
-        $desc       = $this->request->post('desc');
-        $result     = $this->app->suppliers->addSupplierFreight($supplierId, $stype, $title, $desc);
+        $stypeArr   = [1, 2, 3,];
+        $supplierId = trim($this->request->post('supplierId'));
+        $stype      = trim($this->request->post('stype'));
+        $title      = trim($this->request->post('title'));
+        $desc       = trim($this->request->post('desc'));
+        if (!is_numeric($supplierId)) {
+            return ['code' => '3001']; /* 供应商id必须是数字 */
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['3002'];
+        }
+        if (!$title || !$desc) {
+            return ['code' => '3003']; /* 标题和详情不能为空 */
+        }
+        $result = $this->app->suppliers->addSupplierFreight(intval($supplierId), intval($stype), $title, $desc);
         return $result;
 
     }
@@ -311,17 +338,27 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} desc 详情
-     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3001:供应商模版id必须是数字 /3002:计价方式参数有误 / 3003:标题和详情不能为空
      * @apiSuccess (返回) {String} data 结果
      * @apiSampleRequest /admin/suppliers/updateSupplierFreight
      * @author rzc
      */
     public function updateSupplierFreight() {
+        $stypeArr            = [1, 2, 3,];
         $supplier_freight_Id = trim($this->request->post('supplier_freight_Id'));
         $stype               = trim($this->request->post('stype'));
         $title               = trim($this->request->post('title'));
         $desc                = trim($this->request->post('desc'));
-        $result              = $this->app->suppliers->updateSupplierFreight($supplier_freight_Id, $stype, $title, $desc);
+        if (!is_numeric($supplier_freight_Id)) {
+            return ['code' => '3001']; /* 供应商id必须是数字 */
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['3002'];
+        }
+        if (!$title || !$desc) {
+            return ['code' => '3003']; /* 标题和详情不能为空 */
+        }
+        $result = $this->app->suppliers->updateSupplierFreight(intval($supplier_freight_Id), intval($stype), $title, $desc);
         return $result;
     }
 
@@ -342,7 +379,10 @@ class Suppliers extends AdminController {
      */
     public function getSupplierFreightdetail() {
         $sfd_id = trim($this->request->post('sfd_id'));
-        $result = $this->app->suppliers->getSupplierFreightdetail($sfd_id);
+        if (!is_numeric($sfd_id)) {
+            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
+        }
+        $result = $this->app->suppliers->getSupplierFreightdetail(intval($sfd_id));
         return $result;
     }
 
@@ -352,22 +392,54 @@ class Suppliers extends AdminController {
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplierFreightdetail
      * @apiParam (入参) {Number} freight_id 运费模版模版ID
-     * @apiParam (入参) {Number} area_id 区域id
      * @apiParam (入参) {decimal} price 邮费单价
      * @apiParam (入参) {decimal} after_price 续件价格
      * @apiParam (入参) {decimal} total_price 包邮价格
-     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
+     * @apiSuccess (返回) {String} code 200:成功 /3001:运费模版Id类型错误 / 3002:价格只能是数字
      * @apiSuccess (返回) {String} data 结果
      * @apiSampleRequest /admin/suppliers/addSupplierFreightdetail
      * @author rzc
      */
-    public function addSupplierFreightdetail(){
-        $freight_id = trim($this->request->post('freight_id'));
-        $area_id = trim($this->request->post('area_id'));
-        $price = trim($this->request->post('price'));
+    public function addSupplierFreightdetail() {
+        $freight_id  = trim($this->request->post('freight_id'));
+        $price       = trim($this->request->post('price'));
         $after_price = trim($this->request->post('after_price'));
         $total_price = trim($this->request->post('total_price'));
-        $result = $this->app->suppliers->addSupplierFreightdetail($freight_id,$area_id,$price,$after_price,$total_price);
+        if (!is_numeric($freight_id)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($price) || !is_numeric($after_price) || !is_numeric($total_price)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), number_format($price, 2), number_format($after_price, 2), number_format($total_price, 2));
+        return $result;
+    }
+
+
+    /**
+     * @api              {post} / 更新运费模版和市的价格关联
+     * @apiDescription   updateSupplierFreightArea
+     * @apiGroup         admin_Suppliers
+     * @apiName          updateSupplierFreightArea
+     * @apiParam (入参) {String} city_id_str 市id
+     * @apiParam (入参) {String} freight_detail_id 快递模版详情id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:运费模版Id必须为数字 / 3002:快递模版详情id参数有误 / 3003:保存失败 / 3004:提交的city_id不是市级id
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /admin/suppliers/updatesupplierfreightarea
+     * @author zyr
+     */
+    public function updateSupplierFreightArea() {
+        $cityIdStr       = trim($this->request->post('city_id_str'));
+        $freightDetailId = trim($this->request->post('freight_detail_id'));
+        if (empty($cityIdStr)) {
+            return ['code' => '3001'];//市Id不能为空
+        }
+        if (!is_numeric($freightDetailId)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->suppliers->updateSupplierFreightArea($cityIdStr, intval($freightDetailId));
         return $result;
     }
 

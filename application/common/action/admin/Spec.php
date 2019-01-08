@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\common\model\GoodsSpec;
 use app\facade\DbGoods;
 class Spec
 {
@@ -18,8 +19,9 @@ class Spec
         }
         //根据一级属性表的cate_id招到三级分类，根据id找到对应的二级属性
 //        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
+        $where = [];
         $field = "id,cate_id,spe_name";
-        $spec = DbGoods::getSpecList($field,$offset,$pageNum);
+        $spec = DbGoods::getSpecList($field,$where,$offset,$pageNum);
         $total = DbGoods::getSpecListNum();
         if (empty($spec)){
             return ["msg"=>"未获取到数据","code"=>3000];
@@ -49,8 +51,9 @@ class Spec
      */
     public function addAttrPage(){
         //可选一级属性
+        $where = [];
         $field = "id,cate_id,spe_name";
-        $spec = DbGoods::getSpecList($field);
+        $spec = DbGoods::getSpecList($field,$where);
         if (empty($spec)){
             return ["msg"=>"未获取到规格数据","code"=>3000];
         }
@@ -325,5 +328,50 @@ class Spec
                 break;
         }
         return $res;
+    }
+
+    /**
+     * 根据一级规格id获取二级属性
+     * @param $spec_id
+     * @author wujunjie
+     * 2019/1/7-18:00
+     */
+    public function getAttr($spec_id){
+        //判断传过来的id是否有效
+        $where = [["id","=",$spec_id]];
+        $field = "spe_name";
+        $spec = DbGoods::getOneSpec($where,$field);
+        if (empty($spec)){
+            return ["msg"=>"数据不存在","code"=>3000];
+        }
+        $where = [["spec_id","=",$spec_id]];
+        $field = "id,attr_name,spec_id";
+        $res = DbGoods::getAttrList($where,$field);
+        if (empty($res)){
+            return ["msg"=>"二级属性获取失败","code"=>3000];
+        }
+        return ["code"=>200,"attr"=>$res,"spec_name"=>$spec["spe_name"]];
+    }
+
+    /**
+     * 获取一级规格二级属性
+     * @param $cate_id
+     * @return array
+     * @author wujunjie
+     * 2019/1/8-15:25
+     */
+    public function getSpecAttr($cate_id){
+       $where = [["cate_id","=",$cate_id]];
+       $field = "id,spe_name";
+       $spec = DbGoods::getSpecList($field,$where);
+       if (empty($spec)){
+           return ["msg"=>"未获取到一级规格","code"=>3000];
+       }
+       foreach($spec as $k=>$v){
+           $where = [["spec_id","=",$v["id"]]];
+           $field = "id,attr_name";
+           $spec[$k]["attr"] = DbGoods::getAttrList($where,$field);
+       }
+       return ["code"=>200,"data"=>$spec];
     }
 }

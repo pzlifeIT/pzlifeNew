@@ -269,4 +269,31 @@ class Goods
         }
 
     }
+
+    /**
+     * 上下架
+     * @param $id
+     * @param $type
+     * @return array
+     * @author wujunjie
+     * 2019/1/8-10:13
+     */
+    public function upDown($id,$type){
+        //判断传过来的id是否有效
+        $where = [["id","=",$id]];
+        $field = "goods_name";
+        $res = DbGoods::getOneGoods($where,$field);
+        if (empty($res)){
+            return ["msg"=>"数据错误","code"=>3001];
+        }
+        //修改状态
+        $data = [
+          "status"=>$type
+        ];
+        $res = DbGoods::editGoods($data,$id);
+        if (empty($res)){
+            return ['msg'=>"上下架失败","code"=>3002];
+        }
+        return ["msg"=>'成功',"code"=>200];
+    }
 }

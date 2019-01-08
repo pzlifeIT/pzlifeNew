@@ -25,4 +25,8 @@ class DbProvinces {
     public function getAreaOne($field,$where){
         return Areas::where($where)->field($field)->findOrEmpty()->toArray();
     }
+
+    public function getAreaCount($field, $where){
+        return Areas::where($where)->count();
+    }
 }

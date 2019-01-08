@@ -50,4 +50,8 @@ class GoodsClass extends Model {
         $status = array_flip($this->status);
         return $status[$value];
     }
+
+    public function relateCateImage(){
+        return $this->hasOne("GoodsClassImage","class_id");
+    }
 }

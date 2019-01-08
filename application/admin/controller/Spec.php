@@ -161,4 +161,49 @@ class Spec extends AdminController
         $res = $this->app->spec->delSpecAttr($type,$id);
         return $res;
     }
+
+    /**
+     * @api              {post} / 获取二级属性
+     * @apiDescription   getAttr
+     * @apiGroup         admin_spec
+     * @apiName          getAttr
+     * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSuccess (返回) {Array} data 二级属性
+     * @apiSuccess (data) {string} spec_name 一级规格名
+     * @apiParam (入参) {Number} spec_id 一级规格id
+     * @apiSampleRequest /admin/spec/getAttr
+     * @author wujunjie
+     * 2019/1/7-18:11
+     */
+    public function getAttr(){
+        $id = trim(input("post.spec_id"));
+        if (empty(is_numeric($id))){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->spec->getAttr($id);
+        return $res;
+    }
+
+    /**
+     * @api              {post} / 获取一级规格和二级属性
+     * @apiDescription   getAttr
+     * @apiGroup         admin_spec
+     * @apiName          getAttr
+     * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSuccess (返回) {Array} data 数据
+     * @apiParam (入参) {Number} cate_id 三级分类id
+     * @apiSampleRequest /admin/spec/getAttr
+     * @author wujunjie
+     * 2019/1/8-15:25
+     */
+    public function getSpecAttr(){
+        $id = trim(input("post.cate_id"));
+        if (!is_numeric($id)){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->spec->getSpecAttr($id);
+        return $res;
+    }
 }
