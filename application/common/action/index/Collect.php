@@ -1,10 +1,10 @@
 <?php
-//namespace app\common\action\index;
-//
+namespace app\common\action\index;
+
 //use app\facade\DbGoods;
 //use app\facade\DbUser;
 //
-//class Collect{
+class Collect{
 //
 //    /**
 //     * 获取收藏的商品
@@ -29,4 +29,4 @@
 //            return ['msg'=>''];
 //        }
 //    }
-//}
+}
