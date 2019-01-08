@@ -30,6 +30,13 @@ class Index extends MyController {
     }
 
     public function hello() {
+//        print_r(hash_algos());die;
+        echo strlen('5737c4cdd65cd45c8a01988b590dafa93b0818b469243c28dea94a007477148b');die;
+        $password = '123456';
+        $pwd      = hash_hmac('sha3-256', hash_hmac('md5', $password, ''), 'userpass', false);
+        echo $pwd;
+        die;
+
 //        Phpredis::getConn()->delete('index:user:userinfo:1');die;
 //        $dividend = new Dividend(5);
 //        $a        = $dividend->getBoss();

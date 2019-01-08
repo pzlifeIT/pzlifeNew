@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\common\model\SupplierFreightArea;
 use app\facade\DbGoods;
 use app\facade\DbProvinces;
 use app\facade\DbImage;
@@ -99,7 +100,7 @@ class Suppliers {
         $oldLogImage  = [];
         $logImage     = [];
         $new_supplier = [];
-        $image    = filtraImage(Config::get('qiniu.domain'), $image);
+        $image        = filtraImage(Config::get('qiniu.domain'), $image);
         if (!empty($image)) {//提交了图片
             $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
             if (empty($logImage)) {//图片不存在
@@ -173,7 +174,7 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreights($supid) {
-        $field = 'id,supid,stype,title,desc';
+        $field  = 'id,supid,stype,title,desc';
         $result = DbGoods::getSupplierFreights($field, $supid);
         if (empty($result)) {
             return ['code' => '3000'];
@@ -240,39 +241,34 @@ class Suppliers {
 
     /**
      * 新建供应商快递模板
+     * @param $supplierId
+     * @param $stype
+     * @param $title
+     * @param $desc
      * @return array
      * @author rzc
      */
-    public function addSupplierFreight($supplierId, $stype, $title, $desc) {
-        if (!is_numeric($supplierId) || !is_numeric($stype)) {
-            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
-        }
-        if (!$title || !$desc) {
-            return ['code' => '3002']; /* 标题和详情不能为空 */
-        }
+    public function addSupplierFreight(int $supplierId, int $stype, $title, $desc) {
         $supplierfreight          = [];
         $supplierfreight['supid'] = $supplierId;
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
         $supplierfreight['desc']  = $desc;
 //        DbGoods::addSupplierFreight($data);
-        return ['code' => '200'];
         DbGoods::addSupplierFreight($supplierfreight);
         return ['code' => '200'];
     }
 
     /**
      * 修改供应商快递模板
+     * @param $supplier_freight_Id
+     * @param $stype
+     * @param $title
+     * @param $desc
      * @return array
      * @author rzc
      */
-    public function updateSupplierFreight($supplier_freight_Id, $stype, $title, $desc) {
-        if (!is_numeric($supplier_freight_Id) || !is_numeric($stype)) {
-            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
-        }
-        if (!$title || !$desc) {
-            return ['code' => '3002']; /* 标题和详情不能为空 */
-        }
+    public function updateSupplierFreight(int $supplier_freight_Id, int $stype, $title, $desc) {
         $supplierfreight          = [];
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
@@ -287,11 +283,8 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreightdetail($id) {
-        if (!is_numeric($id)) {
-            return ['code' => '3001']; /* 供应商id和方式必须是数字 */
-        }
-        $filed = 'id,freight_id,area_id,price,after_price,total_price';
-        $result = DbGoods::getSupplierFreightdetail($field,$id);
+        $field  = 'id,freight_id,area_id,price,after_price,total_price';
+        $result = DbGoods::getSupplierFreightdetailRow($field, $id);
         if (empty($result)) {
             return ['code' => '3000']; /* 不能为空 */
         }
@@ -300,24 +293,67 @@ class Suppliers {
 
     /**
      * 添加供应商快递模板运费
+     * @param $freight_id
+     * @param $price
+     * @param $after_price
+     * @param $total_price
      * @return array
      * @author rzc
      */
-    public function addSupplierFreightdetail($freight_id,$area_id,$price,$after_price,$total_price){
-        if (!is_numeric($freight_id) || !is_numeric($area_id)) {
-            return ['code' => '3001'];
-        }
-        if (!$price || !$after_price || !$total_price) {
-            return ['code' => '3002'];
-        }
+    public function addSupplierFreightdetail($freight_id, $price, $after_price, $total_price) {
         /* 查询该运费模板ID是否添加过此区域 */
-        $supplier_freight_detail = [];
-        $supplier_freight_detail['freight_id'] = $freight_id;
-        $supplier_freight_detail['area_id'] = $area_id;
-        $supplier_freight_detail['price'] = $price;
+        $supplier_freight_detail                = [];
+        $supplier_freight_detail['freight_id']  = $freight_id;
+        $supplier_freight_detail['price']       = $price;
         $supplier_freight_detail['after_price'] = $after_price;
         $supplier_freight_detail['total_price'] = $total_price;
+        return DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+    }
 
-        $result = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+    /**
+     * 更新运费模版和市的价格关联
+     * @param $cityIdStr
+     * @param $freightDetailId
+     * @return array
+     * @author zyr
+     */
+    public function updateSupplierFreightArea($cityIdStr, $freightDetailId) {
+        $cityIdStr  = str_replace(' ', '', $cityIdStr);
+        $cityIdList = explode(',', $cityIdStr);
+        $cityCount  = DbProvinces::getAreaCount('id', [['id', 'in', $cityIdList], ['level', '=', 2]]);
+        if ($cityCount != count($cityIdList)) {
+            return ['code' => 3004];
+        }
+        $where         = [['freight_detail_id', '=', $freightDetailId],];
+        $freightArea   = DbGoods::getSupplierFreightArea($where, 'id,city_id');
+        $freightAreaId = array_column($freightArea, 'city_id');//已提交的
+        $delList       = array_diff($freightAreaId, $cityIdList);//需要删除的city_id
+        $addList       = array_diff($cityIdList, $freightAreaId);//需要添加的city_id
+//        $idList        = array_column($freightArea, 'id');
+        $delId = [];
+        foreach ($freightArea as $val) {
+            if (in_array($val['city_id'], $delList)) {
+                array_push($delId, $val['id']);
+            }
+        }
+        Db::startTrans();
+        try {
+            if (!empty($delList)) {
+                SupplierFreightArea::destroy($delId);
+            }
+            if (!empty($addList)) {
+                $addArr = [];
+                foreach ($addList as $val) {
+                    array_push($addArr, ['city_id' => $val, 'freight_detail_id' => $freightDetailId]);
+                }
+                DbGoods::addSupplierFreightArea($addArr);
+            }
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3003"];
+        }
+
     }
 }
