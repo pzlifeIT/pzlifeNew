@@ -423,18 +423,46 @@ class DbGoods {
         return (new GoodsRelation())->save($data, ["goods_id" => $goods_id]);
     }
 
+    /**
+     * 删除商品
+     * @param $id
+     * @return bool
+     * @author wujunjie
+     * 2019/1/8-10:09
+     */
     public function delGoods($id) {
         return Goods::destroy($id);
     }
 
+    /**
+     * 删除商品图
+     * @param $id
+     * @return bool
+     * @author wujunjie
+     * 2019/1/8-10:09
+     */
     public function delGoodsImage($id) {
         return GoodsImage::destroy(["goods_id" => ["=", $id]]);
     }
 
+    /**
+     * 删除sku
+     * @param $id
+     * @return bool
+     * @author wujunjie
+     * 2019/1/8-10:09
+     */
     public function delGoodsSku($id) {
         return GoodsSku::destroy(["goods_id" => ["=", $id]]);
     }
 
+    /**
+     * 删除商品类目
+     * @param $id
+     * @return bool
+     * @author wujunjie
+     * 2019/1/8-10:09
+     */
     public function delGoodsRelation($id) {
         return GoodsRelation::destroy(["goods_id" => ["=", $id]]);
     }
@@ -622,9 +650,5 @@ class DbGoods {
      */
     public function getSupplierFreightdetail($field,$id){
         return SupplierFreightDetail::field($field)->where('id',$id)->findOrEmpty()->toArray();
-    }
-
-    public function getCateImage(){
-
     }
 }
