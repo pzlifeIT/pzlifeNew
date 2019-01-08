@@ -7,7 +7,7 @@ use app\index\MyController;
 class Category extends MyController
 {
     /**
-     * @api              {post} / 一级分类
+     * @api              {post} / 分类
      * @apiDescription   getFirstCate
      * @apiGroup         index_category
      * @apiName          getFirstCate

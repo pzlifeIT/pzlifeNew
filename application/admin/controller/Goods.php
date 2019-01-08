@@ -70,7 +70,7 @@ class Goods extends AdminController
      * @apiParam (images) {Number} image_type 图片类型 1详情图 / 2轮播图
      * @apiParam (images) {String} image_path 图片内容
      * @apiParam (入参) {Array} skus sku数据 （一个数组单元是一个json字符串）
-     * @apiParamExample (skus) {Array} 商品图片
+     * @apiParamExample (skus) {Array} sku
      * [
      * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
      * {"stock":1,"market_price":1,"retail_price":"","presell_start_time":"","sku":"{1:1,2:1}"...},
@@ -219,10 +219,32 @@ class Goods extends AdminController
      */
     public function delGoods(){
         $id = trim(input("post.id"));
-        if (empty($id)){
+        if (!is_numeric($id)){
             return ["msg"=>"参数错误","code"=>3002];
         }
         $res = $this->app->goods->delGoods($id);
+        return $res;
+    }
+
+    /**
+     * @api              {post} / 上下架
+     * @apiDescription   upDownGoods
+     * @apiGroup         admin_goods
+     * @apiName          upDownGoods
+     * @apiParam (入参) {Number} id 商品id
+     * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
+     * @apiSuccess (返回) {String} code 200:成功 /3002 参数错误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @author wujunjie
+     * 2019/1/8-10:13
+     */
+    public function upDownGoods(){
+        $id = trim(input("post.id"));
+        $type = trim(input("post.type"));
+        if (!is_numeric($id) || !is_numeric($type)){
+            return ["msg"=>"参数错误","code"=>3002];
+        }
+        $res = $this->app->goods->upDown($id);
         return $res;
     }
 }
