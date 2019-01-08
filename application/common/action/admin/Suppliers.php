@@ -236,7 +236,8 @@ class Suppliers {
             return ['code' => '3000'];
         }
         /* 获取每条数据的上级省市名称 */
-        foreach ($result as $key => $value) {
+        /* foreach ($result as $key => $value) {
+
             $parent   = DbProvinces::getAreaOne('area_name,pid', ['id' => $value['area_id']]);
             $pid      = $parent['pid'];
             $areaname = $parent['area_name'];
@@ -246,7 +247,7 @@ class Suppliers {
                 $areaname = $area['area_name'] . $areaname;
             } while ($pid);
             $result[$key]['areaname'] = $areaname;
-        }
+        } */
         $count = DbGoods::getSupplierFreightdetailCount($freight_id);
         return ['code' => '200', 'totle' => $count, 'data' => $result];
     }
@@ -319,7 +320,8 @@ class Suppliers {
         $supplier_freight_detail['price']       = $price;
         $supplier_freight_detail['after_price'] = $after_price;
         $supplier_freight_detail['total_price'] = $total_price;
-        return DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+        $add = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+        return ['code'=>200,'id'=>$add];
     }
 
     /**
