@@ -368,8 +368,12 @@ class Suppliers extends AdminController {
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreightdetail
      * @apiParam (入参) {Number} sfd_id 快递模版ID
-     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
-     * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模版ID只能是数字
+     * @apiSuccess (data) {String} data 结果
+     * @apiSuccess (data) {String} supplier_freight_Id 快递模版ID
+     * @apiSuccess (data) {String} stype 计价方式1.件数 2.重量 3.体积
+     * @apiSuccess (data) {String} title 标题
+     * @apiSuccess (data) {String} desc 详情
      * @apiSampleRequest /admin/suppliers/getSupplierFreightdetail
      * @author rzc
      */

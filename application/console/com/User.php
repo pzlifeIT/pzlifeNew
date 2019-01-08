@@ -188,7 +188,7 @@ class User extends Pzlife
         $mysql_connect = Db::connect(Config::get('database.db_config'));
 
         /* 查询供应商 */
-        $suppliersql = "SELECT * FROM pre_supplier WHERE `supid`>8 ";
+        $suppliersql = "SELECT * FROM pre_supplier ";
         $supplierdata = $mysql_connect->query($suppliersql);
         Db::startTrans();
             try {
@@ -197,7 +197,7 @@ class User extends Pzlife
                     // print_r($value);
                     $supplier = [];
                     $supplier['id'] = $value['supid'];
-                    $supplier['tel'] = $value['service'];
+                    $supplier['tel'] = trim($value['service']);
                     $supplier['name'] = $value['name'];
                     $supplier['image'] = $value['image'];
                     $supplier['title'] = trim($value['description']);

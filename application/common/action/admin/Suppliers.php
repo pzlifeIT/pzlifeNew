@@ -224,7 +224,7 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreightdetailList($freight_id, $page, $pagenum) {
-        $field  = 'id,freight_id,area_id,price,after_price,total_price';
+        $field  = 'id,freight_id,price,after_price,total_price';
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];

@@ -343,6 +343,20 @@ class DbGoods {
     }
 
     /**
+     * 获取一条商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     * @author rzc
+     */
+    public function getOneGoodsSpec($where,$field,$distinct = 0){
+        if ($distinct == 1) {
+            return GoodsRelation::distinct(true)->field($field)->where($where)->select()->toArray();
+        }
+        return GoodsRelation::field($field)->where($where)->select()->toArray();
+    }
+
+    /**
      * 添加商品
      * @param $data
      * @return mixed
@@ -718,4 +732,17 @@ class DbGoods {
     public function addSupplierFreightArea($data) {
         return $this->supplierFreightArea->saveAll($data);
     }
+
+    /**
+     * 根据Where获取三级分类商品列表
+     * @param $field
+     * @param $order
+     * @param $limit
+     * @param $where
+     * @return array
+     */
+    public function getGoods($field,$limit,$order,$where){
+        return Goods::field($field)->where($where)->order($order,'desc')->limit($limit)->select()->toArray();
+    }
+
 }
