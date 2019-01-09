@@ -320,8 +320,8 @@ class Suppliers {
         $supplier_freight_detail['price']       = $price;
         $supplier_freight_detail['after_price'] = $after_price;
         $supplier_freight_detail['total_price'] = $total_price;
-        $add = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
-        return ['code'=>200,'id'=>$add];
+        $add                                    = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+        return ['code' => 200, 'id' => $add];
     }
 
     /**

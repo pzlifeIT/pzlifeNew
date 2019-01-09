@@ -58,31 +58,38 @@ class Provinces {
 
     /**
      * 获取运费模版的剩余可选省市列表
-     * @param $freight_id
+     * @param $freightId
+     * @param $freightDetailId
      * @return array
      */
-    public function getProvinceCityByFreight(int $freight_id) {
-        $detailList = DbGoods::getSupplierFreightDetail(['freight_id' => $freight_id], 'id');
-        $idList     = array_column($detailList, 'id');
-        $areaWhere  = [
-            ['freight_detail_id', 'in', $idList],
-        ];
-        $selectCity = DbGoods::getSupplierFreightArea($areaWhere, 'city_id');
-        $cityIdList = array_column($selectCity, 'city_id');//已选择价格模版的city
-        $allCity    = DbProvinces::getAreaInfo('id,pid,area_name', ['level' => 2]);
-        $allCityId  = array_column($allCity, 'id');
-        $cityId     = array_diff($allCityId, $cityIdList);
-        $provinceId = array_unique(array_column($allCity, 'pid'));
-        $province = DbProvinces::getAreaInfo('id,pid,area_name', [['id', 'in', $provinceId]]);
-//        print_r($provinceId);die;
-        $city = [];
-        foreach ($allCity as $val) {
+    public function getProvinceCityByFreight(int $freightId, int $freightDetailId) {
+        $detailList           = DbGoods::getSupplierFreightDetail(['freight_id' => $freightId], 'id');
+        $idList               = array_column($detailList, 'id');//运费价格详情id
+        $areaWhere            = [['freight_detail_id', 'in', $idList],];
+        $selectCity           = DbGoods::getSupplierFreightArea($areaWhere, 'city_id');//快递模版的所有价格详情选中的市
+        $cityIdList           = array_column($selectCity, 'city_id');//已选择价格模版的city
+        $selectDetailCity     = DbGoods::getSupplierFreightArea(['freight_detail_id' => $freightDetailId], 'city_id');//快递模版的所有价格详情选中的市
+        $selectDetailCityList = array_column($selectDetailCity, 'city_id');
+        $allCity              = DbProvinces::getAreaInfo('id,pid,area_name', ['level' => 2]);
+        $allCityId            = array_column($allCity, 'id');//所有市id
+        $cityId               = array_diff($allCityId, $cityIdList);//未选的市id(剩下可选的city_id)
+//        $provinceId = array_unique(array_column($allCity, 'pid'));
+        $city       = DbProvinces::getAreaInfo('id,pid,area_name', [['id', 'in', $cityId]]);//剩下可选的city_id
+        $cityDetail = DbProvinces::getAreaInfo('id,pid,area_name', [['id', 'in', $selectDetailCityList]]);//所有价格详情选中的市
+        $cityList   = array_merge($city, $cityDetail);
+        $allList    = [];
+        foreach ($cityList as $val) {
             if (in_array($val['id'], $cityId)) {
-                array_push($city, $val);
+                $val['status'] = 1;//可选的
+            } else {
+                $val['status'] = 2;//已选的
             }
+            array_push($allList, $val);
         }
-        $result = array_merge($province,$city);
-        $phptree = new PHPTree($result);
+        $provinceId = array_unique(array_column($allList, 'pid'));
+        $province   = DbProvinces::getAreaInfo('id,pid,area_name', [['id', 'in', $provinceId]]);
+        $result     = array_merge($province, $allList);
+        $phptree    = new PHPTree($result);
         $phptree->setParam('pk', 'id');
         $result = $phptree->listTree();
         return ['code' => '200', 'data' => $result];
