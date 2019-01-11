@@ -268,7 +268,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getOneGoods
      * @apiParam (入参) {Number} id 商品id
-     * @apiSuccess (返回) {String} code 200:成功 /3002 参数错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
      * @apiSuccess (返回) {Array} images_detatil 商品详情图

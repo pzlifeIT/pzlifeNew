@@ -287,10 +287,10 @@ class Goods {
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
         $goods_data = DbGoods::getOneGoods($where, $field);
         if (empty($goods_data)) {
-            return ["msg" => "商品基本数据获取失败", "code" => 3000];
+            return ["code" => 3000];
         }
         $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
-        $goods_data['goods_class']   = $goodsClass['type_name'];
+        $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
         $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
         $goods_data['supplier_name'] = $supplier['name'];
         //根据商品id找到商品图片表里面的数据
@@ -325,9 +325,9 @@ class Goods {
         $where = [["goods_id", "=", $id]];
         $field = "goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
         $sku   = DbGoods::getSku($where, $field);
-        if (empty($sku)) {
-            return ["msg" => "sku数据获取失败", "code" => 3000];
-        }
+//        if (empty($sku)) {
+//            return ["msg" => "sku数据获取失败", "code" => 3000];
+//        }
 //        }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
     }
