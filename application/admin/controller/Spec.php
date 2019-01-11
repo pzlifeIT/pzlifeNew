@@ -194,7 +194,7 @@ class Spec extends AdminController
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} data 数据
      * @apiParam (入参) {Number} cate_id 三级分类id
-     * @apiSampleRequest /admin/spec/getAttr
+     * @apiSampleRequest /admin/spec/getspecattr
      * @author wujunjie
      * 2019/1/8-15:25
      */

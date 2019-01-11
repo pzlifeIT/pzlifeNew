@@ -157,6 +157,94 @@ class Goods extends AdminController {
         return $res;
     }
 
+
+    /**
+     * @api              {post} / 获取sku列表
+     * @apiDescription   getGoodsSku
+     * @apiGroup         admin_goods
+     * @apiName          getGoodsSku
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:没有这个商品
+     * @apiSuccess (返回) {Array} data 返回数据
+     * @apiSuccess (data) {Number} goods_id 商品id
+     * @apiSuccess (data) {Number} stock 库存
+     * @apiSuccess (data) {Number} market_price 市场价
+     * @apiSuccess (data) {Number} retail_price 零售价
+     * @apiSuccess (data) {Number} cost_price 成本价
+     * @apiSuccess (data) {Number} margin_price 毛利
+     * @apiSuccess (data) {Number} sku_image 规格详情图
+     * @apiSuccess (data) {Number} spec 属性id列表
+     * @apiSuccess (data) {Number} attr 属性列表
+     * @apiSampleRequest /admin/goods/getgoodssku
+     * @return array
+     * @author zyr
+     */
+    public function getGoodsSku() {
+        $goodsId = trim($this->request->post('goods_id'));//商品id
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->goods->getGoodsSku(intval($goodsId));
+        return $result;
+    }
+
+    public function editGoodsSku() {
+        $skuId = trim($this->request->post('sku_id'));
+        if (!is_numeric($skuId)) {
+            return ['code' => '3001'];
+        }
+    }
+
+    /**
+     * @api              {post} / 添加商品的规格属性
+     * @apiDescription   addGoodsSpec
+     * @apiGroup         admin_goods
+     * @apiName          addGoodsSpec
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {Number} attr_id 属性id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 / 3006:商品已有该规格属性 / 3007:提交失败 / 3008:没有任何操作
+     * @apiSampleRequest /admin/goods/addgoodsspec
+     * @return array
+     * @author zyr
+     */
+    public function addGoodsSpec() {
+        $goodsId = trim($this->request->post('goods_id'));//商品id
+        $attrId  = trim($this->request->post('attr_id'));//属性id
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3002'];//商品id必须为数字
+        }
+        if (!is_numeric($attrId)) {
+            return ['code' => '3001'];//属性id必须为数字
+        }
+        $restlt = $this->app->goods->addGoodsSpec(intval($attrId), intval($goodsId));
+        return $restlt;
+    }
+
+    /**
+     * @api              {post} / 删除商品的规格属性
+     * @apiDescription   delGoodsSpec
+     * @apiGroup         admin_goods
+     * @apiName          delGoodsSpec
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {Number} attr_id 属性id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 / 3007:提交失败/ 3008:没有任何操作
+     * @apiSampleRequest /admin/goods/delgoodsspec
+     * @return array
+     * @author zyr
+     */
+    public function delGoodsSpec() {
+        $goodsId = trim($this->request->post('goods_id'));//商品id
+        $attrId  = trim($this->request->post('attr_id'));//属性id
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3002'];//商品id必须为数字
+        }
+        if (!is_numeric($attrId)) {
+            return ['code' => '3001'];//属性id必须为数字
+        }
+        $restlt = $this->app->goods->delGoodsSpec(intval($attrId), intval($goodsId));
+        return $restlt;
+    }
+
     /**
      * @api              {post} / 获取一个商品数据
      * @apiDescription   getOneGoods
@@ -192,14 +280,14 @@ class Goods extends AdminController {
      * @author wujunjie
      * 2019/1/3-10:21
      */
-    public function delGoods() {
-        $id = trim(input("post.id"));
-        if (!is_numeric($id)) {
-            return ["msg" => "参数错误", "code" => 3002];
-        }
-        $res = $this->app->goods->delGoods($id);
-        return $res;
-    }
+//    public function delGoods() {
+//        $id = trim(input("post.id"));
+//        if (!is_numeric($id)) {
+//            return ["msg" => "参数错误", "code" => 3002];
+//        }
+//        $res = $this->app->goods->delGoods($id);
+//        return $res;
+//    }
 
     /**
      * @api              {post} / 上下架

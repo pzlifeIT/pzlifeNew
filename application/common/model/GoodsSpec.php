@@ -22,4 +22,12 @@ class GoodsSpec extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function goodsAttr() {
+        return $this->hasMany('goodsAttr', 'spec_id', 'id');
+    }
+
+    public function goodsRelation() {
+        return $this->hasMany('goodsRelation', 'spec_id', 'id');
+    }
 }

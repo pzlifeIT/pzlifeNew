@@ -24,4 +24,8 @@ class GoodsAttr extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+//    public function goodsSpec() {
+//        return $this->belongsTo('goodsSpec');
+//    }
 }

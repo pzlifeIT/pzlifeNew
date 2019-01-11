@@ -23,6 +23,7 @@ class DbGoods {
     private $supplierFreightDetail;
     private $supplierFreightArea;
     private $goods;
+    private $goodsAttr;
 
     public function __construct() {
         $this->supplier              = new Supplier();
@@ -32,6 +33,7 @@ class DbGoods {
         $this->supplierFreightDetail = new SupplierFreightDetail();
         $this->supplierFreightArea   = new SupplierFreightArea();
         $this->goods                 = new Goods();
+        $this->goodsAttr             = new GoodsAttr();
     }
 
     public function getTier($id) {
@@ -225,6 +227,8 @@ class DbGoods {
 
     /**
      * 获取一条二级属性
+     * @param $where
+     * @param $field
      * @author wujunjie
      * 2019/1/2-14:53
      */
@@ -318,9 +322,6 @@ class DbGoods {
      * @param $field
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2019/1/2-16:26
      */
     public function getOneGoodsImage($where, $field) {
@@ -333,13 +334,53 @@ class DbGoods {
      * @param $field
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2019/1/2-16:44
      */
     public function getOneGoodsSku($where, $field) {
         return GoodsSku::where($where)->field($field)->select()->toArray();
+    }
+
+
+    /**
+     * 获取商品及对应对sku
+     * @param $where
+     * @param $field
+     * @param $field2
+     * @return array
+     */
+    public function getSpecAttr($where, $field, $field2) {
+        return GoodsSpec::field($field)->with([
+            'goodsAttr' => function ($query) use ($field2) {
+                $query->field($field2);
+            }])->where($where)->select()->toArray();
+    }
+
+//    public function getSpecAttr2($where, $field, $field2, $field3) {
+//        return GoodsSpec::field($field)->with([
+//            'goodsAttr'        => function ($query) use ($field2) {
+//                $query->field($field2);
+//            }, 'goodsRelation' => function ($query2) use ($field3) {
+//                $query2->field($field3);
+//            }])->where($where)->select()->toArray();
+//    }
+
+    public function getGoodsAndSku($where, $field, $field2) {
+        return Goods::field($field)->with([
+            'goodsSku' => function ($query) use ($field2) {
+                $query->field($field2);
+            }])->where($where)->select()->toArray();
+    }
+
+    public function getSku($where, $field) {
+        $sku    = GoodsSku::field($field)->where($where)->select()->toArray();
+        $result = [];
+        foreach ($sku as $val) {
+            $goodsAttr   = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
+            $attr        = array_column($goodsAttr, 'attr_name');
+            $val['attr'] = $attr;
+            array_push($result, $val);
+        }
+        return $result;
     }
 
     /**
@@ -349,11 +390,31 @@ class DbGoods {
      * @return array
      * @author rzc
      */
-    public function getOneGoodsSpec($where,$field,$distinct = 0){
+    public function getOneGoodsSpec($where, $field, $distinct = 0) {
         if ($distinct == 1) {
             return GoodsRelation::distinct(true)->field($field)->where($where)->select()->toArray();
         }
         return GoodsRelation::field($field)->where($where)->select()->toArray();
+    }
+
+    /**
+     * 获取商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getGoodsRelation($where, $field) {
+        return GoodsRelation::where($where)->field($field)->select()->toArray();
+    }
+
+    /**
+     * 获取一条商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getGoodsRelationOne($where, $field) {
+        return GoodsRelation::where($where)->field($field)->findOrEmpty()->toArray();
     }
 
     /**
@@ -391,6 +452,11 @@ class DbGoods {
      */
     public function addGoodsSku($data) {
         return (new GoodsSku())->save($data);
+    }
+
+    public function addSkuList($data) {
+        $goodsSku = new GoodsSku();
+        return $goodsSku->saveAll($data);
     }
 
     /**
@@ -483,6 +549,21 @@ class DbGoods {
      */
     public function delGoodsSku($id) {
         return GoodsSku::destroy(["goods_id" => ["=", $id]]);
+    }
+
+    /**
+     * 删除sku
+     * @param $isList
+     * @return bool
+     * @author
+     */
+    public function delSku($isList) {
+        return GoodsSku::destroy($isList);
+    }
+
+
+    public function deleteGoodsRelation($delId) {
+        return GoodsRelation::destroy($delId);
     }
 
     /**
@@ -741,8 +822,8 @@ class DbGoods {
      * @param $where
      * @return array
      */
-    public function getGoods($field,$limit,$order,$where){
-        return Goods::field($field)->where($where)->order($order,'desc')->limit($limit)->select()->toArray();
+    public function getGoods($field, $limit, $order, $where) {
+        return Goods::field($field)->where($where)->order($order, 'desc')->limit($limit)->select()->toArray();
     }
 
 }
