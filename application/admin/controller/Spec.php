@@ -187,9 +187,9 @@ class Spec extends AdminController
 
     /**
      * @api              {post} / 获取一级规格和二级属性
-     * @apiDescription   getAttr
+     * @apiDescription   getSpecAttr
      * @apiGroup         admin_spec
-     * @apiName          getAttr
+     * @apiName          getSpecAttr
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} data 数据

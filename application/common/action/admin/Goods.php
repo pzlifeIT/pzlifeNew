@@ -204,8 +204,11 @@ class Goods {
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
-        $specId       = $checkRes['spec_id'];
-        $relationArr  = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
+        $specId      = $checkRes['spec_id'];
+        $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
+        if (!in_array($attrId, array_column($relationArr, 'attr_id'))) {
+            return ['code' => '3006'];//该商品未绑定这个属性
+        }
         $relationList = [];//现有的规格属性列表
         foreach ($relationArr as $val) {
             if ($val['spec_id'] == $specId && $val['attr_id'] == $attrId) {
@@ -362,13 +365,16 @@ class Goods {
             return ['code' => '3003'];//属性不存在
         }
         $specId   = $goodsAttrOne['spec_id'];
-        $goodsOne = DbGoods::getOneGoods(['id' => $goodsId], 'id');
+        $goodsOne = DbGoods::getOneGoods(['id' => $goodsId], 'id,cate_id');
         if (empty($goodsOne)) {
             return ['code' => '3004'];//商品不存在
         }
-        $goodsSpecOne = DbGoods::getOneSpec(['id' => $specId], 'id');
+        $goodsSpecOne = DbGoods::getOneSpec(['id' => $specId], 'id,cate_id');
         if (empty($goodsSpecOne)) {
             return ['code' => '3005'];//规格为空
+        }
+        if ($goodsSpecOne['cate_id'] != $goodsOne['cate_id']) {
+            return ['code' => '3009'];//提交的属性分类和商品分类不同
         }
         return ['code' => '200', 'spec_id' => $specId];
     }
