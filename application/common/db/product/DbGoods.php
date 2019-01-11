@@ -384,6 +384,23 @@ class DbGoods {
     }
 
     /**
+     * 获取商品的规格属性及关联名称
+     * @param $where
+     * @param $field
+     * @param $field2
+     * @param $field3
+     * @return array
+     */
+    public function getGoodsSpecAttr($where, $field, $field2, $field3) {
+        return GoodsRelation::field($field)->with([
+            'goodsSpec'    => function ($query) use ($field2) {
+                $query->field($field2);
+            }, 'goodsAttr' => function ($query2) use ($field3) {
+                $query2->field($field3);
+            }])->where($where)->select()->toArray();
+    }
+
+    /**
      * 获取一条商品类目属性关系
      * @param $where
      * @param $field

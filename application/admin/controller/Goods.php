@@ -271,8 +271,36 @@ class Goods extends AdminController {
      * @apiSuccess (返回) {String} code 200:成功 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
-     * @apiSuccess (返回) {Array} images_data 商品图片数据
+     * @apiSuccess (返回) {Array} images_detatil 商品详情图
+     * @apiSuccess (返回) {Array} images_carousel 商品轮播图
      * @apiSuccess (返回) {Array} sku sku数据
+     * @apiSuccess (返回) {Array} specAttr
+     * @apiSuccess (goods_data) {Number} supplier_id 供应商id
+     * @apiSuccess (goods_data) {Number} cate_id 分类id
+     * @apiSuccess (goods_data) {String} goods_name 商品名称
+     * @apiSuccess (goods_data) {Number} goods_type 普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (goods_data) {String} subtitle 天然碱性苏打水
+     * @apiSuccess (goods_data) {String} image 标题图
+     * @apiSuccess (goods_data) {Number} status 1.上架 2.下架
+     * @apiSuccess (goods_data) {String} goods_class 三级分类
+     * @apiSuccess (goods_data) {String} supplier_name 供应商名称
+     * @apiSuccess (spec_attr) {Number} spec_id 规格id
+     * @apiSuccess (spec_attr) {Number} attr_id 属性id
+     * @apiSuccess (spec_attr) {Number} spec_name 规格名称
+     * @apiSuccess (spec_attr) {Number} attr_name 属性名称
+     * @apiSuccess (images_detatil) {Number} image_type 1.详情图 2.轮播图
+     * @apiSuccess (images_detatil) {Number} image_path 图片地址
+     * @apiSuccess (images_carousel) {Number} image_type 1.详情图 2.轮播图
+     * @apiSuccess (images_carousel) {Number} image_path 图片地址
+     * @apiSuccess (sku) {Number} goods_id 商品id
+     * @apiSuccess (sku) {Number} stock 库存
+     * @apiSuccess (sku) {Number} market_price 市场价
+     * @apiSuccess (sku) {Number} retail_price 零售价
+     * @apiSuccess (sku) {Number} cost_price 成本价
+     * @apiSuccess (sku) {Number} margin_price 毛利
+     * @apiSuccess (sku) {Number} sku_image 规格详情图
+     * @apiSuccess (sku) {Number} spec 属性id列表
+     * @apiSuccess (sku) {Number} attr 属性列表
      * @apiSampleRequest /admin/goods/getonegoods
      * @author wujunjie
      * 2019/1/2-16:48
