@@ -104,7 +104,7 @@ class Goods extends AdminController {
      * @apiDescription   saveUpdateGoods
      * @apiGroup         admin_goods
      * @apiName          saveUpdateGoods
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} supplier_id 供应商id
@@ -325,6 +325,38 @@ class Goods extends AdminController {
 //        $res = $this->app->goods->delGoods($id);
 //        return $res;
 //    }
+
+
+    /**
+     * @api              {post} / 提交商品详情和轮播图
+     * @apiDescription   uploadGoodsImages
+     * @apiGroup         admin_goods
+     * @apiName          uploadGoodsImages
+     * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {Array} images 属性id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
+     * @apiSampleRequest /admin/goods/uploadgoodsimages
+     * @return array
+     * @author zyr
+     */
+    public function uploadGoodsImages() {
+        $imageTypeArr = [1, 2];//1.详情图 2.轮播图
+        $goodsId      = trim($this->request->post('goods_id'));
+        $imageType    = trim($this->request->post('image_type'));
+        $images       = $this->request->post('images');
+        if (!is_numeric($imageType) || !in_array(intval($imageType), $imageTypeArr)) {
+            return ['code' => '3001'];//图片类型有误
+        }
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3002'];//商品id只能是数字
+        }
+        if (empty($images)) {
+            return ['code' => '3003'];//图片不能空
+        }
+        $result = $this->app->goods->uploadGoodsImages($goodsId, $imageType, $images);
+        return $result;
+    }
 
     /**
      * @api              {post} / 上下架

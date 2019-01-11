@@ -161,26 +161,14 @@ class Category extends AdminController {
         return $result;
     }
 
-    /**
-     * @api              {post} / 删除分类
-     * @apiDescription   delcategory
-     * @apiGroup         admin_category
-     * @apiName          delcategory
-     * @apiParam (入参) {Number} id 当前分类id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:删除失败 / 3002:参数错误 / 3003:不能删除
-     * @apiSuccess (返回) {String} msg 返回消息
-     * @apiSampleRequest /admin/category/delcategory
-     * @author wujunjie
-     * 2018/12/24-17:18
-     */
-    public function delCategory() {
-        $id = trim(input("post.id"));
-        if (empty(is_numeric($id))) {
-            return ["msg" => "参数错误", "code" => 3002];
-        }
-        $res = $this->app->category->delCategory($id);
-        return $res;
-    }
+//    public function delCategory() {
+//        $id = trim(input("post.id"));
+//        if (empty(is_numeric($id))) {
+//            return ["msg" => "参数错误", "code" => 3002];
+//        }
+//        $res = $this->app->category->delCategory($id);
+//        return $res;
+//    }
 
     /**
      * @api              {post} / 停用/启用分类

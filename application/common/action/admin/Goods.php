@@ -350,6 +350,45 @@ class Goods {
 //
 //    }
 
+    public function uploadGoodsImages($goodsId, $imageType, $images) {
+        $goods = DbGoods::getOneGoods(['id' => $goodsId], 'id');
+        if (empty($goods)) {
+            return ['code' => '3004'];
+        }
+        $data    = [];
+        $logData = [];
+        $orderBy = 0;
+        foreach ($images as $img) {
+            $image    = filtraImage(Config::get('qiniu.domain'), $img);//去除域名
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
+            $logImage['status'] = 1;//更新为完成状态
+            $orderBy++;
+            $row = [
+                'goods_id'    => $goodsId,
+                'source_type' => 4,
+                'image_type'  => $imageType,
+                'image_path'  => $img,
+                'order_by'    => $orderBy,
+            ];
+            array_push($logData, $logImage);
+            array_push($data, $row);
+        }
+//        print_r($data);die;
+        Db::startTrans();
+        try {
+            DbGoods::addGoodsImageList($data);
+            DbImage::updateLogImageStatusList($logData);//更新状态为已完成
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3006"];
+        }
+    }
+
     /**
      * 上下架
      * @param $id

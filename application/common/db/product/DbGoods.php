@@ -461,6 +461,16 @@ class DbGoods {
     }
 
     /**
+     * 批量添加图片
+     * @param $data
+     * @return bool
+     */
+    public function addGoodsImageList($data) {
+        $goodsImage = new GoodsImage();
+        return $goodsImage->saveAll($data);
+    }
+
+    /**
      * 添加sku
      * @param $data
      * @return bool

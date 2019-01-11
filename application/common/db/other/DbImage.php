@@ -65,4 +65,8 @@ class DbImage {
         return $this->logImage->save(['status' => $status], $id);
     }
 
+    public function updateLogImageStatusList($data) {
+        return $this->logImage->saveAll($data);
+    }
+
 }
