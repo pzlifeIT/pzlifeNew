@@ -320,7 +320,7 @@ class Goods {
     public function getOneGoods($id, $getType) {
         //根据商品id找到商品表里面的基本数据
         $goods_data = [];
-        if (in_array($getType, [1, 2])) {
+        if (in_array(1, $getType)) {
             $where      = [["id", "=", $id]];
             $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
             $goods_data = DbGoods::getOneGoods($where, $field);
@@ -335,7 +335,7 @@ class Goods {
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
         $imagesCarousel = [];
-        if (in_array($getType, [1, 4])) {
+        if (in_array(3, $getType)) {
             $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
             $field          = "goods_id,image_type,image_path";
             $images_data    = DbGoods::getOneGoodsImage($where, $field);
@@ -355,7 +355,7 @@ class Goods {
         }
 
         $specAttr = [];
-        if (in_array($getType, [1, 3])) {
+        if (in_array(2, $getType)) {
             $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'id,spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
             foreach ($specAttrRes as $specVal) {
                 $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
@@ -368,7 +368,7 @@ class Goods {
 
         //根据商品id获取sku表数据
         $sku = [];
-        if (in_array($getType, [1, 5])) {
+        if (in_array(4, $getType)) {
             $where = [["goods_id", "=", $id]];
             $field = "id,goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
             $sku   = DbGoods::getSku($where, $field);
@@ -394,6 +394,13 @@ class Goods {
 //
 //    }
 
+    /**
+     * 上传商品的轮播图和详情图
+     * @param $goodsId
+     * @param $imageType 1.详情图 2.轮播图
+     * @param $images
+     * @return array
+     */
     public function uploadGoodsImages($goodsId, $imageType, $images) {
         $goods = DbGoods::getOneGoods(['id' => $goodsId], 'id');
         if (empty($goods)) {
@@ -431,6 +438,11 @@ class Goods {
             Db::rollback();
             return ["code" => "3006"];
         }
+    }
+
+
+    public function delGoodsImage($imagePath) {
+
     }
 
     /**

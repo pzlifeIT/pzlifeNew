@@ -307,7 +307,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getOneGoods
      * @apiParam (入参) {Number} id 商品id
-     * @apiParam (入参) {Number} get_type 获取内容类型 1.所有 2.只获取goods_data 3 获取spec_attr 4.获取images_detatil和images_carousel  5.获取sku
+     * @apiParam (入参) {Number} [get_type] 获取内容类型 1.只获取goods_data 2. 获取spec_attr 3.获取images_detatil和images_carousel  4.获取sku   默认为1,2,3,4
      * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002:id必须是数字 / 3003:get_type错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
@@ -345,14 +345,18 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function getOneGoods() {
-        $getTypeArr = [1, 2, 3, 4, 5];
+        $getTypeArr = [1, 2, 3, 4];
         $id         = trim(input("post.id"));
-        $getType    = trim($this->request->post('get_type')) ?? 1;
+        $getType    = trim($this->request->post('get_type'));
+        $getType    = empty($getType) ? '1,2,3,4' : $getType;
         if (!is_numeric($id)) {
             return ["code" => 3002];
         }
-        if (!in_array($getType, $getTypeArr)) {
-            return ['code' => '3003'];
+        $getType = explode(',', $getType);
+        foreach ($getType as $val) {
+            if (!in_array($val, $getTypeArr)) {
+                return ['code' => '3003'];
+            }
         }
         $res = $this->app->goods->getOneGoods($id, $getType);
         return $res;
@@ -400,6 +404,26 @@ class Goods extends AdminController {
         }
         $result = $this->app->goods->uploadGoodsImages($goodsId, $imageType, $images);
         return $result;
+    }
+
+
+    /**
+     * @api              {post} / 删除商品详情和轮播图
+     * @apiDescription   delGoodsImage
+     * @apiGroup         admin_goods
+     * @apiName          delGoodsImage
+     * @apiParam (入参) {Number} image_path 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
+     * @apiSampleRequest /admin/goods/delgoodsimage
+     * @return array
+     * @author zyr
+     */
+    public function delGoodsImage() {
+        $imagePath = trim($this->request->post('image_path'));
+        if (empty($imagePath)) {
+            return ['code' => '3001'];
+        }
+        return;
     }
 
     /**
