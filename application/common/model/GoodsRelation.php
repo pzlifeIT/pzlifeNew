@@ -19,4 +19,12 @@ class GoodsRelation extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function goodsSpec() {
+        return $this->belongsTo('goodsSpec', 'spec_id', 'id');
+    }
+
+    public function goodsAttr() {
+        return $this->belongsTo('goodsAttr', 'attr_id', 'id');
+    }
 }

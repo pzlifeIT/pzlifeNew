@@ -129,6 +129,152 @@ class Goods {
     }
 
     /**
+     * 添加商品的规格属性
+     * @param $attrId
+     * @param $goodsId
+     * @return array
+     */
+    public function addGoodsSpec(int $attrId, int $goodsId) {
+        $checkRes = $this->checkGoods($attrId, $goodsId);
+        if ($checkRes['code'] !== '200') {
+            return $checkRes;
+        }
+        $specId       = $checkRes['spec_id'];
+        $relationArr  = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
+        $relationList = [];//现有的规格属性列表
+        foreach ($relationArr as $val) {
+            if ($val['spec_id'] == $specId && $val['attr_id'] == $attrId) {
+                return ['code' => '3006'];//商品已有该规格属性
+            }
+            $relationList[$val['spec_id']][] = $val['attr_id'];
+        }
+        $relationList[$specId][] = $attrId;
+        $carte                   = $this->cartesian(array_values($relationList));
+        $skuWhere                = ['goods_id' => $goodsId];
+        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
+        $delId                   = [];//需要删除的sku id
+        $delRelation             = [];
+//        print_r($goodsSkuList);die;
+        foreach ($goodsSkuList as $sku) {
+            if (in_array($sku['spec'], $carte)) {
+                $delKey = array_search($sku['spec'], $carte);
+                if ($delKey !== false) {
+                    array_splice($carte, $delKey, 1);
+                }
+            } else {
+                array_push($delId, $sku['id']);
+            }
+        }
+        $data = [];
+        foreach ($carte as $ca) {
+            array_push($data, ['spec' => $ca, 'goods_id' => $goodsId]);
+        }
+        Db::startTrans();
+        try {
+            $flag = false;
+            if (!empty($delId)) {
+                DbGoods::delSku($delId);
+                $flag = true;
+            }
+            if (!empty($data)) {
+                DbGoods::addRelation(['goods_id' => $goodsId, 'spec_id' => $specId, 'attr_id' => $attrId]);
+                DbGoods::addSkuList($data);
+                $flag = true;
+            }
+            if ($flag === false) {
+                Db::rollback();
+                return ['code' => '3008'];
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007'];
+        }
+    }
+
+    /**
+     * 删除商品的规格属性
+     * @param $attrId
+     * @param $goodsId
+     * @return array
+     */
+    public function delGoodsSpec(int $attrId, int $goodsId) {
+        $checkRes = $this->checkGoods($attrId, $goodsId);
+        if ($checkRes['code'] !== '200') {
+            return $checkRes;
+        }
+        $specId      = $checkRes['spec_id'];
+        $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
+        if (!in_array($attrId, array_column($relationArr, 'attr_id'))) {
+            return ['code' => '3006'];//该商品未绑定这个属性
+        }
+        $relationList = [];//现有的规格属性列表
+        foreach ($relationArr as $val) {
+            if ($val['spec_id'] == $specId && $val['attr_id'] == $attrId) {
+                continue;//商品已有该规格属性,需要删除
+//                return ['code' => '3006'];
+            }
+            $relationList[$val['spec_id']][] = $val['attr_id'];
+        }
+        $carte        = $this->cartesian(array_values($relationList));
+        $skuWhere     = ['goods_id' => $goodsId];
+        $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
+        $delId        = [];//需要删除的sku id
+        $delRelation  = [];
+        foreach ($goodsSkuList as $sku) {
+            if (!in_array($sku['spec'], $carte)) {
+                array_push($delId, $sku['id']);
+            }
+        }
+        $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
+        Db::startTrans();
+        try {
+            $flag = false;
+            if (!empty($delId)) {
+                DbGoods::delSku($delId);
+                $flag = true;
+            }
+            if (!empty($delRelationId)) {
+                DbGoods::deleteGoodsRelation(array_column($delRelationId, 'id'));
+                $flag = true;
+            }
+            if ($flag === false) {
+                Db::rollback();
+                return ['code' => '3008'];
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007'];
+        }
+    }
+
+    /**
+     * 获取sku列表
+     * @param $goodsId
+     * @return array
+     */
+    public function getGoodsSku($goodsId) {
+//        $aaa = DbGoods::getGoodsSku(['id'=> 18], 'id,goods_name', 'goods_id,stock,spec');
+//        $aaa = DbGoods::getSpecAttr([['id', 'in', [1, 2, 3]]], 'id,spe_name', 'spec_id,attr_name', 'goods_id,spec_id');
+//        print_r($aaa);
+//        die;
+//        DbGoods::getOneGoodsSku(['goods_id'=>$goodsId],'goods_id');
+
+        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
+        if (empty($goods)) {
+            return ['code' => '3001'];
+        }
+        $result = DbGoods::getSku(['goods_id' => $goodsId], 'goods_id,stock,market_price,retail_price,cost_price,margin_price,sku_image,spec');
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200', 'data' => $result];
+    }
+
+    /**
      * 获取一条商品数据
      * @param $id
      * @return array
@@ -141,44 +287,106 @@ class Goods {
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
         $goods_data = DbGoods::getOneGoods($where, $field);
         if (empty($goods_data)) {
-            return ["msg" => "商品基本数据获取失败", "code" => 3000];
+            return ["code" => 3000];
         }
+        $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
+        $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
+        $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
+        $goods_data['supplier_name'] = $supplier['name'];
         //根据商品id找到商品图片表里面的数据
-        $where       = [["goods_id", "=", $id]];
-        $field       = "goods_id,source_type,image_type,image_path";
-        $images_data = DbGoods::getOneGoodsImage($where, $field);
-        if (empty($images_data)) {
-            return ["msg" => "商品图片获取失败", "code" => 3000];
-        }
-        if ($goods_data["goods_type"] == 1) {
-            //根据商品id获取sku表数据
-            $where = [["goods_id", "=", $id]];
-            $field = "goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image";
-            $sku   = DbGoods::getOneGoodsSku($where, $field);
-            if (empty($sku)) {
-                return ["msg" => "sku数据获取失败", "code" => 3000];
+        $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
+        $field          = "goods_id,image_type,image_path";
+        $images_data    = DbGoods::getOneGoodsImage($where, $field);
+        $imagesDetatil  = [];//商品详情图
+        $imagesCarousel = [];//商品轮播图
+        foreach ($images_data as $im) {
+            if ($im['image_type'] == 1) {
+                array_push($imagesDetatil, $im);
+            }
+            if ($im['image_type'] == 2) {
+                array_push($imagesCarousel, $im);
             }
         }
 
-        return ["code" => 200, "goods_data" => $goods_data, "images_data" => $images_data, "sku" => $sku];
+        $specAttr    = [];
+        $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
+        foreach ($specAttrRes as $specVal) {
+            $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
+            $specVal['attr_name'] = $specVal['goods_attr']['attr_name'];
+            unset($specVal['goods_spec']);
+            unset($specVal['goods_attr']);
+            array_push($specAttr, $specVal);
+        }
+//        if (empty($images_data)) {
+//            return ["msg" => "商品图片获取失败", "code" => 3000];
+//        }
+//        if ($goods_data["goods_type"] == 1) {
+        //根据商品id获取sku表数据
+        $where = [["goods_id", "=", $id]];
+        $field = "goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
+        $sku   = DbGoods::getSku($where, $field);
+//        if (empty($sku)) {
+//            return ["msg" => "sku数据获取失败", "code" => 3000];
+//        }
+//        }
+        return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
     }
 
-    public function delGoods($id) {
-        //开启事务
+//    public function delGoods($id) {
+//        //开启事务
+//        Db::startTrans();
+//        try {
+//            //删除商品基本数据
+//            DbGoods::delGoods($id);
+//            DbGoods::delGoodsImage($id);
+//            DbGoods::delGoodsSku($id);
+//            DbGoods::delGoodsRelation($id);
+//            Db::commit();
+//            return ["msg" => "删除成功", "code" => 200];
+//        } catch (\Exception $e) {
+//            Db::rollback();
+//            return ["msg" => "删除失败", "code" => 3001];
+//        }
+//
+//    }
+
+    public function uploadGoodsImages($goodsId, $imageType, $images) {
+        $goods = DbGoods::getOneGoods(['id' => $goodsId], 'id');
+        if (empty($goods)) {
+            return ['code' => '3004'];
+        }
+        $data    = [];
+        $logData = [];
+        $orderBy = 0;
+        foreach ($images as $img) {
+            $image    = filtraImage(Config::get('qiniu.domain'), $img);//去除域名
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
+            $logImage['status'] = 1;//更新为完成状态
+            $orderBy++;
+            $row = [
+                'goods_id'    => $goodsId,
+                'source_type' => 4,
+                'image_type'  => $imageType,
+                'image_path'  => $img,
+                'order_by'    => $orderBy,
+            ];
+            array_push($logData, $logImage);
+            array_push($data, $row);
+        }
+//        print_r($data);die;
         Db::startTrans();
         try {
-            //删除商品基本数据
-            DbGoods::delGoods($id);
-            DbGoods::delGoodsImage($id);
-            DbGoods::delGoodsSku($id);
-            DbGoods::delGoodsRelation($id);
+            DbGoods::addGoodsImageList($data);
+            DbImage::updateLogImageStatusList($logData);//更新状态为已完成
             Db::commit();
-            return ["msg" => "删除成功", "code" => 200];
+            return ["code" => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ["msg" => "删除失败", "code" => 3001];
+            return ["code" => "3006"];
         }
-
     }
 
     /**
@@ -206,5 +414,62 @@ class Goods {
             return ['msg' => "上下架失败", "code" => 3002];
         }
         return ["msg" => '成功', "code" => 200];
+    }
+
+    /**
+     * 验证规格属性和商品是否存在
+     * @param $attrId
+     * @param $goodsId
+     * @return array
+     */
+    private function checkGoods($attrId, $goodsId) {
+        $goodsAttrOne = DbGoods::getOneAttr(['id' => $attrId], 'spec_id,attr_name');
+        if (empty($goodsAttrOne)) {
+            return ['code' => '3003'];//属性不存在
+        }
+        $specId   = $goodsAttrOne['spec_id'];
+        $goodsOne = DbGoods::getOneGoods(['id' => $goodsId], 'id,cate_id');
+        if (empty($goodsOne)) {
+            return ['code' => '3004'];//商品不存在
+        }
+        $goodsSpecOne = DbGoods::getOneSpec(['id' => $specId], 'id,cate_id');
+        if (empty($goodsSpecOne)) {
+            return ['code' => '3005'];//规格为空
+        }
+        if ($goodsSpecOne['cate_id'] != $goodsOne['cate_id']) {
+            return ['code' => '3009'];//提交的属性分类和商品分类不同
+        }
+        return ['code' => '200', 'spec_id' => $specId];
+    }
+
+    private function cartesian($sets) {
+        $result = [];// 保存结果
+        if (count($sets) == 1) {
+            foreach ($sets[0] as $s) {
+                $result[] = $s;
+            }
+        }
+        for ($i = 0, $count = count($sets); $i < $count - 1; $i++) {// 循环遍历集合数据
+            if ($i == 0) {// 初始化
+                $result = $sets[$i];
+            }
+            $tmp = array();// 保存临时数据
+            // 结果与下一个集合计算笛卡尔积
+            foreach ($result as $res) {
+                foreach ($sets[$i + 1] as $set) {
+                    $tmp[] = $res . ',' . $set;
+                }
+            }
+            $result = $tmp;// 将笛卡尔积写入结果
+        }
+        foreach ($result as &$r) {
+            $v = $r;
+            if (!is_array($r)) {
+                $v = explode(',', $r);
+            }
+            sort($v, SORT_NUMERIC);
+            $r = implode(',', $v);
+        }
+        return $result;
     }
 }

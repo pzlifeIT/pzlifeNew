@@ -50,4 +50,8 @@ class Goods extends Model {
         $status = array_flip($this->status);
         return $status[$value];
     }
+
+    public function goodsSku() {
+        return $this->hasMany('goodsSku', 'goods_id', 'id');
+    }
 }

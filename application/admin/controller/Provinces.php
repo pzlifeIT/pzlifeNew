@@ -77,10 +77,12 @@ class Provinces extends AdminController {
      * @apiGroup         admin_provinces
      * @apiName          getProvinceCityByfreight
      * @apiParam (入参) {Number} freight_id 运费模版详情id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:运费模版Id必须为数字 /
+     * @apiParam (入参) {Number} freight_detail_id 运费模版价格详情id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:运费模版Id必须为数字 / 3002:运费模版价格详情id必须为数字
      * @apiSuccess (返回) {Array} data 结果
      * @apiSuccess (data) {String} area_name 名称
      * @apiSuccess (data) {Number} pid 父级id
+     * @apiSuccess (data) {Number} status 1.可选的 2.已选的
      * @apiSampleRequest /admin/provinces/getprovincecitybyfreight
      * @author zyr
      */
@@ -89,7 +91,11 @@ class Provinces extends AdminController {
         if (!is_numeric($freightId)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->provinces->getProvinceCityByFreight(intval($freightId));
+        $freightDetailId = $this->request->post('freight_detail_id');
+        if (!is_numeric($freightDetailId)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->provinces->getProvinceCityByFreight(intval($freightId), intval($freightDetailId));
         return $result;
     }
 
