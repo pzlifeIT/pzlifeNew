@@ -113,7 +113,7 @@ class Goods
         $goods_first_spec = DbGoods::getOneGoodsSpec($where, $field, 1);
         $goods_spec = [];
         if ($goods_first_spec) {
-            $field = 'id,cate_id,spe_name';
+            $field = 'id,spe_name';
             foreach ($goods_first_spec as $key => $value) {
                 $where = ['id' => $value['spec_id']];
                 $result = DbGoods::getOneSpec($where, $field);
@@ -124,9 +124,8 @@ class Goods
                 $attr_where = [];
                 foreach ($goods_first_attr as $goods => $attr) {
                     $attr_where[] = $attr['attr_id'];
-                    
                 }
-              
+                
                 $attr_field = 'id,spec_id,attr_name';
                 $attr_where = [['id', 'in', $attr_where],['spec_id','=',$value['spec_id']]];
                 

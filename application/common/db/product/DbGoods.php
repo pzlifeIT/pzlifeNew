@@ -343,6 +343,17 @@ class DbGoods {
     }
 
     /**
+     * 获取一条商品规格属性
+     * @param $where
+     * @param $field
+     * @return array
+     * @author rzc
+     */
+    public function getOneSku($where,$field){
+        return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
+    }
+
+    /**
      * 获取一条商品类目属性关系
      * @param $where
      * @param $field

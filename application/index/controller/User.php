@@ -74,4 +74,40 @@ class User extends MyController {
         $res = $this->app->user->loginUserByOpenid($openid);
         return $res;
     }
+
+    /**
+     * @api              {post} / 通过uid获取用户添加地址信息
+     * @apiDescription   getUserAddress
+     * @apiGroup         index_user
+     * @apiName          getUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/getUserAddress
+     * @return array
+     * @author rzc
+     */
+    public function getUserAddress(){
+        $paramUid = $this->request->post('uid');
+        if (empty($paramUid)) {
+            return ['code' => '3002', 'msg' => '缺少参数:uid'];
+        }
+        $uid = trim($paramUid);
+        if (strlen($uid) != 32) {
+            return ['code' => 3001];
+        }
+    }
+
+    /**
+     * @api              {post} / 用户添加地址信息
+     * @apiDescription   addUserAddress
+     * @apiGroup         index_user
+     * @apiName          addUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/addUserAddress
+     * @return array
+     * @author rzc
+     */
 }

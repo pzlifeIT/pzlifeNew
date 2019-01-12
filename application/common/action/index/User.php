@@ -110,7 +110,7 @@ class User {
      * @param $ex
      * @return int|string
      */
-    private function enUid($uid, $ex = false) {
+    public function enUid($uid, $ex = false) {
         if (strlen($uid) > 15) {
             return 0;
         }
@@ -127,7 +127,7 @@ class User {
      * @param bool $ex
      * @return int|string
      */
-    private function deUid($enUid, $ex = false) {
+    public function deUid($enUid, $ex = false) {
         $iv = $this->iv;
         if ($ex !== false) {
             $iv = date('Ymd');

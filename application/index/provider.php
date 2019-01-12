@@ -14,5 +14,6 @@ return [
     'user'     => app\common\action\index\User::class,
     'category' => \app\common\action\index\Category::class,
     'goods' => \app\common\action\index\Goods::class,
+    'cart' => \app\common\action\index\Cart::class,
 //    'collect'  => \app\common\action\index\Collect::class,
 ];
