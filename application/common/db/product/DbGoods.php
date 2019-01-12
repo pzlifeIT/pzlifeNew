@@ -481,6 +481,16 @@ class DbGoods {
         return (new GoodsSku())->save($data);
     }
 
+    /**
+     * 编辑sku详情
+     * @param $data
+     * @param $skuId
+     */
+    public function editGoodsSku($data, $skuId) {
+        $goodsSku = new GoodsSku();
+        $goodsSku->save($data, ['id' => $skuId]);
+    }
+
     public function addSkuList($data) {
         $goodsSku = new GoodsSku();
         return $goodsSku->saveAll($data);
@@ -529,9 +539,9 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/3-9:43
      */
-    public function editGoodsSku($data, $goods_id) {
-        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
-    }
+//    public function editGoodsSku($data, $goods_id) {
+//        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
+//    }
 
     /**
      * 编辑商品属性关系表

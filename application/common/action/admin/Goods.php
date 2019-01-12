@@ -129,6 +129,40 @@ class Goods {
     }
 
     /**
+     * 编辑商品sku
+     * @param $skuId
+     * @param $data
+     * @return array
+     */
+    public function editGoodsSku($skuId, $data) {
+        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id');
+        if (empty($sku)) {
+            return ['code' => '3007'];//skuid不存在
+        }
+        $image    = $data['sku_image'];
+        $logImage = [];
+        if (!empty($image)) {
+            $image    = filtraImage(Config::get('qiniu.domain'), $image);//去除域名
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
+        }
+        Db::startTrans();
+        try {
+            if (!empty($logImage)) {
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            DbGoods::editGoodsSku($data, $skuId);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3008'];
+        }
+    }
+
+    /**
      * 添加商品的规格属性
      * @param $attrId
      * @param $goodsId
@@ -253,21 +287,23 @@ class Goods {
 
     /**
      * 获取sku列表
-     * @param $goodsId
+     * @param $skuId
      * @return array
      */
-    public function getGoodsSku($goodsId) {
+    public function getGoodsSku($skuId) {
 //        $aaa = DbGoods::getGoodsSku(['id'=> 18], 'id,goods_name', 'goods_id,stock,spec');
 //        $aaa = DbGoods::getSpecAttr([['id', 'in', [1, 2, 3]]], 'id,spe_name', 'spec_id,attr_name', 'goods_id,spec_id');
 //        print_r($aaa);
 //        die;
 //        DbGoods::getOneGoodsSku(['goods_id'=>$goodsId],'goods_id');
 
-        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
-        if (empty($goods)) {
-            return ['code' => '3001'];
-        }
-        $result = DbGoods::getSku(['goods_id' => $goodsId], 'goods_id,stock,market_price,retail_price,cost_price,margin_price,sku_image,spec');
+//        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
+//        if (empty($goods)) {
+//            return ['code' => '3001'];
+//        }
+
+
+        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image');
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -281,54 +317,62 @@ class Goods {
      * @author wujunjie
      * 2019/1/2-16:42
      */
-    public function getOneGoods($id) {
+    public function getOneGoods($id, $getType) {
         //根据商品id找到商品表里面的基本数据
-        $where      = [["id", "=", $id]];
-        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
-        $goods_data = DbGoods::getOneGoods($where, $field);
-        if (empty($goods_data)) {
-            return ["code" => 3000];
-        }
-        $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
-        $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
-        $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
-        $goods_data['supplier_name'] = $supplier['name'];
-        //根据商品id找到商品图片表里面的数据
-        $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
-        $field          = "goods_id,image_type,image_path";
-        $images_data    = DbGoods::getOneGoodsImage($where, $field);
-        $imagesDetatil  = [];//商品详情图
-        $imagesCarousel = [];//商品轮播图
-        foreach ($images_data as $im) {
-            if ($im['image_type'] == 1) {
-                array_push($imagesDetatil, $im);
+        $goods_data = [];
+        if (in_array($getType, [1, 2])) {
+            $where      = [["id", "=", $id]];
+            $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+            $goods_data = DbGoods::getOneGoods($where, $field);
+            if (empty($goods_data)) {
+                return ["code" => 3000];
             }
-            if ($im['image_type'] == 2) {
-                array_push($imagesCarousel, $im);
+            $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
+            $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
+            $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
+            $goods_data['supplier_name'] = $supplier['name'];
+        }
+        //根据商品id找到商品图片表里面的数据
+        $imagesDetatil  = [];
+        $imagesCarousel = [];
+        if (in_array($getType, [1, 4])) {
+            $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
+            $field          = "goods_id,image_type,image_path";
+            $images_data    = DbGoods::getOneGoodsImage($where, $field);
+            $imagesDetatil  = [];//商品详情图
+            $imagesCarousel = [];//商品轮播图
+            foreach ($images_data as $im) {
+                if (stripos($im['image_path'], 'http') === false) {//新版本图片
+                    $im['image_path'] = Config::get('qiniu.domain') . '/' . $im['image_path'];
+                }
+                if ($im['image_type'] == 1) {
+                    array_push($imagesDetatil, $im);
+                }
+                if ($im['image_type'] == 2) {
+                    array_push($imagesCarousel, $im);
+                }
             }
         }
 
-        $specAttr    = [];
-        $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
-        foreach ($specAttrRes as $specVal) {
-            $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
-            $specVal['attr_name'] = $specVal['goods_attr']['attr_name'];
-            unset($specVal['goods_spec']);
-            unset($specVal['goods_attr']);
-            array_push($specAttr, $specVal);
+        $specAttr = [];
+        if (in_array($getType, [1, 3])) {
+            $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'id,spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
+            foreach ($specAttrRes as $specVal) {
+                $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
+                $specVal['attr_name'] = $specVal['goods_attr']['attr_name'];
+                unset($specVal['goods_spec']);
+                unset($specVal['goods_attr']);
+                array_push($specAttr, $specVal);
+            }
         }
-//        if (empty($images_data)) {
-//            return ["msg" => "商品图片获取失败", "code" => 3000];
-//        }
-//        if ($goods_data["goods_type"] == 1) {
+
         //根据商品id获取sku表数据
-        $where = [["goods_id", "=", $id]];
-        $field = "goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
-        $sku   = DbGoods::getSku($where, $field);
-//        if (empty($sku)) {
-//            return ["msg" => "sku数据获取失败", "code" => 3000];
-//        }
-//        }
+        $sku = [];
+        if (in_array($getType, [1, 5])) {
+            $where = [["goods_id", "=", $id]];
+            $field = "id,goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
+            $sku   = DbGoods::getSku($where, $field);
+        }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
     }
 

@@ -159,12 +159,12 @@ class Goods extends AdminController {
 
 
     /**
-     * @api              {post} / 获取sku列表
+     * @api              {post} / 获取一个sku信息
      * @apiDescription   getGoodsSku
      * @apiGroup         admin_goods
      * @apiName          getGoodsSku
-     * @apiParam (入参) {Number} goods_id 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:没有这个商品
+     * @apiParam (入参) {Number} sku_id 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} goods_id 商品id
      * @apiSuccess (data) {Number} stock 库存
@@ -175,19 +175,41 @@ class Goods extends AdminController {
      * @apiSuccess (data) {Number} sku_image 规格详情图
      * @apiSuccess (data) {Number} spec 属性id列表
      * @apiSuccess (data) {Number} attr 属性列表
+     * @apiSuccess (data) {Number} integral_price 积分售价
+     * @apiSuccess (data) {Number} integral_active 积分赠送
      * @apiSampleRequest /admin/goods/getgoodssku
      * @return array
      * @author zyr
      */
     public function getGoodsSku() {
-        $goodsId = trim($this->request->post('goods_id'));//商品id
-        if (!is_numeric($goodsId)) {
+        $skuId = trim($this->request->post('sku_id'));
+        if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->goods->getGoodsSku(intval($goodsId));
+        $result = $this->app->goods->getGoodsSku(intval($skuId));
         return $result;
     }
 
+
+    /**
+     * @api              {post} / 编辑商品sku
+     * @apiDescription   editGoodsSku
+     * @apiGroup         admin_goods
+     * @apiName          editGoodsSku
+     * @apiParam (入参) {Number} sku_id
+     * @apiParam (入参) {Number} stock 库存
+     * @apiParam (入参) {Number} market_price 市场价
+     * @apiParam (入参) {Number} retail_price 零售价
+     * @apiParam (入参) {Number} cost_price 成本价
+     * @apiParam (入参) {Number} margin_price 其他运费成本
+     * @apiParam (入参) {Number} integral_price 积分售价
+     * @apiParam (入参) {Number} integral_active 积分赠送
+     * @apiParam (入参) {Number} sku_image 规格详情图
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败
+     * @apiSampleRequest /admin/goods/editgoodssku
+     * @return array
+     * @author zyr
+     */
     public function editGoodsSku() {
         $skuId          = trim($this->request->post('sku_id'));
         $stock          = trim($this->request->post('stock'));//库存
@@ -204,12 +226,29 @@ class Goods extends AdminController {
         if (!is_numeric($stock) || intval($stock) < 0) {//库存必须为大于或等于0的数字
             return ['code' => '3002'];
         }
-        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || !is_numeric($marketPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || floatval($marginPrice)) {//价格必须为大于或等于0的数字
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || !is_numeric($marketPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || floatval($marginPrice) < 0) {//价格必须为大于或等于0的数字
             return ['code' => '3003'];
         }
         if (!is_numeric($integralPrice) || !is_numeric($integralActive) || intval($integralPrice) < 0 || intval($integralActive) < 0) {//积分必须为大于或等于0的数字
             return ['code' => '3004'];
         }
+        $retailPrice = floatval($retailPrice);
+        $costPrice   = floatval($costPrice);
+        if ($retailPrice < bcadd($costPrice, $marginPrice, 2)) {
+            return ['code' => '3006'];//零售价不能小于成本价
+        }
+        $data   = [
+            'stock'           => $stock,
+            'market_price'    => $marketPrice,
+            'retail_price'    => $retailPrice,
+            'cost_price'      => $costPrice,
+            'margin_price'    => $marginPrice,
+            'integral_price'  => $integralPrice,
+            'integral_active' => $integralActive,
+            'sku_image'       => $skuImage,
+        ];
+        $result = $this->app->goods->editGoodsSku($skuId, $data);
+        return $result;
     }
 
     /**
@@ -268,7 +307,8 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getOneGoods
      * @apiParam (入参) {Number} id 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002 参数错误
+     * @apiParam (入参) {Number} get_type 获取内容类型 1.所有 2.只获取goods_data 3 获取spec_attr 4.获取images_detatil和images_carousel  5.获取sku
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002:id必须是数字 / 3003:get_type错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
      * @apiSuccess (返回) {Array} images_detatil 商品详情图
@@ -302,15 +342,19 @@ class Goods extends AdminController {
      * @apiSuccess (sku) {Number} spec 属性id列表
      * @apiSuccess (sku) {Number} attr 属性列表
      * @apiSampleRequest /admin/goods/getonegoods
-     * @author wujunjie
-     * 2019/1/2-16:48
+     * @author zyr
      */
     public function getOneGoods() {
-        $id = trim(input("post.id"));
+        $getTypeArr = [1, 2, 3, 4, 5];
+        $id         = trim(input("post.id"));
+        $getType    = trim($this->request->post('get_type')) ?? 1;
         if (!is_numeric($id)) {
-            return ["msg" => "参数错误", "code" => 3002];
+            return ["code" => 3002];
         }
-        $res = $this->app->goods->getOneGoods($id);
+        if (!in_array($getType, $getTypeArr)) {
+            return ['code' => '3003'];
+        }
+        $res = $this->app->goods->getOneGoods($id, $getType);
         return $res;
     }
 
