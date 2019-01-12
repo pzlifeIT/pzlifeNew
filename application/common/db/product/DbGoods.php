@@ -574,7 +574,7 @@ class DbGoods {
      * 2019/1/8-10:09
      */
     public function delGoodsImage($id) {
-        return GoodsImage::destroy(["goods_id" => ["=", $id]]);
+        return GoodsImage::destroy($id);
     }
 
     /**

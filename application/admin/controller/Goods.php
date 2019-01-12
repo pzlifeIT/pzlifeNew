@@ -413,7 +413,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          delGoodsImage
      * @apiParam (入参) {Number} image_path 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:上传失败
      * @apiSampleRequest /admin/goods/delgoodsimage
      * @return array
      * @author zyr
@@ -421,9 +421,10 @@ class Goods extends AdminController {
     public function delGoodsImage() {
         $imagePath = trim($this->request->post('image_path'));
         if (empty($imagePath)) {
-            return ['code' => '3001'];
+            return ['code' => '3001'];//图片不能为空
         }
-        return;
+        $result = $this->app->goods->delGoodsImage($imagePath);
+        return $result;
     }
 
     /**

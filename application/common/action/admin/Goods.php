@@ -307,7 +307,7 @@ class Goods {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result[0]];
     }
 
     /**
@@ -442,7 +442,29 @@ class Goods {
 
 
     public function delGoodsImage($imagePath) {
-
+        $imagePath   = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
+        $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id');
+        if (empty($goodsImage)) {
+            return ['code' => '3002'];
+        }
+        $goodsImageId = array_column($goodsImage, 'id');
+        $goodsImageId = $goodsImageId[0];
+        $oldLogImage = [];
+        if (stripos($imagePath, 'http') === false) {//新版本图片
+            $oldLogImage = DbImage::getLogImage($imagePath, 1);//之前在使用的图片日志
+        }
+        Db::startTrans();
+        try {
+            if (!empty($oldLogImage)) {
+                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+            }
+            DbGoods::delGoodsImage($goodsImageId);
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3003"];
+        }
     }
 
     /**
