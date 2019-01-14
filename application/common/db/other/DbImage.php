@@ -56,6 +56,17 @@ class DbImage {
     }
 
     /**
+     * 查找图片日志
+     * @param $where
+     * @param $field
+     * @return array
+     * @author zyr
+     */
+    public function getLogImageList($where, $field) {
+        return LogImage::field($field)->where($where)->select()->toArray();
+    }
+
+    /**
      * 更新状态
      * @param $id
      * @param $status

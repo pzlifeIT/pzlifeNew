@@ -135,23 +135,29 @@ class Goods {
      * @return array
      */
     public function editGoodsSku($skuId, $data) {
-        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id');
+        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,sku_image', true);
         if (empty($sku)) {
             return ['code' => '3007'];//skuid不存在
         }
         $image    = $data['sku_image'];
         $logImage = [];
+        $oldImage = [];
         if (!empty($image)) {
             $image    = filtraImage(Config::get('qiniu.domain'), $image);//去除域名
             $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3005'];//图片没有上传过
             }
+            $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
+            $data['sku_image'] = $image;
         }
         Db::startTrans();
         try {
             if (!empty($logImage)) {
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($oldImage)) {
+                DbImage::updateLogImageStatus($oldImage, 3);//更新状态为弃用
             }
             DbGoods::editGoodsSku($data, $skuId);
             Db::commit();
@@ -185,9 +191,9 @@ class Goods {
         $relationList[$specId][] = $attrId;
         $carte                   = $this->cartesian(array_values($relationList));
         $skuWhere                = ['goods_id' => $goodsId];
-        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
+        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec,sku_image');
         $delId                   = [];//需要删除的sku id
-        $delRelation             = [];
+        $delImage                = [];
 //        print_r($goodsSkuList);die;
         foreach ($goodsSkuList as $sku) {
             if (in_array($sku['spec'], $carte)) {
@@ -197,6 +203,17 @@ class Goods {
                 }
             } else {
                 array_push($delId, $sku['id']);
+                if (!empty($sku['sku_image'])) {
+                    array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
+                }
+            }
+        }
+        $updateImageListSave = [];
+        if (!empty($delImage)) {
+            $updateImageList = DbImage::getLogImageList([['image_path', 'in', $delImage], ['status', '=', 1]], 'id');
+            foreach ($updateImageList as $uil) {
+                $uil['status'] = 3;
+                array_push($updateImageListSave, $uil);
             }
         }
         $data = [];
@@ -215,6 +232,9 @@ class Goods {
                 DbGoods::addSkuList($data);
                 $flag = true;
             }
+            if (!empty($updateImageListSave)) {
+                DbImage::updateLogImageStatusList($updateImageListSave);
+            }
             if ($flag === false) {
                 Db::rollback();
                 return ['code' => '3008'];
@@ -222,6 +242,8 @@ class Goods {
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
+            print_r($e);
+            die;
             Db::rollback();
             return ['code' => '3007'];
         }
@@ -255,15 +277,26 @@ class Goods {
         $skuWhere     = ['goods_id' => $goodsId];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
         $delId        = [];//需要删除的sku id
-        $delRelation  = [];
+        $delImage     = [];
         foreach ($goodsSkuList as $sku) {
             if (!in_array($sku['spec'], $carte)) {
                 array_push($delId, $sku['id']);
+                if (!empty($sku['sku_image'])) {
+                    array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
+                }
             } else {
                 $delKey = array_search($sku['spec'], $carte);
                 if ($delKey !== false) {
                     array_splice($carte, $delKey, 1);
                 }
+            }
+        }
+        $updateImageListSave = [];
+        if (!empty($delImage)) {
+            $updateImageList = DbImage::getLogImageList([['image_path', 'in', $delImage], ['status', '=', 1]], 'id');
+            foreach ($updateImageList as $uil) {
+                $uil['status'] = 3;
+                array_push($updateImageListSave, $uil);
             }
         }
         $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
@@ -285,6 +318,9 @@ class Goods {
             if (!empty($data)) {
                 DbGoods::addSkuList($data);
                 $flag = true;
+            }
+            if (!empty($updateImageListSave)) {
+                DbImage::updateLogImageStatusList($updateImageListSave);
             }
             if ($flag === false) {
                 Db::rollback();
@@ -434,7 +470,7 @@ class Goods {
                 'goods_id'    => $goodsId,
                 'source_type' => 4,
                 'image_type'  => $imageType,
-                'image_path'  => $img,
+                'image_path'  => $image,
                 'order_by'    => $orderBy,
             ];
             array_push($logData, $logImage);

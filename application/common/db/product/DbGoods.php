@@ -332,11 +332,15 @@ class DbGoods {
      * 获取一个商品的sku
      * @param $where
      * @param $field
+     * @param $row
      * @return array
      * @author wujunjie
      * 2019/1/2-16:44
      */
-    public function getOneGoodsSku($where, $field) {
+    public function getOneGoodsSku($where, $field, $row = false) {
+        if ($row === true) {
+            return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
+        }
         return GoodsSku::where($where)->field($field)->select()->toArray();
     }
 

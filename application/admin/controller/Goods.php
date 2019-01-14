@@ -382,7 +382,7 @@ class Goods extends AdminController {
      * @apiName          uploadGoodsImages
      * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
      * @apiParam (入参) {Number} goods_id 商品id
-     * @apiParam (入参) {Array} images 属性id
+     * @apiParam (入参) {Array} images 图片集合
      * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
      * @apiSampleRequest /admin/goods/uploadgoodsimages
      * @return array
