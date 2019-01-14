@@ -259,10 +259,15 @@ class Goods {
         foreach ($goodsSkuList as $sku) {
             if (!in_array($sku['spec'], $carte)) {
                 array_push($delId, $sku['id']);
+            } else {
+                $delKey = array_search($sku['spec'], $carte);
+                if ($delKey !== false) {
+                    array_splice($carte, $delKey, 1);
+                }
             }
         }
         $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
-        $data = [];
+        $data          = [];
         foreach ($carte as $ca) {
             array_push($data, ['spec' => $ca, 'goods_id' => $goodsId]);
         }
@@ -277,7 +282,7 @@ class Goods {
                 DbGoods::deleteGoodsRelation(array_column($delRelationId, 'id'));
                 $flag = true;
             }
-            if(!empty($data)){
+            if (!empty($data)) {
                 DbGoods::addSkuList($data);
                 $flag = true;
             }
@@ -450,14 +455,14 @@ class Goods {
 
 
     public function delGoodsImage($imagePath) {
-        $imagePath   = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
+        $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
         $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id');
         if (empty($goodsImage)) {
             return ['code' => '3002'];
         }
         $goodsImageId = array_column($goodsImage, 'id');
         $goodsImageId = $goodsImageId[0];
-        $oldLogImage = [];
+        $oldLogImage  = [];
         if (stripos($imagePath, 'http') === false) {//新版本图片
             $oldLogImage = DbImage::getLogImage($imagePath, 1);//之前在使用的图片日志
         }
