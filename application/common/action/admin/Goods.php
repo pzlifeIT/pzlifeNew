@@ -53,10 +53,6 @@ class Goods {
      * @author zyr
      */
     public function saveGoods($data, $goodsId = 0) {
-        $goods = DbGoods::getOneGoods(['goods_name' => $data['goods_name']], 'id');
-        if (!empty($goods)) {//商品name重复
-            return ['code' => '3006', 'goods_id' => $goods['id']];
-        }
         $cate = DbGoods::getOneCate(['id' => $data['cate_id']], 'tier');
         if ($cate['tier'] != 3) {//分类id不是三级
             return ['code' => '3007'];
@@ -65,9 +61,13 @@ class Goods {
         if (empty($supplier)) {//供应商id不存在
             return ['code' => '3008'];
         }
-        $goods    = DbGoods::getOneGoods(['id' => $goodsId], 'image');
         $logImage = [];
         if (!empty($goodsId)) {//更新操作
+            $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
+            if (!empty($goodsRepe)) {//商品name重复
+                return ['code' => '3006', 'goods_id' => $goods['id']];
+            }
+            $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image');
             $oldLogImage = [];
             if (!empty($data['image'])) {//提交了图片
                 $image    = filtraImage(Config::get('qiniu.domain'), $data['image']);
@@ -157,7 +157,7 @@ class Goods {
         $supplierIdList = DbGoods::getSupplierFreights('id', $supplierId);
         $supplierIdList = array_column($supplierIdList, 'id');
         if (!in_array($data['freight_id'], $supplierIdList)) {
-            return ['code'=>'3009'];
+            return ['code' => '3009'];
         }
         Db::startTrans();
         try {
@@ -527,28 +527,63 @@ class Goods {
     /**
      * 上下架
      * @param $id
-     * @param $type
+     * @param $type 1.上架 ,2.下架
      * @return array
      * @author wujunjie
      * 2019/1/8-10:13
      */
-    public function upDown($id, $type) {
+    public function upDown(int $id, int $type) {
         //判断传过来的id是否有效
         $where = [["id", "=", $id]];
         $field = "goods_name";
         $res   = DbGoods::getOneGoods($where, $field);
         if (empty($res)) {
-            return ["msg" => "数据错误", "code" => 3001];
+            return ["code" => '3001'];
         }
-        //修改状态
-        $data = [
+        if ($type == 1) {// 上架
+            $stockAll       = 0;
+            $retailPriceAll = 0;//总零售价
+            $costPriceAll   = 0;//总成本价
+            $sku            = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            foreach ($sku as $s) {
+                $stockAll       = bcadd($stockAll, $s['stock'], 2);
+                $retailPriceAll = bcadd($retailPriceAll, $s['retail_price']);
+                $costPriceAll   = bcadd($costPriceAll, $s['cost_price']);
+                if ($s['stock'] == 0 && $s['retail_price'] == 0 && $s['cost_price']) {
+                    continue;
+                }
+                if ($s['stock'] <= 0) {
+                    return ['code' => '3003'];//请填写库存
+                }
+                if ($s['retail_price'] <= 0) {
+                    return ['code' => '3004'];//请填写零售价
+                }
+                if ($s['cost_price'] <= 0) {
+                    return ['code' => '3005'];//请填写成本价
+                }
+            }
+            if ($stockAll <= 0 || $retailPriceAll <= 0 || $costPriceAll <= 0) {
+                return ['code' => '3006'];//没有可售的规格商品
+            }
+
+            //1.详情图 2.轮播图
+            $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
+            $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
+            if (!in_array(1, $goodsImageType)) {//没有详情图
+                return ['code' => '3007'];
+            }
+            if (!in_array(2, $goodsImageType)) {//没有轮播图
+                return ['code' => '3008'];
+            }
+        }
+        $data = [//修改状态
             "status" => $type
         ];
         $res  = DbGoods::editGoods($data, $id);
         if (empty($res)) {
-            return ['msg' => "上下架失败", "code" => 3002];
+            return ["code" => '3009'];
         }
-        return ["msg" => '成功', "code" => 200];
+        return ["msg" => '成功', "code" => '200'];
     }
 
     /**
