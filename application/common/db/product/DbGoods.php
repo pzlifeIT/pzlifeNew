@@ -682,10 +682,11 @@ class DbGoods {
      * 获取供应商快递模板列表
      * @param $field
      * @param $supid
+     * @param $status
      * @return bool
      */
-    public function getSupplierFreights($field, $supid) {
-        return SupplierFreight::field($field)->where('supid', $supid)->select()->toArray();
+    public function getSupplierFreights($field, $supid, $status = 1) {
+        return SupplierFreight::field($field)->where(['supid' => $supid, 'status' => $status])->select()->toArray();
     }
 
     /**

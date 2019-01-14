@@ -198,6 +198,7 @@ class Goods extends AdminController {
      * @apiName          editGoodsSku
      * @apiParam (入参) {Number} sku_id
      * @apiParam (入参) {Number} stock 库存
+     * @apiParam (入参) {Number} freight_id 运费模版id
      * @apiParam (入参) {Number} market_price 市场价
      * @apiParam (入参) {Number} retail_price 零售价
      * @apiParam (入参) {Number} cost_price 成本价
@@ -205,7 +206,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} integral_price 积分售价
      * @apiParam (入参) {Number} integral_active 积分赠送
      * @apiParam (入参) {Number} sku_image 规格详情图
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误
      * @apiSampleRequest /admin/goods/editgoodssku
      * @return array
      * @author zyr
@@ -213,6 +214,7 @@ class Goods extends AdminController {
     public function editGoodsSku() {
         $skuId          = trim($this->request->post('sku_id'));
         $stock          = trim($this->request->post('stock'));//库存
+        $freightId      = trim($this->request->post('freight_id'));//运费模版
         $marketPrice    = trim($this->request->post('market_price'));//市场价
         $retailPrice    = trim($this->request->post('retail_price'));//零售价
         $costPrice      = trim($this->request->post('cost_price'));//成本价
@@ -220,7 +222,7 @@ class Goods extends AdminController {
         $integralPrice  = trim($this->request->post('integral_price'));//积分售价
         $integralActive = trim($this->request->post('integral_active'));//积分赠送
         $skuImage       = trim($this->request->post('sku_image'));//规格详情图
-        if (!is_numeric($skuId)) {//id必须为数字
+        if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
             return ['code' => '3001'];
         }
         if (!is_numeric($stock) || intval($stock) < 0) {//库存必须为大于或等于0的数字
@@ -239,6 +241,7 @@ class Goods extends AdminController {
         }
         $data   = [
             'stock'           => $stock,
+            'freight_id'      => $freightId,
             'market_price'    => $marketPrice,
             'retail_price'    => $retailPrice,
             'cost_price'      => $costPrice,

@@ -135,7 +135,7 @@ class Goods {
      * @return array
      */
     public function editGoodsSku($skuId, $data) {
-        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,sku_image', true);
+        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,goods_id,sku_image', true);
         if (empty($sku)) {
             return ['code' => '3007'];//skuid不存在
         }
@@ -150,6 +150,14 @@ class Goods {
             }
             $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
             $data['sku_image'] = $image;
+        }
+        $goodsId        = $sku['goods_id'];
+        $goodsRow       = DbGoods::getOneGoods(['id' => $goodsId], 'supplier_id');
+        $supplierId     = $goodsRow['supplier_id'];//供应商id
+        $supplierIdList = DbGoods::getSupplierFreights('id', $supplierId);
+        $supplierIdList = array_column($supplierIdList, 'id');
+        if (!in_array($data['freight_id'], $supplierIdList)) {
+            return ['code'=>'3009'];
         }
         Db::startTrans();
         try {
