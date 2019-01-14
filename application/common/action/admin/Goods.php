@@ -262,6 +262,10 @@ class Goods {
             }
         }
         $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
+        $data = [];
+        foreach ($carte as $ca) {
+            array_push($data, ['spec' => $ca, 'goods_id' => $goodsId]);
+        }
         Db::startTrans();
         try {
             $flag = false;
@@ -271,6 +275,10 @@ class Goods {
             }
             if (!empty($delRelationId)) {
                 DbGoods::deleteGoodsRelation(array_column($delRelationId, 'id'));
+                $flag = true;
+            }
+            if(!empty($data)){
+                DbGoods::addSkuList($data);
                 $flag = true;
             }
             if ($flag === false) {
