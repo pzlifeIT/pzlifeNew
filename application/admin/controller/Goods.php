@@ -118,34 +118,34 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function saveUpdateGoods() {
-        $goodsId = trim($this->request->post('goods_id'));//商品id
-//        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
-//        $cateId       = trim($this->request->post('cate_id'));//分类id
-        $goodsName = trim($this->request->post('goods_name'));//商品名称
-//        $goodsType    = trim($this->request->post('goods_type'));//商品类型
+        $goodsId      = trim($this->request->post('goods_id'));//商品id
+        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
+        $cateId       = trim($this->request->post('cate_id'));//分类id
+        $goodsName    = trim($this->request->post('goods_name'));//商品名称
+        $goodsType    = trim($this->request->post('goods_type'));//商品类型
         $subtitle     = trim($this->request->post('subtitle'));//标题
         $image        = trim($this->request->post('image'));//商品标题图
         $goodsTypeArr = [1, 2];
-//        if (!is_numeric($supplierId)) {
-//            return ['code' => '3001'];//供应商id只能为数字
-//        }
-//        if (!is_numeric($cateId)) {
-//            return ['code' => '3002'];//分类id只能为数字
-//        }
+        if (!is_numeric($supplierId)) {
+            return ['code' => '3001'];//供应商id只能为数字
+        }
+        if (!is_numeric($cateId)) {
+            return ['code' => '3002'];//分类id只能为数字
+        }
         if (empty($goodsName)) {
             return ['code' => '3003'];//商品名称不能空
         }
-//        if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
-//            return ['code' => '3005'];//商品类型只能为数字
-//        }
+        if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
+            return ['code' => '3005'];//商品类型只能为数字
+        }
         $data = [
-//            'supplier_id' => intval($supplierId),
-//            'cate_id'     => intval($cateId),
-            'goods_name' => $goodsName,
+            'supplier_id' => intval($supplierId),
+            'cate_id'     => intval($cateId),
+            'goods_name'  => $goodsName,
         ];
-//        if (!empty($goodsType)) {
-//            $data['goods_type'] = intval($goodsType);
-//        }
+        if (!empty($goodsType)) {
+            $data['goods_type'] = intval($goodsType);
+        }
         if (!empty($image)) {
             $data['image'] = $image;
         }
@@ -437,7 +437,7 @@ class Goods extends AdminController {
      * @apiName          upDownGoods
      * @apiParam (入参) {Number} id 商品id
      * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:请填写库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有可售的规格商品 / 3007:没有详情图 / 3008:没有轮播图 / 3009:上下架失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:请填写库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有可售的规格商品 / 3007:上下架失败 / 3008:上下架失败 / 300:上下架失败
      * @apiSampleRequest /admin/goods/updowngoods
      * @author wujunjie
      * 2019/1/8-10:13

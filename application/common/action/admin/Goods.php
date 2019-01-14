@@ -65,7 +65,7 @@ class Goods {
         if (!empty($goodsId)) {//更新操作
             $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
             if (!empty($goodsRepe)) {//商品name重复
-                return ['code' => '3006', 'goods_id' => $goods['id']];
+                return ['code' => '3006', 'goods_id' => $goodsRepe['id']];
             }
             $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image');
             $oldLogImage = [];
@@ -529,7 +529,7 @@ class Goods {
      * @param $id
      * @param $type 1.上架 ,2.下架
      * @return array
-     * @author wujunjie
+     * @author zyr
      * 2019/1/8-10:13
      */
     public function upDown(int $id, int $type) {
