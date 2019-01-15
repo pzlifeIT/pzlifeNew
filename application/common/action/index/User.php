@@ -3,6 +3,7 @@
 namespace app\common\action\index;
 
 use app\facade\DbUser;
+use app\facade\DbProvinces;
 use cache\Phpredis;
 use Env;
 
@@ -110,7 +111,7 @@ class User {
      * @param $ex
      * @return int|string
      */
-    private function enUid($uid, $ex = false) {
+    public function enUid($uid, $ex = false) {
         if (strlen($uid) > 15) {
             return 0;
         }
@@ -127,7 +128,7 @@ class User {
      * @param bool $ex
      * @return int|string
      */
-    private function deUid($enUid, $ex = false) {
+    public function deUid($enUid, $ex = false) {
         $iv = $this->iv;
         if ($ex !== false) {
             $iv = date('Ymd');
@@ -159,5 +160,65 @@ class User {
         } else {
             return 0;
         }
+    }
+
+    /**
+     * 添加新地址
+     * @param $paramUid
+     * @param $province_id
+     * @param $city_id
+     * @param $area_id
+     * @param $address
+     * @author rzc
+     */
+    public function addUserAddress($paramUid,$province_id,$city_id,$area_id,$address){
+        $uid = $this->deUid($paramUid);
+        if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
+            return ['code' => 3001,'msg' => '省市区ID必须为数字'];
+        }
+        if (empty($address)) {
+            return ['code' => 3002,'msg' => '请填写详细街道地址'];
+        }
+        /* 判断省市区ID是否合法 */
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $province_id];
+        $province = DbProvinces::getAreaInfo($field, $where);
+        if (empty($province) || $province['level'] != '1') {
+            return ['code' => 3003,'msg' => '错误的省份ID'];
+        }
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $city_id];
+        $city     = DbProvinces::getAreaInfo($field, $where);
+        if (empty($city) || $city['level'] != '2') {
+            return ['code' => 3004,'msg' => '错误的市级ID'];
+        }
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $area_id];
+        $area     = DbProvinces::getAreaInfo($field, $where);
+        if (empty($area) || $area['level'] != '3') {
+            return ['code' => 3005,'msg' => '错误的区级ID'];
+        }
+        // $add = 
+        if ($add) {
+            return ['code' => 200,'msg' => '添加成功'];
+        }else{
+            return ['code' => 3006,'msg' => '添加失败'];
+        }
+    }
+
+    /**
+     * 查询用户地址
+     * @param $paramUid
+     * @author rzc
+     */
+    public function getUserAddress($paramUid){
+        $uid = $this->deUid($paramUid);
+        if (!$uid) {
+            return ['code' => 3000,'msg' => '该用户不存在'];
+        }
+        $field = 'id,uid,province_id,city_id,area_id,address,default';
+        $where = ['uid' => $uid];
+        // $result = 
+        return $result;
     }
 }

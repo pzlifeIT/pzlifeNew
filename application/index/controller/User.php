@@ -74,4 +74,100 @@ class User extends MyController {
         $res = $this->app->user->loginUserByOpenid($openid);
         return $res;
     }
+
+    /**
+     * @api              {post} / 通过uid获取用户添加地址信息
+     * @apiDescription   getUserAddress
+     * @apiGroup         index_user
+     * @apiName          getUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/getUserAddress
+     * @return array
+     * @author rzc
+     */
+    public function getUserAddress(){
+        $paramUid = $this->request->post('uid');
+        if (empty($paramUid)) {
+            return ['code' => '3002', 'msg' => '缺少参数:uid'];
+        }
+        $uid = trim($paramUid);
+        if (strlen($uid) != 32) {
+            return ['code' => 3001];
+        }
+        $result = $this->app->user->getUserAddress($uid);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户添加地址信息
+     * @apiDescription   addUserAddress
+     * @apiGroup         index_user
+     * @apiName          addUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiParam (入参) {Number} province_id 省id
+     * @apiParam (入参) {Number} city_id 市id
+     * @apiParam (入参) {Number} area_id 区级id
+     * @apiParam (入参) {String} address 详细地址
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/addUserAddress
+     * @return array
+     * @author rzc
+     */
+    public function addUserAddress(){
+        $paramUid = trim($this->request->post('uid'));
+        $province_id = trim($this->request->post('province_id'));
+        $city_id = trim($this->request->post('city_id'));
+        $area_id = trim($this->request->post('area_id'));
+        $address = trim($this->request->post('address'));
+
+        if (empty($paramUid)) {
+            return ['code' => '3002', 'msg' => '缺少参数:uid'];
+        }
+        $uid = trim($paramUid);
+        if (strlen($uid) != 32) {
+            return ['code' => 3001];
+        }
+        $result = $this->app->user->addUserAddress($uid,intval($province_id),intval($city_id),intval($area_id),$address);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户修改地址
+     * @apiDescription   updateUserAddress
+     * @apiGroup         index_user
+     * @apiName          updateUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiParam (入参) {Number} province_id 省id
+     * @apiParam (入参) {Number} city_id 市id
+     * @apiParam (入参) {Number} area_id 区级id
+     * @apiParam (入参) {String} address 详细地址
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/updateUserAddress
+     * @return array
+     * @author rzc
+     */
+    public function updateUserAddress(){
+
+    }
+
+    /**
+     * @api              {post} / 用户修改默认地址
+     * @apiDescription   updateUserAddress
+     * @apiGroup         index_user
+     * @apiName          updateUserAddress
+     * @apiParam (入参) {String} uid 用户加密id
+     * @apiParam (入参) {Number} province_id 省id
+     * @apiParam (入参) {Number} city_id 市id
+     * @apiParam (入参) {Number} area_id 区级id
+     * @apiParam (入参) {String} address 详细地址
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/updateUserAddress
+     * @return array
+     * @author rzc
+     */
 }

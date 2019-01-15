@@ -281,6 +281,13 @@ class Spec
      * 2018/12/25-16:23
      */
     private function delSpec($id){
+        //判断参数是否有效
+        $where = [["id","=",$id]];
+        $field = "id";
+        $res = DbGoods::getOneSpec($where,$field);
+        if (empty($res)){
+            return ["msg"=>"规格不存在","code"=>3002];
+        }
         //删除一级属性的时候需要判断有没有二级属性
         $where = [["spec_id","=",$id]];
         $field = "id";
@@ -303,6 +310,12 @@ class Spec
      * 2018/12/25-16:23
      */
     private function delAttr($id){
+        $where = [["id","=",$id]];
+        $field = "id";
+        $res = DbGoods::getOneAttr($where,$field);
+        if(empty($res)){
+            return ["msg"=>"属性不存在","code"=>3002];
+        }
         $res = DbGoods::delAttr($id);
         if (empty($res)){
             return ["msg"=>"删除失败","code"=>3001];
