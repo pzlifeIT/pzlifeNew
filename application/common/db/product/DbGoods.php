@@ -379,9 +379,15 @@ class DbGoods {
         $sku    = GoodsSku::field($field)->where($where)->select()->toArray();
         $result = [];
         foreach ($sku as $val) {
-            $goodsAttr   = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
-            $attr        = array_column($goodsAttr, 'attr_name');
-            $val['attr'] = $attr;
+            $goodsAttr    = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
+            $attr         = array_column($goodsAttr, 'attr_name');
+            $val['attr']  = $attr;
+            $freightTitle = '';
+            if (!empty($val['freight_id'])) {
+                $freightArr           = SupplierFreight::where(['id' => $val['freight_id']])->field('title')->findOrEmpty()->toArray();
+                $freightTitle         = $freightArr['title'];
+            }
+            $val['freight_title'] = $freightTitle;
             array_push($result, $val);
         }
         return $result;

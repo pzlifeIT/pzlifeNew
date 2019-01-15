@@ -21,7 +21,7 @@ class Goods {
         $goods_data = DbGoods::getGoodsList($field, $offset, $pageNum);
         $total      = DbGoods::getGoodsListNum();
         if (empty($goods_data)) {
-            return ["msg" => "商品数据不存在", "code" => 3000];
+            return ["msg" => "商品数据不存在", "code" => '3000'];
         }
         foreach ($goods_data as $k => $v) {
             //查找供应商
@@ -360,7 +360,7 @@ class Goods {
 //        }
 
 
-        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image');
+        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image');
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -427,7 +427,7 @@ class Goods {
         $sku = [];
         if (in_array(4, $getType)) {
             $where = [["goods_id", "=", $id]];
-            $field = "id,goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
+            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
             $sku   = DbGoods::getSku($where, $field);
         }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
