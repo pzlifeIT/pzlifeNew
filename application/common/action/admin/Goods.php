@@ -10,11 +10,13 @@ use Config;
 class Goods {
     /**
      * 商品列表
+     * @param $page
+     * @param $pageNum
      * @return array
      * @author wujunjie
      * 2018/12/26-10:25
      */
-    public function goodsList($page, $pageNum) {
+    public function goodsList(int $page, int $pageNum) {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";

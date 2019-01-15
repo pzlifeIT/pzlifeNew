@@ -10,13 +10,13 @@ class Goods extends AdminController {
      * @apiDescription   getGoodsList
      * @apiGroup         admin_goods
      * @apiName          getGoodsList
-     * @apiParam (入参) {Number} page 当前页
-     * @apiParam (入参) {Number} page_num 每页数量
-     * @apiParam (入参) {Number} class_id 当前页
-     * @apiParam (入参) {Number} goods_name 商品名称
-     * @apiParam (入参) {Number} supplier_id 当前页
-     * @apiParam (入参) {Number} status 上下架状态 1.上架 2.下架
-     * @apiParam (入参) {Number} page 当前页
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiParam (入参) {Number} [class_id] 分类id
+     * @apiParam (入参) {Number} [goods_name] 商品名称
+     * @apiParam (入参) {Number} [supplier_id] 当前页
+     * @apiParam (入参) {Number} [status] 上下架状态 1.上架 2.下架
+     * @apiParam (入参) {Number} goods_id 商品id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3003:page_num只能为数字
      * @apiSuccess (返回) {Number} total 条数
      * @apiSuccess (返回) {Array} data 返回数据
@@ -37,15 +37,15 @@ class Goods extends AdminController {
     public function getGoodsList() {
         $page    = trim(input("post.page"));
         $pageNum = trim(input("post.page_num"));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
         if (!is_numeric($pageNum)) {
             return ["code" => '3002'];
         }
-        $page    = empty($page) ? 1 : intval($page);
-        $pageNum = empty($pageNum) ? 10 : intval($pageNum);
-        $res     = $this->app->goods->goodsList($page, $pageNum);
+        $res = $this->app->goods->goodsList(intval($page), intval($pageNum));
         return $res;
     }
 
@@ -177,6 +177,7 @@ class Goods extends AdminController {
      * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} goods_id 商品id
+     * @apiSuccess (data) {Number} freight_id 运费模版id
      * @apiSuccess (data) {Number} stock 库存
      * @apiSuccess (data) {Number} market_price 市场价
      * @apiSuccess (data) {Number} retail_price 零售价
@@ -184,6 +185,7 @@ class Goods extends AdminController {
      * @apiSuccess (data) {Number} margin_price 毛利
      * @apiSuccess (data) {Number} sku_image 规格详情图
      * @apiSuccess (data) {Number} spec 属性id列表
+     * @apiSuccess (data) {String} freight_title 运费模版标题
      * @apiSuccess (data) {Number} attr 属性列表
      * @apiSuccess (data) {Number} integral_price 积分售价
      * @apiSuccess (data) {Number} integral_active 积分赠送
