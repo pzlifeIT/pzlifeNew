@@ -10,18 +10,48 @@ use Config;
 class Goods {
     /**
      * 商品列表
+     * @param $page
+     * @param $pageNum
+     * @param $goodsId
+     * @param $status
+     * @param $goodsType
+     * @param string $cateName
+     * @param string $goodsName
+     * @param string $supplierName
      * @return array
-     * @author wujunjie
-     * 2018/12/26-10:25
+     * @author zyr
      */
-    public function goodsList($page, $pageNum) {
+    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '') {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
+        $where = [];
+        if (!empty($cateName)) {
+            $classIdArr = DbGoods::getGoodsClass('id', [['type_name', 'like', '%' . $cateName . '%'], ['tier', '=', '3']]);
+            $classId    = array_column($classIdArr, 'id');
+            array_push($where, ['cate_id', 'in', $classId]);
+        }
+        if (!empty($supplierName)) {
+            $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%'], ['status', '=', '1']]);
+            $supplierId  = array_column($supplierArr, 'id');
+            array_push($where, ['supplier_id', 'in', $supplierId]);
+        }
+        if (!empty($goodsName)) {
+            array_push($where, ['goods_name', 'like', '%' . $goodsName . '%']);
+        }
+        if (!empty($goodsId)) {
+            array_push($where, ['id', '=', $goodsId]);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        if (!empty($goodsType)) {
+            array_push($where, ['goods_type', '=', $goodsType]);
+        }
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
-        $goods_data = DbGoods::getGoodsList($field, $offset, $pageNum);
-        $total      = DbGoods::getGoodsListNum();
+        $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum);
+        $total      = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
-            return ["msg" => "商品数据不存在", "code" => 3000];
+            return ["msg" => "商品数据不存在", "code" => '3000'];
         }
         foreach ($goods_data as $k => $v) {
             //查找供应商
@@ -53,10 +83,6 @@ class Goods {
      * @author zyr
      */
     public function saveGoods($data, $goodsId = 0) {
-        $goods = DbGoods::getOneGoods(['goods_name' => $data['goods_name']], 'id');
-        if (!empty($goods)) {//商品name重复
-            return ['code' => '3006', 'goods_id' => $goods['id']];
-        }
         $cate = DbGoods::getOneCate(['id' => $data['cate_id']], 'tier');
         if ($cate['tier'] != 3) {//分类id不是三级
             return ['code' => '3007'];
@@ -65,9 +91,13 @@ class Goods {
         if (empty($supplier)) {//供应商id不存在
             return ['code' => '3008'];
         }
-        $goods    = DbGoods::getOneGoods(['id' => $goodsId], 'image');
         $logImage = [];
         if (!empty($goodsId)) {//更新操作
+            $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
+            if (!empty($goodsRepe)) {//商品name重复
+                return ['code' => '3006', 'goods_id' => $goodsRepe['id']];
+            }
+            $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image');
             $oldLogImage = [];
             if (!empty($data['image'])) {//提交了图片
                 $image    = filtraImage(Config::get('qiniu.domain'), $data['image']);
@@ -129,6 +159,54 @@ class Goods {
     }
 
     /**
+     * 编辑商品sku
+     * @param $skuId
+     * @param $data
+     * @return array
+     */
+    public function editGoodsSku($skuId, $data) {
+        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,goods_id,sku_image', true);
+        if (empty($sku)) {
+            return ['code' => '3007'];//skuid不存在
+        }
+        $image    = $data['sku_image'];
+        $logImage = [];
+        $oldImage = [];
+        if (!empty($image)) {
+            $image    = filtraImage(Config::get('qiniu.domain'), $image);//去除域名
+            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+            if (empty($logImage)) {//图片不存在
+                return ['code' => '3005'];//图片没有上传过
+            }
+            $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
+            $data['sku_image'] = $image;
+        }
+        $goodsId        = $sku['goods_id'];
+        $goodsRow       = DbGoods::getOneGoods(['id' => $goodsId], 'supplier_id');
+        $supplierId     = $goodsRow['supplier_id'];//供应商id
+        $supplierIdList = DbGoods::getSupplierFreights('id', $supplierId);
+        $supplierIdList = array_column($supplierIdList, 'id');
+        if (!in_array($data['freight_id'], $supplierIdList)) {
+            return ['code' => '3009'];
+        }
+        Db::startTrans();
+        try {
+            if (!empty($logImage)) {
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($oldImage)) {
+                DbImage::updateLogImageStatus($oldImage, 3);//更新状态为弃用
+            }
+            DbGoods::editGoodsSku($data, $skuId);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3008'];
+        }
+    }
+
+    /**
      * 添加商品的规格属性
      * @param $attrId
      * @param $goodsId
@@ -151,9 +229,9 @@ class Goods {
         $relationList[$specId][] = $attrId;
         $carte                   = $this->cartesian(array_values($relationList));
         $skuWhere                = ['goods_id' => $goodsId];
-        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
+        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec,sku_image');
         $delId                   = [];//需要删除的sku id
-        $delRelation             = [];
+        $delImage                = [];
 //        print_r($goodsSkuList);die;
         foreach ($goodsSkuList as $sku) {
             if (in_array($sku['spec'], $carte)) {
@@ -163,6 +241,17 @@ class Goods {
                 }
             } else {
                 array_push($delId, $sku['id']);
+                if (!empty($sku['sku_image'])) {
+                    array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
+                }
+            }
+        }
+        $updateImageListSave = [];
+        if (!empty($delImage)) {
+            $updateImageList = DbImage::getLogImageList([['image_path', 'in', $delImage], ['status', '=', 1]], 'id');
+            foreach ($updateImageList as $uil) {
+                $uil['status'] = 3;
+                array_push($updateImageListSave, $uil);
             }
         }
         $data = [];
@@ -181,6 +270,9 @@ class Goods {
                 DbGoods::addSkuList($data);
                 $flag = true;
             }
+            if (!empty($updateImageListSave)) {
+                DbImage::updateLogImageStatusList($updateImageListSave);
+            }
             if ($flag === false) {
                 Db::rollback();
                 return ['code' => '3008'];
@@ -188,6 +280,8 @@ class Goods {
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
+            print_r($e);
+            die;
             Db::rollback();
             return ['code' => '3007'];
         }
@@ -221,13 +315,33 @@ class Goods {
         $skuWhere     = ['goods_id' => $goodsId];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
         $delId        = [];//需要删除的sku id
-        $delRelation  = [];
+        $delImage     = [];
         foreach ($goodsSkuList as $sku) {
             if (!in_array($sku['spec'], $carte)) {
                 array_push($delId, $sku['id']);
+                if (!empty($sku['sku_image'])) {
+                    array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
+                }
+            } else {
+                $delKey = array_search($sku['spec'], $carte);
+                if ($delKey !== false) {
+                    array_splice($carte, $delKey, 1);
+                }
+            }
+        }
+        $updateImageListSave = [];
+        if (!empty($delImage)) {
+            $updateImageList = DbImage::getLogImageList([['image_path', 'in', $delImage], ['status', '=', 1]], 'id');
+            foreach ($updateImageList as $uil) {
+                $uil['status'] = 3;
+                array_push($updateImageListSave, $uil);
             }
         }
         $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
+        $data          = [];
+        foreach ($carte as $ca) {
+            array_push($data, ['spec' => $ca, 'goods_id' => $goodsId]);
+        }
         Db::startTrans();
         try {
             $flag = false;
@@ -238,6 +352,13 @@ class Goods {
             if (!empty($delRelationId)) {
                 DbGoods::deleteGoodsRelation(array_column($delRelationId, 'id'));
                 $flag = true;
+            }
+            if (!empty($data)) {
+                DbGoods::addSkuList($data);
+                $flag = true;
+            }
+            if (!empty($updateImageListSave)) {
+                DbImage::updateLogImageStatusList($updateImageListSave);
             }
             if ($flag === false) {
                 Db::rollback();
@@ -253,25 +374,27 @@ class Goods {
 
     /**
      * 获取sku列表
-     * @param $goodsId
+     * @param $skuId
      * @return array
      */
-    public function getGoodsSku($goodsId) {
+    public function getGoodsSku($skuId) {
 //        $aaa = DbGoods::getGoodsSku(['id'=> 18], 'id,goods_name', 'goods_id,stock,spec');
 //        $aaa = DbGoods::getSpecAttr([['id', 'in', [1, 2, 3]]], 'id,spe_name', 'spec_id,attr_name', 'goods_id,spec_id');
 //        print_r($aaa);
 //        die;
 //        DbGoods::getOneGoodsSku(['goods_id'=>$goodsId],'goods_id');
 
-        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
-        if (empty($goods)) {
-            return ['code' => '3001'];
-        }
-        $result = DbGoods::getSku(['goods_id' => $goodsId], 'goods_id,stock,market_price,retail_price,cost_price,margin_price,sku_image,spec');
+//        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
+//        if (empty($goods)) {
+//            return ['code' => '3001'];
+//        }
+
+
+        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image');
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result[0]];
     }
 
     /**
@@ -281,54 +404,62 @@ class Goods {
      * @author wujunjie
      * 2019/1/2-16:42
      */
-    public function getOneGoods($id) {
+    public function getOneGoods($id, $getType) {
         //根据商品id找到商品表里面的基本数据
-        $where      = [["id", "=", $id]];
-        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
-        $goods_data = DbGoods::getOneGoods($where, $field);
-        if (empty($goods_data)) {
-            return ["code" => 3000];
-        }
-        $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
-        $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
-        $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
-        $goods_data['supplier_name'] = $supplier['name'];
-        //根据商品id找到商品图片表里面的数据
-        $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
-        $field          = "goods_id,image_type,image_path";
-        $images_data    = DbGoods::getOneGoodsImage($where, $field);
-        $imagesDetatil  = [];//商品详情图
-        $imagesCarousel = [];//商品轮播图
-        foreach ($images_data as $im) {
-            if ($im['image_type'] == 1) {
-                array_push($imagesDetatil, $im);
+        $goods_data = [];
+        if (in_array(1, $getType)) {
+            $where      = [["id", "=", $id]];
+            $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+            $goods_data = DbGoods::getOneGoods($where, $field);
+            if (empty($goods_data)) {
+                return ["code" => 3000];
             }
-            if ($im['image_type'] == 2) {
-                array_push($imagesCarousel, $im);
+            $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
+            $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
+            $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
+            $goods_data['supplier_name'] = $supplier['name'];
+        }
+        //根据商品id找到商品图片表里面的数据
+        $imagesDetatil  = [];
+        $imagesCarousel = [];
+        if (in_array(3, $getType)) {
+            $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
+            $field          = "goods_id,image_type,image_path";
+            $images_data    = DbGoods::getOneGoodsImage($where, $field);
+            $imagesDetatil  = [];//商品详情图
+            $imagesCarousel = [];//商品轮播图
+            foreach ($images_data as $im) {
+                if (stripos($im['image_path'], 'http') === false) {//新版本图片
+                    $im['image_path'] = Config::get('qiniu.domain') . '/' . $im['image_path'];
+                }
+                if ($im['image_type'] == 1) {
+                    array_push($imagesDetatil, $im);
+                }
+                if ($im['image_type'] == 2) {
+                    array_push($imagesCarousel, $im);
+                }
             }
         }
 
-        $specAttr    = [];
-        $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
-        foreach ($specAttrRes as $specVal) {
-            $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
-            $specVal['attr_name'] = $specVal['goods_attr']['attr_name'];
-            unset($specVal['goods_spec']);
-            unset($specVal['goods_attr']);
-            array_push($specAttr, $specVal);
+        $specAttr = [];
+        if (in_array(2, $getType)) {
+            $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'id,spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
+            foreach ($specAttrRes as $specVal) {
+                $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
+                $specVal['attr_name'] = $specVal['goods_attr']['attr_name'];
+                unset($specVal['goods_spec']);
+                unset($specVal['goods_attr']);
+                array_push($specAttr, $specVal);
+            }
         }
-//        if (empty($images_data)) {
-//            return ["msg" => "商品图片获取失败", "code" => 3000];
-//        }
-//        if ($goods_data["goods_type"] == 1) {
+
         //根据商品id获取sku表数据
-        $where = [["goods_id", "=", $id]];
-        $field = "goods_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
-        $sku   = DbGoods::getSku($where, $field);
-//        if (empty($sku)) {
-//            return ["msg" => "sku数据获取失败", "code" => 3000];
-//        }
-//        }
+        $sku = [];
+        if (in_array(4, $getType)) {
+            $where = [["goods_id", "=", $id]];
+            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
+            $sku   = DbGoods::getSku($where, $field);
+        }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
     }
 
@@ -350,6 +481,13 @@ class Goods {
 //
 //    }
 
+    /**
+     * 上传商品的轮播图和详情图
+     * @param $goodsId
+     * @param $imageType 1.详情图 2.轮播图
+     * @param $images
+     * @return array
+     */
     public function uploadGoodsImages($goodsId, $imageType, $images) {
         $goods = DbGoods::getOneGoods(['id' => $goodsId], 'id');
         if (empty($goods)) {
@@ -370,7 +508,7 @@ class Goods {
                 'goods_id'    => $goodsId,
                 'source_type' => 4,
                 'image_type'  => $imageType,
-                'image_path'  => $img,
+                'image_path'  => $image,
                 'order_by'    => $orderBy,
             ];
             array_push($logData, $logImage);
@@ -389,31 +527,93 @@ class Goods {
         }
     }
 
+
+    public function delGoodsImage($imagePath) {
+        $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
+        $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id');
+        if (empty($goodsImage)) {
+            return ['code' => '3002'];
+        }
+        $goodsImageId = array_column($goodsImage, 'id');
+        $goodsImageId = $goodsImageId[0];
+        $oldLogImage  = [];
+        if (stripos($imagePath, 'http') === false) {//新版本图片
+            $oldLogImage = DbImage::getLogImage($imagePath, 1);//之前在使用的图片日志
+        }
+        Db::startTrans();
+        try {
+            if (!empty($oldLogImage)) {
+                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+            }
+            DbGoods::delGoodsImage($goodsImageId);
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3003"];
+        }
+    }
+
     /**
      * 上下架
      * @param $id
-     * @param $type
+     * @param $type 1.上架 ,2.下架
      * @return array
-     * @author wujunjie
+     * @author zyr
      * 2019/1/8-10:13
      */
-    public function upDown($id, $type) {
+    public function upDown(int $id, int $type) {
         //判断传过来的id是否有效
         $where = [["id", "=", $id]];
         $field = "goods_name";
         $res   = DbGoods::getOneGoods($where, $field);
         if (empty($res)) {
-            return ["msg" => "数据错误", "code" => 3001];
+            return ["code" => '3001'];
         }
-        //修改状态
-        $data = [
+        if ($type == 1) {// 上架
+            $stockAll       = 0;
+            $retailPriceAll = 0;//总零售价
+            $costPriceAll   = 0;//总成本价
+            $sku            = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            foreach ($sku as $s) {
+                $stockAll       = bcadd($stockAll, $s['stock'], 2);
+                $retailPriceAll = bcadd($retailPriceAll, $s['retail_price']);
+                $costPriceAll   = bcadd($costPriceAll, $s['cost_price']);
+                if ($s['stock'] == 0 && $s['retail_price'] == 0 && $s['cost_price']) {
+                    continue;
+                }
+                if ($s['stock'] <= 0) {
+                    return ['code' => '3003'];//请填写库存
+                }
+                if ($s['retail_price'] <= 0) {
+                    return ['code' => '3004'];//请填写零售价
+                }
+                if ($s['cost_price'] <= 0) {
+                    return ['code' => '3005'];//请填写成本价
+                }
+            }
+            if ($stockAll <= 0 || $retailPriceAll <= 0 || $costPriceAll <= 0) {
+                return ['code' => '3006'];//没有可售的规格商品
+            }
+
+            //1.详情图 2.轮播图
+            $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
+            $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
+            if (!in_array(1, $goodsImageType)) {//没有详情图
+                return ['code' => '3007'];
+            }
+            if (!in_array(2, $goodsImageType)) {//没有轮播图
+                return ['code' => '3008'];
+            }
+        }
+        $data = [//修改状态
             "status" => $type
         ];
         $res  = DbGoods::editGoods($data, $id);
         if (empty($res)) {
-            return ['msg' => "上下架失败", "code" => 3002];
+            return ["code" => '3009'];
         }
-        return ["msg" => '成功', "code" => 200];
+        return ["msg" => '成功', "code" => '200'];
     }
 
     /**

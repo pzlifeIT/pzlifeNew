@@ -123,20 +123,35 @@ class DbGoods {
     /**
      * 获取商品列表
      * @param $field
+     * @param $where
+     * @param $offset
+     * @param $pageNum
+     * @return array
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field, $offset, $pageNum) {
-        return Goods::limit($offset, $pageNum)->field($field)->select()->toArray();
+    public function getGoodsList($field, $where, $offset, $pageNum) {
+        $obj = Goods::field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        if (!empty($offset) && !empty($pageNum)) {
+            $obj = $obj->limit($offset, $pageNum);
+        }
+        return $obj->select()->toArray();
     }
 
     /**
      * 获取商品条数
+     * @param $where
      * @return float|string
      * @author wujunjie
      * 2019/1/3-19:08
      */
-    public function getGoodsListNum() {
+    public function getGoodsListNum($where = []) {
+        if (!empty($where)) {
+            return Goods::where($where)->count();
+        }
         return Goods::count();
     }
 
@@ -332,11 +347,15 @@ class DbGoods {
      * 获取一个商品的sku
      * @param $where
      * @param $field
+     * @param $row
      * @return array
      * @author wujunjie
      * 2019/1/2-16:44
      */
-    public function getOneGoodsSku($where, $field) {
+    public function getOneGoodsSku($where, $field, $row = false) {
+        if ($row === true) {
+            return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
+        }
         return GoodsSku::where($where)->field($field)->select()->toArray();
     }
 
@@ -375,9 +394,15 @@ class DbGoods {
         $sku    = GoodsSku::field($field)->where($where)->select()->toArray();
         $result = [];
         foreach ($sku as $val) {
-            $goodsAttr   = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
-            $attr        = array_column($goodsAttr, 'attr_name');
-            $val['attr'] = $attr;
+            $goodsAttr    = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
+            $attr         = array_column($goodsAttr, 'attr_name');
+            $val['attr']  = $attr;
+            $freightTitle = '';
+            if (!empty($val['freight_id'])) {
+                $freightArr   = SupplierFreight::where(['id' => $val['freight_id']])->field('title')->findOrEmpty()->toArray();
+                $freightTitle = $freightArr['title'];
+            }
+            $val['freight_title'] = $freightTitle;
             array_push($result, $val);
         }
         return $result;
@@ -492,6 +517,16 @@ class DbGoods {
         return (new GoodsSku())->save($data);
     }
 
+    /**
+     * 编辑sku详情
+     * @param $data
+     * @param $skuId
+     */
+    public function editGoodsSku($data, $skuId) {
+        $goodsSku = new GoodsSku();
+        $goodsSku->save($data, ['id' => $skuId]);
+    }
+
     public function addSkuList($data) {
         $goodsSku = new GoodsSku();
         return $goodsSku->saveAll($data);
@@ -540,9 +575,9 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/3-9:43
      */
-    public function editGoodsSku($data, $goods_id) {
-        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
-    }
+//    public function editGoodsSku($data, $goods_id) {
+//        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
+//    }
 
     /**
      * 编辑商品属性关系表
@@ -575,7 +610,7 @@ class DbGoods {
      * 2019/1/8-10:09
      */
     public function delGoodsImage($id) {
-        return GoodsImage::destroy(["goods_id" => ["=", $id]]);
+        return GoodsImage::destroy($id);
     }
 
     /**
@@ -679,10 +714,11 @@ class DbGoods {
      * 获取供应商快递模板列表
      * @param $field
      * @param $supid
+     * @param $status
      * @return bool
      */
-    public function getSupplierFreights($field, $supid) {
-        return SupplierFreight::field($field)->where('supid', $supid)->select()->toArray();
+    public function getSupplierFreights($field, $supid, $status = 1) {
+        return SupplierFreight::field($field)->where(['supid' => $supid, 'status' => $status])->select()->toArray();
     }
 
     /**

@@ -222,7 +222,7 @@ class Suppliers extends AdminController {
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
      * @apiSuccess (data) {object_array} data 结果
      * @apiSuccess (data) {String} supid 供货商id
-     * @apiSuccess (data) {String} pz_supplier_freight 计价方式1.件数 2.重量 3.体积
+     * @apiSuccess (data) {String} stype 计价方式1.件数 2.重量 3.体积
      * @apiSuccess (data) {String} title 标题
      * @apiSuccess (data) {String} desc 详情
      * @apiSampleRequest /admin/suppliers/getsupplierfreights
