@@ -11,7 +11,7 @@ use Config;
 class Category {
     public function allCateList(int $status) {
         $where = [];
-        if ($status == 3) {
+        if ($status != 3) {
             $where = ['status' => $status];
         }
         $field = "id,pid,tier,type_name,status";

@@ -233,7 +233,7 @@ class Category extends AdminController {
     public function allCateList() {
         $statusArr = [1, 2, 3];
         $status    = trim(input("post.status"));
-        $status    = empty($status) ? 1 : intval($status);
+        $status    = empty($status) ? 3 : intval($status);
         if (!in_array($status, $statusArr)) {
             return ['code' => 3001];
         }
