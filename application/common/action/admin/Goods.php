@@ -12,16 +12,44 @@ class Goods {
      * 商品列表
      * @param $page
      * @param $pageNum
+     * @param $goodsId
+     * @param $status
+     * @param $goodsType
+     * @param string $cateName
+     * @param string $goodsName
+     * @param string $supplierName
      * @return array
-     * @author wujunjie
-     * 2018/12/26-10:25
+     * @author zyr
      */
-    public function goodsList(int $page, int $pageNum) {
+    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '') {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
+        $where = [];
+        if (!empty($cateName)) {
+            $classIdArr = DbGoods::getGoodsClass('id', [['type_name', 'like', '%' . $cateName . '%'], ['tier', '=', '3']]);
+            $classId    = array_column($classIdArr, 'id');
+            array_push($where, ['cate_id', 'in', $classId]);
+        }
+        if (!empty($supplierName)) {
+            $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%'], ['status', '=', '1']]);
+            $supplierId  = array_column($supplierArr, 'id');
+            array_push($where, ['supplier_id', 'in', $supplierId]);
+        }
+        if (!empty($goodsName)) {
+            array_push($where, ['goods_name', 'like', '%' . $goodsName . '%']);
+        }
+        if (!empty($goodsId)) {
+            array_push($where, ['id', '=', $goodsId]);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        if (!empty($goodsType)) {
+            array_push($where, ['goods_type', '=', $goodsType]);
+        }
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
-        $goods_data = DbGoods::getGoodsList($field, $offset, $pageNum);
-        $total      = DbGoods::getGoodsListNum();
+        $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum);
+        $total      = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
             return ["msg" => "商品数据不存在", "code" => '3000'];
         }

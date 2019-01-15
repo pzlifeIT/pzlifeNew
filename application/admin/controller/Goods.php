@@ -12,12 +12,13 @@ class Goods extends AdminController {
      * @apiName          getGoodsList
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
-     * @apiParam (入参) {Number} [class_id] 分类id
+     * @apiParam (入参) {Number} [cate_name] 分类名称
      * @apiParam (入参) {Number} [goods_name] 商品名称
-     * @apiParam (入参) {Number} [supplier_id] 当前页
+     * @apiParam (入参) {Number} [goods_type] 商品类型 1实物商品 2虚拟商品
+     * @apiParam (入参) {String} [supplier_name] 供应商id
      * @apiParam (入参) {Number} [status] 上下架状态 1.上架 2.下架
-     * @apiParam (入参) {Number} goods_id 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3003:page_num只能为数字
+     * @apiParam (入参) {Number} [goods_id] 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3002:page_num只能为数字 / 3003:class_id只能为数字
      * @apiSuccess (返回) {Number} total 条数
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 商品id
@@ -35,17 +36,38 @@ class Goods extends AdminController {
      * 2018/12/26-18:04
      */
     public function getGoodsList() {
-        $page    = trim(input("post.page"));
-        $pageNum = trim(input("post.page_num"));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $page         = trim(input("post.page"));
+        $pageNum      = trim(input("post.page_num"));
+        $cateName    = trim(input("post.cate_name"));
+        $goodsName    = trim(input("post.goods_name"));
+        $goodsType    = trim(input("post.goods_type"));
+        $supplierName = trim(input("post.supplier_name"));
+        $status       = trim(input("post.status"));
+        $goodsId      = trim(input("post.goods_id"));
+        $page         = empty($page) ? 1 : $page;
+        $pageNum      = empty($pageNum) ? 10 : $pageNum;
+        $goodsType    = empty($goodsType) ? 0 : $goodsType;
+        $status       = empty($status) ? 0 : $status;
+        $goodsId      = empty($goodsId) ? 0 : $goodsId;
+
+        $goodsTypeAttr = [0, 1, 2];//0为不查询
+        $statusAttr    = [0, 1, 2];//0为不查询
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
         if (!is_numeric($pageNum)) {
             return ["code" => '3002'];
         }
-        $res = $this->app->goods->goodsList(intval($page), intval($pageNum));
+        if (!is_numeric($goodsId)) {
+            return ["code" => '3003'];
+        }
+        if (!in_array($status, $statusAttr)) {
+            return ['code' => '3004'];
+        }
+        if (!in_array($goodsType, $goodsTypeAttr)) {
+            return ['code' => '3005'];
+        }
+        $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName);
         return $res;
     }
 

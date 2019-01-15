@@ -123,20 +123,35 @@ class DbGoods {
     /**
      * 获取商品列表
      * @param $field
+     * @param $where
+     * @param $offset
+     * @param $pageNum
+     * @return array
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field, $offset, $pageNum) {
-        return Goods::limit($offset, $pageNum)->field($field)->select()->toArray();
+    public function getGoodsList($field, $where, $offset, $pageNum) {
+        $obj = Goods::field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        if (!empty($offset) && !empty($pageNum)) {
+            $obj = $obj->limit($offset, $pageNum);
+        }
+        return $obj->select()->toArray();
     }
 
     /**
      * 获取商品条数
+     * @param $where
      * @return float|string
      * @author wujunjie
      * 2019/1/3-19:08
      */
-    public function getGoodsListNum() {
+    public function getGoodsListNum($where = []) {
+        if (!empty($where)) {
+            return Goods::where($where)->count();
+        }
         return Goods::count();
     }
 
@@ -384,8 +399,8 @@ class DbGoods {
             $val['attr']  = $attr;
             $freightTitle = '';
             if (!empty($val['freight_id'])) {
-                $freightArr           = SupplierFreight::where(['id' => $val['freight_id']])->field('title')->findOrEmpty()->toArray();
-                $freightTitle         = $freightArr['title'];
+                $freightArr   = SupplierFreight::where(['id' => $val['freight_id']])->field('title')->findOrEmpty()->toArray();
+                $freightTitle = $freightArr['title'];
             }
             $val['freight_title'] = $freightTitle;
             array_push($result, $val);
