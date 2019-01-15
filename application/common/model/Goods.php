@@ -54,4 +54,11 @@ class Goods extends Model {
     public function goodsSku() {
         return $this->hasMany('goodsSku', 'goods_id', 'id');
     }
+
+    public function supplier() {
+        return $this->belongsTo('supplier', 'supplier_id', 'id');
+    }
+    public function goodsClass() {
+        return $this->belongsTo('goodsClass', 'cate_id', 'id');
+    }
 }

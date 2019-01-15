@@ -131,7 +131,13 @@ class DbGoods {
      * 2019/1/2-10:38
      */
     public function getGoodsList($field, $where, $offset, $pageNum) {
-        $obj = Goods::field($field);
+//        $obj = Goods::field($field)->withJoin(['supplier'=>['id','name']]);
+        $obj = Goods::field($field)->with([
+            'supplier'      => function ($query) {
+                $query->field('id,name')->where(['status' => 1]);
+            }, 'goodsClass' => function ($query2) {
+                $query2->field('id,type_name');
+            }]);
         if (!empty($where)) {
             $obj = $obj->where($where);
         }

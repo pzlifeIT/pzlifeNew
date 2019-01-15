@@ -88,7 +88,6 @@ class Spec
         $data = [
             "cate_id"=>$cate_id,
             "spe_name"=>$spec_name,
-            "create_time"=>time()
         ];
         $res = DbGoods::addSpec($data);
         if (empty($res)){

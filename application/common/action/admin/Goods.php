@@ -31,21 +31,21 @@ class Goods {
             array_push($where, ['cate_id', 'in', $classId]);
         }
         if (!empty($supplierName)) {
-            $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%'], ['status', '=', '1']]);
+            $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%']]);
             $supplierId  = array_column($supplierArr, 'id');
-            array_push($where, ['supplier_id', 'in', $supplierId]);
+            array_push($where, ['pz_goods.supplier_id', 'in', $supplierId]);
         }
         if (!empty($goodsName)) {
-            array_push($where, ['goods_name', 'like', '%' . $goodsName . '%']);
+            array_push($where, ['pz_goods.goods_name', 'like', '%' . $goodsName . '%']);
         }
         if (!empty($goodsId)) {
-            array_push($where, ['id', '=', $goodsId]);
+            array_push($where, ['pz_goods.id', '=', $goodsId]);
         }
         if (!empty($status)) {
-            array_push($where, ['status', '=', $status]);
+            array_push($where, ['pz_goods.status', '=', $status]);
         }
         if (!empty($goodsType)) {
-            array_push($where, ['goods_type', '=', $goodsType]);
+            array_push($where, ['pz_goods.goods_type', '=', $goodsType]);
         }
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
         $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum);
@@ -53,25 +53,17 @@ class Goods {
         if (empty($goods_data)) {
             return ["msg" => "商品数据不存在", "code" => '3000'];
         }
-        foreach ($goods_data as $k => $v) {
-            //查找供应商
-            $whereSupp = [["id", "=", $v['supplier_id']]];
-            $fieldSupp = "id,tel,name";
-            $supplier  = DbGoods::getOneSupplier($whereSupp, $fieldSupp);
-            if (empty($supplier)) {
-                return ["msg" => "供应商数据空", "code" => 3000];
+        foreach ($goods_data as $gk => $gd) {
+            if (isset($gd['supplier'])) {
+                $goods_data[$gk]['supplier'] = $gd['supplier']['name'];
             }
-            $goods_data[$k]["supplier"] = $supplier["name"];
-            //查找三级分类
-            $whereCate = [["id", "=", $v["cate_id"]]];
-            $fieldCate = "id,pid,type_name";
-            $cate      = DbGoods::getOneCate($whereCate, $fieldCate);
-//            if (empty($cate)){
-//                return ["msg"=>"分类数据空","code"=>3000];
-//            }
-            $goods_data[$k]["cate"] = empty($cate) ? '' : $cate["type_name"];
+            if (isset($gd['goods_class'])) {
+                $goods_data[$gk]['cate'] = $gd['goods_class']['type_name'];
+                unset($goods_data[$gk]['goods_class']);
+
+            }
         }
-        return ["code" => 200, "total" => $total, "data" => $goods_data];
+        return ["code" => '200', "total" => $total, "data" => $goods_data];
     }
 
 

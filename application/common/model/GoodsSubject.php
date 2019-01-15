@@ -14,6 +14,8 @@ class GoodsSubject extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
+    protected $updateTime = false;//关闭update_time
     private $status = [1 => '开启', 2 => '停用'];//1.开启 2.停用
 
     // 模型初始化

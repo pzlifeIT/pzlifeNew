@@ -18,7 +18,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} [supplier_name] 供应商id
      * @apiParam (入参) {Number} [status] 上下架状态 1.上架 2.下架
      * @apiParam (入参) {Number} [goods_id] 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3002:page_num只能为数字 / 3003:class_id只能为数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3002:page_num只能为数字 / 3003:goods_id只能为数字 / 3004:上下架状态参数有误 / 3005:商品属性参数有误
      * @apiSuccess (返回) {Number} total 条数
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 商品id
@@ -38,7 +38,7 @@ class Goods extends AdminController {
     public function getGoodsList() {
         $page         = trim(input("post.page"));
         $pageNum      = trim(input("post.page_num"));
-        $cateName    = trim(input("post.cate_name"));
+        $cateName     = trim(input("post.cate_name"));
         $goodsName    = trim(input("post.goods_name"));
         $goodsType    = trim(input("post.goods_type"));
         $supplierName = trim(input("post.supplier_name"));
