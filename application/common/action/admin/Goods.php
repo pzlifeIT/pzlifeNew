@@ -54,9 +54,11 @@ class Goods {
             return ["msg" => "商品数据不存在", "code" => '3000'];
         }
         foreach ($goods_data as $gk => $gd) {
+            $goods_data[$gk]['supplier'] = '';
             if (isset($gd['supplier'])) {
                 $goods_data[$gk]['supplier'] = $gd['supplier']['name'];
             }
+            $goods_data[$gk]['cate'] = '';
             if (isset($gd['goods_class'])) {
                 $goods_data[$gk]['cate'] = $gd['goods_class']['type_name'];
                 unset($goods_data[$gk]['goods_class']);
