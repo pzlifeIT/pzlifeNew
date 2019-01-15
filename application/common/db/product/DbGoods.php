@@ -141,7 +141,7 @@ class DbGoods {
         if (!empty($where)) {
             $obj = $obj->where($where);
         }
-        if (!empty($offset) && !empty($pageNum)) {
+        if (!empty($pageNum)) {
             $obj = $obj->limit($offset, $pageNum);
         }
         return $obj->select()->toArray();
