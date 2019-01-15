@@ -22,6 +22,8 @@ class DbGoods {
     private $supplierFreight;
     private $supplierFreightDetail;
     private $supplierFreightArea;
+    private $goods;
+    private $goodsAttr;
 
     public function __construct() {
         $this->supplier              = new Supplier();
@@ -30,6 +32,8 @@ class DbGoods {
         $this->supplierFreight       = new SupplierFreight();
         $this->supplierFreightDetail = new SupplierFreightDetail();
         $this->supplierFreightArea   = new SupplierFreightArea();
+        $this->goods                 = new Goods();
+        $this->goodsAttr             = new GoodsAttr();
     }
 
     public function getTier($id) {
@@ -119,20 +123,35 @@ class DbGoods {
     /**
      * 获取商品列表
      * @param $field
+     * @param $where
+     * @param $offset
+     * @param $pageNum
+     * @return array
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field, $offset, $pageNum) {
-        return Goods::limit($offset, $pageNum)->field($field)->select()->toArray();
+    public function getGoodsList($field, $where, $offset, $pageNum) {
+        $obj = Goods::field($field);
+        if (!empty($where)) {
+            $obj = $obj->where($where);
+        }
+        if (!empty($offset) && !empty($pageNum)) {
+            $obj = $obj->limit($offset, $pageNum);
+        }
+        return $obj->select()->toArray();
     }
 
     /**
      * 获取商品条数
+     * @param $where
      * @return float|string
      * @author wujunjie
      * 2019/1/3-19:08
      */
-    public function getGoodsListNum() {
+    public function getGoodsListNum($where = []) {
+        if (!empty($where)) {
+            return Goods::where($where)->count();
+        }
         return Goods::count();
     }
 
@@ -178,9 +197,9 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/2-14:47
      */
-    public function getSpecList($field,$where,$offset = 0, $pageNum = 0) {
+    public function getSpecList($field, $where, $offset = 0, $pageNum = 0) {
         $obj = GoodsSpec::field($field);
-        if (!empty($where)){
+        if (!empty($where)) {
             $obj = $obj->where($where);
         }
         //获取不分页
@@ -188,7 +207,7 @@ class DbGoods {
             return $obj->select()->toArray();
         }
         //获取并分页
-        return $obj->limit($offset,$pageNum)->select()->toArray();
+        return $obj->limit($offset, $pageNum)->select()->toArray();
     }
 
     /**
@@ -223,6 +242,8 @@ class DbGoods {
 
     /**
      * 获取一条二级属性
+     * @param $where
+     * @param $field
      * @author wujunjie
      * 2019/1/2-14:53
      */
@@ -316,9 +337,6 @@ class DbGoods {
      * @param $field
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2019/1/2-16:26
      */
     public function getOneGoodsImage($where, $field) {
@@ -329,15 +347,116 @@ class DbGoods {
      * 获取一个商品的sku
      * @param $where
      * @param $field
+     * @param $row
      * @return array
      * @author wujunjie
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
      * 2019/1/2-16:44
      */
-    public function getOneGoodsSku($where, $field) {
+    public function getOneGoodsSku($where, $field, $row = false) {
+        if ($row === true) {
+            return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
+        }
         return GoodsSku::where($where)->field($field)->select()->toArray();
+    }
+
+
+    /**
+     * 获取商品及对应对sku
+     * @param $where
+     * @param $field
+     * @param $field2
+     * @return array
+     */
+    public function getSpecAttr($where, $field, $field2) {
+        return GoodsSpec::field($field)->with([
+            'goodsAttr' => function ($query) use ($field2) {
+                $query->field($field2);
+            }])->where($where)->select()->toArray();
+    }
+
+//    public function getSpecAttr2($where, $field, $field2, $field3) {
+//        return GoodsSpec::field($field)->with([
+//            'goodsAttr'        => function ($query) use ($field2) {
+//                $query->field($field2);
+//            }, 'goodsRelation' => function ($query2) use ($field3) {
+//                $query2->field($field3);
+//            }])->where($where)->select()->toArray();
+//    }
+
+    public function getGoodsAndSku($where, $field, $field2) {
+        return Goods::field($field)->with([
+            'goodsSku' => function ($query) use ($field2) {
+                $query->field($field2);
+            }])->where($where)->select()->toArray();
+    }
+
+    public function getSku($where, $field) {
+        $sku    = GoodsSku::field($field)->where($where)->select()->toArray();
+        $result = [];
+        foreach ($sku as $val) {
+            $goodsAttr    = GoodsAttr::where([['id', 'in', explode(',', $val['spec'])]])->field('attr_name')->select()->toArray();
+            $attr         = array_column($goodsAttr, 'attr_name');
+            $val['attr']  = $attr;
+            $freightTitle = '';
+            if (!empty($val['freight_id'])) {
+                $freightArr   = SupplierFreight::where(['id' => $val['freight_id']])->field('title')->findOrEmpty()->toArray();
+                $freightTitle = $freightArr['title'];
+            }
+            $val['freight_title'] = $freightTitle;
+            array_push($result, $val);
+        }
+        return $result;
+    }
+
+    /**
+     * 获取商品的规格属性及关联名称
+     * @param $where
+     * @param $field
+     * @param $field2
+     * @param $field3
+     * @return array
+     */
+    public function getGoodsSpecAttr($where, $field, $field2, $field3) {
+        return GoodsRelation::field($field)->with([
+            'goodsSpec'    => function ($query) use ($field2) {
+                $query->field($field2);
+            }, 'goodsAttr' => function ($query2) use ($field3) {
+                $query2->field($field3);
+            }])->where($where)->select()->toArray();
+    }
+
+    /**
+     * 获取一条商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     * @author rzc
+     */
+    public function getOneGoodsSpec($where, $field, $distinct = 0) {
+        if ($distinct == 1) {
+            return GoodsRelation::distinct(true)->field($field)->where($where)->select()->toArray();
+        }
+        return GoodsRelation::field($field)->where($where)->select()->toArray();
+    }
+
+    /**
+     * 获取商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getGoodsRelation($where, $field) {
+        return GoodsRelation::where($where)->field($field)->select()->toArray();
+    }
+
+    /**
+     * 获取一条商品类目属性关系
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getGoodsRelationOne($where, $field) {
+        return GoodsRelation::where($where)->field($field)->findOrEmpty()->toArray();
     }
 
     /**
@@ -348,9 +467,11 @@ class DbGoods {
      * 2019/1/2-18:46
      */
     public function addGoods($data) {
-        $g = new Goods();
-        $g->save($data);
-        return $g->id;
+        $res = $this->goods->save($data);
+        if ($res) {
+            return $this->goods->id;
+        }
+        return $res;
     }
 
     /**
@@ -365,6 +486,16 @@ class DbGoods {
     }
 
     /**
+     * 批量添加图片
+     * @param $data
+     * @return bool
+     */
+    public function addGoodsImageList($data) {
+        $goodsImage = new GoodsImage();
+        return $goodsImage->saveAll($data);
+    }
+
+    /**
      * 添加sku
      * @param $data
      * @return bool
@@ -373,6 +504,21 @@ class DbGoods {
      */
     public function addGoodsSku($data) {
         return (new GoodsSku())->save($data);
+    }
+
+    /**
+     * 编辑sku详情
+     * @param $data
+     * @param $skuId
+     */
+    public function editGoodsSku($data, $skuId) {
+        $goodsSku = new GoodsSku();
+        $goodsSku->save($data, ['id' => $skuId]);
+    }
+
+    public function addSkuList($data) {
+        $goodsSku = new GoodsSku();
+        return $goodsSku->saveAll($data);
     }
 
     /**
@@ -395,7 +541,7 @@ class DbGoods {
      * 2019/1/3-9:42
      */
     public function editGoods($data, $id) {
-        return (new Goods())->save($data, ["id" => $id]);
+        return $this->goods->save($data, ["id" => $id]);
     }
 
     /**
@@ -418,9 +564,9 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/3-9:43
      */
-    public function editGoodsSku($data, $goods_id) {
-        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
-    }
+//    public function editGoodsSku($data, $goods_id) {
+//        return (new GoodsSku())->save($data, ["goods_id" => $goods_id]);
+//    }
 
     /**
      * 编辑商品属性关系表
@@ -453,7 +599,7 @@ class DbGoods {
      * 2019/1/8-10:09
      */
     public function delGoodsImage($id) {
-        return GoodsImage::destroy(["goods_id" => ["=", $id]]);
+        return GoodsImage::destroy($id);
     }
 
     /**
@@ -465,6 +611,21 @@ class DbGoods {
      */
     public function delGoodsSku($id) {
         return GoodsSku::destroy(["goods_id" => ["=", $id]]);
+    }
+
+    /**
+     * 删除sku
+     * @param $isList
+     * @return bool
+     * @author
+     */
+    public function delSku($isList) {
+        return GoodsSku::destroy($isList);
+    }
+
+
+    public function deleteGoodsRelation($delId) {
+        return GoodsRelation::destroy($delId);
     }
 
     /**
@@ -542,10 +703,11 @@ class DbGoods {
      * 获取供应商快递模板列表
      * @param $field
      * @param $supid
+     * @param $status
      * @return bool
      */
-    public function getSupplierFreights($field, $supid) {
-        return SupplierFreight::field($field)->where('supid', $supid)->select()->toArray();
+    public function getSupplierFreights($field, $supid, $status = 1) {
+        return SupplierFreight::field($field)->where(['supid' => $supid, 'status' => $status])->select()->toArray();
     }
 
     /**
@@ -609,7 +771,7 @@ class DbGoods {
      * @return bool
      */
     public function getSupplierFreightdetailCount($freight_id) {
-        return SupplierFreightDetail::count()->where('freight_id', $freight_id);
+        return SupplierFreightDetail::where('freight_id', $freight_id)->count();
     }
 
     /**
@@ -714,4 +876,17 @@ class DbGoods {
     public function addSupplierFreightArea($data) {
         return $this->supplierFreightArea->saveAll($data);
     }
+
+    /**
+     * 根据Where获取三级分类商品列表
+     * @param $field
+     * @param $order
+     * @param $limit
+     * @param $where
+     * @return array
+     */
+    public function getGoods($field, $limit, $order, $where) {
+        return Goods::field($field)->where($where)->order($order, 'desc')->limit($limit)->select()->toArray();
+    }
+
 }

@@ -244,34 +244,34 @@ class Category {
      * @author wujunjie
      * 2018/12/24-17:13
      */
-    public function delCategory($id) {
-        //查找该分类是否有子分类,并且没有删除
-        $where = [["pid", "=", $id]];
-        $field = "id,tier";
-        $res   = DbGoods::getOneCate($where, $field);
-        if ($res) {
-            return ["msg" => "该分类有子分类,请先删除子分类", "code" => 3003];
-        }
-        //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能删除
-        //判断当前分类是不是三级分类
-        $where = [["id", "=", $id]];
-        $field = "id,tier";
-        $res   = DbGoods::getOneCate($where, $field);
-        if ($res["tier"] == 3) {
-//            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
-            $where = [["cate_id", "=", $res["id"]]];
-            $field = "id";
-            $res   = DbGoods::getOneSpec($where, $field);
-            if ($res) {
-                return ["msg" => "请先解除该分类下的属性关系", "code" => 3003];
-            }
-        }
-        $res = DbGoods::delCate($id);
-        if (empty($res)) {
-            return ["msg" => "删除失败", "code" => 3001];
-        }
-        return ["msg" => "删除成功", "code" => 200];
-    }
+//    public function delCategory($id) {
+//        //查找该分类是否有子分类,并且没有删除
+//        $where = [["pid", "=", $id]];
+//        $field = "id,tier";
+//        $res   = DbGoods::getOneCate($where, $field);
+//        if ($res) {
+//            return ["msg" => "该分类有子分类,请先删除子分类", "code" => 3003];
+//        }
+//        //如果是一个三级分类，还要判断该三级分类下有没有一级属性，如果有一级属性也不能删除
+//        //判断当前分类是不是三级分类
+//        $where = [["id", "=", $id]];
+//        $field = "id,tier";
+//        $res   = DbGoods::getOneCate($where, $field);
+//        if ($res["tier"] == 3) {
+////            $res = GoodsSpec::where("cate_id", $res["id"])->field("id")->find();
+//            $where = [["cate_id", "=", $res["id"]]];
+//            $field = "id";
+//            $res   = DbGoods::getOneSpec($where, $field);
+//            if ($res) {
+//                return ["msg" => "请先解除该分类下的属性关系", "code" => 3003];
+//            }
+//        }
+//        $res = DbGoods::delCate($id);
+//        if (empty($res)) {
+//            return ["msg" => "删除失败", "code" => 3001];
+//        }
+//        return ["msg" => "删除成功", "code" => 200];
+//    }
 
     //停用分类
     private function stop($id) {
