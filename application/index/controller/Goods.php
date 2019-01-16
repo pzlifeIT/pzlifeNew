@@ -26,6 +26,9 @@ class Goods extends MyController
      * @apiSuccess (data) {String} title 主标题 
      * @apiSuccess (data) {String} subtitle 副标题 
      * @apiSuccess (data) {String} image 商品标题图 
+     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
      * @apiSampleRequest /index/goods/getCategoryGoods
      * @author rzc
      */
@@ -83,7 +86,8 @@ class Goods extends MyController
      * @apiSuccess (goods_sku) {String} active_price 活动价
      * @apiSuccess (goods_sku) {String} active_start_time 活动价开始时间
      * @apiSuccess (goods_sku) {String} active_end_time 活动价过期时间
-     * @apiSuccess (goods_sku) {String} margin_price 毛利
+     * @apiSuccess (goods_sku) {String} margin_price 其他运费成本
+     * @apiSuccess (goods_sku) {String} brokerage 钻石返利
      * @apiSuccess (goods_sku) {String} integral_price 积分售价
      * @apiSuccess (goods_sku) {String} integral_active 积分赠送
      * @apiSuccess (goods_sku) {String} spec sku属性列表
