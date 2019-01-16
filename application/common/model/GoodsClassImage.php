@@ -37,4 +37,14 @@ class GoodsClassImage extends Model {
         $sourceType = array_flip($this->sourceType);
         return $sourceType[$value];
     }
+
+    public function getImagePathAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
 }

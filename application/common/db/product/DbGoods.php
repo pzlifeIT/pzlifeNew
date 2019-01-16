@@ -684,7 +684,10 @@ class DbGoods {
      * 获取供应商表中所有数据计数
      * @return num
      */
-    public function getSupplierCount() {
+    public function getSupplierCount($where) {
+        if (!empty($where)) {
+            return Supplier::where($where)->count();
+        }
         return Supplier::count();
     }
 
