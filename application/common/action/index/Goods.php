@@ -46,6 +46,13 @@ class Goods
             $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 2, $field);
             $field = 'retail_price';
             $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 2, $field);
+            list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+            foreach ($goods_sku as $goods => $sku) {
+                $retail_price[$sku['id']] = $sku['retail_price'];
+                $brokerage[$sku['id']] = $sku['brokerage'];
+            }
+            $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+            
         }
         return ['code' => 200, 'data' => $result];
     }
