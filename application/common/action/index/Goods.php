@@ -153,6 +153,7 @@ class Goods
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,integral_active,spec,sku_image';
         $where = [["goods_id", "=", $goods_id]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
+        /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         foreach ($goods_sku as $goods => $sku) {
             $goods_sku[$goods]['brokerage'] = bcmul(bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),0.9),0.75,2);
         }
