@@ -6,6 +6,7 @@ use app\facade\DbUser;
 use app\facade\DbProvinces;
 use cache\Phpredis;
 use Env;
+use Config;
 
 class User {
     private $redis;
@@ -13,6 +14,7 @@ class User {
     private $cryptKey;
     private $cryptIv;
     private $iv = '00000000';
+    private $cipherUserKey = 'userpass';//用户密码加密key
     private $redisKey = 'index:user:userinfo:';
 
     public function __construct() {
@@ -63,8 +65,7 @@ class User {
      * 注册
      */
     public function register($openId, $password) {
-        $pwd = hash_hmac('sha1', $password, 'userpass');
-        return $pwd;
+        $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
     }
 
 
@@ -99,6 +100,7 @@ class User {
      * 保存用户信息(记录到缓存)
      * @param $id
      * @param $user
+     * @author zyr
      */
     private function saveUser($id, $user) {
         $saveTime = 60;
@@ -171,38 +173,38 @@ class User {
      * @param $address
      * @author rzc
      */
-    public function addUserAddress($paramUid,$province_id,$city_id,$area_id,$address){
+    public function addUserAddress($paramUid, $province_id, $city_id, $area_id, $address) {
         $uid = $this->deUid($paramUid);
         if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
-            return ['code' => 3001,'msg' => '省市区ID必须为数字'];
+            return ['code' => 3001, 'msg' => '省市区ID必须为数字'];
         }
         if (empty($address)) {
-            return ['code' => 3002,'msg' => '请填写详细街道地址'];
+            return ['code' => 3002, 'msg' => '请填写详细街道地址'];
         }
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
         $province = DbProvinces::getAreaInfo($field, $where);
         if (empty($province) || $province['level'] != '1') {
-            return ['code' => 3003,'msg' => '错误的省份ID'];
+            return ['code' => 3003, 'msg' => '错误的省份ID'];
         }
-        $field    = 'id,area_name,pid,level';
-        $where    = ['id' => $city_id];
-        $city     = DbProvinces::getAreaInfo($field, $where);
+        $field = 'id,area_name,pid,level';
+        $where = ['id' => $city_id];
+        $city  = DbProvinces::getAreaInfo($field, $where);
         if (empty($city) || $city['level'] != '2') {
-            return ['code' => 3004,'msg' => '错误的市级ID'];
+            return ['code' => 3004, 'msg' => '错误的市级ID'];
         }
-        $field    = 'id,area_name,pid,level';
-        $where    = ['id' => $area_id];
-        $area     = DbProvinces::getAreaInfo($field, $where);
+        $field = 'id,area_name,pid,level';
+        $where = ['id' => $area_id];
+        $area  = DbProvinces::getAreaInfo($field, $where);
         if (empty($area) || $area['level'] != '3') {
-            return ['code' => 3005,'msg' => '错误的区级ID'];
+            return ['code' => 3005, 'msg' => '错误的区级ID'];
         }
         // $add = 
         if ($add) {
-            return ['code' => 200,'msg' => '添加成功'];
-        }else{
-            return ['code' => 3006,'msg' => '添加失败'];
+            return ['code' => 200, 'msg' => '添加成功'];
+        } else {
+            return ['code' => 3006, 'msg' => '添加失败'];
         }
     }
 
@@ -211,14 +213,29 @@ class User {
      * @param $paramUid
      * @author rzc
      */
-    public function getUserAddress($paramUid){
+    public function getUserAddress($paramUid) {
         $uid = $this->deUid($paramUid);
         if (!$uid) {
-            return ['code' => 3000,'msg' => '该用户不存在'];
+            return ['code' => 3000, 'msg' => '该用户不存在'];
         }
         $field = 'id,uid,province_id,city_id,area_id,address,default';
         $where = ['uid' => $uid];
         // $result = 
+        return $result;
+    }
+
+    /**
+     * 密码加密
+     * @param $str
+     * @param $key
+     * @return string
+     * @author zyr
+     */
+    private function getPassword($str, $key) {
+        $algo   = Config::get('app.cipher_algo');
+        $md5    = hash_hmac('md5', $str, $key);
+        $key2   = strrev($key);
+        $result = hash_hmac($algo, $md5, $key2);
         return $result;
     }
 }

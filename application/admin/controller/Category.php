@@ -135,27 +135,27 @@ class Category extends AdminController {
      * @apiGroup         admin_category
      * @apiName          saveeditcate
      * @apiParam (入参) {Number} id 当前分类id
-     * @apiParam (入参) {String} type_name 分类名称
-     * @apiParam (入参) {Number} status 状态 1启用 2停用
-     * @apiParam (入参) {String} image
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:参数错误 / 3003:状态参数有误 / 3004:分类id不存在 / 3005:该分类名称已经存在 / 3006:图片没有上传过 /
+     * @apiParam (入参) {String} [type_name] 分类名称
+     * @apiParam (入参) {Number} [status] 状态 1启用 2停用
+     * @apiParam (入参) {String} [image] 分类图片
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:id必须为数字 / 3003:状态参数有误 / 3004:分类id不存在 / 3005:该分类名称已经存在 / 3006:图片没有上传过 / 3007:没提交要修改的内容
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/saveeditcate
      * @author wujunjie
      * 2018/12/24-16:56
      */
     public function saveEditCate() {
-        $statusArr = [1, 2];//1.启用  2.停用
+        $statusArr = [0, 1, 2];//1.启用  2.停用
         $id        = trim(input("post.id"));
         $type_name = trim(input("post.type_name"));
         $status    = trim(input("post.status"));
         $image     = trim(input("post.image"));
-        $status    = empty($status) ? 1 : intval($status);
+        $status    = empty($status) ? 0 : intval($status);
         if (!in_array($status, $statusArr)) {
-            return ["msg" => "状态参数有误!", "code" => 3003];
+            return ["code" => '3003'];
         }
-        if (!is_numeric($id) || empty($type_name)) {
-            return ["msg" => "参数错误", "code" => 3002];
+        if (!is_numeric($id)) {
+            return ["code" => '3002'];
         }
         $result = $this->app->category->saveEditCate($id, $type_name, $status, $image);
         return $result;

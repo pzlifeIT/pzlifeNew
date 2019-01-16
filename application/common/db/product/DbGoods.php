@@ -8,6 +8,8 @@ use app\common\model\GoodsClassImage;
 use app\common\model\GoodsImage;
 use app\common\model\GoodsRelation;
 use app\common\model\GoodsSku;
+use app\common\model\GoodsSubject;
+use app\common\model\GoodsSubjectImage;
 use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
@@ -438,7 +440,7 @@ class DbGoods {
      * @return array
      * @author rzc
      */
-    public function getOneSku($where,$field){
+    public function getOneSku($where, $field) {
         return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
     }
 
@@ -824,11 +826,11 @@ class DbGoods {
     /**
      * 更新分类图片
      * @param $data
-     * @param $classId
+     * @param $id
      * @return bool
      */
-    public function updateClassImage($data, $classId) {
-        return $this->goodsClassImage->save($data, ['class_id' => $classId]);
+    public function updateClassImage($data, $id) {
+        return $this->goodsClassImage->save($data, ['id' => $id]);
     }
 
 
@@ -906,4 +908,82 @@ class DbGoods {
         return Goods::field($field)->where($where)->order($order, 'desc')->limit($limit)->select()->toArray();
     }
 
+    /**
+     * 获取专题信息
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @return array
+     * @author zyr
+     */
+    public function getSubject($where, $field, $row = false) {
+        $obj = GoodsSubject::where($where)->field($field);
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        } else {
+            return $obj->select()->toArray();
+        }
+    }
+
+    /**
+     * 添加一个专题
+     * @param $data
+     * @return mixed
+     * @author zyr
+     */
+    public function addSubject($data) {
+        $goodsSubject = new GoodsSubject();
+        $goodsSubject->save($data);
+        return $goodsSubject->id;
+    }
+
+    /**
+     * 编辑一个专题
+     * @param $data
+     * @param $id
+     * @return bool
+     */
+    public function updateSubject($data, $id) {
+        $goodsSubject = new GoodsSubject();
+        return $goodsSubject->save($data, ['id' => $id]);
+    }
+
+    /**
+     * 添加一个专题图片
+     * @param $data
+     * @return mixed
+     * @author zyr
+     */
+    public function addSubjectImage($data) {
+        $goodsSubjectImage = new GoodsSubjectImage();
+        $goodsSubjectImage->save($data);
+        return $goodsSubjectImage->id;
+    }
+
+    /**
+     * 修改专题图片
+     * @param $data
+     * @param $id
+     * @return bool
+     * @author zyr
+     */
+    public function updateSubjectImage($data, $id) {
+        $goodsSubjectImage = new GoodsSubjectImage();
+        return $goodsSubjectImage->save($data, ['id' => $id]);
+    }
+
+    /**
+     * 获取商品专题图片
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @return array
+     */
+    public function getSubjectImage($where, $field, $row = false) {
+        $obj = GoodsSubjectImage::where($where)->field($field);
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
+    }
 }

@@ -522,6 +522,11 @@ class Goods {
     }
 
 
+    /**
+     * 删除商品详情和轮播图
+     * @param $imagePath
+     * @return array
+     */
     public function delGoodsImage($imagePath) {
         $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
         $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id');

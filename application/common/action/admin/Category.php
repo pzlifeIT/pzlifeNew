@@ -179,61 +179,82 @@ class Category {
     /**
      * 保存编辑后的分类
      * @param $id 分类ID
-     * @param $type_name 分类名称
-     * @param $status
-     * @param $image 分类图片
+     * @param string $type_name 分类名称
+     * @param int $status
+     * @param string $image 分类图片
      * @return array
-     * @author wujunjie
-     * 2018/12/24-16:45
+     * @author zyr
      */
-    public function saveEditCate($id, $type_name, $status, $image) {
+    public function saveEditCate($id, $type_name = '', $status = 0, $image = '') {
+        if (empty($type_name) && empty($status) && empty($image)) {
+            return ['code' => '3007'];
+        }
         //保存提交的分类之前需要判断是否已经存在该名称,删除的
         $cateRes = DbGoods::getOneCate(['id' => $id], 'id');
         if (empty($cateRes)) {
             return ['code' => '3004'];//分类id不存在
         }
-        $where = [["type_name", "=", $type_name], ['id', "<>", $id]];
-        $field = "id,type_name";
-        $res   = DbGoods::getOneCate($where, $field);
-        if ($res) {
-            return ["msg" => "该分类名称已经存在", "code" => '3005'];
+        if (!empty($type_name)) {
+            $where = [["type_name", "=", $type_name], ['id', "<>", $id]];
+            $field = "id,type_name";
+            $res   = DbGoods::getOneCate($where, $field);
+            if ($res) {
+                return ["msg" => "该分类名称已经存在", "code" => '3005'];
+            }
+            $data['type_name'] = $type_name;
+        }
+        if (!empty($status)) {
+            $data['status'] = $status;
         }
         /* 初始化数组 */
-        $oldLogImage = [];
-        $logImage    = [];
+        $oldLogImage   = [];
+        $logImage      = [];
+        $oldClassImage = [];
         if (!empty($image)) {//提交了图片
             $image    = filtraImage(Config::get('qiniu.domain'), $image);
             $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3006'];//图片没有上传过
             }
-            $oldClassImage = DbGoods::getClassImage(['class_id' => $id], 'image_path');
-            $oldImage      = $oldClassImage['image_path'];
-            $oldImage      = filtraImage(Config::get('qiniu.domain'), $oldImage);
-            if (!empty($oldImage)) {//之前有图片
+            $oldClassImage = DbGoods::getClassImage(['class_id' => $id], 'id,image_path');
+            if (!empty($oldClassImage)) {//之前有图片
+                $oldImage = $oldClassImage['image_path'];
+                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
                 if (stripos($oldImage, 'http') === false) {//新版本图片
                     $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
                 }
             }
 //            $data['image'] = $image;
         }
-        $data['type_name'] = $type_name;
-        $data['status']    = $status;
+//        print_r($oldClassImage);die;
         Db::startTrans();
         try {
-            DbGoods::editCate($data, $id);
+            $flag = false;
+            if (!empty($data)) {
+                $flag = true;
+                DbGoods::editCate($data, $id);
+            }
             if (!empty($logImage)) {
-                DbGoods::updateClassImage(['image_path' => $image], ['class_id' => $id]);//更新分类图片
+                $flag = true;
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                if (!empty($oldClassImage)) {
+                    DbGoods::updateClassImage(['image_path' => $image], ['id' => $oldClassImage['id']]);//更新分类图片
+                } else {
+                    DbGoods::addClassImage(['class_id' => $id, 'image_path' => $image]);//添加分类图片
+                }
             }
             if (!empty($oldLogImage)) {
                 DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
             }
+            if ($flag === false) {
+                Db::rollback();
+                return ['code' => '3001'];
+            }
             Db::commit();
-            return ['code' => '200', 'msg' => '更新成功'];
+            return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3001', 'msg' => '更新失败'];
+            return ['code' => '3001'];
         }
     }
 

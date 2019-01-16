@@ -1,7 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: zhangyanrong
- * Date: 2019/1/15
- * Time: 7:19 PM
- */
+return [
+    //用户密码加密方式
+    'cipher_algo'            => 'sha256',
+];
