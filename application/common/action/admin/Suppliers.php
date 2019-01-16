@@ -16,7 +16,7 @@ class Suppliers {
      * @return array
      * @author rzc
      */
-    public function getSuppliers($page, $pagenum) {
+    public function getSuppliers($page, $pagenum, $supplierName) {
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -24,8 +24,9 @@ class Suppliers {
         $field  = 'id,tel,name,status,image,title,desc';
         $order  = 'id,desc';
         $limit  = $offset . ',' . $pagenum;
-        $result = DbGoods::getSupplier($field, [], $order, $limit);
-        $totle  = DbGoods::getSupplierCount();
+        $where = [['name', 'like', '%' . $supplierName . '%']];
+        $result = DbGoods::getSupplier($field, $where, $order, $limit);
+        $totle  = DbGoods::getSupplierCount($where);
         if (empty($result)) {
             return ['code' => '3000'];
         }

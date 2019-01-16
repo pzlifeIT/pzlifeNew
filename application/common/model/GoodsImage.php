@@ -4,6 +4,7 @@ namespace app\common\model;
 
 use think\Model;
 use think\model\concern\SoftDelete;
+use Config;
 
 class GoodsImage extends Model {
     use SoftDelete;
@@ -49,5 +50,15 @@ class GoodsImage extends Model {
         }
         $imageType = array_flip($this->imageType);
         return $imageType[$value];
+    }
+
+    public function getImagePathAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
     }
 }

@@ -14,6 +14,7 @@ class Suppliers extends AdminController {
      * @apiName          getSupplier
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
+     * @apiParam (入参) {String} supplierName 供应商名称模糊查询
      * @apiSuccess (返回) {String} code 200:成功 / 3000:供应商列表空 / 3002:页码和查询条数只能是数字
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} data 结果
@@ -39,16 +40,17 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSuppliers() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
-        $page    = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 10;
+        $supplierName = trim($this->request->post('supplierName'));
+        $page         = trim($this->request->post('page'));
+        $pagenum      = trim($this->request->post('pagenum'));
+        $page         = $page ? $page : 1;
+        $pagenum      = $pagenum ? $pagenum : 10;
 
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3002'];
         }
 
-        $result = $this->app->suppliers->getSuppliers($page, $pagenum);
+        $result = $this->app->suppliers->getSuppliers($page, $pagenum, $supplierName);
         return $result;
     }
 
@@ -64,7 +66,7 @@ class Suppliers extends AdminController {
      * @apiSampleRequest /admin/suppliers/getsuppliersall
      * @author zyr
      */
-    public function getSuppliersAll(){
+    public function getSuppliersAll() {
         $result = $this->app->suppliers->getSuppliersAll();
         return $result;
     }
