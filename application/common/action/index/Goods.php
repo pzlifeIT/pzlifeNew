@@ -77,6 +77,7 @@ class Goods
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
+        $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
 
         /* 查询商品轮播图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
