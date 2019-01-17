@@ -145,11 +145,16 @@ class Subject {
 
     /**
      * 所有专题
+     * @param $stype
      * @return array
      * @author zyr
      */
-    public function getAllSubject() {
-        $subjectList = DbGoods::getSubject([], 'id,pid,subject,status');
+    public function getAllSubject(int $stype) {
+        $where = [];
+        if ($stype == 2) {
+            $where[] = [['tier', '<>', 3]];
+        }
+        $subjectList = DbGoods::getSubject($where, 'id,pid,subject');
         if (empty($subjectList)) {
             return ['code' => '3000'];
         }
