@@ -2,10 +2,12 @@
 
 namespace app\common\action\admin;
 
+use app\common\model\GoodsSubject;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use think\Db;
 use Config;
+use third\PHPTree;
 
 class Subject {
     /**
@@ -29,7 +31,7 @@ class Subject {
                 $tier = 3;
             }
         }
-        $subjectIsset = DbGoods::getSubject(['subject' => $subject], 'id', true);
+        $subjectIsset = DbGoods::getSubject(['subject' => $subject, 'tier' => $tier], 'id', true);
         if (!empty($subjectIsset)) {
             return ['code' => '3005'];//专题名已存在
         }
@@ -68,10 +70,11 @@ class Subject {
      * @param $status
      * @param $subject
      * @param $image
+     * @param $orderBy
      * @return array
      */
-    public function editSubject(int $id, int $status, $subject, $image) {
-        if (empty($subject) && empty($status) && empty($image)) {
+    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0) {
+        if (empty($subject) && empty($status) && empty($image) && empty($orderBy)) {
             return ['code' => '3007'];
         }
         $subjectRow = DbGoods::getSubject(['id' => $id], 'id,pid', true);//获取上级专题
@@ -87,6 +90,9 @@ class Subject {
         }
         if (!empty($status)) {
             $data['status'] = $status;
+        }
+        if (!empty($orderBy)) {
+            $data['order_by'] = $orderBy;
         }
         $logImage        = [];
         $oldLogImage     = [];
@@ -132,10 +138,131 @@ class Subject {
             Db::commit();
             return ["code" => '200'];
         } catch (\Exception $e) {
-            print_r($e);
-            die;
             Db::rollback();
             return ["code" => "3008"];//保存失败
         }
+    }
+
+    /**
+     * 所有专题
+     * @return array
+     * @author zyr
+     */
+    public function getAllSubject() {
+        $subjectList = DbGoods::getSubject([], 'id,pid,subject,status');
+        if (empty($subjectList)) {
+            return ['code' => '3000'];
+        }
+        $tree = new PHPTree($subjectList);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $subject_tree = $tree->listTree();
+        return ['code' => '200', 'data' => $subject_tree];
+    }
+
+    /**
+     * 建立商品和专题关系
+     * @param int $goodsId
+     * @param int $subjectId
+     * @return array
+     * @author zyr
+     */
+    public function subjectGoodsAssoc(int $goodsId, int $subjectId) {
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'id');
+        if (empty($goodsRow)) {
+            return ['code' => '3003'];//商品不存在
+        }
+        $subjectRow = DbGoods::getSubject(['id' => $subjectId, 'tier' => 3], 'id', true);
+        if (empty($subjectRow)) {
+            return ['code' => '3004'];//专题不存在
+        }
+        $subjectRelation = DbGoods::getSubjectRelation(['goods_id' => $goodsId, 'subject_id' => $subjectId], 'id', true);
+        if (!empty($subjectRelation)) {
+            return ['code' => '3005'];//已经关联
+        }
+        $data = [
+            'goods_id'   => $goodsId,
+            'subject_id' => $subjectId,
+        ];
+        $id   = DbGoods::addSubjectRelation($data);
+        if ($id) {
+            return ['code' => '200'];
+        }
+        return ['code' => '3006'];
+    }
+
+    public function getGoodsSubject($goodsId, $stype) {
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'id');
+        if (empty($goodsRow)) {
+            return ['code' => '3003'];//商品不存在
+        }
+        $subjectRelationList = DbGoods::getSubjectRelation([['goods_id', '=', $goodsId]], 'subject_id');
+        if (empty($subjectRelationList) && $stype === 1) {
+            return ['code' => '3000'];
+        }
+        $where = [['tier', '=', 3]];
+        if ($stype === 2) {
+            if (!empty($subjectRelationList)) {
+                $subjectIdList = array_column($subjectRelationList, 'subject_id');
+                array_push($where, ['id', 'not in', $subjectIdList]);
+            }
+        } else {
+            $subjectIdList = array_column($subjectRelationList, 'subject_id');
+            array_push($where, ['id', 'in', $subjectIdList]);
+        }
+        $subjectList = DbGoods::getSubject($where, 'id,pid,subject');
+        if (empty($subjectList)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200', 'data' => $subjectList];
+    }
+
+    public function delGoodsSubject(int $subjectId) {
+        $getSubject = DbGoods::getSubject(['id' => $subjectId], 'id', true);
+        if (empty($getSubject)) {
+            return ['code' => '3002'];//专题不存在
+        }
+        $subjectRelationId  = [];
+        $getSubjectRelation = DbGoods::getSubjectRelation(['subject_id' => $subjectId], 'id');
+        if (!empty($getSubjectRelation)) {
+            $subjectRelationId = array_column($getSubjectRelation, 'id');
+        }
+        Db::startTrans();
+        try {
+            $res1 = true;
+            if (!empty($subjectRelationId)) {
+                $res1 = DbGoods::delSubjectRelation($subjectRelationId);
+            }
+            $res2 = DbGoods::delSubject($subjectId);
+            if ($res1 && $res2) {
+                Db::commit();
+                return ["code" => '200'];
+            }
+            Db::rollback();
+            return ['code' => '3003'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3003"];//保存失败
+        }
+    }
+
+    /**
+     * 取消专题商品的关联
+     * @param int $goodsId
+     * @param int $subjectId
+     * @return array
+     * @author zyr
+     */
+    public function delGoodsSubjectAssoc(int $goodsId, int $subjectId) {
+        $subjectRelation = DbGoods::getSubjectRelation(['goods_id' => $goodsId, 'subject_id' => $subjectId], 'id', true);
+        if (empty($subjectRelation)) {
+            return ['code' => '3003'];//没有关联无法删除
+        }
+        $subjectRelationId = $subjectRelation['id'];
+        $res               = DbGoods::delSubjectRelation($subjectRelationId);
+        if ($res) {
+            return ['code' => '200'];
+        }
+        return ['code' => '3004'];
     }
 }

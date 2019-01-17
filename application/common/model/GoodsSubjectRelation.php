@@ -2,10 +2,10 @@
 
 namespace app\common\model;
 
-use think\Model;
 use think\model\concern\SoftDelete;
+use think\model\Pivot;
 
-class GoodsSubjectRelation extends Model {
+class GoodsSubjectRelation extends Pivot {
     use SoftDelete;
     protected $pk = 'id';
     // 设置当前模型对应的完整数据表名称

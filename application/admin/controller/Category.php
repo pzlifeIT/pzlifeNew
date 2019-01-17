@@ -74,7 +74,7 @@ class Category extends AdminController {
      * @apiName          saveaddcate
      * @apiParam (入参) {Number} pid 父级分类id
      * @apiParam (入参) {String} type_name 分类名称
-     * @apiParam (入参) {Number} [status] 状态 1启用 / 2停用
+     * @apiParam (入参) {Number} [status] 状态 1启用 / 2停用 默认2
      * @apiParam (入参) {String} [image] 图片路径
      * @apiSuccess (返回) {String} code 200:成功 / 3001:保存失败 / 3002:分类名称不能为空 / 3003.图片没有上传过 / 3004.状态参数有误 / 3005.该分类名称已经存在
      * @apiSuccess (返回) {String} msg 提示信息
@@ -88,7 +88,7 @@ class Category extends AdminController {
         $type_name = trim(input("post.type_name"));
         $status    = trim(input("post.status"));
         $image     = trim(input("post.image"));
-        $status    = empty($status) ? 1 : intval($status);
+        $status    = empty($status) ? 2 : intval($status);
         if (!in_array($status, $statusArr)) {
             return ["code" => 3004];
         }

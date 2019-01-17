@@ -34,4 +34,8 @@ class GoodsSubject extends Model {
         $status = array_flip($this->status);
         return $status[$value];
     }
+
+    public function goodss() {
+        return $this->belongsToMany('Goods', 'app\\common\\model\\GoodsSubjectRelation','goods_id','id');
+    }
 }

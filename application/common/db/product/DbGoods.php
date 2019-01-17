@@ -10,6 +10,7 @@ use app\common\model\GoodsRelation;
 use app\common\model\GoodsSku;
 use app\common\model\GoodsSubject;
 use app\common\model\GoodsSubjectImage;
+use app\common\model\GoodsSubjectRelation;
 use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
@@ -924,7 +925,7 @@ class DbGoods {
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         } else {
-            return $obj->select()->toArray();
+            return $obj->order('order_by', 'asc')->select()->toArray();
         }
     }
 
@@ -988,5 +989,45 @@ class DbGoods {
             return $obj->findOrEmpty()->toArray();
         }
         return $obj->select()->toArray();
+    }
+
+    /**
+     * 获取商品专题关联关系
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @return array
+     */
+    public function getSubjectRelation($where, $field, $row = false) {
+        $obj = GoodsSubjectRelation::where($where)->field($field);
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
+    }
+
+    /**
+     * 添加商品专题关联关系
+     * @param $data
+     * @return mixed
+     */
+    public function addSubjectRelation($data) {
+        $goodsSubjectRelation = new GoodsSubjectRelation();
+        $goodsSubjectRelation->save($data);
+        return $goodsSubjectRelation->id;
+    }
+
+    /**
+     * 删除商品专题关联
+     * @param $data
+     * @return bool
+     * @author zyr
+     */
+    public function delSubjectRelation($data) {
+        return GoodsSubjectRelation::destroy($data);
+    }
+
+    public function delSubject($data){
+        return GoodsSubject::destroy($data);
     }
 }
