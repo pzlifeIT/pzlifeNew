@@ -164,6 +164,7 @@ class Goods {
             return ['code' => '3007'];//skuid不存在
         }
         $image    = $data['sku_image'];
+        unset($data['sku_image']);
         $logImage = [];
         $oldImage = [];
         if (!empty($image)) {
