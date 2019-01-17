@@ -250,7 +250,7 @@ class Subject {
         }
         $subjectList['subject_image'] = $subjectList['goods_subject_image'][0]['image_path'] ?? '';
         unset($subjectList['goods_subject_image']);
-        return $subjectList;
+        return ['code' => '200', 'data' => $subjectList];
     }
 
     /**
