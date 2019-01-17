@@ -92,6 +92,11 @@ class Goods
         $field = 'retail_price';
         $goods_data['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
         $goods_data['max_retail_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
+
+        $field = 'integral_active';
+        $goods_data['min_integral_active'] = DbGoods:: getOneSkuMost($where, 1, $field);
+        $goods_data['max_integral_active'] = DbGoods:: getOneSkuMost($where, 2, $field);
+
         /* 查询商品轮播图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
         $field = "goods_id,source_type,image_type,image_path";
