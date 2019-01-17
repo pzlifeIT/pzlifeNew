@@ -53,7 +53,7 @@ class Subject {
         try {
             $subjectId = DbGoods::addSubject($data);
             if (!empty($logImage)) {
-                DbGoods::addSubjectImage(['subject_id' => $subjectId, 'image_path' => $image]);//添加分类图片
+                DbGoods::addSubjectImage(['subject_id' => $subjectId, 'image_path' => $image]);//添加专题图片
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
             }
             Db::commit();
@@ -151,7 +151,7 @@ class Subject {
      */
     public function getAllSubject(int $stype) {
         $where       = [];
-        $field       = 'id,pid,subject,status,tier';
+        $field       = 'id,pid,subject,status,tier,order_by';
         $selectImage = true;
         if ($stype == 2) {
             $field       = 'id,pid,subject';
@@ -163,7 +163,7 @@ class Subject {
             return ['code' => '3000'];
         }
         foreach ($subjectList as $k => $val) {
-            if(!isset($val['goods_subject_image'])){
+            if (!isset($val['goods_subject_image'])) {
                 break;
             }
             $subjectImage = $val['goods_subject_image'][0]['image_path'] ?? '';
@@ -208,6 +208,13 @@ class Subject {
         return ['code' => '3006'];
     }
 
+    /**
+     * 获取商品专题
+     * @param $goodsId
+     * @param $stype
+     * @return array
+     * @author zyr
+     */
     public function getGoodsSubject($goodsId, $stype) {
         $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'id');
         if (empty($goodsRow)) {
@@ -234,6 +241,24 @@ class Subject {
         return ['code' => '200', 'data' => $subjectList];
     }
 
+    public function getSubjectDetail(int $subjectId){
+        $where = ['id'=>$subjectId];
+        $field = 'id,pid,subject,status,tier,order_by';
+        $subjectList = DbGoods::getSubject($where, $field, true, true);
+        if(empty($subjectList)){
+            return ['code'=>'3000'];
+        }
+        $subjectList['subject_image'] = $subjectList['goods_subject_image'][0]['image_path'];
+        unset($subjectList['goods_subject_image']);
+        return $subjectList;
+    }
+
+    /**
+     * 删除专题
+     * @param int $subjectId
+     * @return array
+     * @author zyr
+     */
     public function delGoodsSubject(int $subjectId) {
         $getSubject = DbGoods::getSubject(['id' => $subjectId], 'id', true);
         if (empty($getSubject)) {

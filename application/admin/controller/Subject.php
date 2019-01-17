@@ -83,6 +83,10 @@ class Subject extends AdminController {
      * @apiName          getAllSubject
      * @apiParam (入参) stype 1:所有 2.一二级  默认:1
      * @apiSuccess (返回) {String} code 200:成功 / 3000:没有数据 / 3001:stype参数有误
+     * @apiSuccess (data) {String} subject 专题名称
+     * @apiSuccess (data) {Number} status 1.启用 2.停用
+     * @apiSuccess (data) {Number} tier 层级
+     * @apiSuccess (data) {String} subject_image 专题图片
      * @apiSampleRequest /admin/subject/getallsubject
      * @author zyr
      */
@@ -144,6 +148,29 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->getGoodsSubject(intval($goodsId), intval($stype));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取专题详情
+     * @apiDescription   getSubjectDetail
+     * @apiGroup         admin_subject
+     * @apiName          getSubjectDetail
+     * @apiParam (入参) {Number} subject_id 专题id
+     * @apiSuccess (返回) {String} code 200:成功 /3000:数据为空 / 3001:id必须数字
+     * @apiSuccess (data) {String} subject 专题名称
+     * @apiSuccess (data) {Number} status 1.启用 2.停用
+     * @apiSuccess (data) {Number} tier 层级
+     * @apiSuccess (data) {String} subject_image 专题图片
+     * @apiSampleRequest /admin/subject/getsubjectdetail
+     * @author zyr
+     */
+    public function getSubjectDetail() {
+        $subjectId = trim($this->request->post('subject_id'));
+        if (!is_numeric($subjectId)) {
+            return ["code" => '3001'];
+        }
+        $result = $this->app->subject->getSubjectDetail(intval($subjectId));
         return $result;
     }
 
