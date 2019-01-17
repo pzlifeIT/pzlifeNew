@@ -159,12 +159,12 @@ class Goods {
      * @return array
      */
     public function editGoodsSku($skuId, $data) {
-        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,stock,goods_id,retail_price,cost_price,sku_image', true);
+        $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,goods_id,sku_image', true);
         if (empty($sku)) {
             return ['code' => '3007'];//skuid不存在
         }
-        if ($sku['stock'] > 0) {
-            if ($sku['retail_price'] <= 0 || $sku['cost_price'] <= 0) {
+        if ($data['stock'] > 0) {
+            if ($data['retail_price'] <= 0 || $data['cost_price'] <= 0) {
                 return ['code' => '3010'];//请填写零售价和成本价
             }
         }

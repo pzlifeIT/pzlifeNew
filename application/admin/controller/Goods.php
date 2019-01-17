@@ -240,7 +240,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} integral_price 积分售价
      * @apiParam (入参) {Number} integral_active 积分赠送
      * @apiParam (入参) {Number} sku_image 规格详情图
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误 / 3010:请填写零售价和成本价
      * @apiSampleRequest /admin/goods/editgoodssku
      * @return array
      * @author zyr
