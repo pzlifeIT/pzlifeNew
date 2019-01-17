@@ -17,6 +17,7 @@ use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
 use app\common\model\SupplierFreightArea;
 use app\common\model\SupplierFreightDetail;
+use think\Db;
 
 class DbGoods {
     private $supplier;
@@ -443,6 +444,23 @@ class DbGoods {
      */
     public function getOneSku($where, $field) {
         return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
+    }
+
+    /**
+     * 获取一条商品规格某字段最值
+     * @param $where
+     * @param $field
+     * @return array
+     * @author rzc
+     */
+    public function getOneSkuMost($where, $most, $field) {
+        /* 最小 */
+        if ($most == 1) {
+            return GoodsSku::where($where)->min($field);
+        }elseif ($most == 2) {
+            return GoodsSku::where($where)->max($field);
+        }
+        
     }
 
     /**
