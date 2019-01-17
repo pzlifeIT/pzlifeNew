@@ -163,7 +163,12 @@ class Goods {
         if (empty($sku)) {
             return ['code' => '3007'];//skuid不存在
         }
-        $image    = $data['sku_image'];
+        if ($sku['stock'] > 0) {
+            if ($sku['retail_price'] <= 0||$sku['cost_price'] <= 0) {
+                return ['code' => '3010'];//请填写零售价和成本价
+            }
+        }
+        $image = $data['sku_image'];
         unset($data['sku_image']);
         $logImage = [];
         $oldImage = [];

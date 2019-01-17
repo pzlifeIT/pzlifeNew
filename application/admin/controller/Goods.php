@@ -471,7 +471,7 @@ class Goods extends AdminController {
      * @apiName          upDownGoods
      * @apiParam (入参) {Number} id 商品id
      * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:请填写库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有可售的规格商品 / 3007:上下架失败 / 3008:上下架失败 / 300:上下架失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:请填写库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有可售的规格商品 / 3007:没有详情图 / 3008:没有轮播图 / 3009:上下架失败
      * @apiSampleRequest /admin/goods/updowngoods
      * @author wujunjie
      * 2019/1/8-10:13
