@@ -230,14 +230,42 @@ class Subject {
                 $subjectIdList = array_column($subjectRelationList, 'subject_id');
                 array_push($where, ['id', 'not in', $subjectIdList]);
             }
+            $subjectList3 = DbGoods::getSubject($where, 'id,pid,subject');//三级
+            if (empty($subjectList3)) {
+                return ['code' => '3000'];
+            }
+            $subjectList2 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList3, 'pid'))]], 'id,pid,subject');//二级
+            $subjectList1 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList2, 'pid'))]], 'id,pid,subject');//一级
+            $subjectList  = array_merge($subjectList1, $subjectList2, $subjectList3);
+            $tree         = new PHPTree($subjectList);
+            $tree->setParam("pk", "id");
+            $tree->setParam("pid", "pid");
+            $subjectList = $tree->listTree();
         } else {
             $subjectIdList = array_column($subjectRelationList, 'subject_id');
             array_push($where, ['id', 'in', $subjectIdList]);
+            $subjectList3 = DbGoods::getSubject($where, 'id,pid,subject');//三级
+            if (empty($subjectList3)) {
+                return ['code' => '3000'];
+            }
+            $subjectList2 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList3, 'pid'))]], 'id,pid,subject');//二级
+            $subjectList1 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList2, 'pid'))]], 'id,pid,subject');//一级
+            $subjectList = [];
+            foreach ($subjectList3 as $s3) {
+                foreach ($subjectList2 as $s2) {
+                    if ($s3['pid'] == $s2['id']) {
+                        $s3['subject_tier2'] = $s2['subject'];
+                        foreach ($subjectList1 as $s1) {
+                            if ($s2['pid'] == $s1['id']) {
+                                $s3['subject_tier1'] = $s1['subject'];
+                            }
+                        }
+                    }
+                }
+                array_push($subjectList, $s3);
+            }
         }
-        $subjectList = DbGoods::getSubject($where, 'id,pid,subject');
-        if (empty($subjectList)) {
-            return ['code' => '3000'];
-        }
+
         return ['code' => '200', 'data' => $subjectList];
     }
 
