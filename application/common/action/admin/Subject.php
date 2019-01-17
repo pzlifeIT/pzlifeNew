@@ -150,13 +150,25 @@ class Subject {
      * @author zyr
      */
     public function getAllSubject(int $stype) {
-        $where = [];
+        $where       = [];
+        $field       = 'id,pid,subject,status';
+        $selectImage = true;
         if ($stype == 2) {
-            $where[] = [['tier', '<>', 3]];
+            $field       = 'id,pid,subject';
+            $where[]     = [['tier', '<>', 3]];
+            $selectImage = false;
         }
-        $subjectList = DbGoods::getSubject($where, 'id,pid,subject');
+        $subjectList = DbGoods::getSubject($where, 'id,pid,subject', false, $selectImage);
         if (empty($subjectList)) {
             return ['code' => '3000'];
+        }
+        foreach ($subjectList as $k => $val) {
+            if(!isset($val['goods_subject_image'])){
+                break;
+            }
+            $subjectImage = $val['goods_subject_image'][0]['image_path'] ?? '';
+            unset($subjectList[$k]['goods_subject_image']);
+            $subjectList[$k]['subject_image'] = $subjectImage;
         }
         $tree = new PHPTree($subjectList);
         $tree->setParam("pk", "id");

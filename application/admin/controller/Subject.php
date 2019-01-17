@@ -81,7 +81,7 @@ class Subject extends AdminController {
      * @apiDescription   getAllSubject
      * @apiGroup         admin_subject
      * @apiName          getAllSubject
-     * @apiParam (入参) stype 1:所有 2.一二级
+     * @apiParam (入参) stype 1:所有 2.一二级  默认:1
      * @apiSuccess (返回) {String} code 200:成功 / 3000:没有数据 / 3001:stype参数有误
      * @apiSampleRequest /admin/subject/getallsubject
      * @author zyr
@@ -89,6 +89,7 @@ class Subject extends AdminController {
     public function getAllSubject() {
         $stypeArr = [1, 2];
         $stype    = trim($this->request->post('stype'));
+        $stype    = empty($stype) ? 1 : $stype;
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3001'];//stype参数有误
         }

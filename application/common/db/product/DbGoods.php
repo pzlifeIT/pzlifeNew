@@ -457,10 +457,10 @@ class DbGoods {
         /* 最小 */
         if ($most == 1) {
             return GoodsSku::where($where)->min($field);
-        }elseif ($most == 2) {
+        } elseif ($most == 2) {
             return GoodsSku::where($where)->max($field);
         }
-        
+
     }
 
     /**
@@ -935,11 +935,18 @@ class DbGoods {
      * @param $where
      * @param $field
      * @param bool $row
+     * @param bool $image
      * @return array
      * @author zyr
      */
-    public function getSubject($where, $field, $row = false) {
+    public function getSubject($where, $field, $row = false, $image = false) {
         $obj = GoodsSubject::where($where)->field($field);
+        if ($image === true) {
+            $obj = $obj->with([
+                'goodsSubjectImage' => function ($query) {
+                    $query->field('subject_id,image_path');
+                }]);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         } else {
@@ -1045,7 +1052,7 @@ class DbGoods {
         return GoodsSubjectRelation::destroy($data);
     }
 
-    public function delSubject($data){
+    public function delSubject($data) {
         return GoodsSubject::destroy($data);
     }
 }

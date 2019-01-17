@@ -38,4 +38,7 @@ class GoodsSubject extends Model {
     public function goodss() {
         return $this->belongsToMany('Goods', 'app\\common\\model\\GoodsSubjectRelation','goods_id','id');
     }
+    public function goodsSubjectImage() {
+        return $this->hasMany('goodsSubjectImage', 'subject_id', 'id');
+    }
 }
