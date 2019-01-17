@@ -151,14 +151,14 @@ class Subject {
      */
     public function getAllSubject(int $stype) {
         $where       = [];
-        $field       = 'id,pid,subject,status';
+        $field       = 'id,pid,subject,status,tier';
         $selectImage = true;
         if ($stype == 2) {
             $field       = 'id,pid,subject';
             $where[]     = [['tier', '<>', 3]];
             $selectImage = false;
         }
-        $subjectList = DbGoods::getSubject($where, 'id,pid,subject', false, $selectImage);
+        $subjectList = DbGoods::getSubject($where, $field, false, $selectImage);
         if (empty($subjectList)) {
             return ['code' => '3000'];
         }
