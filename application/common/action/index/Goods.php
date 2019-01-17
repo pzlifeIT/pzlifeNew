@@ -43,9 +43,9 @@ class Goods
             $result[$key]['goods_sku'] = $goods_sku; */
             $where = ['goods_id'=>$value['id']];
             $field = 'market_price';
-            $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 2, $field);
+            $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             $field = 'retail_price';
-            $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 2, $field);
+            $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
@@ -85,7 +85,13 @@ class Goods
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
         $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
-
+        $where = ['goods_id'=>$goods_id];
+        $field = 'market_price';
+        $goods_data['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+        $goods_data['max_market_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
+        $field = 'retail_price';
+        $goods_data['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+        $goods_data['max_retail_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
         /* 查询商品轮播图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
         $field = "goods_id,source_type,image_type,image_path";
