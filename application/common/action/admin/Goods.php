@@ -576,39 +576,30 @@ class Goods {
             return ["code" => '3001'];
         }
         if ($type == 1) {// 上架
-            $stockAll       = 0;
-            $retailPriceAll = 0;//总零售价
-            $costPriceAll   = 0;//总成本价
-            $sku            = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $stockAll = 0;
+            $sku = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
-                $stockAll       = bcadd($stockAll, $s['stock'], 2);
-                $retailPriceAll = bcadd($retailPriceAll, $s['retail_price']);
-                $costPriceAll   = bcadd($costPriceAll, $s['cost_price']);
-                if ($s['stock'] == 0 && $s['retail_price'] == 0 && $s['cost_price']) {
-                    continue;
-                }
-                if ($s['stock'] <= 0) {
-                    return ['code' => '3003'];//请填写库存
-                }
-                if ($s['retail_price'] <= 0) {
-                    return ['code' => '3004'];//请填写零售价
-                }
-                if ($s['cost_price'] <= 0) {
-                    return ['code' => '3005'];//请填写成本价
+                $stockAll = bcadd($stockAll, $s['stock'], 2);
+                if ($s['stock'] > 0) {
+                    if ($s['retail_price'] == 0) {
+                        return ['code' => '3004'];//请填写零售价
+                    }
+                    if ($s['cost_price'] == 0) {
+                        return ['code' => '3005'];//请填写成本价
+                    }
                 }
             }
-            if ($stockAll <= 0 || $retailPriceAll <= 0 || $costPriceAll <= 0) {
-                return ['code' => '3006'];//没有可售的规格商品
+            if ($stockAll <= 0) {
+                return ['code' => '3003'];//没有可售库存
             }
-
             //1.详情图 2.轮播图
             $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
             $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
             if (!in_array(1, $goodsImageType)) {//没有详情图
-                return ['code' => '3007'];
+                return ['code' => '3006'];
             }
             if (!in_array(2, $goodsImageType)) {//没有轮播图
-                return ['code' => '3008'];
+                return ['code' => '3007'];
             }
         }
         $data = [//修改状态
@@ -616,7 +607,7 @@ class Goods {
         ];
         $res  = DbGoods::editGoods($data, $id);
         if (empty($res)) {
-            return ["code" => '3009'];
+            return ["code" => '3008'];
         }
         return ["msg" => '成功', "code" => '200'];
     }
