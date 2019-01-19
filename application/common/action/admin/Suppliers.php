@@ -106,7 +106,7 @@ class Suppliers {
             return ['code' => '3006'];//供应商id不存在
         }
         $supplierName = DbGoods::getOneSupplier([['name', '=', $name], ['id', '<>', $id]], 'id');
-        if (empty($supplierName)) {
+        if (!empty($supplierName)) {
             return ['code' => '3007'];//供应商名称不能重复
         }
         /* 初始化数组 */
@@ -301,7 +301,7 @@ class Suppliers {
         if (empty($result)) {
             return ['code' => '3000']; /* 不能为空 */
         }
-        return ['code' => '200', $result];
+        return ['code' => '200', 'data' => $result];
     }
 
     /**
