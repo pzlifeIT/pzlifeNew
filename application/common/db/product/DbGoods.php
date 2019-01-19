@@ -887,6 +887,16 @@ class DbGoods {
     }
 
     /**
+     * 添加运费模版价格详情
+     * @param $data
+     * @return mixed
+     * @author
+     */
+    public function editSupplierFreightdetail($data, $id) {
+        return $this->supplierFreightDetail->save($data, $id);
+    }
+
+    /**
      * 获取运费模版价格详情列表
      * @param $where
      * @param string $field

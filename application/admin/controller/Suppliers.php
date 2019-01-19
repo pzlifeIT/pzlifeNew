@@ -276,7 +276,12 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 每页条数
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID和页码和每页条数只能是数字
-     * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} freight_id 快递模版ID
+     * @apiSuccess (data) {Decimal} price 邮费单价
+     * @apiSuccess (data) {Decimal} after_price 续件价格
+     * @apiSuccess (data) {Decimal} total_price 包邮价格
+     * @apiSuccess (data) {Decimal} unit_price 计价单位包邮价(重量按kg 体积按m³)
      * @apiSampleRequest /admin/suppliers/getSupplierFreightdetailList
      * @author rzc
      */
@@ -369,13 +374,14 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierFreightdetail
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreightdetail
-     * @apiParam (入参) {Number} sfd_id 快递模版ID
+     * @apiParam (入参) {Number} sfd_id 快递模版运费详情ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模版ID只能是数字
-     * @apiSuccess (data) {String} data 结果
-     * @apiSuccess (data) {String} supplier_freight_Id 快递模版ID
-     * @apiSuccess (data) {String} stype 计价方式1.件数 2.重量 3.体积
-     * @apiSuccess (data) {String} title 标题
-     * @apiSuccess (data) {String} desc 详情
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} freight_id 快递模版ID
+     * @apiSuccess (data) {Decimal} price 邮费单价
+     * @apiSuccess (data) {Decimal} after_price 续件价格
+     * @apiSuccess (data) {Decimal} total_price 包邮价格
+     * @apiSuccess (data) {Decimal} unit_price 计价单位包邮价(重量按kg 体积按m³)
      * @apiSampleRequest /admin/suppliers/getSupplierFreightdetail
      * @author rzc
      */
@@ -394,10 +400,11 @@ class Suppliers extends AdminController {
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplierFreightdetail
      * @apiParam (入参) {Number} freight_id 运费模版模版ID
-     * @apiParam (入参) {decimal} price 邮费单价
-     * @apiParam (入参) {decimal} after_price 续件价格
-     * @apiParam (入参) {decimal} total_price 包邮价格
-     * @apiSuccess (返回) {String} code 200:成功 /3001:运费模版Id类型错误 / 3002:价格只能是数字
+     * @apiParam (入参) {decimal} [price] 邮费单价 默认0
+     * @apiParam (入参) {decimal} [after_price] 续件价格 默认0
+     * @apiParam (入参) {decimal} [total_price] 包邮价格 默认0
+     * @apiParam (入参) {decimal} [unit_price] 计价单位包邮价(重量按kg 体积按m³) 默认0
+     * @apiSuccess (返回) {String} code 200:成功 /3001:运费模版Id错误 / 3002:价格只能是数字 / 3003:运费模版不存在
      * @apiSuccess (返回) {String} data 结果
      * @apiSampleRequest /admin/suppliers/addSupplierFreightdetail
      * @author rzc
@@ -407,13 +414,53 @@ class Suppliers extends AdminController {
         $price       = trim($this->request->post('price'));
         $after_price = trim($this->request->post('after_price'));
         $total_price = trim($this->request->post('total_price'));
-        if (!is_numeric($freight_id)) {
+        $unit_price  = trim($this->request->post('unit_price'));
+        if (!is_numeric($freight_id) || $freight_id < 0) {
             return ['code' => '3001'];
         }
+        $price       = empty($price) ? 0 : $price;
+        $after_price = empty($after_price) ? 0 : $after_price;
+        $total_price = empty($total_price) ? 0 : $total_price;
+        $unit_price  = empty($unit_price) ? 0 : $unit_price;
         if (!is_numeric($price) || !is_numeric($after_price) || !is_numeric($total_price)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), number_format($price, 2), number_format($after_price, 2), number_format($total_price, 2));
+        $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), floatval($price, 2), floatval($after_price, 2), floatval($total_price, 2), floatval($unit_price));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改供应商快递模板运费
+     * @apiDescription   editSupplierFreightdetail
+     * @apiGroup         admin_Suppliers
+     * @apiName          editSupplierFreightdetail
+     * @apiParam (入参) {Number} freight_id 运费模版模版ID
+     * @apiParam (入参) {decimal} [price] 邮费单价 默认0
+     * @apiParam (入参) {decimal} [after_price] 续件价格 默认0
+     * @apiParam (入参) {decimal} [total_price] 包邮价格 默认0
+     * @apiParam (入参) {decimal} [unit_price] 计价单位包邮价(重量按kg 体积按m³) 默认0
+     * @apiSuccess (返回) {String} code 200:成功 /3001:运费模版Id错误 / 3002:价格只能是数字 / 3003:运费详情不存在
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSampleRequest /admin/suppliers/editsupplierfreightdetail
+     * @author rzc
+     */
+    public function editSupplierFreightdetail() {
+        $freight_detail_id = trim($this->request->post('freight_detail_id'));
+        $price             = trim($this->request->post('price'));
+        $after_price       = trim($this->request->post('after_price'));
+        $total_price       = trim($this->request->post('total_price'));
+        $unit_price        = trim($this->request->post('unit_price'));
+        if (!is_numeric($freight_detail_id) || $freight_detail_id < 0) {
+            return ['code' => '3001'];
+        }
+        $price       = empty($price) ? 0 : $price;
+        $after_price = empty($after_price) ? 0 : $after_price;
+        $total_price = empty($total_price) ? 0 : $total_price;
+        $unit_price  = empty($unit_price) ? 0 : $unit_price;
+        if (!is_numeric($price) || !is_numeric($after_price) || !is_numeric($total_price)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->suppliers->editSupplierFreightdetail(intval($freight_detail_id), floatval($price, 2), floatval($after_price, 2), floatval($total_price, 2), floatval($unit_price));
         return $result;
     }
 

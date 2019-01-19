@@ -24,7 +24,7 @@ class Suppliers {
         $field  = 'id,tel,name,status,image,title,desc';
         $order  = 'id,desc';
         $limit  = $offset . ',' . $pagenum;
-        $where = [['name', 'like', '%' . $supplierName . '%']];
+        $where  = [['name', 'like', '%' . $supplierName . '%']];
         $result = DbGoods::getSupplier($field, $where, $order, $limit);
         $totle  = DbGoods::getSupplierCount($where);
         if (empty($result)) {
@@ -193,7 +193,6 @@ class Suppliers {
             return ['code' => '3000'];
         }
         return ['code' => '200', 'data' => $result];
-        return ['code' => '200', 'data' => $result];
     }
 
     /**
@@ -225,7 +224,7 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreightdetailList($freight_id, $page, $pagenum) {
-        $field  = 'id,freight_id,price,after_price,total_price';
+        $field  = 'id,freight_id,price,after_price,total_price,unit_price';
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -297,7 +296,7 @@ class Suppliers {
      * @author rzc
      */
     public function getSupplierFreightdetail($id) {
-        $field  = 'id,freight_id,area_id,price,after_price,total_price';
+        $field  = 'id,freight_id,price,after_price,total_price,unit_price';
         $result = DbGoods::getSupplierFreightdetailRow($field, $id);
         if (empty($result)) {
             return ['code' => '3000']; /* 不能为空 */
@@ -311,17 +310,48 @@ class Suppliers {
      * @param $price
      * @param $after_price
      * @param $total_price
+     * @param $unit_price
      * @return array
      * @author rzc
      */
-    public function addSupplierFreightdetail($freight_id, $price, $after_price, $total_price) {
+    public function addSupplierFreightdetail($freight_id, $price, $after_price, $total_price, $unit_price) {
+        $supplierFreight = DbGoods::getSupplierFreight('id', $freight_id);
+        if (empty($supplierFreight)) {
+            return ['code' => '3003'];
+        }
         /* 查询该运费模板ID是否添加过此区域 */
         $supplier_freight_detail                = [];
         $supplier_freight_detail['freight_id']  = $freight_id;
         $supplier_freight_detail['price']       = $price;
         $supplier_freight_detail['after_price'] = $after_price;
         $supplier_freight_detail['total_price'] = $total_price;
+        $supplier_freight_detail['unit_price']  = $unit_price;
         $add                                    = DbGoods::addSupplierFreightdetail($supplier_freight_detail);
+        return ['code' => 200, 'id' => $add];
+    }
+
+    /**
+     * 添加供应商快递模板运费
+     * @param $freight_detail_id
+     * @param $price
+     * @param $after_price
+     * @param $total_price
+     * @param $unit_price
+     * @return array
+     * @author zyr
+     */
+    public function editSupplierFreightdetail($freight_detail_id, $price, $after_price, $total_price, $unit_price) {
+        $freightDetail = DbGoods::getSupplierFreightdetailRow($freight_detail_id);
+        if (empty($freightDetail)) {
+            return ['code' => '3003'];
+        }
+        /* 查询该运费模板ID是否添加过此区域 */
+        $supplier_freight_detail                = [];
+        $supplier_freight_detail['price']       = $price;
+        $supplier_freight_detail['after_price'] = $after_price;
+        $supplier_freight_detail['total_price'] = $total_price;
+        $supplier_freight_detail['unit_price']  = $unit_price;
+        $add                                    = DbGoods::addSupplierFreightdetail($supplier_freight_detail, $freight_detail_id);
         return ['code' => 200, 'id' => $add];
     }
 
