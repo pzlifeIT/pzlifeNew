@@ -425,7 +425,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($price) || !is_numeric($after_price) || !is_numeric($total_price)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), floatval($price, 2), floatval($after_price, 2), floatval($total_price, 2), floatval($unit_price));
+        $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), floatval($price), floatval($after_price), floatval($total_price), floatval($unit_price));
         return $result;
     }
 
