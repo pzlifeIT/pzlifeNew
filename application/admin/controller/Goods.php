@@ -208,9 +208,11 @@ class Goods extends AdminController {
      * @apiSuccess (data) {Number} sku_image 规格详情图
      * @apiSuccess (data) {Number} spec 属性id列表
      * @apiSuccess (data) {String} freight_title 运费模版标题
-     * @apiSuccess (data) {Number} attr 属性列表
+     * @apiSuccess (data) {Array} attr 属性列表
      * @apiSuccess (data) {Number} integral_price 积分售价
      * @apiSuccess (data) {Number} integral_active 积分赠送
+     * @apiSuccess (data) {Number} weight 重量(单位kg)用作计算运费
+     * @apiSuccess (data) {Number} volume 体积(单位m³)用作计算运费
      * @apiSampleRequest /admin/goods/getgoodssku
      * @return array
      * @author zyr
@@ -230,17 +232,19 @@ class Goods extends AdminController {
      * @apiDescription   editGoodsSku
      * @apiGroup         admin_goods
      * @apiName          editGoodsSku
-     * @apiParam (入参) {Number} sku_id
-     * @apiParam (入参) {Number} stock 库存
-     * @apiParam (入参) {Number} freight_id 运费模版id
-     * @apiParam (入参) {Number} market_price 市场价
-     * @apiParam (入参) {Number} retail_price 零售价
-     * @apiParam (入参) {Number} cost_price 成本价
-     * @apiParam (入参) {Number} margin_price 其他运费成本
-     * @apiParam (入参) {Number} integral_price 积分售价
-     * @apiParam (入参) {Number} integral_active 积分赠送
-     * @apiParam (入参) {Number} sku_image 规格详情图
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误 / 3010:请填写零售价和成本价
+     * @apiParam (入参) {Int} sku_id
+     * @apiParam (入参) {Int} stock 库存
+     * @apiParam (入参) {Int} freight_id 运费模版id
+     * @apiParam (入参) {Decimal} market_price 市场价
+     * @apiParam (入参) {Decimal} retail_price 零售价
+     * @apiParam (入参) {Decimal} cost_price 成本价
+     * @apiParam (入参) {Decimal} margin_price 其他运费成本
+     * @apiParam (入参) {Int} integral_price 积分售价
+     * @apiParam (入参) {Int} integral_active 积分赠送
+     * @apiParam (入参) {String} sku_image 规格详情图
+     * @apiParam (入参) {Decimal} [weight] 重量(单位kg)用作计算运费
+     * @apiParam (入参) {Decimal} [volume] 体积(单位m³)用作计算运费
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误 / 3010:请填写零售价和成本价 / 3011:选择重量模版必须填写重量 / 3012:选择体积模版必须填写体积 / 3013:商品下架才能编辑
      * @apiSampleRequest /admin/goods/editgoodssku
      * @return array
      * @author zyr
@@ -255,6 +259,8 @@ class Goods extends AdminController {
         $marginPrice    = trim($this->request->post('margin_price'));//其他运费成本
         $integralPrice  = trim($this->request->post('integral_price'));//积分售价
         $integralActive = trim($this->request->post('integral_active'));//积分赠送
+        $weight         = trim($this->request->post('weight'));//重量
+        $volume         = trim($this->request->post('volume'));//体积
         $skuImage       = trim($this->request->post('sku_image'));//规格详情图
         if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
             return ['code' => '3001'];
@@ -284,7 +290,7 @@ class Goods extends AdminController {
             'integral_active' => $integralActive,
             'sku_image'       => $skuImage,
         ];
-        $result = $this->app->goods->editGoodsSku($skuId, $data);
+        $result = $this->app->goods->editGoodsSku($skuId, $data, $weight, $volume);
         return $result;
     }
 

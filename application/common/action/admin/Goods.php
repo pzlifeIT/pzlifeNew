@@ -156,9 +156,11 @@ class Goods {
      * 编辑商品sku
      * @param $skuId
      * @param $data
+     * @param $weight
+     * @param $volume
      * @return array
      */
-    public function editGoodsSku($skuId, $data) {
+    public function editGoodsSku($skuId, $data, $weight, $volume) {
         $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,goods_id,sku_image', true);
         if (empty($sku)) {
             return ['code' => '3007'];//skuid不存在
@@ -166,6 +168,23 @@ class Goods {
         if ($data['stock'] > 0) {
             if ($data['retail_price'] <= 0 || $data['cost_price'] <= 0) {
                 return ['code' => '3010'];//请填写零售价和成本价
+            }
+        }
+        $goodsId  = $sku['goods_id'];
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
+        if ($goodsRow['status'] == 1) {
+            return ['code' => '3013'];//商品下架才能编辑
+        }
+        $freightId    = $data['freight_id'];
+        $supplieStype = DbGoods::getSupplierFreight('stype', $freightId);
+        if ($supplieStype['stype'] == 2) {//重量
+            if (!is_numeric($weight) || $weight <= 0) {
+                return ['code' => '3011'];//选择重量模版必须填写重量
+            }
+        }
+        if ($supplieStype['stype'] == 3) {//体积
+            if (!is_numeric($volume) || $volume <= 0) {
+                return ['code' => '3012'];//选择体积模版必须填写体积
             }
         }
         $image = $data['sku_image'];
@@ -181,8 +200,6 @@ class Goods {
             $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
             $data['sku_image'] = $image;
         }
-        $goodsId        = $sku['goods_id'];
-        $goodsRow       = DbGoods::getOneGoods(['id' => $goodsId], 'supplier_id');
         $supplierId     = $goodsRow['supplier_id'];//供应商id
         $supplierIdList = DbGoods::getSupplierFreights('id', $supplierId);
         $supplierIdList = array_column($supplierIdList, 'id');
@@ -390,7 +407,7 @@ class Goods {
 //        }
 
 
-        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image');
+        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,weight,volume,spec,sku_image');
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -577,7 +594,7 @@ class Goods {
         }
         if ($type == 1) {// 上架
             $stockAll = 0;
-            $sku = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $sku      = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
                 $stockAll = bcadd($stockAll, $s['stock'], 2);
                 if ($s['stock'] > 0) {
