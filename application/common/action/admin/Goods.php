@@ -206,6 +206,8 @@ class Goods {
         if (!in_array($data['freight_id'], $supplierIdList)) {
             return ['code' => '3009'];
         }
+        $data['weight'] = $weight;
+        $data['volume'] = $volume;
         Db::startTrans();
         try {
             if (!empty($logImage)) {

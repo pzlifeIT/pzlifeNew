@@ -384,6 +384,8 @@ class Goods extends AdminController {
      * @apiSuccess (sku) {Number} sku_image 规格详情图
      * @apiSuccess (sku) {Number} spec 属性id列表
      * @apiSuccess (sku) {Number} attr 属性列表
+     * @apiParam (入参) {Decimal} [weight] 重量(单位kg)用作计算运费
+     * @apiParam (入参) {Decimal} [volume] 体积(单位m³)用作计算运费
      * @apiSampleRequest /admin/goods/getonegoods
      * @author zyr
      */
