@@ -474,7 +474,7 @@ class Goods {
         $sku = [];
         if (in_array(4, $getType)) {
             $where = [["goods_id", "=", $id]];
-            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,spec,sku_image";
+            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,weight,volume,spec,sku_image";
             $sku   = DbGoods::getSku($where, $field);
         }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
