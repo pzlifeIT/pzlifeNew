@@ -4,8 +4,13 @@ namespace app\index\controller;
 
 use app\index\MyController;
 
-class Category extends MyController
-{
+class Category extends MyController {
+    protected $beforeActionList = [
+//        'isLogin',//所有方法的前置操作
+        'isLogin' => ['except' => 'getFirstCate'],//除去getFirstCate其他方法都进行isLogin前置操作
+//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 分类
      * @apiDescription   getFirstCate
@@ -17,7 +22,7 @@ class Category extends MyController
      * @author wujunjie
      * 2019/1/7-9:47
      */
-    public function getFirstCate(){
+    public function getFirstCate() {
         $res = $this->app->category->getFirstCate();
         return $res;
     }

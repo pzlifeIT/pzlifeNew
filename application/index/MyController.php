@@ -14,6 +14,9 @@ class MyController extends Controller {
         if (Config::get('deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
         }
+        if (Config::get('deploy') == 'production') {//生产环境
+            header('Access-Control-Allow-Origin:*');
+        }
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
@@ -24,6 +27,7 @@ class MyController extends Controller {
      * 获取所在的项目入口(index,admin)
      * @param $file
      * @return bool|string
+     * @author zyr
      */
     protected function controllerBaseName($file) {
         $path  = dirname(dirname($file));
@@ -35,6 +39,7 @@ class MyController extends Controller {
      * 获取不包含命名空间的类名
      * @param $class
      * @return string
+     * @author zyr
      */
     protected function classBasename($class) {
         $class = is_object($class) ? get_class($class) : $class;
@@ -47,6 +52,7 @@ class MyController extends Controller {
      * @param $data
      * @param string $method
      * @return array|mixed
+     * @author zyr
      */
     protected function sendRequest($requestUrl, $data, $method = 'post') {
         $methonArr = ['get', 'post'];
@@ -76,6 +82,7 @@ class MyController extends Controller {
      * 验证手机格式
      * @param $mobile
      * @return bool
+     * @author zyr
      */
     protected function checkMobile($mobile) {
         if (!empty($mobile) && preg_match('/^1[3-9]{1}\d{9}$/', $mobile)) {
@@ -87,6 +94,7 @@ class MyController extends Controller {
     /**
      * api验证
      * @return array
+     * @author zyr
      */
     private function checkApi() {
         $params = $this->request->param();
@@ -107,6 +115,7 @@ class MyController extends Controller {
      * 接口时间戳验证
      * @param int $timestamp
      * @return bool
+     * @author zyr
      */
     private function checkTimestamp($timestamp = 0) {
         $nowTime  = time();
@@ -122,6 +131,7 @@ class MyController extends Controller {
      * @param $sign
      * @param $params
      * @return bool
+     * @author zyr
      */
     private function checkSign($sign, $params) {
         unset($params['timestamp']);
@@ -137,5 +147,20 @@ class MyController extends Controller {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 验证con_id登录
+     */
+    protected function isLogin() {
+        $conId = trim($this->request->post('con_id'));
+        if (!empty($conId) && strlen($conId) == 16) {
+            $res = $this->app->user->isLogin($conId);//判断是否登录
+            if ($res['code'] == '200') {
+                return;
+            }
+            exit(json_encode($res));
+        }
+        exit(json_encode(['code' => '5000']));
     }
 }

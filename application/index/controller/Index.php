@@ -3,6 +3,7 @@
 namespace app\index\controller;
 
 use app\index\MyController;
+use cache\Phpredis;
 use Env;
 use Config;
 use think\Db;
@@ -30,8 +31,20 @@ class Index extends MyController {
     }
 
     public function hello() {
+//        echo enUid(25739);die;
+        $this->redis       = Phpredis::getConn();
+
+        echo $this->redis->zScore('index:user:conId:expiration','35c219b263cac833');die;
+//        echo $this->redis->zDelete('index:user:conId:expiration', '35c219b263cac833');die;
+
+//        var_dump($this->redis->del('index:user:userinfo:25739'));die;
+//        print_r($this->redis->hGetAll('index:user:conId:uid'));die;
+//        print_r( $this->redis->hGetAll('index:user:userinfo:25739'));die;
+
+
 //        print_r(hash_algos());die;
-        echo strlen('5737c4cdd65cd45c8a01988b590dafa93b0818b469243c28dea94a007477148b');die;
+        echo strlen('5737c4cdd65cd45c8a01988b590dafa93b0818b469243c28dea94a007477148b');
+        die;
         $password = '123456';
         $pwd      = hash_hmac('sha3-256', hash_hmac('md5', $password, ''), 'userpass', false);
         echo $pwd;
