@@ -53,7 +53,7 @@ class Cart extends MyController
         }
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
         // $uid = $this->app->user->deUid($paramUid);
-        $result = $this->app->cart->getUserCart($paramUid);
+        $result = $this->app->cart->getUserCart($conId);
         return $result;
 
     }
@@ -99,8 +99,8 @@ class Cart extends MyController
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
         // $uid = $this->app->user->enUid($paramUid);
         // echo $uid;die;
-        if (empty($paramUid) || empty($goods_skuid)) {
-            return ['code' => '3002', 'msg' => '缺少参数:uid或者商品SKUID'];
+        if (empty($goods_skuid)) {
+            return ['code' => '3009', 'msg' => '缺少参数:uid或者商品SKUID'];
         }
         if (!is_numeric($goods_skuid)) {
             return ['code' => '3003', 'msg' => '商品SKU_ID必须是数字'];
@@ -111,11 +111,9 @@ class Cart extends MyController
         if (!is_numeric($track_id)) {
             return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
         }
-        if (strlen($paramUid) != 32) {
-            return ['code' => 3001];
-        }
+        
 
-        $result = $this->app->cart->addCartGoods($paramUid, intval($goods_skuid), intval($goods_num), intval($track_id));
+        $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), intval($track_id));
         return $result;
     }
 
@@ -172,7 +170,7 @@ class Cart extends MyController
         if (!is_numeric($track_id)) {
             return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
         }
-        $result = $this->app->cart->updateCartGoods($paramUid, intval($goods_skuid), intval($goods_num), intval($track_id));
+        $result = $this->app->cart->updateCartGoods($conId, intval($goods_skuid), intval($goods_num), intval($track_id));
         return $result;
     }
 
@@ -215,7 +213,7 @@ class Cart extends MyController
             return ['code' => '3001'];
         }
         
-        $result = $this->app->cart->editUserCart($paramUid, $del_shopid, $del_skuid);
+        $result = $this->app->cart->editUserCart($conId, $del_shopid, $del_skuid);
         return $result;
     }
 }

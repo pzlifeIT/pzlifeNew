@@ -5,18 +5,10 @@ namespace app\common\action\index;
 use app\common\action\index\User;
 use app\facade\DbGoods;
 use app\facade\DbShops;
-use \cache\Phpredis;
 use function Qiniu\json_decode;
 
-class Cart
+class Cart extends CommonIndex
 {
-    private $redis;
-
-    public function __construct()
-    {
-        $this->redis = Phpredis::getConn();
-    }
-
     /**
      * 加入购物车
      * @param $uid
