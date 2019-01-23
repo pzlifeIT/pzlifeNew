@@ -25,11 +25,14 @@ class Cart
      * @param $track_id
      * @author rzc
      */
-    public function addCartGoods($paramUid, $goods_skuid, $buy_num, $track_id)
+    public function addCartGoods($conId, $goods_skuid, $buy_num, $track_id)
     {
         // phpinfo();
        
-        $uid =deUid($paramUid);
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
 
         /* 获取该商品规格属性ID */
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
@@ -98,9 +101,12 @@ class Cart
      * @param $uid
      * @author rzc
      */
-    public function getUserCart($uid){
+    public function getUserCart($conId){
 
-        $uid = deUid($uid);
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
         $cart = $this->redis->hgetall('cart:' . $uid);
         if ($cart) {
             $expirat_time = $this->redis->expire('cart:' . $uid,2592000); 
@@ -213,11 +219,11 @@ class Cart
      * @param $track_id
      * @author rzc
      */
-    public function updateCartGoods($paramUid, $goods_skuid, $buy_num, $track_id){
+    public function updateCartGoods($conId, $goods_skuid, $buy_num, $track_id){
        
-        $uid = deUid($paramUid);
-        if (!$uid) {
-            return ['code' => '3006'];//用户ID不存在
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
         }
         $expirat_time = $this->redis->expire('cart:' . $uid,2592000); 
         $cart = $this->redis->hget('cart:' . $uid,'skuid:'.$goods_skuid);
@@ -273,14 +279,14 @@ class Cart
      * @param $track_id
      * @author rzc
      */
-    public function editUserCart($paramUid,$del_shopid,$del_skuid){
+    public function editUserCart($conId,$del_shopid,$del_skuid){
        
-        $uid = deUid($paramUid);
-        if (!$uid) {
-            return ['code' => '3002','msg' => '用户ID不存在'];
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
         }
         if (empty($del_shopid)) {
-            return ['code' => '3003','msg' => '删除店铺ID为空'];
+            return ['code' => '3002','msg' => '删除店铺ID为空'];
         }
         if (empty($del_skuid)) {
             return ['code' => '3004','msg' => '删除SKU_ID为空'];
