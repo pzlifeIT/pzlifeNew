@@ -2,50 +2,329 @@
 
 namespace app\common\action\index;
 
+use app\common\action\notify\Note;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
-use cache\Phpredis;
 use Env;
 use Config;
+use think\Db;
 
-class User {
-    private $redis;
-    private $cryptMethod;
-    private $cryptKey;
-    private $cryptIv;
-    private $iv = '00000000';
+class User extends CommonIndex {
     private $cipherUserKey = 'userpass';//用户密码加密key
-    private $redisKey = 'index:user:userinfo:';
+    private $note;
 
     public function __construct() {
-        $this->redis       = Phpredis::getConn();
-        $this->cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
-        $this->cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
-        $this->cryptIv     = Env::get('cipher.userAesIv', '11111111');
+        parent::__construct();
+        $this->note = new Note();
     }
 
+    /**
+     * 账号密码登录
+     * @param $mobile
+     * @param $password
+     * @return array
+     * @author zyr
+     */
+    public function login($mobile, $password) {
+        $user = DbUser::getUserOne(['mobile' => $mobile], 'id,passwd');
+        $uid  = $user['id'];
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
+        if ($cipherPassword != $user['passwd']) {
+            return ['code' => '3003'];
+        }
+        $conId   = $this->createConId();
+        $userCon = DbUser::getUserCon(['uid' => $uid], 'id', true);
+        if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+            $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            if ($conUid === false) {
+                $this->redis->zDelete($this->redisConIdTimem, $conId);
+                $this->redis->hDel($this->redisConIdUid, $conId);
+            }
+            return ['code' => '200', 'con_id' => $conId];
+        }
+        return ['code' => '3004'];
+    }
+
+    /**
+     * 快捷登录
+     * @param $mobile
+     * @param $vercode
+     * @param $openid
+     * @param $nickName
+     * @param $avatar
+     * @return array
+     * @author zyr
+     */
+    public function quickLogin($mobile, $vercode, $openid, $nickName, $avatar) {
+        $stype = 3;
+        if ($this->checkVercode($stype, $mobile, $vercode) === false) {
+            return ['code' => '3006'];//验证码错误
+        }
+        $updateData = [];
+        $addData    = [];
+        $uid        = $this->checkAccount($mobile);
+        if (empty($uid)) {
+            $user = DbUser::getUserOne(['openid' => $openid], 'id');
+            if (!empty($user)) {//注册了微信的老用户
+                $uid        = $user['id'];
+                $updateData = [
+                    'mobile' => $mobile,
+                ];
+            } else {
+                $addData = [
+                    'mobile'    => $mobile,
+                    'openid'    => $openid,
+                    'nick_name' => $nickName,
+                    'avatar'    => $avatar,
+                ];
+            }
+        }
+        if (!empty($uid)) {
+            $userCon = DbUser::getUserCon(['uid' => $uid], 'id', true);
+        }
+        Db::startTrans();
+        try {
+            $conId = $this->createConId();
+            if (!empty($updateData)) {
+                DbUser::updateUser($updateData, $uid);
+            } else if (!empty($addData)) {
+                $uid = DbUser::addUser($addData);//添加后生成的uid
+            }
+            if (!empty($userCon)) {
+                DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
+            } else {
+                DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
+            }
+            $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            if ($conUid === false) {
+                $this->redis->zDelete($this->redisConIdTimem, $conId);
+                $this->redis->hDel($this->redisConIdUid, $conId);
+                Db::rollback();
+            }
+            $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
+            Db::commit();
+            return ['code' => '200', 'con_id' => $conId];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007'];
+        }
+    }
+
+    /**
+     * 新用户注册
+     * @param $mobile
+     * @param $vercode
+     * @param $password
+     * @param $openid
+     * @param $nickName
+     * @param $avatar
+     * @return array
+     * @author zyr
+     */
+    public function register($mobile, $vercode, $password, $openid, $nickName, $avatar) {
+        $stype = 1;
+        if ($this->checkVercode($stype, $mobile, $vercode) === false) {
+            return ['code' => '3006'];//验证码错误
+        }
+        if (!empty($this->checkAccount($mobile))) {
+            return ['code' => '3008'];
+        }
+        $uid  = 0;
+        $user = DbUser::getUserOne(['openid' => $openid], 'id');
+        if (!empty($user)) {
+            $uid = $user['id'];
+        }
+        $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
+        $data           = [
+            'mobile'    => $mobile,
+            'passwd'    => $cipherPassword,
+            'openid'    => $openid,
+            'nick_name' => $nickName,
+            'avatar'    => $avatar,
+        ];
+        Db::startTrans();
+        try {
+            if (empty($uid)) {//新用户,直接添加
+                $uid = DbUser::addUser($data);//添加后生成的uid
+            } else {//老版本用户
+                DbUser::updateUser($data, $uid);
+            }
+            $conId = $this->createConId();
+            DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
+            $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            if ($conUid === false) {
+                $this->redis->zDelete($this->redisConIdTimem, $conId);
+                $this->redis->hDel($this->redisConIdUid, $conId);
+                Db::rollback();
+            }
+            $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
+            Db::commit();
+            return ['code' => '200', 'con_id' => $conId];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007'];
+        }
+    }
+
+    /**
+     * 重置密码
+     * @param $mobile
+     * @param $vercode
+     * @param $password
+     * @return array
+     * @author zyr
+     */
+    public function resetPassword($mobile, $vercode, $password) {
+        $stype = 2;
+        $uid   = $this->checkAccount($mobile);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        if ($this->checkVercode($stype, $mobile, $vercode) === false) {
+            return ['code' => '3006'];//验证码错误
+        }
+        $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
+        $result         = DbUser::updateUser(['passwd' => $cipherPassword], $uid);
+        if ($result) {
+            $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
+            return ['code' => '200'];
+        }
+        return ['code' => '3003'];
+    }
+
+    /**
+     * 微信登录
+     * @param $openid
+     * @return array
+     * @author zyr
+     */
     public function loginUserByOpenid($openid) {
         $user = DbUser::getUser(['openid' => $openid]);
         if (empty($user)) {
             return ['code' => '3000'];
         }
-        $uid = $this->enUid($user['id']);
+        $uid = enUid($user['id']);
         $id  = $user['id'];
         unset($user['id']);
         $user['uid'] = $uid;
-        $this->saveUser($id, $user);
-        return ['code' => '200', 'data' => ['uid' => $uid, 'mobile' => $user['mobile']]];
+//        $this->saveUser($id, $user);//用户信息保存在缓存
+        if (empty($user['mobile'])) {
+            return ['code' => '3002'];
+        }
+        $conId   = $this->createConId();
+        $userCon = DbUser::getUserCon(['uid' => $id], 'id', true);
+        if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+            $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            if ($conUid === false) {
+                $this->redis->zDelete($this->redisConIdTimem, $conId);
+                $this->redis->hDel($this->redisConIdUid, $conId);
+            }
+            return ['code' => '200', 'con_id' => $conId];
+        }
     }
 
-    public function getUser($uid) {
-        $id = $this->deUid($uid);
-        if ($this->redis->exists($this->redisKey . $id)) {
-            $res = $this->redis->hGetAll($this->redisKey . $id);
+    /**
+     * 验证用户是否存在
+     * @param $mobile
+     * @return bool
+     * @author zyr
+     */
+    private function checkAccount($mobile) {
+        $user = DbUser::getUserOne(['mobile' => $mobile], 'id');
+        if (!empty($user)) {
+            return $user['id'];
+        }
+        return 0;
+    }
+
+    /**
+     * 生成并发送验证码
+     * @param $mobile
+     * @param $stype
+     * @return array
+     * @author zyr
+     */
+    public function sendVercode($mobile, $stype) {
+        $redisKey   = $this->redisKey . 'vercode:' . $mobile . ':' . $stype;
+        $timeoutKey = $this->redisKey . 'vercode:timeout:' . $mobile . ':' . $stype;
+        $code       = $this->createVercode($mobile, $stype, $redisKey, $timeoutKey);
+        if (empty($code)) {//已发送过验证码
+            return ['code' => '3003'];//一分钟内不能重复发送
+        }
+        $content = getVercodeContent($code);//短信内容
+        $result  = $this->note->sendSms($mobile, $content);//发送短信
+        if ($result['code'] != '200') {
+            $this->redis->del($timeoutKey);
+            $this->redis->del($redisKey);
+            return ['code' => '3004'];//短信发送失败
+        }
+        DbUser::addLogVercode(['stype' => $stype, 'code' => $code, 'mobile' => $mobile]);
+        return ['code' => '200'];
+    }
+
+    /**
+     * 验证提交的验证码是否正确
+     * @param $stype
+     * @param $mobile
+     * @param $vercode
+     * @return bool
+     * @author zyr
+     */
+    private function checkVercode($stype, $mobile, $vercode) {
+        $redisKey  = $this->redisKey . 'vercode:' . $mobile . ':' . $stype;
+        $redisCode = $this->redis->get($redisKey);//服务器保存的验证码
+        if ($redisCode == $vercode) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 生成并保存验证码
+     * @param $mobile
+     * @param $stype
+     * @param $redisKey
+     * @param $timeoutKey
+     * @return string
+     * @author zyr
+     */
+    private function createVercode($mobile, $stype, $redisKey, $timeoutKey) {
+        if (!$this->redis->setNx($timeoutKey, 1)) {
+            return '0';//一分钟内不能重复发送
+        }
+        $this->redis->setTimeout($timeoutKey, 60);//60秒自动过期
+        $code = randCaptcha(6);//生成验证码
+        if ($this->redis->setEx($redisKey, 600, $code)) {//不重新发送酒10分钟过期
+            return $code;
+        }
+        return '0';
+    }
+
+    /**
+     * 获取用户信息
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function getUser($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        if ($this->redis->exists($this->redisKey . 'userinfo:' . $uid)) {
+            $res = $this->redis->hGetAll($this->redisKey . 'userinfo:' . $uid);
         } else {
-            $res        = DbUser::getUser(['id' => $id]);
-            $res['uid'] = $this->enUid($res['id']);
+            $res        = DbUser::getUser(['id' => $uid]);
+            $res['uid'] = enUid($res['id']);
             unset($res['id']);
-            $this->saveUser($id, $res);
+            $this->saveUser($uid, $res);
         }
         if (empty($res)) {
             return ['code' => '3000'];
@@ -53,21 +332,6 @@ class User {
         unset($res['id']);
         return ['code' => 200, 'data' => $res];
     }
-
-    /**
-     * 登录
-     */
-    public function login() {
-
-    }
-
-    /**
-     * 注册
-     */
-    public function register($openId, $password) {
-        $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
-    }
-
 
     /**
      * @return array
@@ -95,7 +359,6 @@ class User {
         return $user['user_identity'];
     }
 
-
     /**
      * 保存用户信息(记录到缓存)
      * @param $id
@@ -103,108 +366,56 @@ class User {
      * @author zyr
      */
     private function saveUser($id, $user) {
-        $saveTime = 60;
-        $this->redis->hMSet($this->redisKey . $id, $user);
-        $this->redis->expireAt($this->redisKey . $id, bcadd(time(), $saveTime, 0));//设置过期
-    }
-
-    /**
-     * @param $uid
-     * @param $ex
-     * @return int|string
-     */
-    public function enUid($uid, $ex = false) {
-        if (strlen($uid) > 15) {
-            return 0;
-        }
-        $iv = $this->iv;
-        if ($ex !== false) {
-            $iv = date('Ymd');
-        }
-        $uid = intval($uid);
-        return $this->encrypt($uid, $iv);
-    }
-
-    /**
-     * @param $enUid
-     * @param bool $ex
-     * @return int|string
-     */
-    public function deUid($enUid, $ex = false) {
-        $iv = $this->iv;
-        if ($ex !== false) {
-            $iv = date('Ymd');
-        }
-        return $this->decrypt($enUid, $iv);
-    }
-
-    /**
-     * 加密
-     * @param $str
-     * @param $iv
-     * @return string
-     */
-    private function encrypt($str, $iv) {
-        $encrypt = base64_encode(openssl_encrypt($str, $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv));
-        return $encrypt;
-    }
-
-    /**
-     * 解密
-     * @param $encrypt
-     * @param $iv
-     * @return int|string
-     */
-    private function decrypt($encrypt, $iv) {
-        $decrypt = openssl_decrypt(base64_decode($encrypt), $this->cryptMethod, $this->cryptKey, 0, $this->cryptIv . $iv);
-        if ($decrypt) {
-            return $decrypt;
-        } else {
-            return 0;
-        }
+        $saveTime = 600;//保存10分钟
+        $this->redis->hMSet($this->redisKey . 'userinfo:' . $id, $user);
+        $this->redis->expireAt($this->redisKey . 'userinfo:' . $id, bcadd(time(), $saveTime, 0));//设置过期
     }
 
     /**
      * 添加新地址
-     * @param $paramUid
+     * @param $conId
      * @param $province_id
      * @param $city_id
      * @param $area_id
      * @param $address
+     * @return array
      * @author rzc
      */
-    public function addUserAddress($paramUid, $province_id, $city_id, $area_id, $address) {
-        $uid = $this->deUid($paramUid);
+    public function addUserAddress($conId, $province_id, $city_id, $area_id, $address) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
         if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
-            return ['code' => 3001, 'msg' => '省市区ID必须为数字'];
+            return ['code' => '3001', 'msg' => '省市区ID必须为数字'];
         }
         if (empty($address)) {
-            return ['code' => 3002, 'msg' => '请填写详细街道地址'];
+            return ['code' => '3002', 'msg' => '请填写详细街道地址'];
         }
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
         $province = DbProvinces::getAreaInfo($field, $where);
         if (empty($province) || $province['level'] != '1') {
-            return ['code' => 3003, 'msg' => '错误的省份ID'];
+            return ['code' => '3007', 'msg' => '错误的省份ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $city_id];
         $city  = DbProvinces::getAreaInfo($field, $where);
         if (empty($city) || $city['level'] != '2') {
-            return ['code' => 3004, 'msg' => '错误的市级ID'];
+            return ['code' => '3004', 'msg' => '错误的市级ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $area_id];
         $area  = DbProvinces::getAreaInfo($field, $where);
         if (empty($area) || $area['level'] != '3') {
-            return ['code' => 3005, 'msg' => '错误的区级ID'];
+            return ['code' => '3005', 'msg' => '错误的区级ID'];
         }
         // $add = 
         if ($add) {
-            return ['code' => 200, 'msg' => '添加成功'];
+            return ['code' => '200', 'msg' => '添加成功'];
         } else {
-            return ['code' => 3006, 'msg' => '添加失败'];
+            return ['code' => '3006', 'msg' => '添加失败'];
         }
     }
 
@@ -213,10 +424,10 @@ class User {
      * @param $paramUid
      * @author rzc
      */
-    public function getUserAddress($paramUid) {
-        $uid = $this->deUid($paramUid);
-        if (!$uid) {
-            return ['code' => 3000, 'msg' => '该用户不存在'];
+    public function getUserAddress($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
         }
         $field = 'id,uid,province_id,city_id,area_id,address,default';
         $where = ['uid' => $uid];
@@ -232,10 +443,20 @@ class User {
      * @author zyr
      */
     private function getPassword($str, $key) {
-        $algo   = Config::get('app.cipher_algo');
+        $algo   = Config::get('conf.cipher_algo');
         $md5    = hash_hmac('md5', $str, $key);
         $key2   = strrev($key);
         $result = hash_hmac($algo, $md5, $key2);
         return $result;
+    }
+
+    /**
+     * 创建唯一conId
+     * @author zyr
+     */
+    private function createConId() {
+        $conId = uniqid(date('ymdHis'));
+        $conId = hash_hmac('fnv164', $conId, '');
+        return $conId;
     }
 }
