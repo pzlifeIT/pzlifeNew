@@ -102,4 +102,64 @@ class Goods extends MyController
         return $result;
     }
     
+    /**
+     * @api              {post} / 专题商品列表
+     * @apiDescription   getSubjectGoods
+     * @apiGroup         index_Goods
+     * @apiName          getSubjectGoods
+     * @apiParam (入参) {Number} subject_id 对应专题三级分类id
+     * @apiParam (入参) {Number} [page] 页码 (默认:1)
+     * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
+     * @apiSuccess (返回) {Number} total 总条数
+     * @apiSuccess (返回) {Array} data 分类数据
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} supplier_id 供应商ID
+     * @apiSuccess (data) {String} subject_id 分类ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (data) {String} title 主标题 
+     * @apiSuccess (data) {String} subtitle 副标题 
+     * @apiSuccess (data) {String} image 商品标题图 
+     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
+     * @apiSampleRequest /index/goods/getSubjectGoods
+     * @author rzc
+     */
+    public function getSubjectGoods(){
+        $subject_id = trim($this->request->post('subject_id'));
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
+
+        $goodslist = $this->app->goods->getSubjectGoods($subject_id,$page,$page_num);
+        return $goodslist;
+    }
+
+    /**
+     * @api              {post} / 搜索商品列表
+     * @apiDescription   getSubjectGoods
+     * @apiGroup         index_Goods
+     * @apiName          getSubjectGoods
+     * @apiParam (入参) {String} search 搜索内容
+     * @apiParam (入参) {Number} [page] 页码 (默认:1)
+     * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
+     * @apiSuccess (返回) {Number} total 总条数
+     * @apiSuccess (返回) {String} type_name 上级分类的name
+     * @apiSuccess (返回) {Array} data 分类数据
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} supplier_id 供应商ID
+     * @apiSuccess (data) {String} subject_id 分类ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (data) {String} title 主标题 
+     * @apiSuccess (data) {String} subtitle 副标题 
+     * @apiSuccess (data) {String} image 商品标题图 
+     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
+     * @apiSampleRequest /index/goods/getSubjectGoods
+     * @author rzc
+     */
 }

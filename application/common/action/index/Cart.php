@@ -28,8 +28,8 @@ class Cart
     public function addCartGoods($paramUid, $goods_skuid, $buy_num, $track_id)
     {
         // phpinfo();
-        $user = new User;
-        $uid = $user->deUid($paramUid);
+       
+        $uid =deUid($paramUid);
 
         /* 获取该商品规格属性ID */
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
@@ -99,8 +99,8 @@ class Cart
      * @author rzc
      */
     public function getUserCart($uid){
-        $user = new User;
-        $uid = $user->deUid($uid);
+
+        $uid = deUid($uid);
         $cart = $this->redis->hgetall('cart:' . $uid);
         if ($cart) {
             $expirat_time = $this->redis->expire('cart:' . $uid,2592000); 
@@ -214,8 +214,8 @@ class Cart
      * @author rzc
      */
     public function updateCartGoods($paramUid, $goods_skuid, $buy_num, $track_id){
-        $user = new User;
-        $uid = $user->deUid($paramUid);
+       
+        $uid = deUid($paramUid);
         if (!$uid) {
             return ['code' => '3006'];//用户ID不存在
         }
@@ -274,8 +274,8 @@ class Cart
      * @author rzc
      */
     public function editUserCart($paramUid,$del_shopid,$del_skuid){
-        $user = new User;
-        $uid = $user->deUid($paramUid);
+       
+        $uid = deUid($paramUid);
         if (!$uid) {
             return ['code' => '3002','msg' => '用户ID不存在'];
         }

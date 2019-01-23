@@ -954,7 +954,7 @@ class DbGoods {
         if ($image === true) {
             $obj = $obj->with([
                 'goodsSubjectImage' => function ($query) {
-                    $query->field('subject_id,image_path');
+                    $query->field('subject_id,source_type,image_path');
                 }]);
         }
         if ($row === true) {
@@ -1033,10 +1033,13 @@ class DbGoods {
      * @param bool $row
      * @return array
      */
-    public function getSubjectRelation($where, $field, $row = false) {
+    public function getSubjectRelation($where, $field, $row = false,$limit = false) {
         $obj = GoodsSubjectRelation::where($where)->field($field);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
+        }
+        if ($limit) {
+            return $obj->limit($limit)->select()->toArray();
         }
         return $obj->select()->toArray();
     }
@@ -1065,4 +1068,6 @@ class DbGoods {
     public function delSubject($data) {
         return GoodsSubject::destroy($data);
     }
+
+
 }

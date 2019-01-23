@@ -8,7 +8,7 @@ class Goods
 {
 
     /**
-     * 商品列表
+     * 分类商品列表
      * @param $cate_id
      * @param $page
      * @param $page_num
@@ -35,6 +35,10 @@ class Goods
         $order = 'id';
         $where = ['status' => 1, 'cate_id' => $cate_id];
         $result = DbGoods::getGoods($field, $limit, $order, $where);
+
+        if(empty($result)){
+            return ['code' => 200, 'data' => $result];
+        }
 
         /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
         foreach ($result as $key => $value) {
@@ -171,6 +175,81 @@ class Goods
         return [$goods_spec, $goods_sku];
     }
 
- 
+ /**
+     * 分类商品列表
+     * @param $cate_id
+     * @param $page
+     * @param $page_num
+     * @return array
+     * @author rzc
+     */
+    public function getSubjectGoods($subject_id, $page, $page_num)
+    {
+        $page = $page ? 1 : 1;
+        $page_num = $page_num ? 10 : 10;
+        if (!$subject_id) {
+            return ['code' => 3002, 'msg' => '参数不存在'];
+        }
+        if (!is_numeric($subject_id) || !is_numeric($page) || !is_numeric($page_num)) {
+            return ['code' => 3001, 'msg' => '参数必须是数字'];
+        }
+
+        
+        $offect = ($page - 1) * $page_num;
+        if ($offect < 0) {
+            return ['code' => '3000'];
+        }
+        $limit = $offect . ',' . $page_num;
+        $field = 'subject,tier,id';
+        $where = ['id'=>$subject_id];
+        $subject = DbGoods::getSubject($where, $field, true);
+        if ($subject['tier'] !=3) {
+            return ['code' => 3003,'msg'=>'传入专题ID有误'];
+        }
+        // getSubjectRelation($where, $field, $row = false,$limit = false)
+
+        $field = 'goods_id';
+        $where = ['subject_id'=>$subject_id];
+        $goodslist = DbGoods::getSubjectRelation($where, $field, false,$limit);
+        foreach ($goodslist as $goods => $list) {
+           $goodsid[]=$list['goods_id'];
+        }
+
+        if(empty($goodslist)){
+            return ['code' => 200, 'data' => []];
+        }
+        
+        /* 获取专题商品关联关系 */
+
+        $field = 'id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image';
+        $order = 'id';
+        // $where = ['status' => 1, 'cate_id' => $cate_id];
+        $where = [['status','=', 1], ['id' ,'IN', $goodsid]];
+        $result = DbGoods::getGoods($field, $limit, $order, $where);
+
+        if(empty($result)){
+            return ['code' => 200, 'data' => []];
+        }
+
+        /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
+        foreach ($result as $key => $value) {
+           /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+            $result[$key]['spec'] = $goods_spec;
+            $result[$key]['goods_sku'] = $goods_sku; */
+            $where = ['goods_id'=>$value['id']];
+            $field = 'market_price';
+            $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
+            $field = 'retail_price';
+            $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
+            list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+            foreach ($goods_sku as $goods => $sku) {
+                $retail_price[$sku['id']] = $sku['retail_price'];
+                $brokerage[$sku['id']] = $sku['brokerage'];
+            }
+            $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+            
+        }
+        return ['code' => 200, 'data' => $result];
+    }
 
 }
