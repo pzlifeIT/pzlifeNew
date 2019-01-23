@@ -184,7 +184,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getuser
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是16位 / 3002:缺少con_id / 3003:conId有误查不到uid
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:conId有误查不到uid
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSuccess (data) {String} id 用户加密id
      * @apiSuccess (data) {Number} user_type 1.普通账户2.总店账户
@@ -213,7 +213,7 @@ class User extends MyController {
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         $res = $this->app->user->getUser($conId);
@@ -252,7 +252,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserAddress
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:该用户没有地址 / 3001:con_id长度只能是16位 / 3002:缺少con_id / 3003:conId有误查不到uid
+     * @apiSuccess (返回) {String} code 200:成功 3000:该用户没有地址 / 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:conId有误查不到uid
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserAddress
      * @return array
@@ -263,7 +263,7 @@ class User extends MyController {
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserAddress($conId);
@@ -295,7 +295,7 @@ class User extends MyController {
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address);

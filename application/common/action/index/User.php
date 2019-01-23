@@ -254,7 +254,7 @@ class User extends CommonIndex {
     public function sendVercode($mobile, $stype) {
         $redisKey   = $this->redisKey . 'vercode:' . $mobile . ':' . $stype;
         $timeoutKey = $this->redisKey . 'vercode:timeout:' . $mobile . ':' . $stype;
-        $code       = $this->createVercode($mobile, $stype, $redisKey, $timeoutKey);
+        $code       = $this->createVercode($redisKey, $timeoutKey);
         if (empty($code)) {//已发送过验证码
             return ['code' => '3003'];//一分钟内不能重复发送
         }
@@ -288,14 +288,12 @@ class User extends CommonIndex {
 
     /**
      * 生成并保存验证码
-     * @param $mobile
-     * @param $stype
      * @param $redisKey
      * @param $timeoutKey
      * @return string
      * @author zyr
      */
-    private function createVercode($mobile, $stype, $redisKey, $timeoutKey) {
+    private function createVercode($redisKey, $timeoutKey) {
         if (!$this->redis->setNx($timeoutKey, 1)) {
             return '0';//一分钟内不能重复发送
         }
@@ -456,7 +454,7 @@ class User extends CommonIndex {
      */
     private function createConId() {
         $conId = uniqid(date('ymdHis'));
-        $conId = hash_hmac('fnv164', $conId, '');
+        $conId = hash_hmac('ripemd128', $conId, '');
         return $conId;
     }
 }

@@ -48,7 +48,7 @@ class Cart extends MyController
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
@@ -93,7 +93,7 @@ class Cart extends MyController
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
@@ -154,7 +154,7 @@ class Cart extends MyController
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
@@ -211,7 +211,7 @@ class Cart extends MyController
         if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($conId) != 16) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         

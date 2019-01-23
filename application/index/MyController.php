@@ -154,7 +154,7 @@ class MyController extends Controller {
      */
     protected function isLogin() {
         $conId = trim($this->request->post('con_id'));
-        if (!empty($conId) && strlen($conId) == 16) {
+        if (!empty($conId) && strlen($conId) == 32) {
             $res = $this->app->user->isLogin($conId);//判断是否登录
             if ($res['code'] == '200') {
                 return;
