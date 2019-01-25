@@ -341,7 +341,7 @@ class Suppliers {
      * @author zyr
      */
     public function editSupplierFreightdetail($freight_detail_id, $price, $after_price, $total_price, $unit_price) {
-        $freightDetail = DbGoods::getSupplierFreightdetailRow($freight_detail_id);
+        $freightDetail = DbGoods::getSupplierFreightdetailRow('id',$freight_detail_id);
         if (empty($freightDetail)) {
             return ['code' => '3003'];
         }
@@ -351,7 +351,7 @@ class Suppliers {
         $supplier_freight_detail['after_price'] = $after_price;
         $supplier_freight_detail['total_price'] = $total_price;
         $supplier_freight_detail['unit_price']  = $unit_price;
-        $add                                    = DbGoods::addSupplierFreightdetail($supplier_freight_detail, $freight_detail_id);
+        $add                                    = DbGoods::editSupplierFreightdetail($supplier_freight_detail, $freight_detail_id);
         return ['code' => 200, 'id' => $add];
     }
 

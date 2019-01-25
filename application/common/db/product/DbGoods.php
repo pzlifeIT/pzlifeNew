@@ -893,7 +893,7 @@ class DbGoods {
      * @author
      */
     public function editSupplierFreightdetail($data, $id) {
-        return $this->supplierFreightDetail->save($data, $id);
+        return $this->supplierFreightDetail->save($data, ['id'=>$id]);
     }
 
     /**

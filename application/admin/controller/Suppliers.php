@@ -123,7 +123,7 @@ class Suppliers extends AdminController {
         $image = trim($this->request->post('image'));
 
         /* 参数判断 */
-        if (!$this->checkMobile($tel)) {
+        if (!checkMobile($tel)) {
             return ['code' => '3001'];
         }
         if (!$name || !$title || !$desc) {
@@ -163,7 +163,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($id)) {
             return ['code' => '3003'];
         }
-        if (!$this->checkMobile($tel)) {
+        if (!checkMobile($tel)) {
             return ['code' => '3001'];
         }
         if (!$name || !$title || !$desc) {
@@ -434,7 +434,7 @@ class Suppliers extends AdminController {
      * @apiDescription   editSupplierFreightdetail
      * @apiGroup         admin_Suppliers
      * @apiName          editSupplierFreightdetail
-     * @apiParam (入参) {Number} freight_id 运费模版模版ID
+     * @apiParam (入参) {Number} freight_detail_id 运费价格详情ID
      * @apiParam (入参) {decimal} [price] 邮费单价 默认0
      * @apiParam (入参) {decimal} [after_price] 续件价格 默认0
      * @apiParam (入参) {decimal} [total_price] 包邮价格 默认0
@@ -460,7 +460,7 @@ class Suppliers extends AdminController {
         if (!is_numeric($price) || !is_numeric($after_price) || !is_numeric($total_price)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->suppliers->editSupplierFreightdetail(intval($freight_detail_id), floatval($price, 2), floatval($after_price, 2), floatval($total_price, 2), floatval($unit_price));
+        $result = $this->app->suppliers->editSupplierFreightdetail(intval($freight_detail_id), floatval($price), floatval($after_price), floatval($total_price), floatval($unit_price));
         return $result;
     }
 
