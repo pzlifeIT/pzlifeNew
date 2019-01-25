@@ -106,6 +106,6 @@ class Provinces extends AdminController {
      * @param string $name
      */
     private function addLog($code, $func, $name = '') {
-        $this->app->adminLog->apiRequestLog($this->classBasename(__class__) . '/' . $func, $code, $this->controllerBaseName(__FILE__), $name);
+        $this->app->adminLog->apiRequestLog(classBasename(__class__) . '/' . $func, $code, controllerBaseName(__FILE__), $name);
     }
 }

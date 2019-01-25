@@ -26,7 +26,7 @@ class Note extends NotifyController {
      */
     public function sendSms() {
         $phone = trim($this->request->post('phone'));//手机号
-        if (!$this->checkMobile($phone)) {
+        if (!checkMobile($phone)) {
             return ['code' => 3001];
         }
         $code   = trim($this->request->post('code'));//验证码
@@ -48,7 +48,7 @@ class Note extends NotifyController {
      */
     public function getSms() {
         $phone = trim($this->request->post('phone'));//手机号
-        if (!$this->checkMobile($phone)) {
+        if (!checkMobile($phone)) {
             return ['code' => 3001];
         }
         $date = trim($this->request->post('date'));//Ymd

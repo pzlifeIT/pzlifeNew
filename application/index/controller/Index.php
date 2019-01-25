@@ -31,6 +31,10 @@ class Index extends MyController {
     }
 
     public function hello() {
+
+
+
+
 //        echo enUid(25739);die;
         $this->redis       = Phpredis::getConn();
 
