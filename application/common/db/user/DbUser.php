@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\Users;
+use app\common\model\UserWxinfo;
 
 class DbUser {
     /**
@@ -126,5 +127,28 @@ class DbUser {
     public function updateUserCon($data, $id) {
         $userCon = new UserCon();
         return $userCon->save($data, ['id' => $id]);
+    }
+
+    /**
+     * 获取openid是否已保存
+     * @param $uid
+     * @param $openId
+     * @return float|string
+     * @author zyr
+     */
+    public function getUserOpenidCount($uid, $openId) {
+        return UserWxinfo::where(['uid' => $uid, 'openid' => $openId])->count();
+    }
+
+    /**
+     * 保存openid
+     * @param $data
+     * @return mixed
+     * @author zyr
+     */
+    public function saveUserOpenid($data) {
+        $userWxinfo = new UserWxinfo();
+        $userWxinfo->save($data);
+        return $userWxinfo->id;
     }
 }

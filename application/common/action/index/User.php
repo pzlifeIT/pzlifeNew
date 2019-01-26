@@ -53,33 +53,37 @@ class User extends CommonIndex {
      * 快捷登录
      * @param $mobile
      * @param $vercode
-     * @param $openid
-     * @param $nickName
-     * @param $avatar
+     * @param $code
+     * @param $encrypteddata
+     * @param $iv
      * @return array
      * @author zyr
      */
-    public function quickLogin($mobile, $vercode, $openid, $nickName, $avatar) {
+    public function quickLogin($mobile, $vercode, $code, $encrypteddata, $iv) {
         $stype = 3;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
         }
+        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        if ($wxInfo === false) {
+            return ['code' => '3002'];
+        }
         $updateData = [];
         $addData    = [];
-        $uid        = $this->checkAccount($mobile);
+        $uid        = $this->checkAccount($mobile);//通过手机号获取uid
         if (empty($uid)) {
-            $user = DbUser::getUserOne(['openid' => $openid], 'id');
+            $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');//手机号获取不到就通过微信获取
             if (!empty($user)) {//注册了微信的老用户
                 $uid        = $user['id'];
                 $updateData = [
                     'mobile' => $mobile,
                 ];
-            } else {
+            } else {//新用户
                 $addData = [
                     'mobile'    => $mobile,
-                    'openid'    => $openid,
-                    'nick_name' => $nickName,
-                    'avatar'    => $avatar,
+                    'unionid'   => $wxInfo['unionid'],
+                    'nick_name' => $wxInfo['nickname'],
+                    'avatar'    => $wxInfo['avatarurl'],//$wxInfo['unionid'],
                 ];
             }
         }
@@ -108,6 +112,7 @@ class User extends CommonIndex {
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
             Db::commit();
+            $this->saveOpenid($uid, $wxInfo['openid']);
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
@@ -120,13 +125,13 @@ class User extends CommonIndex {
      * @param $mobile
      * @param $vercode
      * @param $password
-     * @param $openid
-     * @param $nickName
-     * @param $avatar
+     * @param $code
+     * @param $encrypteddata
+     * @param $iv
      * @return array
      * @author zyr
      */
-    public function register($mobile, $vercode, $password, $openid, $nickName, $avatar) {
+    public function register($mobile, $vercode, $password, $code, $encrypteddata, $iv) {
         $stype = 1;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
@@ -134,8 +139,12 @@ class User extends CommonIndex {
         if (!empty($this->checkAccount($mobile))) {
             return ['code' => '3008'];
         }
+        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        if ($wxInfo === false) {
+            return ['code' => '3002'];
+        }
         $uid  = 0;
-        $user = DbUser::getUserOne(['openid' => $openid], 'id');
+        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
         if (!empty($user)) {
             $uid = $user['id'];
         }
@@ -143,9 +152,9 @@ class User extends CommonIndex {
         $data           = [
             'mobile'    => $mobile,
             'passwd'    => $cipherPassword,
-            'openid'    => $openid,
-            'nick_name' => $nickName,
-            'avatar'    => $avatar,
+            'unionid'   => $wxInfo['unionid'],
+            'nick_name' => $wxInfo['nickname'],
+            'avatar'    => $wxInfo['avatarurl'],
         ];
         Db::startTrans();
         try {
@@ -165,6 +174,7 @@ class User extends CommonIndex {
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
             Db::commit();
+            $this->saveOpenid($uid, $wxInfo['openid']);
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
@@ -200,12 +210,16 @@ class User extends CommonIndex {
 
     /**
      * 微信登录
-     * @param $openid
+     * @param $code
      * @return array
      * @author zyr
      */
-    public function loginUserByOpenid($openid) {
-        $user = DbUser::getUser(['openid' => $openid]);
+    public function loginUserByWx($code) {
+        $wxInfo = $this->getOpenid($code);
+        if ($wxInfo === false) {
+            return ['code' => '3001'];
+        }
+        $user = DbUser::getUser(['unionid' => $wxInfo['unionid']]);
         if (empty($user)) {
             return ['code' => '3000'];
         }
@@ -226,7 +240,26 @@ class User extends CommonIndex {
                 $this->redis->zDelete($this->redisConIdTimem, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
+            $this->saveOpenid($id, $wxInfo['openid']);
             return ['code' => '200', 'con_id' => $conId];
+        }
+        return ['code' => '3003'];
+    }
+
+    /**
+     * 保存openid
+     * @param $uid
+     * @param $openId
+     * @author zyr
+     */
+    private function saveOpenid($uid, $openId) {
+        $userCount = DbUser::getUserOpenidCount($uid, $openId);
+        if ($userCount == 0) {
+            $data = [
+                'uid'    => $uid,
+                'openid' => $openId,
+            ];
+            DbUser::saveUserOpenid($data);
         }
     }
 
@@ -367,6 +400,82 @@ class User extends CommonIndex {
         $saveTime = 600;//保存10分钟
         $this->redis->hMSet($this->redisKey . 'userinfo:' . $id, $user);
         $this->redis->expireAt($this->redisKey . 'userinfo:' . $id, bcadd(time(), $saveTime, 0));//设置过期
+    }
+
+    /**
+     * 获取用的openid unionid 及详细信息
+     * @param $code
+     * @param $encrypteddata
+     * @param $iv
+     * @return array|bool|int
+     * @author zyr
+     */
+    private function getOpenid($code, $encrypteddata = '', $iv = '') {
+        $appid         = Config::get('conf.weixin_miniprogram_appid');
+        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
+        $get_token_url = 'https://api.weixin.qq.com/sns/jscode2session?appid=' . $appid . '&secret=' . $secret . '&js_code=' . $code . '&grant_type=authorization_code';
+        $res           = sendRequest($get_token_url);
+        $result        = json_decode($res, true);
+        // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
+        if (empty($result['unionid']) || empty($result['session_key'])) {
+            return false;
+        }
+        $sessionKey = $result['session_key'];
+        unset($result['session_key']);
+        if (!empty($encrypteddata) && !empty($iv)) {
+            $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
+        }
+        if (is_array($result)) {
+            $result = array_change_key_case($result, CASE_LOWER);//CASE_UPPER,CASE_LOWER
+            return $result;
+        }
+        return false;
+        //[openId] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[nickName] => 榮,[gender] => 1,[language] => zh_CN,[city] =>,[province] => Shanghai,[country] => China,
+        //[avatarUrl] => https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJiaWQI7tUfDVrvuSrDDcfFiaJriaibibBiaYabWL5h6HlDgMMvkyFul9JRicr0ZMULxs66t5NBdyuhEokhA/132
+        //[unionId] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk
+    }
+
+    /**
+     * 解密微信信息
+     * @param $encryptedData
+     * @param $iv
+     * @param $sessionKey
+     * @return int|array
+     * @author zyr
+     * -40001: 签名验证错误
+     * -40002: xml解析失败
+     * -40003: sha加密生成签名失败
+     * -40004: encodingAesKey 非法
+     * -40005: appid 校验错误
+     * -40006: aes 加密失败
+     * -40007: aes 解密失败
+     * -40008: 解密后得到的buffer非法
+     * -40009: base64加密失败
+     * -40010: base64解密失败
+     * -40011: 生成xml失败
+     */
+    private function decryptData($encryptedData, $iv, $sessionKey) {
+        $appid = Config::get('conf.weixin_miniprogram_appid');
+        if (strlen($sessionKey) != 24) {
+            return -41001;
+        }
+        $aesKey = base64_decode($sessionKey);
+        if (strlen($iv) != 24) {
+            return -41002;
+        }
+        $aesIV     = base64_decode($iv);
+        $aesCipher = base64_decode($encryptedData);
+        $result    = openssl_decrypt($aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
+        $dataObj   = json_decode($result);
+        if ($dataObj == null) {
+            return -41003;
+        }
+        if ($dataObj->watermark->appid != $appid) {
+            return -41003;
+        }
+        $data = json_decode($result, true);
+        unset($data['watermark']);
+        return $data;
     }
 
     /**

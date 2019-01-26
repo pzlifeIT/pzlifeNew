@@ -7,7 +7,7 @@ use app\index\MyController;
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByOpenid'],//除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx'],//除去getFirstCate其他方法都进行second前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -44,35 +44,31 @@ class User extends MyController {
      * @apiName          quickLogin
      * @apiParam (入参) {String} mobile 接收的手机号
      * @apiParam (入参) {String} vercode 验证码
-     * @apiParam (入参) {String} openid 微信openid
-     * @apiParam (入参) {String} nick_name 微信昵称
-     * @apiParam (入参) {String} avatar 微信头像
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:缺少openid / 3003:openid有误 / 3004:验证码格式有误 / 3006:验证码错误
+     * @apiParam (入参) {String} code 微信code
+     * @apiParam (入参) {String} encrypteddata 微信加密信息
+     * @apiParam (入参) {String} iv
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
      * @return array
      * @author zyr
      */
     public function quickLogin() {
-        $mobile   = trim($this->request->post('mobile'));
-        $vercode  = trim($this->request->post('vercode'));
-        $openid   = trim($this->request->post('openid'));
-        $nickName = trim($this->request->post('nick_name'));
-        $avatar   = trim($this->request->post('avatar'));
+        $mobile        = trim($this->request->post('mobile'));
+        $vercode       = trim($this->request->post('vercode'));
+        $code          = trim($this->request->post('code'));
+        $encrypteddata = trim($this->request->post('encrypteddata'));
+        $iv            = trim($this->request->post('iv'));
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
-        }
-        if (empty($openid)) {
-            return ['code' => '3002'];//缺少参数:openid
-        }
-        $openid = trim($openid);
-        if (strlen($openid) != 28) {
-            return ['code' => '3003'];//openid有误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
         }
-        $resule = $this->app->user->quickLogin($mobile, $vercode, $openid, $nickName, $avatar);
+        if (strlen($code) != 32) {
+            return ['code' => '3002'];//code有误
+        }
+        $resule = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv);
         return $resule;
     }
 
@@ -82,33 +78,29 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          register
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {String} openid 微信openid
      * @apiParam (入参) {String} vercode 验证码
      * @apiParam (入参) {String} password 密码
-     * @apiParam (入参) {String} nick_name 微信昵称
-     * @apiParam (入参) {String} avatar 微信头像
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:缺少参数:openid / 3003:openid有误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
+     * @apiParam (入参) {String} code 微信code
+     * @apiParam (入参) {String} encrypteddata 微信加密信息
+     * @apiParam (入参) {String} iv
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/register
      * @return array
      * @author zyr
      */
     public function register() {
-        $mobile   = trim($this->request->post('mobile'));
-        $openid   = trim($this->request->post('openid'));
-        $vercode  = trim($this->request->post('vercode'));
-        $password = trim($this->request->post('password'));
-        $nickName = trim($this->request->post('nick_name'));
-        $avatar   = trim($this->request->post('avatar'));
+        $mobile        = trim($this->request->post('mobile'));
+        $code          = trim($this->request->post('code'));
+        $vercode       = trim($this->request->post('vercode'));
+        $password      = trim($this->request->post('password'));
+        $encrypteddata = trim($this->request->post('encrypteddata'));
+        $iv            = trim($this->request->post('iv'));
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
         }
-        if (empty($openid)) {
-            return ['code' => '3002'];//缺少参数:openid
-        }
-        $openid = trim($openid);
-        if (strlen($openid) != 28) {
-            return ['code' => '3003'];//openid有误
+        if (strlen($code) != 32) {
+            return ['code' => '3002'];//code有误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
@@ -116,7 +108,7 @@ class User extends MyController {
         if (checkPassword($password) === false) {
             return ['code' => '3005'];
         }
-        $resule = $this->app->user->register($mobile, $vercode, $password, $openid, $nickName, $avatar);
+        $resule = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv);
         return $resule;
     }
 
@@ -157,7 +149,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          sendVercode
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2修改密码 3.快捷登录
+     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:发送类型有误 / 3003:一分钟内不能重复发送 / 3004:短信发送失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/sendvercode
@@ -222,27 +214,23 @@ class User extends MyController {
 
 
     /**
-     * @api              {post} / 通过openid登录
-     * @apiDescription   loginUserByOpenid
+     * @api              {post} / 通过微信code登录
+     * @apiDescription   loginUserByWx
      * @apiGroup         index_user
-     * @apiName          loginUserByOpenid
-     * @apiParam (入参) {String} openid 微信openid
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:没有手机号的老用户
+     * @apiName          loginUserByWx
+     * @apiParam (入参) {String} code 微信code
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
      * @apiSuccess (data) {String} uid 用户加密id
-     * @apiSampleRequest /index/user/loginUserByOpenid
+     * @apiSampleRequest /index/user/loginuserbywx
      * @return array
      * @author zyr
      */
-    public function loginUserByOpenid() {
-        $paramOpenid = $this->request->post('openid');
-        if (empty($paramOpenid)) {
-            return ['code' => '3002', 'msg' => '缺少参数:openid'];
-        }
-        $openid = trim($paramOpenid);
-        if (strlen($openid) != 28) {
+    public function loginUserByWx() {
+        $code = trim($this->request->post('code'));
+        if (strlen($code) != 32) {
             return ['code' => 3001];
         }
-        $res = $this->app->user->loginUserByOpenid($openid);
+        $res = $this->app->user->loginUserByWx($code);
         return $res;
     }
 
