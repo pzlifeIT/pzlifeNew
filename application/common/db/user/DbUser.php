@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\Users;
+use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
 
 class DbUser {
@@ -150,5 +151,33 @@ class DbUser {
         $userWxinfo = new UserWxinfo();
         $userWxinfo->save($data);
         return $userWxinfo->id;
+    }
+
+    /**
+     * 保存地址
+     * @param $data
+     * @return bool
+     * @author rzc
+     */
+    public function addUserAddress($data) {
+        $userAddress = new UserAddress();
+        $userAddress->save($data); 
+        return $userAddress->id;
+    }
+
+    /**
+     * 获取用户地址
+     * @param $field 字段
+     * @param $where 条件
+     * @param $row 查多条还是一条
+     * @return array
+     * @author rzc
+     */
+    public function getUserAddress($field,$where,$row = false){
+        $obj = UserAddress::where($where)->field($field);
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
     }
 }

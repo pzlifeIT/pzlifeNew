@@ -502,23 +502,30 @@ class User extends CommonIndex {
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
-        $province = DbProvinces::getAreaInfo($field, $where);
+        $province = DbProvinces::getAreaOne($field, $where);
+        
         if (empty($province) || $province['level'] != '1') {
             return ['code' => '3007', 'msg' => '错误的省份ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $city_id];
-        $city  = DbProvinces::getAreaInfo($field, $where);
+        $city  = DbProvinces::getAreaOne($field, $where);
         if (empty($city) || $city['level'] != '2') {
             return ['code' => '3004', 'msg' => '错误的市级ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $area_id];
-        $area  = DbProvinces::getAreaInfo($field, $where);
+        $area  = DbProvinces::getAreaOne($field, $where);
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级ID'];
         }
-        // $add = 
+        $data = [];
+        $data['uid'] = $uid;
+        $data['province_id'] = $province_id;
+        $data['city_id'] = $city_id;
+        $data['area_id'] = $area_id;
+        $data['address'] = $address;
+        $add = DbUser::addUserAddress($data);
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
         } else {
@@ -538,8 +545,11 @@ class User extends CommonIndex {
         }
         $field = 'id,uid,province_id,city_id,area_id,address,default';
         $where = ['uid' => $uid];
-        // $result = 
-        return $result;
+        $result = DbUser::getUserAddress($field,$where);
+        if (empty($result)) {
+            return ['code' => 3000];
+        }
+        return ['code' =>200,'data'=>$result];
     }
 
     /**

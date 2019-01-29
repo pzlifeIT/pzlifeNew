@@ -65,6 +65,7 @@ class Cart extends CommonIndex
 
         $cart['goods_id'] = $goods_sku['goods_id'];
         $cart['track'] = [$track_id => $buy_num]; /* 购买店铺：购买数量 */
+        $cart['spec'] = $goods_sku['spec']; /* 规格属性 */
         $hash_cart = json_encode($cart);
         $key = 'skuid:' . $goods_skuid;
 
