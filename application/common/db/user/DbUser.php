@@ -166,6 +166,18 @@ class DbUser {
     }
 
     /**
+     * 更新地址
+     * @param $data
+     * @param $where
+     * @return bool
+     * @author rzc
+     */
+    public function updateUserAddress($data,$where){
+        $userAddress = new UserAddress();
+        return  $userAddress->save($data,$where); 
+    }
+
+    /**
      * 获取用户地址
      * @param $field 字段
      * @param $where 条件
