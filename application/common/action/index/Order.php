@@ -124,20 +124,21 @@ class Order extends CommonIndex {
             foreach ($diff as $di) {
                 $oneGoods = DbGoods::getOneGoods(['id' => $cart[$di]['goods_id']], 'id,goods_name,subtitle,image');
                 $attrList = DbGoods::getAttrList([['id', 'in', explode(',', $cart[$di]['spec'])]], 'attr_name');
-                $attrList = array_column($attrList,'attr_name');
+                $attrList = array_column($attrList, 'attr_name');
                 array_push($eGoodsList, $oneGoods['goods_name'] . '(' . implode('、', $attrList) . ')');
             }
             return ['code' => '3004', 'goodsError' => $eGoodsList];//商品售罄列表
         }
-        $goodsOversold   = [];//库存不够商品列表
-        $goodsList       = [];
-        $freightPrice    = [];//各个运费模版的运费价格
-        $freightCount    = [];//各个运费模版的购买数量
-        $freightWeight   = [];//各个运费模版的购买重量
-        $freightVolume   = [];//各个运费模版的购买体积
-        $rebateAll       = 0;//所有商品钻石返利总和
-        $totalGoodsPrice = 0;//所有商品总价
-        $goodsCount      = 0;//购买商品总数
+        $goodsOversold     = [];//库存不够商品列表
+        $goodsList         = [];
+        $freightPrice      = [];//各个运费模版的运费价格
+        $freightCount      = [];//各个运费模版的购买数量
+        $freightWeight     = [];//各个运费模版的购买重量
+        $freightVolume     = [];//各个运费模版的购买体积
+        $rebateAll         = 0;//所有商品钻石返利总和
+        $totalGoodsPrice   = 0;//所有商品总价
+        $goodsCount        = 0;//购买商品总数
+        $totalFreightPrice = 0;//总运费
         foreach ($goodsSku as $value) {
             $value['supplier_id'] = $value['goods']['supplier_id'];
             $value['goods_name']  = $value['goods']['goods_name'];
@@ -172,47 +173,47 @@ class Order extends CommonIndex {
         if (!empty($goodsOversold)) {
             return ['code' => '3007', 'goods_oversold' => $goodsOversold];//库存不足商品
         }
-        /* 运费模版 start */
-        $freightIdList = array_values(array_unique(array_column($goodsList, 'freight_id')));
-        $freightList   = DbGoods::getFreightAndDetail([['freight_id', 'in', $freightIdList]], $cityId, 'id,freight_id,price,after_price,total_price,unit_price', 'id,supid,stype', 'freight_detail_id,city_id', $freightIdList);
-        $freightDiff   = array_values(array_diff($freightIdList, array_keys($freightList)));
-        if (!empty($freightDiff)) {
-            $eGoodsList = [];
-            foreach ($freightDiff as $fd) {
-                foreach ($goodsList as $gl) {
-                    if ($gl['freight_id'] == $fd) {
-                        array_push($eGoodsList, $gl['goods_name'] . '(' . implode('、', $gl['attr']) . ')');
+        if (!empty($cityId)) {
+            /* 运费模版 运费计算 start */
+            $freightIdList = array_values(array_unique(array_column($goodsList, 'freight_id')));
+            $freightList   = DbGoods::getFreightAndDetail([['freight_id', 'in', $freightIdList]], $cityId, 'id,freight_id,price,after_price,total_price,unit_price', 'id,supid,stype', 'freight_detail_id,city_id', $freightIdList);
+            $freightDiff   = array_values(array_diff($freightIdList, array_keys($freightList)));
+            if (!empty($freightDiff)) {
+                $eGoodsList = [];
+                foreach ($freightDiff as $fd) {
+                    foreach ($goodsList as $gl) {
+                        if ($gl['freight_id'] == $fd) {
+                            array_push($eGoodsList, $gl['goods_name'] . '(' . implode('、', $gl['attr']) . ')');
+                        }
                     }
                 }
+                return ['code' => '3006', 'freightError' => $eGoodsList];//商品不支持配送
             }
-            return ['code' => '3006', 'freightError' => $eGoodsList];//商品不支持配送
+            foreach ($freightList as $flk => $fl) {
+                if ($fl['total_price'] <= $freightPrice[$flk]) {//该供应商的当前运费模版下购买的总价超过包邮价可以包邮
+                    continue;
+                }
+                $price = 0;
+                if ($fl['stype'] == 1) {//件数
+                    if ($fl['unit_price'] <= $freightCount[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        continue;
+                    }
+                    $price = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                } else if ($fl['stype'] == 2) {//重量
+                    if ($fl['unit_price'] <= $freightWeight[$flk]) {//购买重量超过当前模版的满件包邮条件可以包邮
+                        continue;
+                    }
+                    $price = bcadd(bcmul(bcsub($freightWeight[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                } else if ($fl['stype'] == 3) {//体积
+                    if ($fl['unit_price'] <= $freightVolume[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        continue;
+                    }
+                    $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                }
+                $totalFreightPrice = bcadd($totalFreightPrice, $price, 2);
+            }
+            /* 运费模版 end */
         }
-        $totalFreightPrice = 0;//总运费
-        foreach ($freightList as $flk => $fl) {
-            if ($fl['total_price'] <= $freightPrice[$flk]) {//该供应商的当前运费模版下购买的总价超过包邮价可以包邮
-                continue;
-            }
-            $price = 0;
-            if ($fl['stype'] == 1) {//件数
-                if ($fl['unit_price'] <= $freightCount[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
-                    continue;
-                }
-                $price = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-            } else if ($fl['stype'] == 2) {//重量
-                if ($fl['unit_price'] <= $freightWeight[$flk]) {//购买重量超过当前模版的满件包邮条件可以包邮
-                    continue;
-                }
-                $price = bcadd(bcmul(bcsub($freightWeight[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-            } else if ($fl['stype'] == 3) {//体积
-                if ($fl['unit_price'] <= $freightVolume[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
-                    continue;
-                }
-                $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-            }
-            $totalFreightPrice = bcadd($totalFreightPrice, $price, 2);
-        }
-        /* 运费模版 end */
-
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice);
         return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => $goodsList];
     }
@@ -291,6 +292,9 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function checkCart($skuIdList, $uid) {
+        if(!$this->redis->exists($this->redisCartUserKey . $uid)){
+            return false;
+        }
         $prefix   = $this->prefix;
         $carts    = $this->redis->hKeys($this->redisCartUserKey . $uid);
         $cartList = array_map(function ($v) use ($prefix) {
