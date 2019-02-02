@@ -123,7 +123,9 @@ class Order extends CommonIndex {
             $eGoodsList = [];
             foreach ($diff as $di) {
                 $oneGoods = DbGoods::getOneGoods(['id' => $cart[$di]['goods_id']], 'id,goods_name,subtitle,image');
-                array_push($eGoodsList, $oneGoods);
+                $attrList = DbGoods::getAttrList([['id', 'in', explode(',', $cart[$di]['spec'])]], 'attr_name');
+                $attrList = array_column($attrList,'attr_name');
+                array_push($eGoodsList, $oneGoods['goods_name'] . '(' . implode('、', $attrList) . ')');
             }
             return ['code' => '3004', 'goodsError' => $eGoodsList];//商品售罄列表
         }
