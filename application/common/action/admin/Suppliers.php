@@ -188,7 +188,7 @@ class Suppliers {
      */
     public function getSupplierFreights($supid) {
         $field  = 'id,supid,stype,title,desc';
-        $result = DbGoods::getSupplierFreights($field, $supid);
+        $result = DbGoods::getSupplierFreights(['supid' => $supid, 'status' => 1], $field);
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -341,7 +341,7 @@ class Suppliers {
      * @author zyr
      */
     public function editSupplierFreightdetail($freight_detail_id, $price, $after_price, $total_price, $unit_price) {
-        $freightDetail = DbGoods::getSupplierFreightdetailRow('id',$freight_detail_id);
+        $freightDetail = DbGoods::getSupplierFreightdetailRow('id', $freight_detail_id);
         if (empty($freightDetail)) {
             return ['code' => '3003'];
         }

@@ -24,4 +24,8 @@ class SupplierFreightArea extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function supplierFreightDetail() {
+        return $this->belongsTo('supplierFreightDetail', 'freight_detail_id', 'id');
+    }
 }
