@@ -235,11 +235,12 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 通过uid获取用户添加地址信息
+     * @api              {post} / 通过con_id获取用户添加地址信息
      * @apiDescription   getUserAddress
      * @apiGroup         index_user
      * @apiName          getUserAddress
      * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} address_id 查询一条传值，查所有不传 
      * @apiSuccess (返回) {String} code 200:成功 3000:该用户没有地址 / 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:conId有误查不到uid
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserAddress
@@ -248,13 +249,19 @@ class User extends MyController {
      */
     public function getUserAddress() {
         $conId = trim($this->request->post('con_id'));
+        $address_id    = trim($this->request->post('address_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->getUserAddress($conId);
+        if ($address_id) {
+            if (!is_numeric($address_id)) {
+                return ['code' => '3003'];
+            }
+        }
+        $result = $this->app->user->getUserAddress($conId,$address_id);
         return $result;
     }
 
@@ -268,6 +275,8 @@ class User extends MyController {
      * @apiParam (入参) {Number} city_id 市id
      * @apiParam (入参) {Number} area_id 区级id
      * @apiParam (入参) {String} address 详细地址
+     * @apiParam (入参) {String} mobile 电话号码
+     * @apiParam (入参) {String} name 姓名
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3002:缺少con_id / 3003:conId有误查不到uid
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/addUserAddress
@@ -280,13 +289,18 @@ class User extends MyController {
         $city_id     = trim($this->request->post('city_id'));
         $area_id     = trim($this->request->post('area_id'));
         $address     = trim($this->request->post('address'));
+        $mobile      = trim($this->request->post('mobile'));
+        $name        = trim($this->request->post('name'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address);
+        if (!checkMobile($mobile)) {
+            return ['code' => '3003'];//手机格式有误
+        }
+        $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address,$mobile,$name);
         return $result;
     }
 
@@ -296,10 +310,13 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          updateUserAddress
      * @apiParam (入参) {String} uid 用户加密id
+     * @apiParam (入参) {String} address_id 修改地址ID
      * @apiParam (入参) {Number} province_id 省id
      * @apiParam (入参) {Number} city_id 市id
      * @apiParam (入参) {Number} area_id 区级id
      * @apiParam (入参) {String} address 详细地址
+     * @apiParam (入参) {String} mobile 电话号码
+     * @apiParam (入参) {String} name 姓名
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/updateUserAddress
@@ -307,23 +324,55 @@ class User extends MyController {
      * @author rzc
      */
     public function updateUserAddress() {
-
+        $conId       = trim($this->request->post('con_id'));
+        $province_id = trim($this->request->post('province_id'));
+        $city_id     = trim($this->request->post('city_id'));
+        $area_id     = trim($this->request->post('area_id'));
+        $address     = trim($this->request->post('address'));
+        $mobile      = trim($this->request->post('mobile'));
+        $name        = trim($this->request->post('name'));
+        $address_id  = trim($this->request->post('address_id'));
+        if (!checkMobile($mobile)) {
+            return ['code' => '3003'];//手机格式有误
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->updateUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address,$name,$mobile,$address_id);
+        return $result;
     }
 
     /**
      * @api              {post} / 用户修改默认地址
-     * @apiDescription   updateUserAddress
+     * @apiDescription   updateUserAddressDefault
      * @apiGroup         index_user
-     * @apiName          updateUserAddress
-     * @apiParam (入参) {String} uid 用户加密id
-     * @apiParam (入参) {Number} province_id 省id
-     * @apiParam (入参) {Number} city_id 市id
-     * @apiParam (入参) {Number} area_id 区级id
-     * @apiParam (入参) {String} address 详细地址
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数
+     * @apiName          updateUserAddressDefault
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} address_id 地址ID
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:address_id必须是数字
      * @apiSuccess (data) {String} address 用户添加的收货地址
-     * @apiSampleRequest /index/user/updateUserAddress
+     * @apiSampleRequest /index/user/updateUserAddressDefault
      * @return array
      * @author rzc
      */
+
+     public function updateUserAddressDefault(){
+        $conId       = trim($this->request->post('con_id'));
+        $address_id  = trim($this->request->post('address_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($address_id)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->user->updateUserAddressDefault($conId,$address_id);
+        return $resule;
+     }
+     
 }

@@ -498,40 +498,52 @@ class User extends CommonIndex {
      * @param $city_id
      * @param $area_id
      * @param $address
+     * @param $mobile
+     * @param $name
      * @return array
      * @author rzc
      */
-    public function addUserAddress($conId, $province_id, $city_id, $area_id, $address) {
+    public function addUserAddress($conId, $province_id, $city_id, $area_id, $address,$mobile,$name) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
-            return ['code' => '3003'];
+            return ['code' => '3009','msg' => 'uid为空'];
         }
         if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
-            return ['code' => '3001', 'msg' => '省市区ID必须为数字'];
+            return ['code' => '3008', 'msg' => '省市区ID必须为数字'];
         }
         if (empty($address)) {
-            return ['code' => '3002', 'msg' => '请填写详细街道地址'];
+            return ['code' => '3007', 'msg' => '请填写详细街道地址'];
         }
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
-        $province = DbProvinces::getAreaInfo($field, $where);
+        $province = DbProvinces::getAreaOne($field, $where);
+        
         if (empty($province) || $province['level'] != '1') {
-            return ['code' => '3007', 'msg' => '错误的省份ID'];
+            return ['code' => '3006', 'msg' => '错误的省份ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $city_id];
-        $city  = DbProvinces::getAreaInfo($field, $where);
+        $city  = DbProvinces::getAreaOne($field, $where);
         if (empty($city) || $city['level'] != '2') {
             return ['code' => '3004', 'msg' => '错误的市级ID'];
         }
         $field = 'id,area_name,pid,level';
         $where = ['id' => $area_id];
-        $area  = DbProvinces::getAreaInfo($field, $where);
+        $area  = DbProvinces::getAreaOne($field, $where);
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级ID'];
         }
-        // $add = 
+        $data = [];
+        $data['uid'] = $uid;
+        $data['province_id'] = $province_id;
+        $data['city_id'] = $city_id;
+        $data['area_id'] = $area_id;
+        $data['address'] = $address;
+        $data['mobile'] = $mobile;
+        $data['name'] = $name;
+        $data = ['default'=>2];
+        $add = DbUser::addUserAddress($data);
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
         } else {
@@ -540,19 +552,119 @@ class User extends CommonIndex {
     }
 
     /**
-     * 查询用户地址
-     * @param $paramUid
+     * 修改地址
+     * @param $conId
+     * @param $province_id
+     * @param $city_id
+     * @param $area_id
+     * @param $address
+     * @param $mobile
+     * @param $name
+     * @param $address_id
+     * @return array
      * @author rzc
      */
-    public function getUserAddress($conId) {
+    public function updateUserAddress($conId, $province_id, $city_id, $area_id, $address,$name,$mobile,$address_id){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3009','msg' => 'uid为空'];
+        }
+        if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
+            return ['code' => '3008', 'msg' => '省市区ID必须为数字'];
+        }
+        if (empty($address)) {
+            return ['code' => '3007', 'msg' => '请填写详细街道地址'];
+        }
+        /* 判断省市区ID是否合法 */
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $province_id];
+        $province = DbProvinces::getAreaOne($field, $where);
+        
+        if (empty($province) || $province['level'] != '1') {
+            return ['code' => '3006', 'msg' => '错误的省份ID'];
+        }
+        $field = 'id,area_name,pid,level';
+        $where = ['id' => $city_id];
+        $city  = DbProvinces::getAreaOne($field, $where);
+        if (empty($city) || $city['level'] != '2') {
+            return ['code' => '3004', 'msg' => '错误的市级ID'];
+        }
+        $field = 'id,area_name,pid,level';
+        $where = ['id' => $area_id];
+        $area  = DbProvinces::getAreaOne($field, $where);
+        if (empty($area) || $area['level'] != '3') {
+            return ['code' => '3005', 'msg' => '错误的区级ID'];
+        }
+        $field = 'id,uid';
+        $where = ['id'=>$address_id,'uid'=>$uid];
+        $is_address = DbUser::getUserAddress($field,$where,true);
+        if (!$is_address) {
+            return ['code' => '3010','msg' => '无效的address_id'];
+        }
+        $data = [];
+        $data['province_id'] = $province_id;
+        $data['city_id'] = $city_id;
+        $data['area_id'] = $area_id;
+        $data['address'] = $address;
+        $data['mobile'] = $mobile;
+        $data['name'] = $name;
+        DbUser::updateUserAddress($data,$where);
+        return ['code' => 200];
+    }
+
+    /**
+     * 查询用户地址
+     * @param $conId
+     * @param $address_id
+     * @author rzc
+     */
+    public function getUserAddress($conId,$address_id = false) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        $field = 'id,uid,province_id,city_id,area_id,address,default';
+        $field = 'id,uid,province_id,city_id,area_id,address,default,name,mobile';
         $where = ['uid' => $uid];
-        // $result = 
-        return $result;
+
+        /* 查询一条用户地址详细信息 */
+        if ($address_id) {
+            $where = ['uid' => $uid,'address_id'=>$address_id];
+            $result = DbUser::getUserAddress($field,$where,true);
+            if (empty($result)) {
+                return ['code' => 3000];
+            }
+            return ['code' =>200,'data'=>$result];
+        }
+        
+        $result = DbUser::getUserAddress($field,$where);
+        if (empty($result)) {
+            return ['code' => 3000];
+        }
+        return ['code' =>200,'data'=>$result];
+    }
+
+    /**
+     * 设置用户默认地址
+     * @param $conId
+     * @param $address_id
+     * @author rzc
+     */
+    public function updateUserAddressDefault($conId,$address_id){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3004'];
+        }
+        $field = 'id,uid,province_id,city_id,area_id,address,default,name,mobile';
+        $where = ['uid' => $uid,'address_id'=>$address_id];
+        $result = DbUser::getUserAddress($field,$where,true);
+        if (empty($result)) {
+            return ['code' => 3005,'msg' => '该地址不存在，无法设为默认']; /*  */
+        }
+       
+        DbUser::updateUserAddress(['default'=>2],['uid' => $uid]);
+        DbUser::updateUserAddress(['default'=>1],$where);
+        return ['code' => 200,'msg' => '修改默认成功'];
+       
     }
 
     /**

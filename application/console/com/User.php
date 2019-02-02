@@ -45,7 +45,7 @@ class User extends Pzlife
         ini_set('memory_limit', '1024M');
         $password = hash_hmac('sha1', '123456', 'userpass');
 
-        $member = "SELECT * FROM pre_member   ";
+        $member = "SELECT `mw`.`unionid`,`m`.* FROM pre_member_wxunion AS mw LEFT JOIN pre_member AS m USING(`uid`)  ";
 
         $memberdata = $mysql_connect->query($member);
         // print_r($memberdata);die;
@@ -58,7 +58,7 @@ class User extends Pzlife
                 continue;
             }
            
-            
+            // print_r($member_relationship);die;
             /* 用户关系数组初始化 */
             $user_relation = [];
             $user_relation['uid'] = $value['uid'];
