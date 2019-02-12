@@ -596,7 +596,7 @@ class User extends CommonIndex {
         $data['mobile'] = $mobile;
         $data['name'] = $name;
         DbUser::updateUserAddress($data,$where);
-        return ['code' => 200];
+        return ['code' => 200,'msg' => '修改成功'];
     }
 
     /**
