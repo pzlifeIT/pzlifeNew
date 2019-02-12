@@ -11,8 +11,11 @@ class DbShops {
      * @param $field
      * @return array
      */
-    public function getShopInfo($field, $where){
+    public function getShopInfo($field, $where) {
         return Shops::field($field)->where($where)->findOrEmpty()->toArray();
     }
-    
+
+    public function getShops($where, $field) {
+        return Shops::field($field)->where($where)->select()->toArray();
+    }
 }

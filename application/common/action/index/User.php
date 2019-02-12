@@ -36,14 +36,17 @@ class User extends CommonIndex {
             return ['code' => '3003'];
         }
         $conId   = $this->createConId();
-        $userCon = DbUser::getUserCon(['uid' => $uid], 'id', true);
+        $userCon = DbUser::getUserCon(['uid' => $uid], 'id,con_id', true);
         if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+            $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
+            $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
             $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
             if ($conUid === false) {
                 $this->redis->zDelete($this->redisConIdTimem, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
+            DbUser::updateUser(['last_time' => time()], $uid);
             return ['code' => '200', 'con_id' => $conId];
         }
         return ['code' => '3004'];
@@ -87,8 +90,9 @@ class User extends CommonIndex {
                 ];
             }
         }
+        $userCon = [];
         if (!empty($uid)) {
-            $userCon = DbUser::getUserCon(['uid' => $uid], 'id', true);
+            $userCon = DbUser::getUserCon(['uid' => $uid], 'id,con_id', true);
         }
         Db::startTrans();
         try {
@@ -103,6 +107,10 @@ class User extends CommonIndex {
             } else {
                 DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
             }
+            if (!empty($userCon)) {
+                $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
+                $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
+            }
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
             $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
             if ($conUid === false) {
@@ -112,6 +120,7 @@ class User extends CommonIndex {
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
             Db::commit();
+            DbUser::updateUser(['last_time' => time()], $uid);
             $this->saveOpenid($uid, $wxInfo['openid']);
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
@@ -155,6 +164,7 @@ class User extends CommonIndex {
             'unionid'   => $wxInfo['unionid'],
             'nick_name' => $wxInfo['nickname'],
             'avatar'    => $wxInfo['avatarurl'],
+            'last_time' => time(),
         ];
         Db::startTrans();
         try {
@@ -232,14 +242,17 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         $conId   = $this->createConId();
-        $userCon = DbUser::getUserCon(['uid' => $id], 'id', true);
+        $userCon = DbUser::getUserCon(['uid' => $id], 'id,con_id', true);
         if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+            $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
+            $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
             $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
             if ($conUid === false) {
                 $this->redis->zDelete($this->redisConIdTimem, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
+            DbUser::updateUser(['last_time' => time()], $uid);
             $this->saveOpenid($id, $wxInfo['openid']);
             return ['code' => '200', 'con_id' => $conId];
         }

@@ -17,4 +17,5 @@ return [
     'cart' => \app\common\action\index\Cart::class,
     'order' => \app\common\action\index\Order::class,
 //    'collect'  => \app\common\action\index\Collect::class,
+    'order'     => app\common\action\index\Order::class
 ];

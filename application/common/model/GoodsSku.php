@@ -36,4 +36,8 @@ class GoodsSku extends Model {
         }
         return $value;
     }
+
+    public function goods() {
+        return $this->belongsTo('goods', 'goods_id', 'id');
+    }
 }

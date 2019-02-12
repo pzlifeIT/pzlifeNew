@@ -151,6 +151,10 @@ class DbGoods {
         return $obj->select()->toArray();
     }
 
+//    public function getGoodsList2($where,$field){
+//        return Goods::field($field)->where($where)->select()->toArray();
+//    }
+
     /**
      * 获取商品条数
      * @param $where
@@ -367,6 +371,13 @@ class DbGoods {
             return GoodsSku::where($where)->field($field)->findOrEmpty()->toArray();
         }
         return GoodsSku::where($where)->field($field)->select()->toArray();
+    }
+
+    public function getSkuGoods($where, $field1, $field2) {
+        return GoodsSku::field($field1)->withJoin([
+            'goods' => function ($query) use ($field2) {
+                $query->withField($field2)->where(['status' => 1]);
+            }])->where($where)->select()->toArray();
     }
 
 
@@ -747,8 +758,42 @@ class DbGoods {
      * @param $status
      * @return bool
      */
-    public function getSupplierFreights($field, $supid, $status = 1) {
-        return SupplierFreight::field($field)->where(['supid' => $supid, 'status' => $status])->select()->toArray();
+    public function getSupplierFreights($where, $field) {
+        return SupplierFreight::field($field)->where($where)->select()->toArray();
+    }
+
+    public function getFreightAndDetail($where, $cityId, $field, $field2, $field3, $freightId) {
+//        $list = SupplierFreightDetail::field($field)->with(
+//            ['supplierFreight'       => function ($query2) use ($field2) {
+//                $query2->field($field2);
+//            }, 'supplierFreightArea' => function ($query) use ($field3, $cityId) {
+//                $query->field($field3)->where(['city_id' => $cityId]);
+//            }]
+//        )->where($where)->select()->toArray();
+        $list = SupplierFreightArea::field('id,city_id')->withJoin(
+            ['supplierFreightDetail' => function ($query) use ($field, $freightId) {
+                $query->withField($field)->where([['freight_id', 'in', $freightId]]);
+            },
+            ])->where(['city_id' => $cityId])->select()->toArray();
+//        return $list;
+        $result = [];
+        foreach ($list as $val) {
+            $freightId                = $val['supplier_freight_detail']['freight_id'];
+            $val['freight_detail_id'] = $val['supplier_freight_detail']['id'];
+            $val['price']             = $val['supplier_freight_detail']['price'];
+            $val['after_price']       = $val['supplier_freight_detail']['after_price'];
+            $val['total_price']       = $val['supplier_freight_detail']['total_price'];
+            $val['unit_price']        = $val['supplier_freight_detail']['unit_price'];
+            unset($val['supplier_freight_detail']);
+            unset($val['id']);
+            unset($val['city_id']);
+            $supplierFreight = SupplierFreight::field('supid,stype')->where(['id' => $freightId])->findOrEmpty()->toArray();
+            $val['supid']    = $supplierFreight['supid'];
+            $val['stype']    = $supplierFreight['stype'];
+//            array_push($result, $val);
+            $result[$freightId] = $val;
+        }
+        return $result;
     }
 
     /**
@@ -893,7 +938,7 @@ class DbGoods {
      * @author
      */
     public function editSupplierFreightdetail($data, $id) {
-        return $this->supplierFreightDetail->save($data, ['id'=>$id]);
+        return $this->supplierFreightDetail->save($data, ['id' => $id]);
     }
 
     /**
@@ -1033,7 +1078,7 @@ class DbGoods {
      * @param bool $row
      * @return array
      */
-    public function getSubjectRelation($where, $field, $row = false,$limit = false) {
+    public function getSubjectRelation($where, $field, $row = false, $limit = false) {
         $obj = GoodsSubjectRelation::where($where)->field($field);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();

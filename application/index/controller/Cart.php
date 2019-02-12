@@ -1,10 +1,10 @@
 <?php
+
 namespace app\index\controller;
 
 use app\index\MyController;
 
-class Cart extends MyController
-{
+class Cart extends MyController {
 
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
@@ -17,7 +17,7 @@ class Cart extends MyController
      * @apiDescription   getUserCart
      * @apiGroup         index_Cart
      * @apiName          getUserCart
-     * @apiParam (入参) {Number} con_id 
+     * @apiParam (入参) {Number} con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
@@ -42,8 +42,7 @@ class Cart extends MyController
      * @apiSampleRequest /index/cart/getUserCart
      * @author rzc
      */
-    public function getUserCart()
-    {
+    public function getUserCart() {
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -82,14 +81,12 @@ class Cart extends MyController
      * @apiSampleRequest /index/cart/addUserCart
      * @author rzc
      */
-    public function addUserCart()
-    {
-       
+    public function addUserCart() {
         $goods_skuid = trim($this->request->post('goods_skuid'));
-        $goods_num = trim($this->request->post('goods_num'));
-        $track_id = trim($this->request->post('track_id'));
-        $track_id = $track_id ? $track_id : 1;
-        $conId = trim($this->request->post('con_id'));
+        $goods_num   = trim($this->request->post('goods_num'));
+        $track_id    = trim($this->request->post('track_id'));
+        $track_id    = $track_id ? $track_id : 1;
+        $conId       = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -111,7 +108,7 @@ class Cart extends MyController
         if (!is_numeric($track_id)) {
             return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
         }
-        
+
 
         $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), intval($track_id));
         return $result;
@@ -141,14 +138,12 @@ class Cart extends MyController
      * @apiSampleRequest /index/cart/updateUserCart
      * @author rzc
      */
-    public function updateUserCart()
-    {
-       
+    public function updateUserCart() {
         $goods_skuid = trim($this->request->post('goods_skuid'));
-        $goods_num = trim($this->request->post('goods_num'));
-        $track_id = trim($this->request->post('track_id'));
-        $track_id = $track_id ? $track_id : 1;
-        $conId = trim($this->request->post('con_id'));
+        $goods_num   = trim($this->request->post('goods_num'));
+        $track_id    = trim($this->request->post('track_id'));
+        $track_id    = $track_id ? $track_id : 1;
+        $conId       = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -179,7 +174,7 @@ class Cart extends MyController
      * @apiDescription   editUserCart
      * @apiGroup         index_Cart
      * @apiName          editUserCart
-     * @apiParam (入参) {Number} paramUid 请求uid
+     * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} del_skuid 删除商品skuid,多条用','拼接
      * @apiParam (入参) {String} del_shopid 删除商品店铺ID,多条用','拼接
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数
@@ -197,10 +192,8 @@ class Cart extends MyController
      * @apiSampleRequest /index/cart/editUserCart
      * @author rzc
      */
-    public function editUserCart()
-    {
-       
-        $del_skuid = trim($this->request->post('del_skuid'));
+    public function editUserCart() {
+        $del_skuid  = trim($this->request->post('del_skuid'));
         $del_shopid = trim($this->request->post('del_shopid'));
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
         // $uid = $this->app->user->enUid($paramUid);
@@ -212,7 +205,6 @@ class Cart extends MyController
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        
         $result = $this->app->cart->editUserCart($conId, $del_shopid, $del_skuid);
         return $result;
     }

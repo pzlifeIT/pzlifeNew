@@ -19,4 +19,12 @@ class SupplierFreightDetail extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function supplierFreight() {
+        return $this->belongsTo('supplierFreight', 'freight_id', 'id');
+    }
+
+    public function supplierFreightArea() {
+        return $this->hasMany('supplierFreightArea', 'freight_detail_id', 'id');
+    }
 }

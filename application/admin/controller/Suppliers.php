@@ -172,7 +172,7 @@ class Suppliers extends AdminController {
         return $this->app->suppliers->editSupplier(intval($id), $tel, $name, $title, $desc, $image);
     }
 
-    /**
+    /*
      * @api              {post} / 停用或启用供应商
      * @apiDescription   issetSupplier
      * @apiGroup         admin_Suppliers
@@ -184,36 +184,36 @@ class Suppliers extends AdminController {
      * @apiSampleRequest /admin/suppliers/issetSupplier
      * @author rzc
      */
-    public function issetSupplier() {
-        /* 参数处理及判断 */
-        $status = trim($this->request->post('status'));
-        $id     = trim($this->request->post('id'));
-        if (!is_numeric($status) || !is_numeric($id)) {
-            return ['code' => '3001'];
-        }
-        $supplier = $this->app->suppliers->getSupplierWhereFile('id', $id);
-        /* 已启用供应商 */
-        if ($status == 1 && $status == $supplier['status']) {
-            return ['code' => '3002'];
-        } /* 已停用供应商 */
-        elseif ($status == 2 && $status == $supplier['status']) {
-            return ['code' => '3003'];
-        }
-        /* 启动事务 */
-        Db::startTrans();
-        try {
-            $this->app->suppliers->updateSupplier(['status' => $status], $id);
-            $this->app->suppliers->updateSupplierFreights($status, $id);
-            /* 提交事务 */
-            Db::commit();
-            return ['code' => '200', 'msg' => '操作成功'];
-        } catch (\Exception $e) {
-            /* 回滚事务 */
-            Db::rollback();
-            return ['code' => '3004', 'msg' => '操作失败'];
-        }
-
-    }
+//    public function issetSupplier() {
+//        /* 参数处理及判断 */
+//        $status = trim($this->request->post('status'));
+//        $id     = trim($this->request->post('id'));
+//        if (!is_numeric($status) || !is_numeric($id)) {
+//            return ['code' => '3001'];
+//        }
+//        $supplier = $this->app->suppliers->getSupplierWhereFile('id', $id);
+//        /* 已启用供应商 */
+//        if ($status == 1 && $status == $supplier['status']) {
+//            return ['code' => '3002'];
+//        } /* 已停用供应商 */
+//        elseif ($status == 2 && $status == $supplier['status']) {
+//            return ['code' => '3003'];
+//        }
+//        /* 启动事务 */
+//        Db::startTrans();
+//        try {
+//            $this->app->suppliers->updateSupplier(['status' => $status], $id);
+//            $this->app->suppliers->updateSupplierFreights($status, $id);
+//            /* 提交事务 */
+//            Db::commit();
+//            return ['code' => '200', 'msg' => '操作成功'];
+//        } catch (\Exception $e) {
+//            /* 回滚事务 */
+//            Db::rollback();
+//            return ['code' => '3004', 'msg' => '操作失败'];
+//        }
+//
+//    }
 
     /**
      * @api              {post} / 获取供应商快递模板列表

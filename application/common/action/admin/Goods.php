@@ -200,8 +200,8 @@ class Goods {
             $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
             $data['sku_image'] = $image;
         }
-        $supplierId     = $goodsRow['supplier_id'];//供应商id
-        $supplierIdList = DbGoods::getSupplierFreights('id', $supplierId);
+        $supplierId = $goodsRow['supplier_id'];//供应商id
+        $supplierIdList = DbGoods::getSupplierFreights(['supid' => $supplierId, 'status' => 1], 'id');
         $supplierIdList = array_column($supplierIdList, 'id');
         if (!in_array($data['freight_id'], $supplierIdList)) {
             return ['code' => '3009'];
@@ -589,10 +589,13 @@ class Goods {
     public function upDown(int $id, int $type) {
         //判断传过来的id是否有效
         $where = [["id", "=", $id]];
-        $field = "goods_name";
+        $field = "goods_name,cate_id";
         $res   = DbGoods::getOneGoods($where, $field);
         if (empty($res)) {
             return ["code" => '3001'];
+        }
+        if (empty($res['cate_id'])) {
+            return ['code' => '3009'];
         }
         if ($type == 1) {// 上架
             $stockAll = 0;
