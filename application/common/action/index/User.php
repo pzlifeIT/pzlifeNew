@@ -536,10 +536,10 @@ class User extends CommonIndex {
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级名称'];
         }
-        print_r($province);
+        /* print_r($province);
         print_r($city);
         print_r($area);
-        die;
+        die; */
         $data                = [];
         $data['uid']         = $uid;
         $data['province_id'] = $province['id'];
