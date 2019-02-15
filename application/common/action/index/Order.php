@@ -36,7 +36,7 @@ class Order extends CommonIndex {
         }
         $cityId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('*', ['id' => $userAddressId]);
+            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId]);
             if (empty($userAddress)) {
                 return ['code' => '3003'];
             }
@@ -108,7 +108,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $userAddress = DbUser::getUserAddress('*', ['id' => $userAddressId]);
+        $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
         if (empty($userAddress)) {
             return ['code' => '3003'];
         }
@@ -132,7 +132,7 @@ class Order extends CommonIndex {
      */
     private function summary($uid, $skuIdList, $cityId) {
         $cart     = $this->getCartGoods($skuIdList, $uid);
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
             $eGoodsList = [];
@@ -395,13 +395,13 @@ class Order extends CommonIndex {
         }
         /* 判断会员身份，低于当前层级可购买升级 */
         $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];/* 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人 */
-       
-        if ($user_identity >= $user_type+1) {
+
+        if ($user_identity >= $user_type + 1) {
             return ['code' => '3003', 'msg' => '购买权益等级低于当前权益'];
         }
-       
+
         /* 先查询是否有已存在未结算订单 */
-        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1],'*', true);
+        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1], '*', true);
         if ($has_member_order) {
             /* 判断订单金额是否与最新订单金额相等 */
             if ($pay_money != $has_member_order['pay_money']) {
