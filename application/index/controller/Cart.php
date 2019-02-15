@@ -93,9 +93,8 @@ class Cart extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
-        // $uid = $this->app->user->enUid($paramUid);
-        // echo $uid;die;
+        // 5a3f0e0196fdebb4737c0851849c2005
+       
         if (empty($goods_skuid)) {
             return ['code' => '3009', 'msg' => '缺少参数:uid或者商品SKUID'];
         }
@@ -105,11 +104,9 @@ class Cart extends MyController {
         if (!is_numeric($goods_num)) {
             return ['code' => '3004', 'msg' => '购买数量必须是数字'];
         }
-        if (!is_numeric($track_id)) {
-            return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
-        }
-        $parent_id = enUid($parent_id);
-
+       
+        $parent_id = deUid($parent_id);
+        
         $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
         return $result;
     }
@@ -119,7 +116,7 @@ class Cart extends MyController {
      * @apiDescription   updateUserCart
      * @apiGroup         index_Cart
      * @apiName          updateUserCart
-     * @apiParam (入参) {Number} paramUid 请求uid
+     * @apiParam (入参) {Number} con_id 请求uid
      * @apiParam (入参) {Number} goods_skuid 商品SKU_id
      * @apiParam (入参) {Number} goods_num 数量(数量为0则为删除此商品)
      * @apiParam (入参) {Number} track_id 店铺ID

@@ -35,8 +35,9 @@ class Cart extends CommonIndex {
         $where     = [["id", "=", $goods_skuid]];
         $goods_sku = DbGoods::getOneSku($where, $field);
 
-        $field = 'uid,shop_name,shop_image,server_mobile,status';
+        $field = 'id,uid,shop_name,shop_image,server_mobile,status';
         $where = ['uid' => $parent_id];
+        
         $shop  = DbShops::getShopInfo($field, $where);
         if (!$shop) {
             $track_id = 1;
