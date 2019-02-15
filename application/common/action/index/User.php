@@ -536,10 +536,8 @@ class User extends CommonIndex {
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级名称'];
         }
-        /* print_r($province);
-        print_r($city);
-        print_r($area);
-        die; */
+       
+       
         $data                = [];
         $data['uid']         = $uid;
         $data['province_id'] = $province['id'];
@@ -548,7 +546,7 @@ class User extends CommonIndex {
         $data['address']     = $address;
         $data['mobile']      = $mobile;
         $data['name']        = $name;
-        $data                = ['default' => 2];
+        $data['default']     =   2;
         $add                 = DbUser::addUserAddress($data);
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];

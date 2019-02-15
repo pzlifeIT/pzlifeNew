@@ -386,7 +386,7 @@ class Order extends CommonIndex {
         }
 
         /* 判断会员身份，低于当前层级可购买升级 */
-        $user_identity = DbUser::getUserOne(['uid' => $uid], 'user_identity')['user_identity'];
+        $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];
         if ($user_identity >= $user_type) {
             return ['code' => '3003', 'msg' => '购买权益等级低于当前权益'];
         }

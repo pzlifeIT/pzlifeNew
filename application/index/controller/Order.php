@@ -166,7 +166,6 @@ class Order extends MyController {
      * @apiName          createMemberOrder
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员1000
-     * @apiParam (入参) {Number} city_id 选择的地址
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type必须是数字 
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/createMemberOrder
