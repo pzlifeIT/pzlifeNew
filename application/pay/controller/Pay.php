@@ -17,21 +17,16 @@ class Pay extends PayController {
         parent::__construct($app);
     }
 
-    public function index() {
-        echo 'index';
-        exit;
-    }
-
     /**
-     * @api              {post} / 购买钻石会员
+     * @api              {post} / 支付订单
      * @apiDescription   pay
      * @apiGroup         pay_wxpay
      * @apiName          pay
      * @apiParam (入参) {String} order_no 订单号
      * @apiParam (入参) {Int} payment 1.普通订单 2.购买会员订单 3.虚拟商品订单
      * @apiParam (入参) {String} [platform] 环境 1.小程序 2.公众号(默认1)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:city_id必须为数字 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 3007:商品库存不够
-     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单号不存在 / 3001.订单号错误 / 3002.订单类型错误 / 3004:订单已取消 / 3005:订单已关闭 / 3006:订单已付款 3007:订单已过期 / 3008:已付款 / 3009:支付方式暂不支持
+     * @apiSuccess (返回) {String} parameters 发起支付加密数据
      * @apiSampleRequest /pay/pay/pay
      * @author zyr
      */
@@ -49,7 +44,6 @@ class Pay extends PayController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->payment->payment($orderNo, intval($payment), $platform);
-//        $result = call_user_func_array([$this->app->payment, $paymentPlatformArr[$paymentPlatform]], [$orderNo, intval($payType)]);
         return $result;
     }
 
