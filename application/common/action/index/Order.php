@@ -2,6 +2,7 @@
 
 namespace app\common\action\index;
 
+use app\facade\DbUser;
 use app\facade\DbShops;
 use Config;
 use app\facade\DbGoods;
@@ -20,17 +21,25 @@ class Order extends CommonIndex {
      * 结算页面
      * @param $conId
      * @param $skuIdList
-     * @param $cityId
+     * @param $userAddressId
      * @return array
      * @author zyr
      */
-    public function createSettlement($conId, $skuIdList, $cityId) {
+    public function createSettlement($conId, $skuIdList, $userAddressId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
         if ($this->checkCart($skuIdList, $uid) === false) {
             return ['code' => '3005'];//商品未加入购物车
+        }
+        $cityId = 0;
+        if (!empty($userAddressId)) {
+            $userAddress = DbUser::getUserAddress('*', ['id' => $userAddressId]);
+            if (empty($userAddress)) {
+                return ['code' => '3003'];
+            }
+            $cityId = $userAddress['city_id'];
         }
         $summary = $this->summary($uid, $skuIdList, $cityId);
         if ($summary['code'] != '200') {
@@ -93,11 +102,16 @@ class Order extends CommonIndex {
         return $summary;
     }
 
-    public function createOrder($conId, $skuIdList, $cityId) {
+    public function createOrder($conId, $skuIdList, $userAddressId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
+        $userAddress = DbUser::getUserAddress('*', ['id' => $userAddressId]);
+        if (empty($userAddress)) {
+            return ['code' => '3003'];
+        }
+        $cityId = $userAddress['city_id'];
         if ($this->checkCart($skuIdList, $uid) === false) {
             return ['code' => '3005'];//参数有误，商品未加入购物车
         }
@@ -117,7 +131,7 @@ class Order extends CommonIndex {
      */
     private function summary($uid, $skuIdList, $cityId) {
         $cart     = $this->getCartGoods($skuIdList, $uid);
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
             $eGoodsList = [];
@@ -292,7 +306,7 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function checkCart($skuIdList, $uid) {
-        if(!$this->redis->exists($this->redisCartUserKey . $uid)){
+        if (!$this->redis->exists($this->redisCartUserKey . $uid)) {
             return false;
         }
         $prefix   = $this->prefix;

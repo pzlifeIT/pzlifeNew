@@ -200,7 +200,7 @@ class Goods {
             $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
             $data['sku_image'] = $image;
         }
-        $supplierId = $goodsRow['supplier_id'];//供应商id
+        $supplierId     = $goodsRow['supplier_id'];//供应商id
         $supplierIdList = DbGoods::getSupplierFreights(['supid' => $supplierId, 'status' => 1], 'id');
         $supplierIdList = array_column($supplierIdList, 'id');
         if (!in_array($data['freight_id'], $supplierIdList)) {
@@ -247,7 +247,7 @@ class Goods {
         }
         $relationList[$specId][] = $attrId;
         $carte                   = $this->cartesian(array_values($relationList));
-        $skuWhere                = ['goods_id' => $goodsId];
+        $skuWhere                = ['goods_id' => $goodsId, 'status' => 1];
         $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec,sku_image');
         $delId                   = [];//需要删除的sku id
         $delImage                = [];
@@ -259,7 +259,7 @@ class Goods {
                     array_splice($carte, $delKey, 1);
                 }
             } else {
-                array_push($delId, $sku['id']);
+                array_push($delId, ['id' => $sku['id'], 'status' => 2]);
                 if (!empty($sku['sku_image'])) {
                     array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
                 }
@@ -331,13 +331,13 @@ class Goods {
             $relationList[$val['spec_id']][] = $val['attr_id'];
         }
         $carte        = $this->cartesian(array_values($relationList));
-        $skuWhere     = ['goods_id' => $goodsId];
+        $skuWhere     = ['goods_id' => $goodsId, 'status' => 2];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
         $delId        = [];//需要删除的sku id
         $delImage     = [];
         foreach ($goodsSkuList as $sku) {
             if (!in_array($sku['spec'], $carte)) {
-                array_push($delId, $sku['id']);
+                array_push($delId, ['id' => $sku['id'], 'status' => 2]);
                 if (!empty($sku['sku_image'])) {
                     array_push($delImage, filtraImage(Config::get('qiniu.domain'), $sku['sku_image']));
                 }
@@ -409,7 +409,7 @@ class Goods {
 //        }
 
 
-        $result = DbGoods::getSku(['id' => $skuId], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,weight,volume,spec,sku_image');
+        $result = DbGoods::getSku(['id' => $skuId, 'status' => 1], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,weight,volume,spec,sku_image');
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -475,7 +475,7 @@ class Goods {
         //根据商品id获取sku表数据
         $sku = [];
         if (in_array(4, $getType)) {
-            $where = [["goods_id", "=", $id]];
+            $where = [["goods_id", "=", $id], ['status', '=', 1]];
             $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,integral_active,weight,volume,spec,sku_image";
             $sku   = DbGoods::getSku($where, $field);
         }

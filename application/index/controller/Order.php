@@ -11,7 +11,7 @@ class Order extends MyController {
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
-       /**
+    /**
      * @api              {post} / 获取用户订单
      * @apiDescription   getUserOrderList
      * @apiGroup         index_order
@@ -24,8 +24,8 @@ class Order extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserOrderList(){
-        $con_id = trim($this->request->post('con_id'));
+    public function getUserOrderList() {
+        $con_id       = trim($this->request->post('con_id'));
         $order_status = trim($this->request->post('order_status'));
         if (empty($con_id)) {
             return ['code' => '3002'];
@@ -37,29 +37,29 @@ class Order extends MyController {
             if (!is_numeric($order_status)) {
                 return ['code' => '3003'];
             }
-            $order_statusArr = [1,2,3,4,5,6,7,8,9,10];
-            if (!in_array($order_status,$order_statusArr)) {
+            $order_statusArr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            if (!in_array($order_status, $order_statusArr)) {
                 return ['code' => 3004];
             }
         }
-        
-        $result = $this->app->order->getUserOrderList($con_id,$order_status);
+
+        $result = $this->app->order->getUserOrderList($con_id, $order_status);
         return $result;
     }
 
-    /** 
+    /**
      * @api              {post} / 创建结算页
      * @apiDescription   createSettlement
      * @apiGroup         index_order
      * @apiName          createSettlement
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
-     * @apiParam (入参) {Number} [city_id] 选择的地址(不选地址暂不计算邮费)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:city_id必须为数字 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 3007:商品库存不够
+     * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
-     * @apiSuccess (返回) {Float} total_goods_price 商品ID
-     * @apiSuccess (返回) {Float} total_freight_price 所有商品总价
+     * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
+     * @apiSuccess (返回) {Float} total_freight_price 运费总价
      * @apiSuccess (返回) {Float} total_price 价格总计
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (supplier_list) {Int} id 供应商id
@@ -92,7 +92,8 @@ class Order extends MyController {
     public function createSettlement() {
         $skuIdList = trim($this->request->post('sku_id_list'));
         $conId     = trim($this->request->post('con_id'));
-        $cityId    = trim($this->request->post('city_id'));
+//        $cityId    = trim($this->request->post('city_id'));
+        $userAddressId = trim($this->request->post('user_address_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -105,11 +106,11 @@ class Order extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3002'];
         }
-        $cityId = empty($cityId) ? 0 : $cityId;
-        if (!is_numeric($cityId)) {
+        $userAddressId = empty($userAddressId) ? 0 : $userAddressId;
+        if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->order->createSettlement($conId, $skuIdList, intval($cityId));
+        $result = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId));
         return $result;
     }
 
@@ -120,8 +121,8 @@ class Order extends MyController {
      * @apiName          createOrder
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
-     * @apiParam (入参) {Number} city_id 选择的地址
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:city_id必须为数字 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 3007:商品库存不够
+     * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/createorder
      * @author zyr
@@ -129,7 +130,8 @@ class Order extends MyController {
     public function createOrder() {
         $skuIdList = trim($this->request->post('sku_id_list'));
         $conId     = trim($this->request->post('con_id'));
-        $cityId    = trim($this->request->post('city_id'));
+//        $cityId        = trim($this->request->post('city_id'));
+        $userAddressId = trim($this->request->post('user_address_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -142,10 +144,10 @@ class Order extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3002'];
         }
-        if (!is_numeric($cityId)) {
+        if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->order->createOrder($conId, $skuIdList, intval($cityId));
+        $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId));
         return $result;
     }
 }

@@ -376,7 +376,7 @@ class DbGoods {
     public function getSkuGoods($where, $field1, $field2) {
         return GoodsSku::field($field1)->withJoin([
             'goods' => function ($query) use ($field2) {
-                $query->withField($field2)->where(['status' => 1]);
+                $query->withField($field2)->where(['goods.status' => 1]);
             }])->where($where)->select()->toArray();
     }
 
@@ -670,7 +670,8 @@ class DbGoods {
      * @author
      */
     public function delSku($delId) {
-        return GoodsSku::save(['status' => 2], ['id', $delId]);
+        $goodSku = new GoodsSku();
+        return $goodSku->saveAll($delId);
 //        return GoodsSku::destroy($isList);
     }
 
