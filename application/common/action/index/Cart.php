@@ -148,7 +148,7 @@ class Cart extends CommonIndex {
 
                     /* 若无此规格，则该商品暂时以失效处理 */
                     if (!$goods_sku_name) {
-                        $old_failure[$track_id][] = $goods_data;
+                        $old_failure[$track_id][] = $goods_sku;
                         continue;
                     }
                     /*  print_r($goods_sku_name);die; */

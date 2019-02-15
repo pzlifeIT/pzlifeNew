@@ -98,7 +98,7 @@ class Goods extends MyController
     public function getGoods(){
         $goods_id = trim($this->request->post('goods_id'));
         $source = trim($this->request->post('source'));
-        $result = $this->app->goods->getGoodsinfo($goods_id,$source);
+        $result = $this->app->goods->getGoodsinfo($goods_id,intval($source));
         return $result;
     }
     
