@@ -384,21 +384,22 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-
-        /* 判断会员身份，低于当前层级可购买升级 */
-        $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];
-        if ($user_identity >= $user_type) {
-            return ['code' => '3003', 'msg' => '购买权益等级低于当前权益'];
-        }
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
         } elseif ($user_type == 2) {
             $pay_money = 15000;
         } elseif ($user_type == 3) {
-            $user_type == 1;
+            $user_type = 1;
             $pay_money = 1000;
         }
+        /* 判断会员身份，低于当前层级可购买升级 */
+        $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];/* 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人 */
+       
+        if ($user_identity >= $user_type+1) {
+            return ['code' => '3003', 'msg' => '购买权益等级低于当前权益'];
+        }
+       
         /* 先查询是否有已存在未结算订单 */
         $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1],'*', true);
         if ($has_member_order) {
