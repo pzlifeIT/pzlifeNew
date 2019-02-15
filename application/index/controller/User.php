@@ -317,11 +317,11 @@ class User extends MyController {
      * @apiDescription   updateUserAddress
      * @apiGroup         index_user
      * @apiName          updateUserAddress
-     * @apiParam (入参) {String} uid 用户加密id
+     * @apiParam (入参) {String} con_id 用户加密id
      * @apiParam (入参) {String} address_id 修改地址ID
-     * @apiParam (入参) {Number} province_id 省id
-     * @apiParam (入参) {Number} city_id 市id
-     * @apiParam (入参) {Number} area_id 区级id
+     * @apiParam (入参) {Number} province_name 省id
+     * @apiParam (入参) {Number} city_name 市id
+     * @apiParam (入参) {Number} area_name 区级id
      * @apiParam (入参) {String} address 详细地址
      * @apiParam (入参) {String} mobile 电话号码
      * @apiParam (入参) {String} name 姓名
