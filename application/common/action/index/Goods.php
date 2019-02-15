@@ -89,7 +89,7 @@ class Goods
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
         $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
-        $where = ['goods_id'=>$goods_id];
+        $where = ['goods_id' => $goods_id,'status' => 1];
         $field = 'market_price';
         $goods_data['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
         $goods_data['max_market_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
@@ -166,7 +166,7 @@ class Goods
          
         
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,integral_active,spec,sku_image';
-        $where = [["goods_id", "=", $goods_id]];
+        $where = [["goods_id", "=", $goods_id],["status", "=",1]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         foreach ($goods_sku as $goods => $sku) {
@@ -176,7 +176,7 @@ class Goods
     }
 
  /**
-     * 分类商品列表
+     * 专题商品列表
      * @param $cate_id
      * @param $page
      * @param $page_num
@@ -236,7 +236,7 @@ class Goods
            /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             $result[$key]['spec'] = $goods_spec;
             $result[$key]['goods_sku'] = $goods_sku; */
-            $where = ['goods_id'=>$value['id']];
+            $where = ['goods_id' => $value['id'],'status' => 1];
             $field = 'market_price';
             $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             $field = 'retail_price';
