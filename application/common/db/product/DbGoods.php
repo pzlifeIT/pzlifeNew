@@ -663,13 +663,15 @@ class DbGoods {
     }
 
     /**
-     * 删除sku
-     * @param $isList
+     * 删除sku(状态修改为无效)
+     * @param $delId
+     * @param $id
      * @return bool
      * @author
      */
-    public function delSku($isList) {
-        return GoodsSku::destroy($isList);
+    public function delSku($delId) {
+        return GoodsSku::save(['status' => 2], ['id', $delId]);
+//        return GoodsSku::destroy($isList);
     }
 
 
