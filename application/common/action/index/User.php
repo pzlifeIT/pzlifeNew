@@ -646,7 +646,7 @@ class User extends CommonIndex {
 
         /* 查询一条用户地址详细信息 */
         if ($address_id) {
-            $where  = ['uid' => $uid, 'address_id' => $address_id];
+            $where  = ['uid' => $uid, 'id' => $address_id];
             $result = DbUser::getUserAddress($field, $where, true);
             if (empty($result)) {
                 return ['code' => 3000];
