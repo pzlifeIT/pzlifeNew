@@ -121,7 +121,7 @@ class Cart extends CommonIndex {
 
                     /* $track_id = $track_id; */
                     /* 获取店铺信息 */
-
+                   
                     /* 查询商品信息 */
                     $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
                     $where     = [["id", "=", $skuid]];
@@ -184,7 +184,7 @@ class Cart extends CommonIndex {
             $valid = [];
             foreach ($old_valid as $old => $val) {
                 //    print_r($val);
-                $field         = 'uid,shop_name,shop_image,server_mobile,status';
+                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
                 $where         = ['id' => $old];
                 $shop          = DbShops::getShopInfo($field, $where);
                 $shop['goods'] = $val;
@@ -193,7 +193,7 @@ class Cart extends CommonIndex {
             $failure = [];
             foreach ($old_failure as $old => $val) {
                 //    print_r($val);
-                $field         = 'uid,shop_name,shop_image,server_mobile,status';
+                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
                 $where         = ['id' => $old];
                 $shop          = DbShops::getShopInfo($field, $where);
                 $shop['goods'] = $val;

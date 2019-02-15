@@ -382,6 +382,9 @@ class Order extends CommonIndex {
             $pay_money = 100;
         }elseif ($user_type == 2) {
             $pay_money = 15000;
+        }elseif($user_type == 3){
+            $user_type == 1;
+            $pay_money = 1000;
         }
         /* 先查询是否有已存在未结算订单 */
 

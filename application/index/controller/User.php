@@ -279,9 +279,9 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          addUserAddress
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Number} province_id 省id
-     * @apiParam (入参) {Number} city_id 市id
-     * @apiParam (入参) {Number} area_id 区级id
+     * @apiParam (入参) {Number} province_name 省id
+     * @apiParam (入参) {Number} city_name 市id
+     * @apiParam (入参) {Number} area_name 区级id
      * @apiParam (入参) {String} address 详细地址
      * @apiParam (入参) {String} mobile 电话号码
      * @apiParam (入参) {String} name 姓名
@@ -293,9 +293,9 @@ class User extends MyController {
      */
     public function addUserAddress() {
         $conId       = trim($this->request->post('con_id'));
-        $province_id = trim($this->request->post('province_id'));
-        $city_id     = trim($this->request->post('city_id'));
-        $area_id     = trim($this->request->post('area_id'));
+        $province_id = trim($this->request->post('province_name'));
+        $city_id     = trim($this->request->post('city_name'));
+        $area_id     = trim($this->request->post('area_name'));
         $address     = trim($this->request->post('address'));
         $mobile      = trim($this->request->post('mobile'));
         $name        = trim($this->request->post('name'));
@@ -308,7 +308,7 @@ class User extends MyController {
         if (!checkMobile($mobile)) {
             return ['code' => '3003'];//手机格式有误
         }
-        $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address, $mobile, $name);
+        $result = $this->app->user->addUserAddress($conId, $province_name, $city_name, $area_name, $address, $mobile, $name);
         return $result;
     }
 
