@@ -83,6 +83,7 @@ class User extends MyController {
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} encrypteddata 微信加密信息
      * @apiParam (入参) {String} iv
+     * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/register
@@ -96,6 +97,8 @@ class User extends MyController {
         $password      = trim($this->request->post('password'));
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
+        $platform      = trim($this->request->post('platform'));
+        $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
         }
@@ -108,7 +111,8 @@ class User extends MyController {
         if (checkPassword($password) === false) {
             return ['code' => '3005'];
         }
-        $resule = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv);
+        $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
+        $resule   = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform);
         return $resule;
     }
 
@@ -219,6 +223,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          loginUserByWx
      * @apiParam (入参) {String} code 微信code
+     * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
      * @apiSuccess (data) {String} uid 用户加密id
      * @apiSampleRequest /index/user/loginuserbywx
@@ -226,11 +231,14 @@ class User extends MyController {
      * @author zyr
      */
     public function loginUserByWx() {
-        $code = trim($this->request->post('code'));
+        $code        = trim($this->request->post('code'));
+        $platform    = trim($this->request->post('platform'));
+        $platformArr = [1, 2];
         if (strlen($code) != 32) {
             return ['code' => 3001];
         }
-        $res = $this->app->user->loginUserByWx($code);
+        $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
+        $res      = $this->app->user->loginUserByWx($code, $platform);
         return $res;
     }
 
@@ -240,7 +248,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserAddress
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Number} address_id 查询一条传值，查所有不传 
+     * @apiParam (入参) {Number} address_id 查询一条传值，查所有不传
      * @apiSuccess (返回) {String} code 200:成功 3000:该用户没有地址 / 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:conId有误查不到uid
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserAddress
@@ -248,8 +256,8 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserAddress() {
-        $conId = trim($this->request->post('con_id'));
-        $address_id    = trim($this->request->post('address_id'));
+        $conId      = trim($this->request->post('con_id'));
+        $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -261,7 +269,7 @@ class User extends MyController {
                 return ['code' => '3003'];
             }
         }
-        $result = $this->app->user->getUserAddress($conId,$address_id);
+        $result = $this->app->user->getUserAddress($conId, $address_id);
         return $result;
     }
 
@@ -300,7 +308,7 @@ class User extends MyController {
         if (!checkMobile($mobile)) {
             return ['code' => '3003'];//手机格式有误
         }
-        $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address,$mobile,$name);
+        $result = $this->app->user->addUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address, $mobile, $name);
         return $result;
     }
 
@@ -341,7 +349,7 @@ class User extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->updateUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address,$name,$mobile,$address_id);
+        $result = $this->app->user->updateUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address, $name, $mobile, $address_id);
         return $result;
     }
 
@@ -359,9 +367,9 @@ class User extends MyController {
      * @author rzc
      */
 
-     public function updateUserAddressDefault(){
-        $conId       = trim($this->request->post('con_id'));
-        $address_id  = trim($this->request->post('address_id'));
+    public function updateUserAddressDefault() {
+        $conId      = trim($this->request->post('con_id'));
+        $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -371,8 +379,8 @@ class User extends MyController {
         if (!is_numeric($address_id)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->user->updateUserAddressDefault($conId,$address_id);
+        $result = $this->app->user->updateUserAddressDefault($conId, $address_id);
         return $resule;
-     }
-     
+    }
+
 }

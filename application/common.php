@@ -177,3 +177,14 @@ function classBasename($class) {
     $class = is_object($class) ? get_class($class) : $class;
     return basename(str_replace('\\', '/', $class));
 }
+
+/**
+ * 创建唯一订单号
+ * @param $prefix (1.odr:购买商品订单 2.mem:购买会员订单 3.wpy:微信支付订单号)
+ * @return string
+ * @author zyr
+ */
+function createOrderNo($prefix = 'odr') {
+    $orderNo = $prefix . date('ymdHis') . substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
+    return $orderNo;
+}

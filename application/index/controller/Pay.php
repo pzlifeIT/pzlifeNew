@@ -4,9 +4,6 @@ namespace app\index\controller;
 
 use app\index\MyController;
 use Env;
-use think\Container;
-use think\Controller;
-
 
 class Pay extends MyController
 {
