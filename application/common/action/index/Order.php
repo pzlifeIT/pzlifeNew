@@ -400,8 +400,7 @@ class Order extends CommonIndex {
             $pay_money = 1000;
         }
         /* 先查询是否有已存在未结算订单 */
-
-        $has_member_order = DbOrder::getMemberOrder('*', ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1], true);
+        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1],'*', true);
         if ($has_member_order) {
             /* 判断订单金额是否与最新订单金额相等 */
             if ($pay_money != $has_member_order['pay_money']) {
