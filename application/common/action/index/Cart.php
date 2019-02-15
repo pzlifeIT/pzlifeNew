@@ -136,8 +136,8 @@ class Cart extends CommonIndex {
                     $goods_data['buy_num']  = $num;
                     /* print_r($goods_data); */
                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
-                    if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || !$goods_sku) {
-                        $old_failure[$track_id][] = $goods_data;
+                    if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                        $old_failure[$track_id][] = $goods_sku;
                         continue;
                     }
                     /* 获取购物车购买规格属性 */
