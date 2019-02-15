@@ -123,7 +123,7 @@ class Cart extends CommonIndex {
                     /* 获取店铺信息 */
                    
                     /* 查询商品信息 */
-                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
+                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image,status';
                     $where     = [["id", "=", $skuid]];
                     $goods_sku = DbGoods::getOneSku($where, $field);
                     /* 该规格查询不到直接失效 */
