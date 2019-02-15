@@ -608,13 +608,13 @@ class User extends CommonIndex {
         }
         $data                = [];
         $data['province_id'] = $province_id;
-        $data['city_id']     = $city_id;
-        $data['area_id']     = $area_id;
-        $data['address']     = $address;
-        $data['mobile']      = $mobile;
-        $data['name']        = $name;
-        DbUser::updateUserAddress($data, $where);
-        return ['code' => 200];
+        $data['city_id'] = $city_id;
+        $data['area_id'] = $area_id;
+        $data['address'] = $address;
+        $data['mobile'] = $mobile;
+        $data['name'] = $name;
+        DbUser::updateUserAddress($data,$where);
+        return ['code' => 200,'msg' => '修改成功'];
     }
 
     /**
