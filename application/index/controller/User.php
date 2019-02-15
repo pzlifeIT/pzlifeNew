@@ -293,9 +293,9 @@ class User extends MyController {
      */
     public function addUserAddress() {
         $conId       = trim($this->request->post('con_id'));
-        $province_id = trim($this->request->post('province_name'));
-        $city_id     = trim($this->request->post('city_name'));
-        $area_id     = trim($this->request->post('area_name'));
+        $province_name = trim($this->request->post('province_name'));
+        $city_name     = trim($this->request->post('city_name'));
+        $area_name     = trim($this->request->post('area_name'));
         $address     = trim($this->request->post('address'));
         $mobile      = trim($this->request->post('mobile'));
         $name        = trim($this->request->post('name'));
@@ -333,9 +333,9 @@ class User extends MyController {
      */
     public function updateUserAddress() {
         $conId       = trim($this->request->post('con_id'));
-        $province_id = trim($this->request->post('province_id'));
-        $city_id     = trim($this->request->post('city_id'));
-        $area_id     = trim($this->request->post('area_id'));
+        $province_name = trim($this->request->post('province_name'));
+        $city_name     = trim($this->request->post('city_name'));
+        $area_name     = trim($this->request->post('area_name'));
         $address     = trim($this->request->post('address'));
         $mobile      = trim($this->request->post('mobile'));
         $name        = trim($this->request->post('name'));
@@ -349,7 +349,7 @@ class User extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->updateUserAddress($conId, intval($province_id), intval($city_id), intval($area_id), $address, $name, $mobile, $address_id);
+        $result = $this->app->user->updateUserAddress($conId, $province_name, $city_name, $area_name, $address, $name, $mobile, $address_id);
         return $result;
     }
 
