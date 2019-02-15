@@ -137,6 +137,7 @@ class Cart extends CommonIndex {
                     /* print_r($goods_data); */
                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
                     if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                        $goods_sku['goods_name'] = $goods_data['goods_name'];
                         $old_failure[$track_id][] = $goods_sku;
                         continue;
                     }
@@ -148,6 +149,7 @@ class Cart extends CommonIndex {
 
                     /* 若无此规格，则该商品暂时以失效处理 */
                     if (!$goods_sku_name) {
+                        $goods_sku['goods_name'] = $goods_data['goods_name'];
                         $old_failure[$track_id][] = $goods_sku;
                         continue;
                     }
