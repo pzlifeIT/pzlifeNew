@@ -6,6 +6,7 @@ use app\facade\DbUser;
 use app\facade\DbShops;
 use Config;
 use app\facade\DbGoods;
+use app\facade\DbOrder;
 use think\Db;
 
 class Order extends CommonIndex {
@@ -320,4 +321,105 @@ class Order extends CommonIndex {
         }
         return false;
     }
+
+    /**
+     * 创建唯一订单号
+     * @author zyr
+     */
+    private function createOrderNo() {
+        $orderNo = date('ymdHis') . substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
+        return $orderNo;
+    }
+
+    /**
+     * 获取用户订单列表
+     * @param $conId
+     * @param $order_status
+     * @param $cityId
+     * @return array
+     * @author rzc
+     */
+    public function getUserOrderList($conId, $order_status = false, $page, $pagenum) {
+        $uid = $this->getUidByConId($conId);
+        // $uid = 1;
+        if (empty($uid)) {
+            return ['code' => '3005'];
+        }
+        $offset = ($page - 1) * $pagenum;
+        if ($offset < 0) {
+            return ['code' => '3000'];
+        }
+        $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money';
+        if ($order_status) {
+            $where = ['uid' => $uid, 'order_status' => $order_status];
+        }
+        $where  = ['uid' => $uid];
+        $limit  = $offset . ',' . $pagenum;
+        $result = DbOrder::getUserOrder($field, $where, false, $limit);
+        if (empty($result)) {
+            return ['code' => '200', 'order_list' => []];
+        }
+
+        foreach ($result as $key => $value) {
+            $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
+            // print_r($order_child);die;
+            foreach ($order_child as $order => $child) {
+                $order_child[$order]['order_goods'] = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
+
+            }
+            $result[$key]['order_child'] = $order_child;
+        }
+        return ['code' => '200', 'order_list' => $result];
+    }
+
+    /**
+     * 创建用户权益订单
+     * @param $conId
+     * @param $user_type
+     * @return array
+     * @author rzc
+     */
+    public function createMemberOrder($conId, $user_type) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+
+        /* 判断会员身份，低于当前层级可购买升级 */
+        $user_identity = DbUser::getUserOne(['uid' => $uid], 'user_identity')['user_identity'];
+        if ($user_identity >= $user_type) {
+            return ['code' => '3003', 'msg' => '购买权益等级低于当前权益'];
+        }
+        /* 计算支付金额 */
+        if ($user_type == 1) {
+            $pay_money = 100;
+        } elseif ($user_type == 2) {
+            $pay_money = 15000;
+        } elseif ($user_type == 3) {
+            $user_type == 1;
+            $pay_money = 1000;
+        }
+        /* 先查询是否有已存在未结算订单 */
+
+        $has_member_order = DbOrder::getMemberOrder('*', ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1], true);
+        if ($has_member_order) {
+            /* 判断订单金额是否与最新订单金额相等 */
+            if ($pay_money != $has_member_order['pay_money']) {
+                $has_member_order['pay_money'] = $pay_money;
+                /* 更新支付金额 */
+                DbOrder::updateMemberOrder(['pay_money' => $pay_money], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
+            }
+            return ['code' => '200', 'order_data' => $has_member_order];
+        } else {
+            $order              = [];
+            $order['order_no']  = $this->createOrderNo();
+            $order['uid']       = $uid;
+            $order['user_type'] = $user_type;
+            $order['pay_money'] = $pay_money;
+            DbOrder::addMemberOrder($order);
+            return ['code' => '200', 'order_data' => $order];
+        }
+
+    }
 }
+/* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

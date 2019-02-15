@@ -18,7 +18,9 @@ class Order extends MyController {
      * @apiName          getUserOrderList
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_status必须是数字 / 3004:订单状态码有误
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {Number} pagenum 每页展示条数
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_status、page和pagenum必须是数字 / 3004:订单状态码有误
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/order/getUserOrderList
      * @return array
@@ -27,11 +29,18 @@ class Order extends MyController {
     public function getUserOrderList() {
         $con_id       = trim($this->request->post('con_id'));
         $order_status = trim($this->request->post('order_status'));
+        $page = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pagenum'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
         if (empty($con_id)) {
             return ['code' => '3002'];
         }
         if (strlen($con_id) != 32) {
             return ['code' => '3001'];
+        }
+        if (!is_numeric($page) || !is_numeric($pagenum)) {
+            return ['code' => '3003'];
         }
         if ($order_status) {
             if (!is_numeric($order_status)) {
@@ -42,8 +51,7 @@ class Order extends MyController {
                 return ['code' => 3004];
             }
         }
-
-        $result = $this->app->order->getUserOrderList($con_id, $order_status);
+        $result = $this->app->order->getUserOrderList($con_id,$order_status,$page,$pagenum);
         return $result;
     }
 
@@ -148,6 +156,35 @@ class Order extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 创建购买权益订单
+     * @apiDescription   createMemberOrder
+     * @apiGroup         index_order
+     * @apiName          createMemberOrder
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员1000
+     * @apiParam (入参) {Number} city_id 选择的地址
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type必须是数字 
+     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSampleRequest /index/order/createMemberOrder
+     * @author rzc
+     */
+    public function createMemberOrder(){
+        $conId = trim($this->request->post('con_id'));
+        $user_type = trim($this->request->post('user_type'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($user_type)) {
+            return ['code' => 3003];
+        }
+        $result = $this->app->order->createMemberOrder($conId,intval($user_type));
         return $result;
     }
 }

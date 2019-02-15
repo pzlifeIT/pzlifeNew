@@ -121,9 +121,9 @@ class Cart extends CommonIndex {
 
                     /* $track_id = $track_id; */
                     /* 获取店铺信息 */
-
+                   
                     /* 查询商品信息 */
-                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
+                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image,status';
                     $where     = [["id", "=", $skuid]];
                     $goods_sku = DbGoods::getOneSku($where, $field);
                     /* 该规格查询不到直接失效 */
@@ -135,22 +135,14 @@ class Cart extends CommonIndex {
                     $goods_data['track_id'] = $track_id;
                     $goods_data['buy_num']  = $num;
                     /* print_r($goods_data); */
-                    /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
-                    if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || !$goods_sku) {
-                        $old_failure[$track_id][] = $goods_data;
-                        continue;
-                    }
+                   
                     /* 获取购物车购买规格属性 */
                     $attr_field = 'id,spec_id,attr_name';
                     $attr_where = [['id', 'in', $goods_sku['spec']]];
 
                     $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
 
-                    /* 若无此规格，则该商品暂时以失效处理 */
-                    if (!$goods_sku_name) {
-                        $old_failure[$track_id][] = $goods_data;
-                        continue;
-                    }
+                    
                     /*  print_r($goods_sku_name);die; */
 
                     /* 获取商品所在分类 */
@@ -176,6 +168,16 @@ class Cart extends CommonIndex {
                     $cart_buy['track_id']      = $goods_data['track_id'];
                     $cart_buy['buy_num']       = $goods_data['buy_num'];
 
+                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
+                     if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                        $old_failure[$track_id][] = $cart_buy;
+                        continue;
+                    }
+                    /* 若无此规格，则该商品暂时以失效处理 */
+                    if (!$goods_sku_name) {
+                        $old_failure[$track_id][] = $cart_buy;
+                        continue;
+                    }
                     $old_valid[$track_id][] = $cart_buy;
 
                 }
@@ -184,7 +186,7 @@ class Cart extends CommonIndex {
             $valid = [];
             foreach ($old_valid as $old => $val) {
                 //    print_r($val);
-                $field         = 'uid,shop_name,shop_image,server_mobile,status';
+                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
                 $where         = ['id' => $old];
                 $shop          = DbShops::getShopInfo($field, $where);
                 $shop['goods'] = $val;
@@ -193,7 +195,7 @@ class Cart extends CommonIndex {
             $failure = [];
             foreach ($old_failure as $old => $val) {
                 //    print_r($val);
-                $field         = 'uid,shop_name,shop_image,server_mobile,status';
+                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
                 $where         = ['id' => $old];
                 $shop          = DbShops::getShopInfo($field, $where);
                 $shop['goods'] = $val;

@@ -1,5 +1,4 @@
 <?php
-
 namespace app\facade;
 
 use think\Facade;
