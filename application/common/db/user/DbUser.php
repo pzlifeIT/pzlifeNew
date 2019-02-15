@@ -161,7 +161,7 @@ class DbUser {
      */
     public function addUserAddress($data) {
         $userAddress = new UserAddress();
-        $userAddress->save($data); 
+        $userAddress->save($data);
         return $userAddress->id;
     }
 
@@ -172,9 +172,9 @@ class DbUser {
      * @return bool
      * @author rzc
      */
-    public function updateUserAddress($data,$where){
+    public function updateUserAddress($data, $where) {
         $userAddress = new UserAddress();
-        return  $userAddress->save($data,$where); 
+        return $userAddress->save($data, $where);
     }
 
     /**
@@ -185,11 +185,27 @@ class DbUser {
      * @return array
      * @author rzc
      */
-    public function getUserAddress($field,$where,$row = false){
+    public function getUserAddress($field, $where, $row = false) {
         $obj = UserAddress::where($where)->field($field);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
         return $obj->select()->toArray();
+    }
+
+    public function getUserWxinfo($where, $field, $row = false) {
+        $obj = UserWxinfo::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
     }
 }

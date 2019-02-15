@@ -11,10 +11,5 @@
 
 // 应用容器绑定定义
 return [
-    'user'     => app\common\action\index\User::class,
-    'category' => \app\common\action\index\Category::class,
-    'goods' => \app\common\action\index\Goods::class,
-    'cart' => \app\common\action\index\Cart::class,
-//    'collect'  => \app\common\action\index\Collect::class,
-    'order'     => app\common\action\index\Order::class
+    'payment' => app\common\action\pay\Payment::class,
 ];

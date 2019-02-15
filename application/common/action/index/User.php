@@ -137,10 +137,11 @@ class User extends CommonIndex {
      * @param $code
      * @param $encrypteddata
      * @param $iv
+     * @param $platform
      * @return array
      * @author zyr
      */
-    public function register($mobile, $vercode, $password, $code, $encrypteddata, $iv) {
+    public function register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform) {
         $stype = 1;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
@@ -184,7 +185,7 @@ class User extends CommonIndex {
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
             Db::commit();
-            $this->saveOpenid($uid, $wxInfo['openid']);
+            $this->saveOpenid($uid, $wxInfo['openid'], $platform);
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
@@ -221,10 +222,11 @@ class User extends CommonIndex {
     /**
      * 微信登录
      * @param $code
+     * @param $platform
      * @return array
      * @author zyr
      */
-    public function loginUserByWx($code) {
+    public function loginUserByWx($code, $platform) {
         $wxInfo = $this->getOpenid($code);
         if ($wxInfo === false) {
             return ['code' => '3001'];
@@ -253,7 +255,7 @@ class User extends CommonIndex {
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
             DbUser::updateUser(['last_time' => time()], $uid);
-            $this->saveOpenid($id, $wxInfo['openid']);
+            $this->saveOpenid($id, $wxInfo['openid'], $platform);
             return ['code' => '200', 'con_id' => $conId];
         }
         return ['code' => '3003'];
@@ -263,14 +265,17 @@ class User extends CommonIndex {
      * 保存openid
      * @param $uid
      * @param $openId
+     * @param $platform
      * @author zyr
      */
-    private function saveOpenid($uid, $openId) {
+    private function saveOpenid($uid, $openId, $platform) {
         $userCount = DbUser::getUserOpenidCount($uid, $openId);
         if ($userCount == 0) {
             $data = [
-                'uid'    => $uid,
-                'openid' => $openId,
+                'uid'         => $uid,
+                'openid'      => $openId,
+                'platform'    => $platform,
+                'openid_type' => Config::get('conf.platform_conf')[Config::get('app.deploy')],
             ];
             DbUser::saveUserOpenid($data);
         }
@@ -503,10 +508,10 @@ class User extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addUserAddress($conId, $province_id, $city_id, $area_id, $address,$mobile,$name) {
+    public function addUserAddress($conId, $province_id, $city_id, $area_id, $address, $mobile, $name) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
-            return ['code' => '3009','msg' => 'uid为空'];
+            return ['code' => '3009', 'msg' => 'uid为空'];
         }
         if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
             return ['code' => '3008', 'msg' => '省市区ID必须为数字'];
@@ -518,7 +523,7 @@ class User extends CommonIndex {
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
         $province = DbProvinces::getAreaOne($field, $where);
-        
+
         if (empty($province) || $province['level'] != '1') {
             return ['code' => '3006', 'msg' => '错误的省份ID'];
         }
@@ -534,16 +539,16 @@ class User extends CommonIndex {
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级ID'];
         }
-        $data = [];
-        $data['uid'] = $uid;
+        $data                = [];
+        $data['uid']         = $uid;
         $data['province_id'] = $province_id;
-        $data['city_id'] = $city_id;
-        $data['area_id'] = $area_id;
-        $data['address'] = $address;
-        $data['mobile'] = $mobile;
-        $data['name'] = $name;
-        $data = ['default'=>2];
-        $add = DbUser::addUserAddress($data);
+        $data['city_id']     = $city_id;
+        $data['area_id']     = $area_id;
+        $data['address']     = $address;
+        $data['mobile']      = $mobile;
+        $data['name']        = $name;
+        $data                = ['default' => 2];
+        $add                 = DbUser::addUserAddress($data);
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
         } else {
@@ -564,10 +569,10 @@ class User extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function updateUserAddress($conId, $province_id, $city_id, $area_id, $address,$name,$mobile,$address_id){
+    public function updateUserAddress($conId, $province_id, $city_id, $area_id, $address, $name, $mobile, $address_id) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
-            return ['code' => '3009','msg' => 'uid为空'];
+            return ['code' => '3009', 'msg' => 'uid为空'];
         }
         if (!is_numeric($province_id) || !is_numeric($city_id) || !is_numeric($area_id)) {
             return ['code' => '3008', 'msg' => '省市区ID必须为数字'];
@@ -579,7 +584,7 @@ class User extends CommonIndex {
         $field    = 'id,area_name,pid,level';
         $where    = ['id' => $province_id];
         $province = DbProvinces::getAreaOne($field, $where);
-        
+
         if (empty($province) || $province['level'] != '1') {
             return ['code' => '3006', 'msg' => '错误的省份ID'];
         }
@@ -595,13 +600,13 @@ class User extends CommonIndex {
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级ID'];
         }
-        $field = 'id,uid';
-        $where = ['id'=>$address_id,'uid'=>$uid];
-        $is_address = DbUser::getUserAddress($field,$where,true);
+        $field      = 'id,uid';
+        $where      = ['id' => $address_id, 'uid' => $uid];
+        $is_address = DbUser::getUserAddress($field, $where, true);
         if (!$is_address) {
-            return ['code' => '3010','msg' => '无效的address_id'];
+            return ['code' => '3010', 'msg' => '无效的address_id'];
         }
-        $data = [];
+        $data                = [];
         $data['province_id'] = $province_id;
         $data['city_id'] = $city_id;
         $data['area_id'] = $area_id;
@@ -618,7 +623,7 @@ class User extends CommonIndex {
      * @param $address_id
      * @author rzc
      */
-    public function getUserAddress($conId,$address_id = false) {
+    public function getUserAddress($conId, $address_id = false) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3003'];
@@ -628,19 +633,19 @@ class User extends CommonIndex {
 
         /* 查询一条用户地址详细信息 */
         if ($address_id) {
-            $where = ['uid' => $uid,'address_id'=>$address_id];
-            $result = DbUser::getUserAddress($field,$where,true);
+            $where  = ['uid' => $uid, 'address_id' => $address_id];
+            $result = DbUser::getUserAddress($field, $where, true);
             if (empty($result)) {
                 return ['code' => 3000];
             }
-            return ['code' =>200,'data'=>$result];
+            return ['code' => 200, 'data' => $result];
         }
-        
-        $result = DbUser::getUserAddress($field,$where);
+
+        $result = DbUser::getUserAddress($field, $where);
         if (empty($result)) {
             return ['code' => 3000];
         }
-        return ['code' =>200,'data'=>$result];
+        return ['code' => 200, 'data' => $result];
     }
 
     /**
@@ -649,22 +654,22 @@ class User extends CommonIndex {
      * @param $address_id
      * @author rzc
      */
-    public function updateUserAddressDefault($conId,$address_id){
+    public function updateUserAddressDefault($conId, $address_id) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3004'];
         }
-        $field = 'id,uid,province_id,city_id,area_id,address,default,name,mobile';
-        $where = ['uid' => $uid,'address_id'=>$address_id];
-        $result = DbUser::getUserAddress($field,$where,true);
+        $field  = 'id,uid,province_id,city_id,area_id,address,default,name,mobile';
+        $where  = ['uid' => $uid, 'address_id' => $address_id];
+        $result = DbUser::getUserAddress($field, $where, true);
         if (empty($result)) {
-            return ['code' => 3005,'msg' => '该地址不存在，无法设为默认']; /*  */
+            return ['code' => 3005, 'msg' => '该地址不存在，无法设为默认']; /*  */
         }
-       
-        DbUser::updateUserAddress(['default'=>2],['uid' => $uid]);
-        DbUser::updateUserAddress(['default'=>1],$where);
-        return ['code' => 200,'msg' => '修改默认成功'];
-       
+
+        DbUser::updateUserAddress(['default' => 2], ['uid' => $uid]);
+        DbUser::updateUserAddress(['default' => 1], $where);
+        return ['code' => 200, 'msg' => '修改默认成功'];
+
     }
 
     /**

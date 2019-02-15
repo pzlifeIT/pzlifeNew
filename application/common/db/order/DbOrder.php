@@ -1,13 +1,16 @@
 <?php
-
 namespace app\common\db\order;
-
 use app\common\model\Orders;
 use app\common\model\OrderChild;
 use app\common\model\OrderGoods;
 use app\common\model\MemberOrder;
+use app\common\model\LogPay;
 
 class DbOrder {
+
+    public function __construct() {
+    }
+
     /**
      * 获取用户订单信息
      * @param $where
@@ -16,6 +19,7 @@ class DbOrder {
      * @param $limit
      * @return array
      */
+    
     public function getUserOrder($field,$where,$row = false,$limit = false){
         $obj = Orders::field($field)->where($where);
         if($row === true){
@@ -71,11 +75,46 @@ class DbOrder {
      * @param $data
      * @return array
      */
-    public function getMemberOrder($field,$where,$row = false,$limit = false){
+/*     public function getMemberOrder($field,$where,$row = false,$limit = false){
         $obj = MemberOrder::field($field)->where($where);
         if ($row === true){
             return $obj->findOrEmpty()->toArray();
         }
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
+    } */
+
+
+
+    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = MemberOrder::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    public function getLogPay($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = LogPay::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    public function addLogPay($data) {
+        $logPay = new LogPay();
+        $logPay->save($data);
+        return $logPay->id;
+    }
+
+    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
     }
 }
+
+
