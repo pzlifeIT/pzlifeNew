@@ -654,9 +654,9 @@ class User extends CommonIndex {
 
             // $field = 'id,area_name,pid,level';
             // $where = ['id' => $city_id];
-            $result['province_name']    = DbProvinces::getAreaOne('*', ['id' => $province_id])['area_name'];
-            $result['city_name']    = DbProvinces::getAreaOne('*', ['id' => $city_id,'level'=>2])['area_name'];
-            $result['area_name']    = DbProvinces::getAreaOne('*', ['id' => $area_id])['area_name'];
+            $result['province_name']    = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+            $result['city_name']    = DbProvinces::getAreaOne('*', ['id' => $result['city_id'],'level'=>2])['area_name'];
+            $result['area_name']    = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
 
             return ['code' => 200, 'data' => $result];
         }
