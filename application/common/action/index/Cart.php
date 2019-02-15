@@ -23,7 +23,7 @@ class Cart extends CommonIndex {
      * @param $track_id
      * @author rzc
      */
-    public function addCartGoods($conId, $goods_skuid, $buy_num, $track_id) {
+    public function addCartGoods($conId, $goods_skuid, $buy_num, $parent_id) {
         // phpinfo();
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -36,9 +36,14 @@ class Cart extends CommonIndex {
         $goods_sku = DbGoods::getOneSku($where, $field);
 
         $field = 'uid,shop_name,shop_image,server_mobile,status';
-        $where = ['id' => $track_id];
+        $where = ['uid' => $parent_id];
         $shop  = DbShops::getShopInfo($field, $where);
-
+        if (!$shop) {
+            $track_id = 1;
+        }else{
+            $track_id = $shop['id'];
+        }
+        
         if (!$shop) {
             return ['code' => 3005, 'msg' => '该店铺不存在'];
         }
@@ -167,6 +172,7 @@ class Cart extends CommonIndex {
                     $cart_buy['status']        = $goods_data['status'];
                     $cart_buy['track_id']      = $goods_data['track_id'];
                     $cart_buy['buy_num']       = $goods_data['buy_num'];
+                    $cart_buy['brokerage']     = bcmul(bcmul(bcmul(bcsub($goods_sku['retail_price'],$goods_sku['cost_price'],$goods_sku['margin_price']),0.9),0.75,2),$goods_data['buy_num'],2);
 
                      /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
                      if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {

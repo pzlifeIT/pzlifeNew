@@ -65,7 +65,7 @@ class Cart extends MyController {
      * @apiParam (入参) {Number} con_id 请求uid
      * @apiParam (入参) {Number} goods_skuid 商品SKU_id
      * @apiParam (入参) {Number} goods_num 数量
-     * @apiParam (入参) {Number} track_id 店铺ID
+     * @apiParam (入参) {Number} parent_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
@@ -84,8 +84,8 @@ class Cart extends MyController {
     public function addUserCart() {
         $goods_skuid = trim($this->request->post('goods_skuid'));
         $goods_num   = trim($this->request->post('goods_num'));
-        $track_id    = trim($this->request->post('track_id'));
-        $track_id    = $track_id ? $track_id : 1;
+        $parent_id    = trim($this->request->post('parent_id'));
+        // $track_id    = $track_id ? $track_id : 1;
         $conId       = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -108,9 +108,9 @@ class Cart extends MyController {
         if (!is_numeric($track_id)) {
             return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
         }
+        $parent_id = enUid($parent_id);
 
-
-        $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), intval($track_id));
+        $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
         return $result;
     }
 
