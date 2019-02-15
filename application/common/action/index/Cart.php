@@ -135,24 +135,14 @@ class Cart extends CommonIndex {
                     $goods_data['track_id'] = $track_id;
                     $goods_data['buy_num']  = $num;
                     /* print_r($goods_data); */
-                    /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
-                    if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
-                        $goods_sku['goods_name'] = $goods_data['goods_name'];
-                        $old_failure[$track_id][] = $goods_sku;
-                        continue;
-                    }
+                   
                     /* 获取购物车购买规格属性 */
                     $attr_field = 'id,spec_id,attr_name';
                     $attr_where = [['id', 'in', $goods_sku['spec']]];
 
                     $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
 
-                    /* 若无此规格，则该商品暂时以失效处理 */
-                    if (!$goods_sku_name) {
-                        $goods_sku['goods_name'] = $goods_data['goods_name'];
-                        $old_failure[$track_id][] = $goods_sku;
-                        continue;
-                    }
+                    
                     /*  print_r($goods_sku_name);die; */
 
                     /* 获取商品所在分类 */
@@ -178,6 +168,16 @@ class Cart extends CommonIndex {
                     $cart_buy['track_id']      = $goods_data['track_id'];
                     $cart_buy['buy_num']       = $goods_data['buy_num'];
 
+                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
+                     if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                        $old_failure[$track_id][] = $cart_buy;
+                        continue;
+                    }
+                    /* 若无此规格，则该商品暂时以失效处理 */
+                    if (!$goods_sku_name) {
+                        $old_failure[$track_id][] = $cart_buy;
+                        continue;
+                    }
                     $old_valid[$track_id][] = $cart_buy;
 
                 }
