@@ -48,7 +48,7 @@ class User extends Pzlife
         $member = "SELECT `mw`.`unionid`,`m`.* FROM pre_member_wxunion AS mw LEFT JOIN pre_member AS m USING(`uid`)  ";
 
         $memberdata = $mysql_connect->query($member);
-        // print_r($memberdata);die;
+        // print_r(count($memberdata));die;
         foreach ($memberdata as $key => $value) {
             /* 查出原用户关系 */
             
@@ -58,7 +58,7 @@ class User extends Pzlife
                 continue;
             }
            
-            // print_r($member_relationship);die;
+            // print_r($value);die;
             /* 用户关系数组初始化 */
             $user_relation = [];
             $user_relation['uid'] = $value['uid'];
@@ -135,7 +135,7 @@ class User extends Pzlife
                 $new_user['avatar'] = $value['avatar'];
             }
             
-            $new_user['openid'] = trim($member_relationship[0]['wx_openid']);
+            $new_user['unionid'] = trim($value['unionid']);
             $new_user['bindshop'] = $value['bingshopid'];
             $new_user['commission_freeze'] = 2;
 
