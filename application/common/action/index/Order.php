@@ -186,13 +186,13 @@ class Order extends CommonIndex {
         $deductionMoney = 0;//商票抵扣金额
         $thirdMoney     = 0;//第三方支付金额
         $discountMoney  = 0;//优惠金额
-        if ($payType == 4) {//商票支付
+        if ($payType == 2) {//商票支付
             $userInfo = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance,balance_freeze', true);
             if ($userInfo['balance_freeze'] == '2') {//商票未冻结
                 $deductionMoney = $userInfo['balance'];//可支付的商票
             }
             $thirdMoney = bcsub($summary['total_price'], $deductionMoney, 2);
-        } else if ($payType == 2) {//微信支付
+        } else if ($payType == 1) {//第三方支付
             $thirdMoney = $summary['total_price'];
         }
         $orderData = [
@@ -206,6 +206,7 @@ class Order extends CommonIndex {
             'third_money'     => $thirdMoney,//第三方支付金额
             'discount_money'  => $discountMoney,//优惠金额
             'pay_type'        => $payType,
+            'third_pay_type'  => 2,//第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
             'linkman'         => $userAddress['name'],
             'linkphone'       => $userAddress['mobile'],
             'province_id'     => $userAddress['province_id'],

@@ -301,7 +301,7 @@ class Goods extends AdminController {
      * @apiName          addGoodsSpec
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} attr_id 属性id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 / 3006:商品已有该规格属性 / 3007:提交失败 / 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 / 3006:商品已有该规格属性 / 3007:提交失败 / 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
      * @apiSampleRequest /admin/goods/addgoodsspec
      * @return array
      * @author zyr
@@ -326,7 +326,7 @@ class Goods extends AdminController {
      * @apiName          delGoodsSpec
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} attr_id 属性id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 /3006:该商品未绑定这个属性 / 3007:提交失败/ 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 /3006:该商品未绑定这个属性 / 3007:提交失败/ 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
      * @apiSampleRequest /admin/goods/delgoodsspec
      * @return array
      * @author zyr

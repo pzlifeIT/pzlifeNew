@@ -130,7 +130,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
-     * @apiParam (入参) {Number} pay_type 支付方式 2.微信 4.商票(1.支付宝[暂不支持] 3.银联[暂不支持])
+     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商票支付
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSampleRequest /index/order/createorder
@@ -141,7 +141,7 @@ class Order extends MyController {
         $conId         = trim($this->request->post('con_id'));
         $userAddressId = trim($this->request->post('user_address_id'));
         $payType       = trim($this->request->post('pay_type'));
-        $payTypeArr    = [2, 4];
+        $payTypeArr    = [1, 2];
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
