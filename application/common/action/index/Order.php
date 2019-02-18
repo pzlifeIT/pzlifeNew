@@ -499,7 +499,7 @@ class Order extends CommonIndex {
      */
     public function getUserOrderList($conId, $order_status = false, $page, $pagenum) {
         $uid = $this->getUidByConId($conId);
-        // $uid = 1;
+        // $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3005'];
         }
@@ -508,10 +508,12 @@ class Order extends CommonIndex {
             return ['code' => '3000'];
         }
         $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
+        $where  = ['uid' => $uid];
         if ($order_status) {
             $where = ['uid' => $uid, 'order_status' => $order_status];
         }
-        $where  = ['uid' => $uid];
+        // print_r($order_status);die;
+        
         $limit  = $offset . ',' . $pagenum;
         $result = DbOrder::getUserOrder($field, $where, false, $limit);
         if (empty($result)) {

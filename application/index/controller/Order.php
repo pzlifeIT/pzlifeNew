@@ -6,7 +6,7 @@ use app\index\MyController;
 
 class Order extends MyController {
     protected $beforeActionList = [
-        'isLogin',//所有方法的前置操作
+        // 'isLogin',//所有方法的前置操作
 //        'isLogin' => ['except' => ''],//除去getFirstCate其他方法都进行second前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
@@ -17,7 +17,7 @@ class Order extends MyController {
      * @apiGroup         index_order
      * @apiName          getUserOrderList
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiParam (入参) {Number} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
+     * @apiParam (入参) {Number} orderStatus 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 每页展示条数
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_status、page和pagenum必须是数字 / 3004:订单状态码有误
@@ -28,7 +28,8 @@ class Order extends MyController {
      */
     public function getUserOrderList() {
         $con_id       = trim($this->request->post('con_id'));
-        $order_status = trim($this->request->post('order_status'));
+        // $con_id = 1;
+        $order_status = $this->request->post('orderStatus');
         $page         = trim($this->request->post('page'));
         $pagenum      = trim($this->request->post('pagenum'));
         $page         = $page ? $page : 1;
@@ -39,6 +40,7 @@ class Order extends MyController {
         if (strlen($con_id) != 32) {
             return ['code' => '3001'];
         }
+        // var_dump($order_status);die;
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3003'];
         }
@@ -51,6 +53,7 @@ class Order extends MyController {
                 return ['code' => 3004];
             }
         }
+       
         $result = $this->app->order->getUserOrderList($con_id, $order_status, $page, $pagenum);
         return $result;
     }
