@@ -236,6 +236,10 @@ class Goods {
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
+        if ($goodsRow['status'] == 1) {
+            return ['code' => '3013'];//商品下架才能编辑
+        }
         $specId       = $checkRes['spec_id'];
         $relationArr  = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
         $relationList = [];//现有的规格属性列表
@@ -316,6 +320,10 @@ class Goods {
         $checkRes = $this->checkGoods($attrId, $goodsId);
         if ($checkRes['code'] !== '200') {
             return $checkRes;
+        }
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
+        if ($goodsRow['status'] == 1) {
+            return ['code' => '3013'];//商品下架才能编辑
         }
         $specId      = $checkRes['spec_id'];
         $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
