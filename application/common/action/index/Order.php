@@ -42,6 +42,8 @@ class Order extends CommonIndex {
             }
             $cityId = $userAddress['city_id'];
         }
+        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
+        $balance = $balance['balance'] ?? 0;
         $summary = $this->summary($uid, $skuIdList, $cityId);
         if ($summary['code'] != '200') {
             return $summary;
@@ -104,6 +106,7 @@ class Order extends CommonIndex {
         }
         unset($summary['goods_list']);
         $summary['supplier_list'] = $supplier;
+        $summary['balance'] = $balance;
         return $summary;
     }
 

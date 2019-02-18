@@ -71,6 +71,7 @@ class Order extends MyController {
      * @apiSuccess (返回) {Float} total_price 价格总计
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
+     * @apiSuccess (返回) {Float} balance 账户的商票余额
      * @apiSuccess (supplier_list) {Int} id 供应商id
      * @apiSuccess (supplier_list) {String} name 供应商name
      * @apiSuccess (supplier_list) {String} image 供应商image
