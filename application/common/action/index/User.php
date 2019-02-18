@@ -75,10 +75,11 @@ class User extends CommonIndex {
      * @param $code
      * @param $encrypteddata
      * @param $iv
+     * @param $platform
      * @return array
      * @author zyr
      */
-    public function quickLogin($mobile, $vercode, $code, $encrypteddata, $iv) {
+    public function quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform) {
         $stype = 3;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
@@ -135,9 +136,9 @@ class User extends CommonIndex {
                 Db::rollback();
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
-            Db::commit();
             DbUser::updateUser(['last_time' => time()], $uid);
-            $this->saveOpenid($uid, $wxInfo['openid']);
+            $this->saveOpenid($uid, $wxInfo['openid'], $platform);
+            Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
@@ -200,8 +201,8 @@ class User extends CommonIndex {
                 Db::rollback();
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
-            Db::commit();
             $this->saveOpenid($uid, $wxInfo['openid'], $platform);
+            Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();

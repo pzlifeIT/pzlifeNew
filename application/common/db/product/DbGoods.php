@@ -565,6 +565,20 @@ class DbGoods {
         $goodsSku->save($data, ['id' => $skuId]);
     }
 
+    /**
+     * 改库存
+     * @param $skuIdList
+     * @param string $modify 增加/减少inc/dec
+     * @author zyr
+     */
+    public function decStock($skuIdList, $modify = 'dec') {
+        foreach ($skuIdList as $skuId => $num) {
+            $sku        = GoodsSku::get($skuId);
+            $sku->stock = [$modify, $num];
+            $sku->save();
+        }
+    }
+
     public function addSkuList($data) {
         $goodsSku = new GoodsSku();
         return $goodsSku->saveAll($data);

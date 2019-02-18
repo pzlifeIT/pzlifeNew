@@ -47,6 +47,7 @@ class User extends MyController {
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} encrypteddata 微信加密信息
      * @apiParam (入参) {String} iv
+     * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
@@ -59,6 +60,8 @@ class User extends MyController {
         $code          = trim($this->request->post('code'));
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
+        $platform      = trim($this->request->post('platform'));
+        $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
         }
@@ -68,7 +71,7 @@ class User extends MyController {
         if (strlen($code) != 32) {
             return ['code' => '3002'];//code有误
         }
-        $resule = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv);
+        $resule = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform);
         return $resule;
     }
 
@@ -292,13 +295,13 @@ class User extends MyController {
      * @author rzc
      */
     public function addUserAddress() {
-        $conId       = trim($this->request->post('con_id'));
+        $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
         $area_name     = trim($this->request->post('area_name'));
-        $address     = trim($this->request->post('address'));
-        $mobile      = trim($this->request->post('mobile'));
-        $name        = trim($this->request->post('name'));
+        $address       = trim($this->request->post('address'));
+        $mobile        = trim($this->request->post('mobile'));
+        $name          = trim($this->request->post('name'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -332,14 +335,14 @@ class User extends MyController {
      * @author rzc
      */
     public function updateUserAddress() {
-        $conId       = trim($this->request->post('con_id'));
+        $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
         $area_name     = trim($this->request->post('area_name'));
-        $address     = trim($this->request->post('address'));
-        $mobile      = trim($this->request->post('mobile'));
-        $name        = trim($this->request->post('name'));
-        $address_id  = trim($this->request->post('address_id'));
+        $address       = trim($this->request->post('address'));
+        $mobile        = trim($this->request->post('mobile'));
+        $name          = trim($this->request->post('name'));
+        $address_id    = trim($this->request->post('address_id'));
         if (!checkMobile($mobile)) {
             return ['code' => '3003'];//手机格式有误
         }

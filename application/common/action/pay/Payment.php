@@ -7,6 +7,7 @@ use app\facade\DbUser;
 use pay\wxpay\WxMiniprogramPay;
 use cache\Phpredis;
 use Config;
+use think\Db;
 
 /**
  * 支付
@@ -20,78 +21,140 @@ class Payment {
     }
 
     public function payment($orderNo, int $payment, int $platform) {
-        $orderId        = 0;
-        $payMoney       = 0;//要支付的金额
-        $uid            = 0;//支付人
-        $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.线下
-        $orderOutTime   = Config::get('conf.order_out_time');//订单过期时间
-        $memberOrderRow = [];
+        $orderOutTime = Config::get('conf.order_out_time');//订单过期时间
         if ($payment == 2) {//购买会员订单
+            $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商票
             $memberOrderRow = $this->memberDiamond($orderNo);
             if (empty($memberOrderRow)) {
                 return ['code' => '3000'];//订单号不存在
             }
             if ($memberOrderRow['pay_status'] == 2) {//取消
                 return ['code' => '3004'];//订单已取消
-            }
-            if ($memberOrderRow['pay_status'] == 3) {//关闭
+            } else if ($memberOrderRow['pay_status'] == 3) {//关闭
                 return ['code' => '3005'];//订单已关闭
-            }
-            if ($memberOrderRow['pay_status'] == 4) {//已付款
+            } else if ($memberOrderRow['pay_status'] == 4) {//已付款
                 return ['code' => '3006'];//订单已付款
             }
             if ($memberOrderRow['create_time'] < date('Y-m-d H:i:s', time() - $orderOutTime)) {
                 return ['code' => '3007'];//订单已过期
             }
-            $orderId  = $memberOrderRow['id'];
-            $payMoney = $memberOrderRow['pay_money'];
-            $uid      = $memberOrderRow['uid'];
-            $payType  = $memberOrderRow['pay_type'];
-        }
-        $logTypeRow = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
-        if (!empty($logTypeRow)) {
-            return ['code' => '3008'];//已付款
-        }
-        if ($payType == 2) {//微信支付
-            //获取openid
-            $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
-            $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
-            $openid     = $userWxinfo['openid'];
-            $payNo      = createOrderNo('mem');
-            $data       = [
-                'pay_no'   => $payNo,
-                'uid'      => $uid,
-                'payment'  => $payment,
-                'pay_type' => 2,
-                'order_id' => $orderId,
-                'money'    => bcmul($payMoney, 100, 0),
-            ];
-            $parameters = $this->wxpay($openid, $data);
-            return ['code' => '200', 'parameters' => $parameters];
+            $orderId    = $memberOrderRow['id'];
+            $payMoney   = $memberOrderRow['pay_money'];//要支付的金额
+            $uid        = $memberOrderRow['uid'];
+            $payType    = $memberOrderRow['pay_type'];
+            $logTypeRow = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
+            if (!empty($logTypeRow)) {
+                return ['code' => '3008'];//第三方支付已付款
+            }
+            if ($payType == 2) {//微信支付
+                $parameters = $this->wxpay($uid, $platform, $payment, $payMoney, $orderId);
+                if ($parameters === false) {
+                    return ['code' => '3010'];//创建支付订单失败
+                }
+                return ['code' => '200', 'parameters' => $parameters];
+            }
+        } else if ($payment == 1) {//普通订单
+            $nomalOrder = $this->nomalOrder($orderNo);
+            if (empty($nomalOrder)) {
+                return ['code' => '3000'];//不存在需要支付的订单
+            }
+            if ($nomalOrder['order_status'] == 2) {//取消
+                return ['code' => '3004'];//订单已取消
+            } else if ($nomalOrder['order_status'] == 3) {//关闭
+                return ['code' => '3005'];//订单已关闭
+            } else if ($nomalOrder['order_status'] != 1) {//已付款
+                return ['code' => '3006'];//订单已付款
+            }
+            if ($nomalOrder['create_time'] < date('Y-m-d H:i:s', time() - $orderOutTime)) {
+                return ['code' => '3007'];//订单已过期
+            }
+            $orderId        = $nomalOrder['id'];
+            $uid            = $nomalOrder['uid'];
+            $payType        = $nomalOrder['pay_type'];//支付类型 1.所有第三方支付 2.商票
+            $thirdPayType   = $nomalOrder['third_pay_type'];//第三方支付类型1.支付宝 2.微信 3.银联
+            $thirdMoney     = $nomalOrder['third_money'];//第三方支付金额
+            $deductionMoney = $nomalOrder['deduction_money'];//商票抵扣金额
+            $logTypeRow = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
+            if (!empty($logTypeRow)) {
+                return ['code' => '3008'];//第三方支付已付款
+            }
+            Db::startTrans();
+            try {
+                if ($payType == 2 && $deductionMoney > 0) {//商票支付
+                    DbUser::modifyBalance($uid, $deductionMoney, 'dec');
+                }
+                if ($thirdPayType == 2) {//微信支付
+                    $parameters = $this->wxpay($uid, $platform, $payment, $thirdMoney, $orderId);
+                    if ($parameters === false) {
+                        Db::rollback();
+                        return ['code' => '3010'];//创建支付订单失败
+                    }
+                    Db::commit();
+                    return ['code' => '200', 'parameters' => $parameters];
+                }
+            } catch (\Exception $e) {
+                Db::rollback();
+                return ['code' => '3010'];//创建支付订单失败
+            }
         }
         return ['code' => '3009'];//支付方式暂不支持
     }
 
     /**
      * 微信支付
-     * @param $openid
-     * @param $data
+     * @param $uid
+     * @param $platform
+     * @param $payment
+     * @param $payMoney
+     * @param $orderId
      * @return array
      * @author zyr
      */
-    private function wxpay($openid, $data) {
-        $addRes = DbOrder::addLogPay($data);
+    private function wxpay($uid, $platform, $payment, $payMoney, $orderId) {
+        //获取openid
+        $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
+        $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
+        $openid     = $userWxinfo['openid'];
+        $payNo      = createOrderNo('mem');
+        $data       = [
+            'pay_no'   => $payNo,
+            'uid'      => $uid,
+            'payment'  => $payment,
+            'pay_type' => 2,
+            'order_id' => $orderId,
+            'money'    => bcmul($payMoney, 100, 0),
+        ];
+        $addRes     = DbOrder::addLogPay($data);
         if (!empty($addRes)) {
             $wxPay  = new WxMiniprogramPay($openid, $data['pay_no'], $data['money']);
             $result = $wxPay->pay();
             return $result;
         }
-        return ['code' => '3010'];//创建支付订单失败
+        return false;
+//        return ['code' => '3010'];//创建支付订单失败
     }
 
+    /**
+     * 购买会员订单
+     * @param $orderNo
+     * @return mixed
+     * @author zyr
+     */
     private function memberDiamond($orderNo) {
         $memberOrderRow = DbOrder::getMemberOrder(['order_no' => $orderNo], 'id,uid,pay_money,pay_status,pay_type,create_time', true);
         return $memberOrderRow;
+    }
+
+    /**
+     * 普通商品购买订单
+     * @param $orderNo
+     * @return mixed
+     * @author zyr
+     */
+    private function nomalOrder($orderNo) {
+        $field      = 'id,uid,order_status,pay_money,deduction_money,third_money,pay_type,third_pay_type,create_time';
+        $nomalOrder = DbOrder::getUserOrder($field, ['order_no' => $orderNo, 'order_status' => 1], true);
+        return $nomalOrder;
     }
 
     public function wxPayCallback($res) {

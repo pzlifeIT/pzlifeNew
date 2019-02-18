@@ -20,6 +20,22 @@ class DbUser {
         return $user;
     }
 
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = Users::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
     public function getUserOne($where, $field) {
         $user = Users::where($where)->field($field)->findOrEmpty()->toArray();
         return $user;
@@ -207,5 +223,18 @@ class DbUser {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    /**
+     * 改商票余额
+     * @param $uid
+     * @param $balance
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyBalance($uid, $balance, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->balance = [$modify, $balance];
+        $user->save();
     }
 }

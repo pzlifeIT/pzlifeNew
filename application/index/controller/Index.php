@@ -31,14 +31,15 @@ class Index extends MyController {
     }
 
     public function hello() {
-
-
+        echo enUid(24807);
+        die;
 
 
 //        echo enUid(25739);die;
-        $this->redis       = Phpredis::getConn();
+        $this->redis = Phpredis::getConn();
 
-        echo $this->redis->zScore('index:user:conId:expiration','35c219b263cac833');die;
+        echo $this->redis->zScore('index:user:conId:expiration', '35c219b263cac833');
+        die;
 //        echo $this->redis->zDelete('index:user:conId:expiration', '35c219b263cac833');die;
 
 //        var_dump($this->redis->del('index:user:userinfo:25739'));die;

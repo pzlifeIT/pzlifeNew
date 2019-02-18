@@ -236,6 +236,10 @@ class Goods {
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
+        if ($goodsRow['status'] == 1) {
+            return ['code' => '3013'];//商品下架才能编辑
+        }
         $specId       = $checkRes['spec_id'];
         $relationArr  = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
         $relationList = [];//现有的规格属性列表
@@ -317,6 +321,10 @@ class Goods {
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
+        $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
+        if ($goodsRow['status'] == 1) {
+            return ['code' => '3013'];//商品下架才能编辑
+        }
         $specId      = $checkRes['spec_id'];
         $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
         if (!in_array($attrId, array_column($relationArr, 'attr_id'))) {
@@ -331,7 +339,7 @@ class Goods {
             $relationList[$val['spec_id']][] = $val['attr_id'];
         }
         $carte        = $this->cartesian(array_values($relationList));
-        $skuWhere     = ['goods_id' => $goodsId, 'status' => 2];
+        $skuWhere     = ['goods_id' => $goodsId, 'status' => 1];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
         $delId        = [];//需要删除的sku id
         $delImage     = [];
@@ -599,7 +607,7 @@ class Goods {
         }
         if ($type == 1) {// 上架
             $stockAll = 0;
-            $sku      = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
                 $stockAll = bcadd($stockAll, $s['stock'], 2);
                 if ($s['stock'] > 0) {
