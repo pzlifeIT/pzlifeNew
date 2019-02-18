@@ -7,6 +7,7 @@ use app\facade\DbUser;
 use pay\wxpay\WxMiniprogramPay;
 use cache\Phpredis;
 use Config;
+use think\Db;
 
 /**
  * 支付
@@ -73,6 +74,10 @@ class Payment {
             $thirdPayType   = $nomalOrder['third_pay_type'];//第三方支付类型1.支付宝 2.微信 3.银联
             $thirdMoney     = $nomalOrder['third_money'];//第三方支付金额
             $deductionMoney = $nomalOrder['deduction_money'];//商票抵扣金额
+            $logTypeRow = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
+            if (!empty($logTypeRow)) {
+                return ['code' => '3008'];//第三方支付已付款
+            }
             Db::startTrans();
             try {
                 if ($payType == 2 && $deductionMoney > 0) {//商票支付
