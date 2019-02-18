@@ -331,7 +331,7 @@ class Goods {
             $relationList[$val['spec_id']][] = $val['attr_id'];
         }
         $carte        = $this->cartesian(array_values($relationList));
-        $skuWhere     = ['goods_id' => $goodsId, 'status' => 2];
+        $skuWhere     = ['goods_id' => $goodsId, 'status' => 1];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
         $delId        = [];//需要删除的sku id
         $delImage     = [];
@@ -599,7 +599,7 @@ class Goods {
         }
         if ($type == 1) {// 上架
             $stockAll = 0;
-            $sku      = DbGoods::getOneGoodsSku([], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
                 $stockAll = bcadd($stockAll, $s['stock'], 2);
                 if ($s['stock'] > 0) {
