@@ -507,7 +507,7 @@ class Order extends CommonIndex {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money';
+        $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
         if ($order_status) {
             $where = ['uid' => $uid, 'order_status' => $order_status];
         }
@@ -521,11 +521,13 @@ class Order extends CommonIndex {
         foreach ($result as $key => $value) {
             $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
             // print_r($order_child);die;
+            $express_money = 0;
             foreach ($order_child as $order => $child) {
                 $order_child[$order]['order_goods'] = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
-
+                $express_money += $child['express_money'] ;
             }
             $result[$key]['order_child'] = $order_child;
+            $result[$key]['express_money'] = $express_money;
         }
         return ['code' => '200', 'order_list' => $result];
     }
