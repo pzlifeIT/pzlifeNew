@@ -1,5 +1,7 @@
 <?php
+
 namespace app\common\db\order;
+
 use app\common\model\Orders;
 use app\common\model\OrderChild;
 use app\common\model\OrderGoods;
@@ -12,6 +14,17 @@ class DbOrder {
     }
 
     /**
+     * 添加添加一条订单
+     * @param $data
+     * @return int
+     */
+    public function addOrder($data) {
+        $order = new Orders();
+        $order->save($data);
+        return $order->id;
+    }
+
+    /**
      * 获取用户订单信息
      * @param $where
      * @param $field
@@ -19,13 +32,18 @@ class DbOrder {
      * @param $limit
      * @return array
      */
-    
-    public function getUserOrder($field,$where,$row = false,$limit = false){
+
+    public function getUserOrder($field, $where, $row = false, $limit = false) {
         $obj = Orders::field($field)->where($where);
-        if($row === true){
+        if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
+    }
+
+    public function addOrderChilds($data) {
+        $order = new OrderChild();
+        return $order->saveAll($data);
     }
 
     /**
@@ -34,8 +52,13 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field,$where){
+    public function getOrderChild($field, $where) {
         return OrderChild::field($field)->where($where)->select()->toArray();
+    }
+
+    public function addOrderGoods($data) {
+        $orderGoods = new OrderGoods();
+        return $orderGoods->saveAll($data);
     }
 
     /**
@@ -44,7 +67,7 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderGoods($field,$where){
+    public function getOrderGoods($field, $where) {
         return OrderGoods::field($field)->where($where)->select()->toArray();
     }
 
@@ -53,7 +76,7 @@ class DbOrder {
      * @param $data
      * @return array
      */
-    public function addMemberOrder($data){
+    public function addMemberOrder($data) {
         $MemberOrder = new MemberOrder;
         $MemberOrder->save($data);
         return $MemberOrder->id;
@@ -65,9 +88,9 @@ class DbOrder {
      * @param $where
      * @return array
      */
-    public function updateMemberOrder($data,$where){
+    public function updateMemberOrder($data, $where) {
         $MemberOrder = new MemberOrder;
-        return $MemberOrder->save($data,$where);
+        return $MemberOrder->save($data, $where);
     }
 
     /**
@@ -75,14 +98,13 @@ class DbOrder {
      * @param $data
      * @return array
      */
-/*     public function getMemberOrder($field,$where,$row = false,$limit = false){
-        $obj = MemberOrder::field($field)->where($where);
-        if ($row === true){
-            return $obj->findOrEmpty()->toArray();
-        }
-        return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
-    } */
-
+    /*     public function getMemberOrder($field,$where,$row = false,$limit = false){
+            $obj = MemberOrder::field($field)->where($where);
+            if ($row === true){
+                return $obj->findOrEmpty()->toArray();
+            }
+            return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
+        } */
 
 
     public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {

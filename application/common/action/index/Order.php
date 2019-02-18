@@ -26,7 +26,7 @@ class Order extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function createSettlement($conId, $skuIdList, $userAddressId) {
+    public function createSettlement($conId, $skuIdList, int $userAddressId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -36,7 +36,7 @@ class Order extends CommonIndex {
         }
         $cityId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId]);
+            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
             if (empty($userAddress)) {
                 return ['code' => '3003'];
             }
@@ -46,7 +46,10 @@ class Order extends CommonIndex {
         if ($summary['code'] != '200') {
             return $summary;
         }
-        $cart      = $this->getCartGoods($skuIdList, $uid);
+        $cart = $this->getCartGoods($skuIdList, $uid);
+        if ($cart == false) {
+            return ['code' => '3005'];
+        }
         $cartShops = array_column($cart, 'shops');//所有购买涉及的门店
         $shops     = [];
         array_map(function ($value) use (&$shops) {
@@ -74,6 +77,7 @@ class Order extends CommonIndex {
                     unset($gl['stock']);
                     unset($gl['supplier_id']);
                     unset($gl['buySum']);
+                    unset($gl['shopBuySum']);
                     $glList[$gl['id']] = $gl;
                     $shopKey           = array_keys($cart[$gl['id']]['track']);
                     foreach ($shopKey as $s) {
@@ -103,12 +107,12 @@ class Order extends CommonIndex {
         return $summary;
     }
 
-    public function createOrder($conId, $skuIdList, $userAddressId) {
+    public function createOrder($conId, $skuIdList, int $userAddressId, int $payType) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
+        $userAddress = DbUser::getUserAddress('uid,mobile,name,province_id,city_id,area_id,address', ['id' => $userAddressId], true);
         if (empty($userAddress)) {
             return ['code' => '3003'];
         }
@@ -117,8 +121,126 @@ class Order extends CommonIndex {
             return ['code' => '3005'];//参数有误，商品未加入购物车
         }
         $summary = $this->summary($uid, $skuIdList, $cityId);
-        print_r($summary);
-        die;
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+//        print_r($summary);die;
+        /*
+         * 商品订单内容
+         */
+        $cart = $this->getCartGoods($skuIdList, $uid);
+        if ($cart === false) {
+            return ['code' => '3005'];
+        }
+        $cartShops = array_column($cart, 'shops');//所有购买涉及的门店
+        $shops     = [];
+        array_map(function ($value) use (&$shops) {
+            $shops = array_merge($shops, array_values($value));
+        }, $cartShops);
+        $shops    = array_values(array_unique($shops));//去重后的门店
+        $shopList = DbShops::getShops([['id', 'in', $shops]], 'id,uid');//购买的所有店铺信息列表
+        $shopList = array_column($shopList, 'uid', 'id');
+//        print_r($shopList);die;
+
+        $orderGoodsData = [];
+        foreach ($summary['goods_list'] as $gList) {
+            foreach ($gList['shopBuySum'] as $kgl => $gl) {
+                $goodsData = [
+                    'goods_id'     => $gList['goods_id'],
+                    'goods_name'   => $gList['goods_name'],
+                    'sku_id'       => $gList['id'],
+                    'sup_id'       => $gList['supplier_id'],
+                    'boss_uid'     => $shopList[$kgl],
+                    'goods_price'  => bcmul($gList['retail_price'], $gl, 2),
+                    'margin_price' => bcmul($this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']), $gl, 2),
+                    'integral'     => bcmul($gList['integral'], $gl, 0),
+                    'goods_num'    => $gl,
+                    'sku_json'     => json_encode($gList['attr']),
+                ];
+                array_push($orderGoodsData, $goodsData);
+            }
+        }
+//        print_r($orderGoodsData);die;
+        /*
+         * 商品订单内容
+         */
+        /*
+         * 子订单内容
+         */
+        $freightSupplierPrice = $summary['freight_supplier_price'];
+        $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
+        $supplierData         = [];
+        foreach ($supplier as $sval) {
+            $sval['express_money'] = $freightSupplierPrice[$sval['id']];
+            $sval['supplier_id']   = $sval['id'];
+            $sval['supplier_name'] = $sval['name'];
+            unset($sval['id']);
+            unset($sval['name']);
+            array_push($supplierData, $sval);
+        }
+//        print_r($supplierData);die;
+        /*
+         * 子订单内容
+         */
+        $orderNo        = createOrderNo();//创建订单号
+        $deductionMoney = 0;//商票抵扣金额
+        $thirdMoney     = 0;//第三方支付金额
+        $discountMoney  = 0;//优惠金额
+        if ($payType == 4) {//商票支付
+            $userInfo = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance,balance_freeze', true);
+            if ($userInfo['balance_freeze'] == '2') {//商票未冻结
+                $deductionMoney = $userInfo['balance'];//可支付的商票
+            }
+            $thirdMoney = bcsub($summary['total_price'], $deductionMoney, 2);
+        } else if ($payType == 2) {//微信支付
+            $thirdMoney = $summary['total_price'];
+        }
+        $orderData = [
+            'order_no'        => $orderNo,
+            'third_order_id'  => 0,
+            'uid'             => $uid,
+            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney,//商票抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商票抵扣金额)
+            'goods_money'     => $summary['total_goods_price'],//商品金额
+            'third_money'     => $thirdMoney,//第三方支付金额
+            'discount_money'  => $discountMoney,//优惠金额
+            'pay_type'        => $payType,
+            'linkman'         => $userAddress['name'],
+            'linkphone'       => $userAddress['mobile'],
+            'province_id'     => $userAddress['province_id'],
+            'city_id'         => $userAddress['city_id'],
+            'area_id'         => $userAddress['area_id'],
+            'address'         => $userAddress['address'],
+            'message'         => '',
+        ];
+//        print_r($orderData);die;
+        $stockSku = array_column($summary['goods_list'], 'buySum', 'id');
+        Db::startTrans();
+        try {
+            $orderId = DbOrder::addOrder($orderData);
+            if (empty($orderId)) {
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+            foreach ($supplierData as $sdkey => $sdval) {
+                $supplierData[$sdkey]['order_id'] = $orderId;
+            }
+            $childOrder    = DbOrder::addOrderChilds($supplierData);
+            $childSupplier = $childOrder->toArray();
+            $childSupplier = array_column($childSupplier, 'id', 'supplier_id');
+            foreach ($orderGoodsData as $ogdK => $ogdV) {
+                $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
+            }
+            DbOrder::addOrderGoods($orderGoodsData);
+            DbGoods::decStock($stockSku);
+            $this->summaryCart($skuIdList, $uid);
+            Db::commit();
+            return ['code' => '200', 'order_no' => $orderNo];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3009'];
+        }
     }
 
 
@@ -131,7 +253,10 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function summary($uid, $skuIdList, $cityId) {
-        $cart     = $this->getCartGoods($skuIdList, $uid);
+        $cart = $this->getCartGoods($skuIdList, $uid);
+        if ($cart === false) {
+            return ['code' => '3005'];
+        }
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
@@ -144,16 +269,17 @@ class Order extends CommonIndex {
             }
             return ['code' => '3004', 'goodsError' => $eGoodsList];//商品售罄列表
         }
-        $goodsOversold     = [];//库存不够商品列表
-        $goodsList         = [];
-        $freightPrice      = [];//各个运费模版的运费价格
-        $freightCount      = [];//各个运费模版的购买数量
-        $freightWeight     = [];//各个运费模版的购买重量
-        $freightVolume     = [];//各个运费模版的购买体积
-        $rebateAll         = 0;//所有商品钻石返利总和
-        $totalGoodsPrice   = 0;//所有商品总价
-        $goodsCount        = 0;//购买商品总数
-        $totalFreightPrice = 0;//总运费
+        $goodsOversold        = [];//库存不够商品列表
+        $goodsList            = [];
+        $freightPrice         = [];//各个运费模版的商品购买价格
+        $freightCount         = [];//各个运费模版的购买数量
+        $freightWeight        = [];//各个运费模版的购买重量
+        $freightVolume        = [];//各个运费模版的购买体积
+        $rebateAll            = 0;//所有商品钻石返利总和
+        $totalGoodsPrice      = 0;//所有商品总价
+        $goodsCount           = 0;//购买商品总数
+        $totalFreightPrice    = 0;//总运费
+        $freightSupplierPrice = [];//各个供应商的运费
         foreach ($goodsSku as $value) {
             $value['supplier_id'] = $value['goods']['supplier_id'];
             $value['goods_name']  = $value['goods']['goods_name'];
@@ -168,6 +294,7 @@ class Order extends CommonIndex {
                 array_push($goodsOversold, $value['goods_name'] . '(' . implode('、', $value['attr']) . ')');
             }
             $value['buySum']                     = $cartSum;
+            $value['shopBuySum']                 = $cart[$value['id']]['track'];
             $fPrice                              = bcmul($value['retail_price'], $cartSum, 2);
             $freightPrice[$value['freight_id']]  = isset($freightPrice[$value['freight_id']]) ? bcadd($freightPrice[$value['freight_id']], $fPrice, 2) : $fPrice;//同一个供应商模版id的商品价格累加
             $fCount                              = bcmul(1, $cartSum, 2);
@@ -177,7 +304,7 @@ class Order extends CommonIndex {
             $fVolume                             = bcmul($value['volume'], $cartSum, 2);
             $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 0) : $fVolume;//同一个供应商模版id的商品体积累加
             $distrProfits                        = $this->getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
-            $value['rebate']                     = $this->getRebate($distrProfits);
+            $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
             $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2);//钻石返利
 //            $integralAll                         = bcadd($this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price'], $cartSum));
@@ -206,6 +333,7 @@ class Order extends CommonIndex {
             }
             foreach ($freightList as $flk => $fl) {
                 if ($fl['total_price'] <= $freightPrice[$flk]) {//该供应商的当前运费模版下购买的总价超过包邮价可以包邮
+                    $freightSupplierPrice[$fl['supid']] = isset($freightSupplierPrice[$fl['supid']]) ? bcadd($freightSupplierPrice[$fl['supid']], 0, 0) : 0;
                     continue;
                 }
                 $price = 0;
@@ -225,12 +353,27 @@ class Order extends CommonIndex {
                     }
                     $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                 }
-                $totalFreightPrice = bcadd($totalFreightPrice, $price, 2);
+                $freightSupplierPrice[$fl['supid']] = isset($freightSupplierPrice[$fl['supid']]) ? bcadd($freightSupplierPrice[$fl['supid']], $price, 0) : $price;
+                $totalFreightPrice                  = bcadd($totalFreightPrice, $price, 2);
             }
             /* 运费模版 end */
         }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice);
-        return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => $goodsList];
+        return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice];
+    }
+
+    /**
+     * 创建订单后清空购物车中下单的商品
+     * @param $skuIdList
+     * @param $uid
+     * @author zyr
+     */
+    private function summaryCart($skuIdList, $uid) {
+        $params = [$this->redisCartUserKey . $uid];
+        foreach ($skuIdList as $silV) {
+            array_push($params, $this->prefix . $silV);
+        }
+        call_user_func_array([$this->redis, 'hDel'], $params);
     }
 
     /**
@@ -255,7 +398,7 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
-        $profits      = bcsub(bcsub($retailPrice, $costPrice), $marginPrice, 2);//利润(售价-进价-其他成本)
+        $profits      = bcsub(bcsub($retailPrice, $costPrice, 2), $marginPrice, 2);//利润(售价-进价-其他成本)
         $distrProfits = bcmul($profits, 0.9, 2);//可分配利润
         return $distrProfits;
     }
@@ -270,8 +413,9 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function getIntegral($retailPrice, $costPrice, $marginPrice, $num = 1) {
-        $profits  = bcsub(bcsub($retailPrice, $costPrice), $marginPrice, 2);//利润(售价-进价-其他成本)
+        $profits  = bcsub(bcsub($retailPrice, $costPrice, 2), $marginPrice, 2);//利润(售价-进价-其他成本)
         $integral = bcmul($profits, 2, 0);
+        $integral = bcmul($integral, $num, 0);
         return $integral;
     }
 
@@ -287,8 +431,14 @@ class Order extends CommonIndex {
         $skuIdListNew = array_map(function ($v) use ($prefix) {
             return $prefix . $v;
         }, $skuIdList);
-        $buyList      = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
-        $result       = [];
+
+        $keys = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        $diff = array_diff($skuIdListNew, $keys);
+        if (!empty($diff)) {
+            return false;
+        }
+        $buyList = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
+        $result  = [];
         foreach ($buyList as $key => $val) {
             $cartRow          = json_decode($val, true);
             $cartRow['sum']   = array_sum($cartRow['track']);
@@ -320,15 +470,6 @@ class Order extends CommonIndex {
             return true;
         }
         return false;
-    }
-
-    /**
-     * 创建唯一订单号
-     * @author zyr
-     */
-    private function createOrderNo() {
-        $orderNo = date('ymdHis') . substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
-        return $orderNo;
     }
 
     /**
@@ -412,7 +553,7 @@ class Order extends CommonIndex {
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {
             $order              = [];
-            $order['order_no']  = $this->createOrderNo();
+            $order['order_no']  = createOrderNo('mem');
             $order['uid']       = $uid;
             $order['user_type'] = $user_type;
             $order['pay_money'] = $pay_money;

@@ -29,10 +29,10 @@ class Order extends MyController {
     public function getUserOrderList() {
         $con_id       = trim($this->request->post('con_id'));
         $order_status = trim($this->request->post('order_status'));
-        $page = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
-        $page = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 10;
+        $page         = trim($this->request->post('page'));
+        $pagenum      = trim($this->request->post('pagenum'));
+        $page         = $page ? $page : 1;
+        $pagenum      = $pagenum ? $pagenum : 10;
         if (empty($con_id)) {
             return ['code' => '3002'];
         }
@@ -51,7 +51,7 @@ class Order extends MyController {
                 return ['code' => 3004];
             }
         }
-        $result = $this->app->order->getUserOrderList($con_id,$order_status,$page,$pagenum);
+        $result = $this->app->order->getUserOrderList($con_id, $order_status, $page, $pagenum);
         return $result;
     }
 
@@ -70,6 +70,7 @@ class Order extends MyController {
      * @apiSuccess (返回) {Float} total_freight_price 运费总价
      * @apiSuccess (返回) {Float} total_price 价格总计
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
+     * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
      * @apiSuccess (supplier_list) {Int} id 供应商id
      * @apiSuccess (supplier_list) {String} name 供应商name
      * @apiSuccess (supplier_list) {String} image 供应商image
@@ -98,9 +99,8 @@ class Order extends MyController {
      * @author zyr
      */
     public function createSettlement() {
-        $skuIdList = trim($this->request->post('sku_id_list'));
-        $conId     = trim($this->request->post('con_id'));
-//        $cityId    = trim($this->request->post('city_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $conId         = trim($this->request->post('con_id'));
         $userAddressId = trim($this->request->post('user_address_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
@@ -130,16 +130,18 @@ class Order extends MyController {
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够
-     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiParam (入参) {Number} pay_type 支付方式 2.微信 4.商票(1.支付宝[暂不支持] 3.银联[暂不支持])
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败
+     * @apiSuccess (返回) {String} order_no 订单号
      * @apiSampleRequest /index/order/createorder
      * @author zyr
      */
     public function createOrder() {
-        $skuIdList = trim($this->request->post('sku_id_list'));
-        $conId     = trim($this->request->post('con_id'));
-//        $cityId        = trim($this->request->post('city_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $conId         = trim($this->request->post('con_id'));
         $userAddressId = trim($this->request->post('user_address_id'));
+        $payType       = trim($this->request->post('pay_type'));
+        $payTypeArr    = [2, 4];
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -155,7 +157,10 @@ class Order extends MyController {
         if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId));
+        if (!in_array($payType, $payTypeArr)) {
+            return ['code' => '3008'];
+        }
+        $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
         return $result;
     }
 
@@ -166,13 +171,13 @@ class Order extends MyController {
      * @apiName          createMemberOrder
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员1000
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type必须是数字 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type必须是数字
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/createMemberOrder
      * @author rzc
      */
-    public function createMemberOrder(){
-        $conId = trim($this->request->post('con_id'));
+    public function createMemberOrder() {
+        $conId     = trim($this->request->post('con_id'));
         $user_type = trim($this->request->post('user_type'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -183,7 +188,7 @@ class Order extends MyController {
         if (!is_numeric($user_type)) {
             return ['code' => 3003];
         }
-        $result = $this->app->order->createMemberOrder($conId,intval($user_type));
+        $result = $this->app->order->createMemberOrder($conId, intval($user_type));
         return $result;
     }
 }
