@@ -193,7 +193,7 @@ class DbUser {
         return $obj->select()->toArray();
     }
 
-    public function getUserWxinfo($where, $field, $row = false) {
+    public function getUserWxinfo($where, $field, $row = false,$orderBy = '',$sc = '',$limit = '') {
         $obj = UserWxinfo::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);

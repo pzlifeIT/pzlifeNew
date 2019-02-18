@@ -379,7 +379,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type) {
+    public function createMemberOrder($conId, $user_type,$pay_type) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -407,7 +407,7 @@ class Order extends CommonIndex {
             if ($pay_money != $has_member_order['pay_money']) {
                 $has_member_order['pay_money'] = $pay_money;
                 /* 更新支付金额 */
-                DbOrder::updateMemberOrder(['pay_money' => $pay_money], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
+                DbOrder::updateMemberOrder(['pay_money' => $pay_money,'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
             }
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {
@@ -416,6 +416,7 @@ class Order extends CommonIndex {
             $order['uid']       = $uid;
             $order['user_type'] = $user_type;
             $order['pay_money'] = $pay_money;
+            $order['pay_type']  = $pay_type;
             DbOrder::addMemberOrder($order);
             return ['code' => '200', 'order_data' => $order];
         }

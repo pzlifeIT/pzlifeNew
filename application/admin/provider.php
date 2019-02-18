@@ -23,4 +23,5 @@ return [
     'user'    => app\common\action\admin\User::class,
     'upload'    => app\common\action\admin\Upload::class,
     'admin'     => app\common\action\admin\Admin::class,
+    'rights'     => app\common\action\admin\Rights::class,
 ];

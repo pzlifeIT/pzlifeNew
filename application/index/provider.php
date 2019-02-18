@@ -16,5 +16,6 @@ return [
     'goods' => \app\common\action\index\Goods::class,
     'cart' => \app\common\action\index\Cart::class,
 //    'collect'  => \app\common\action\index\Collect::class,
-    'order'     => app\common\action\index\Order::class
+    'order'     => app\common\action\index\Order::class,
+    'rights'     => app\common\action\index\Rights::class,
 ];
