@@ -383,7 +383,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->updateUserAddressDefault($conId, $address_id);
-        return $resule;
+        return $result;
     }
 
 }
