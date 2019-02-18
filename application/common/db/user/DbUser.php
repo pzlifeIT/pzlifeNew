@@ -224,4 +224,17 @@ class DbUser {
         }
         return $obj->toArray();
     }
+
+    /**
+     * 改商票余额
+     * @param $uid
+     * @param $balance
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyBalance($uid, $balance, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->balance = [$modify, $balance];
+        $user->save();
+    }
 }

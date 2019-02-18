@@ -135,9 +135,9 @@ class User extends CommonIndex {
                 Db::rollback();
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
-            Db::commit();
             DbUser::updateUser(['last_time' => time()], $uid);
             $this->saveOpenid($uid, $wxInfo['openid']);
+            Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
@@ -200,8 +200,8 @@ class User extends CommonIndex {
                 Db::rollback();
             }
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);//成功后删除验证码
-            Db::commit();
             $this->saveOpenid($uid, $wxInfo['openid'], $platform);
+            Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();

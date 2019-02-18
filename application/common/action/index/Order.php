@@ -106,7 +106,7 @@ class Order extends CommonIndex {
         }
         unset($summary['goods_list']);
         $summary['supplier_list'] = $supplier;
-        $summary['balance'] = $balance;
+        $summary['balance']       = $balance;
         return $summary;
     }
 
@@ -189,12 +189,20 @@ class Order extends CommonIndex {
         $deductionMoney = 0;//商票抵扣金额
         $thirdMoney     = 0;//第三方支付金额
         $discountMoney  = 0;//优惠金额
+        $isPay          = false;
         if ($payType == 2) {//商票支付
-            $userInfo = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance,balance_freeze', true);
+            $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
             if ($userInfo['balance_freeze'] == '2') {//商票未冻结
-                $deductionMoney = $userInfo['balance'];//可支付的商票
+                if ($summary['total_price'] > $userInfo['balance']) {
+                    $deductionMoney = $userInfo['balance'];//可支付的商票
+                    $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
+                } else {
+                    $isPay          = true;//可以直接商票支付完成
+                    $deductionMoney = $summary['total_price'];
+                }
+            } else {
+                $thirdMoney = $summary['total_price'];
             }
-            $thirdMoney = bcsub($summary['total_price'], $deductionMoney, 2);
         } else if ($payType == 1) {//第三方支付
             $thirdMoney = $summary['total_price'];
         }
@@ -202,6 +210,7 @@ class Order extends CommonIndex {
             'order_no'        => $orderNo,
             'third_order_id'  => 0,
             'uid'             => $uid,
+            'order_status'    => $isPay ? 4 : 1,
             'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
             'deduction_money' => $deductionMoney,//商票抵扣金额
             'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商票抵扣金额)
@@ -217,6 +226,7 @@ class Order extends CommonIndex {
             'area_id'         => $userAddress['area_id'],
             'address'         => $userAddress['address'],
             'message'         => '',
+            'pay_time'        => $isPay ? time() : 0,
         ];
 //        print_r($orderData);die;
         $stockSku = array_column($summary['goods_list'], 'buySum', 'id');
@@ -238,9 +248,12 @@ class Order extends CommonIndex {
             }
             DbOrder::addOrderGoods($orderGoodsData);
             DbGoods::decStock($stockSku);
+            if ($isPay) {
+                DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
+            }
             $this->summaryCart($skuIdList, $uid);
             Db::commit();
-            return ['code' => '200', 'order_no' => $orderNo];
+            return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3009'];
