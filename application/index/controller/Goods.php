@@ -138,9 +138,9 @@ class Goods extends MyController
 
     /**
      * @api              {post} / 搜索商品列表(未完成)
-     * @apiDescription   getSubjectGoods
+     * @apiDescription   getSearchGoods
      * @apiGroup         index_Goods
-     * @apiName          getSubjectGoods
+     * @apiName          getSearchGoods
      * @apiParam (入参) {String} search 搜索内容
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
@@ -159,7 +159,7 @@ class Goods extends MyController
      * @apiSuccess (data) {String} min_market_price 最低市场价 
      * @apiSuccess (data) {String} min_retail_price 最低零售价
      * @apiSuccess (data) {String} min_brokerage 最低钻石返利
-     * @apiSampleRequest /index/goods/getSubjectGoods
+     * @apiSampleRequest /index/goods/getSearchGoods
      * @author rzc
      */
     public function getSearchGoods(){
