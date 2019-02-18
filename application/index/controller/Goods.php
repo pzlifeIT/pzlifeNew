@@ -137,7 +137,7 @@ class Goods extends MyController
     }
 
     /**
-     * @api              {post} / 搜索商品列表
+     * @api              {post} / 搜索商品列表(未完成)
      * @apiDescription   getSubjectGoods
      * @apiGroup         index_Goods
      * @apiName          getSubjectGoods
@@ -162,4 +162,7 @@ class Goods extends MyController
      * @apiSampleRequest /index/goods/getSubjectGoods
      * @author rzc
      */
+    public function getSearchGoods(){
+
+    }
 }
