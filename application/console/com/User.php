@@ -116,6 +116,7 @@ class User extends Pzlife
             elseif ($value['label'] == 'diamondvip') {
                 $new_user['user_identity'] = 2;
                 $new_user['mobile'] = $value['mobile'];
+                $user_relation['is_boss'] = 2;
                 $diamondvip = $mysql_connect->query('SELECT * FROM pre_diamondvip_get WHERE `uid` = ' . $value['uid'] . ' AND `status`= 1 ORDER BY `gdid` DESC LIMIT 1');
                 if ($diamondvip) {
                     $new_user['true_name'] = $diamondvip[0]['linkman'];
@@ -125,6 +126,7 @@ class User extends Pzlife
             /* 普通用户信息 */
             else {
                 $new_user['user_identity'] = 1;
+                $user_relation['is_boss'] = 2;
             }
 
             /* 新用户信息 */
