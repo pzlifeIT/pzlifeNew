@@ -166,8 +166,9 @@ class User extends Pzlife
                 Db::commit();
             } catch (\Exception $e) {
                 // 回滚事务
-                print_r($e);die;
+                // print_r($e);die;
                 Db::rollback();
+                continue;
             }
             /* 事务提交 */
             // Db::transaction(function () {
