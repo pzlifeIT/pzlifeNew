@@ -148,7 +148,7 @@ class Payment {
      */
     private function nomalOrder($orderNo) {
         $field      = 'id,uid,order_status,pay_money,deduction_money,third_money,pay_type,third_pay_type,create_time';
-        $nomalOrder = DbOrder::getUserOrder($field, ['order_no' => $orderNo, 'order_status' => 1], true);
+        $nomalOrder = DbOrder::getOrder($field, ['order_no' => $orderNo, 'order_status' => 1], true);
         return $nomalOrder;
     }
 
@@ -175,7 +175,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getUserOrder('id', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,

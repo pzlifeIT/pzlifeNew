@@ -25,7 +25,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $order = DbOrder::getUserOrder('id,deduction_money', ['order_no' => $orderNo, 'uid' => $uid, 'order_status' => 1], true);
+        $order = DbOrder::getOrder('id,deduction_money', ['order_no' => $orderNo, 'uid' => $uid, 'order_status' => 1], true);
         if (empty($order)) {
             return ['code' => '3003'];//没有可取消的订单
         }
