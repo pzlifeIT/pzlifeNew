@@ -579,6 +579,20 @@ class DbGoods {
         }
     }
 
+    /**
+     * 改一个库存
+     * @param $skuId
+     * @param $num
+     * @param string $modify 增加/减少inc/dec
+     * @return bool
+     * @author zyr
+     */
+    public function modifyStock($skuId, $num, $modify = 'inc') {
+        $sku        = GoodsSku::get($skuId);
+        $sku->stock = [$modify, 1];
+        return $sku->save();
+    }
+
     public function addSkuList($data) {
         $goodsSku = new GoodsSku();
         return $goodsSku->saveAll($data);
