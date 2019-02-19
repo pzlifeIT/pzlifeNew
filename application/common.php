@@ -188,3 +188,32 @@ function createOrderNo($prefix = 'odr') {
     $orderNo = $prefix . date('ymdHis') . substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
     return $orderNo;
 }
+
+/**
+ * 快递编码公司对应物流
+ * @return array
+ * @author rzc
+ */
+function getExpressList(){
+    $ExpressList = [
+        'shunfeng' =>'顺丰速运',
+        'zhongtong' =>'中通快递',
+        'shentong' =>'申通快递',
+        'yunda' =>'韵达快递',
+        'tiantian' =>'天天快递',
+        'huitongkuaidi' =>'百世快递',
+        'ems' =>'EMS',
+        'youshuwuliu' =>'优速物流',
+        'kuayue' =>'跨越速运',
+        'debangwuliu' =>'德邦物流',
+        'yuantong' =>'圆通速递',
+        'jiuyescm' =>'九曳快递',
+        'zhaijibian' =>'黑猫宅急便(宅急便)',
+        'ane66' =>'安能快递',
+        'youzhengguonei' =>'中国邮政',
+        'rufengda' =>'如风达',
+        'wanxiangwuliu' =>'万象物流',
+        'SJPS' => '商家派送',
+    ];
+    return $ExpressList;
+}

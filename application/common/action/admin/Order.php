@@ -54,6 +54,23 @@ class Order{
             $order_child[$order]['order_goods'] = $order_goods;
             $express_money += $child['express_money'] ;
         }
-        return ['code' => 200,'order_info' => $order_info, 'order_child' => $order_child];
+        $order_pack = [];
+        foreach ($order_child as $order => $child) {
+            $order_goods = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']],false,true);
+            $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']],'sku_id');
+            foreach ($order_goods as $og => $goods) {
+                foreach ($order_goods_num as $ogn => $goods_num) {
+                    if ($goods_num['sku_id'] == $goods['sku_id']) {
+                        $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                        $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'],true);
+                    }
+                }
+            }
+            $order_pack[$order]['order_goods'] = $order_goods;
+           
+            // dump( Db::getLastSql());die;
+        }
+        // print_r($order_pack);die;
+        return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child];
     }
 }
