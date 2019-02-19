@@ -556,7 +556,7 @@ class Order extends CommonIndex {
         // print_r($order_status);die;
         
         $limit  = $offset . ',' . $pagenum;
-        $result = DbOrder::getUserOrder($field, $where, false, $limit);
+        $result = DbOrder::getOrder($field, $where, false, $limit);
         if (empty($result)) {
             return ['code' => '200', 'order_list' => []];
         }
