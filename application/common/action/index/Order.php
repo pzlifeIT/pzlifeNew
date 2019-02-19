@@ -539,8 +539,8 @@ class Order extends CommonIndex {
      * @author rzc
      */
     public function getUserOrderList($conId, $order_status = false, $page, $pagenum) {
-        $uid = $this->getUidByConId($conId);
-        // $uid = 23697;
+        // $uid = $this->getUidByConId($conId);
+        $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3005'];
         }
@@ -563,14 +563,27 @@ class Order extends CommonIndex {
 
         foreach ($result as $key => $value) {
             $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
-            // print_r($order_child);die;
+            
             $express_money = 0;
             foreach ($order_child as $order => $child) {
-                $order_child[$order]['order_goods'] = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
+                $order_goods = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']],false,true);
+                $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']],'sku_id');
+                foreach ($order_goods as $og => $goods) {
+                    foreach ($order_goods_num as $ogn => $goods_num) {
+                        if ($goods_num['sku_id'] == $goods['sku_id']) {
+                            $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                            $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'],true);
+                        }
+                    }
+                }
+                // dump( Db::getLastSql());die;
+                
+                $order_child[$order]['order_goods'] = $order_goods;
+               
                 $express_money += $child['express_money'] ;
             }
-            $result[$key]['order_child'] = $order_child;
             $result[$key]['express_money'] = $express_money;
+            $result[$key]['order_child'] = $order_child;
         }
         return ['code' => '200', 'order_list' => $result];
     }

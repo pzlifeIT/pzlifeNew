@@ -77,8 +77,16 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderGoods($field, $where) {
-        return OrderGoods::field($field)->where($where)->select()->toArray();
+    public function getOrderGoods($field, $where ,$group = false, $distinct = false) {
+        $obj = OrderGoods::field($field)->where($where);
+        
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
+        if ($group) {
+            $obj = $obj->group($group);
+        }
+        return $obj->select()->toArray();
     }
 
     /**

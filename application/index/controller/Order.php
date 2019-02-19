@@ -6,7 +6,7 @@ use app\index\MyController;
 
 class Order extends MyController {
     protected $beforeActionList = [
-        'isLogin',//所有方法的前置操作
+        // 'isLogin',//所有方法的前置操作
 //        'isLogin' => ['except' => ''],//除去getFirstCate其他方法都进行second前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
@@ -27,19 +27,19 @@ class Order extends MyController {
      * @author rzc
      */
     public function getUserOrderList() {
-        $con_id = trim($this->request->post('con_id'));
-        // $con_id = 1;
+        // $con_id = trim($this->request->post('con_id'));
+        $con_id = 1;
         $order_status = $this->request->post('orderStatus');
         $page         = trim($this->request->post('page'));
         $pagenum      = trim($this->request->post('pagenum'));
         $page         = $page ? $page : 1;
         $pagenum      = $pagenum ? $pagenum : 10;
-        if (empty($con_id)) {
-            return ['code' => '3002'];
-        }
-        if (strlen($con_id) != 32) {
-            return ['code' => '3001'];
-        }
+        // if (empty($con_id)) {
+        //     return ['code' => '3002'];
+        // }
+        // if (strlen($con_id) != 32) {
+        //     return ['code' => '3001'];
+        // }
         // var_dump($order_status);die;
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3003'];

@@ -23,6 +23,7 @@ class Order{
         }
         $field = 'id,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
         $orderList = DbOrder::getOrder($field, [['1','=','1']], false, $offset.','.$pagenum);
+        // dump( Db::getLastSql());die;
         if (empty($orderList)) {
             return ['code' => 3000];
         }
@@ -30,20 +31,6 @@ class Order{
         return ['code' => 200 , 'totle' => $totle, 'order_list' => $orderList];
     }
 
-    /* 
-    foreach ($orderList as $key => $value) {
-            $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
-            $express_money = 0;
-            $order_goods = [];
-            foreach ($order_child as $order => $child) {
-                $order_child[$order]['order_goods'] = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
-                $express_money += $child['express_money'] ;
-            }
-            $orderList[$key]['express_money'] = $express_money;
-            $orderList[$key]['order_goods'] = $order_goods;
-        }
-    
-    */
 
     /**
      * 获取订单详情
