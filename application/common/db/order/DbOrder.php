@@ -33,7 +33,7 @@ class DbOrder {
      * @return array
      */
 
-    public function getUserOrder($field, $where, $row = false, $limit = false) {
+    public function getOrder($field, $where, $row = false, $limit = false) {
         $obj = Orders::field($field)->where($where);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
@@ -44,6 +44,11 @@ class DbOrder {
     public function addOrderChilds($data) {
         $order = new OrderChild();
         return $order->saveAll($data);
+    }
+
+    public function getOrderCount($where){
+        $obj = Orders::where($where);
+        return $obj->count();
     }
 
     /**
