@@ -24,6 +24,11 @@ class DbOrder {
         return $order->id;
     }
 
+    public function updataOrder($data, $id) {
+        $order = new Orders();
+        return $order->save($data, ['id' => $id]);
+    }
+
     /**
      * 获取用户订单信息
      * @param $where
@@ -112,11 +117,31 @@ class DbOrder {
         } */
 
 
+    /**
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc 排序方式asc,desc
+     * @param string $limit
+     * @return mixed
+     * @author zyr
+     */
     public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = MemberOrder::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
     }
 
+    /**
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc 排序方式asc,desc
+     * @param string $limit
+     * @return mixed
+     * @author zyr
+     */
     public function getLogPay($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = LogPay::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
@@ -128,6 +153,20 @@ class DbOrder {
         return $logPay->id;
     }
 
+    public function updateLogPay($data, $id) {
+        $logPay = new LogPay();
+        return $logPay->save($data, ['id' => $id]);
+    }
+
+    /**
+     * @param $obj
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc
+     * @param string $limit
+     * @return mixed
+     * @author zyr
+     */
     private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);

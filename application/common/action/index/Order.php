@@ -18,6 +18,38 @@ class Order extends CommonIndex {
         $this->redisCartUserKey = Config::get('rediskey.cart.redisCartUserKey');
     }
 
+    public function cancelOrder($orderNo, $conId = '', $uid = 0) {
+        if (empty($uid)) {
+            $uid = $this->getUidByConId($conId);
+        }
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $order = DbOrder::getUserOrder('id,deduction_money', ['order_no' => $orderNo, 'uid' => $uid, 'order_status' => 1], true);
+        if (empty($order)) {
+            return ['code' => '3003'];//没有可取消的订单
+        }
+        $orderChild    = DbOrder::getOrderChild('id', [['order_id', 'in', $order['id']]]);
+        $orderChildIds = array_column($orderChild, 'id');
+        $orderGoods    = DbOrder::getOrderGoods('id,sku_id,goods_num', [['order_child_id', 'in', $orderChildIds]]);
+        $data          = [
+            'order_status' => 2,
+        ];
+        Db::startTrans();
+        try {
+            foreach ($orderGoods as $og) {
+                DbGoods::modifyStock($og['sku_id'], $og['goods_num'], 'inc');//退回库存
+            }
+            DbOrder::updataOrder($data, $order['id']);//改订单状态
+            DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
+            Db::commit();
+            return ['code' => '200'];//取消成功
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//取消失败
+        }
+    }
+
     /**
      * 结算页面
      * @param $conId
@@ -110,6 +142,15 @@ class Order extends CommonIndex {
         return $summary;
     }
 
+    /**
+     * 创建订单
+     * @param $conId
+     * @param $skuIdList 1,2,3
+     * @param $userAddressId 1 收货地址id
+     * @param $payType 2 支付方式1:所有第三方支付2:商票支付
+     * @return array
+     * @author zyr
+     */
     public function createOrder($conId, $skuIdList, int $userAddressId, int $payType) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -148,19 +189,21 @@ class Order extends CommonIndex {
         $orderGoodsData = [];
         foreach ($summary['goods_list'] as $gList) {
             foreach ($gList['shopBuySum'] as $kgl => $gl) {
-                $goodsData = [
-                    'goods_id'     => $gList['goods_id'],
-                    'goods_name'   => $gList['goods_name'],
-                    'sku_id'       => $gList['id'],
-                    'sup_id'       => $gList['supplier_id'],
-                    'boss_uid'     => $shopList[$kgl],
-                    'goods_price'  => bcmul($gList['retail_price'], $gl, 2),
-                    'margin_price' => bcmul($this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']), $gl, 2),
-                    'integral'     => bcmul($gList['integral'], $gl, 0),
-                    'goods_num'    => $gl,
-                    'sku_json'     => json_encode($gList['attr']),
-                ];
-                array_push($orderGoodsData, $goodsData);
+                for ($i = 0; $i < $gl; $i++) {
+                    $goodsData = [
+                        'goods_id'     => $gList['goods_id'],
+                        'goods_name'   => $gList['goods_name'],
+                        'sku_id'       => $gList['id'],
+                        'sup_id'       => $gList['supplier_id'],
+                        'boss_uid'     => $shopList[$kgl],
+                        'goods_price'  => $gList['retail_price'],
+                        'margin_price' => $this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
+                        'integral'     => $gList['integral'],
+                        'goods_num'    => 1,
+                        'sku_json'     => json_encode($gList['attr']),
+                    ];
+                    array_push($orderGoodsData, $goodsData);
+                }
             }
         }
 //        print_r($orderGoodsData);die;
@@ -248,9 +291,7 @@ class Order extends CommonIndex {
             }
             DbOrder::addOrderGoods($orderGoodsData);
             DbGoods::decStock($stockSku);
-            if ($isPay) {
-                DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
-            }
+            DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
             $this->summaryCart($skuIdList, $uid);
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
@@ -541,7 +582,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type,$pay_type) {
+    public function createMemberOrder($conId, $user_type, $pay_type) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -569,7 +610,7 @@ class Order extends CommonIndex {
             if ($pay_money != $has_member_order['pay_money']) {
                 $has_member_order['pay_money'] = $pay_money;
                 /* 更新支付金额 */
-                DbOrder::updateMemberOrder(['pay_money' => $pay_money,'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
+                DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
             }
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {

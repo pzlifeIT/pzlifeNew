@@ -60,9 +60,11 @@ class Pay extends PayController {
      * @author zyr
      */
     public function wxPayCallback() {
-        $res    = $this->request->request();
-        $res2 = file_get_contents('php://input');
-        $result = $this->app->payment->wxPayCallback($res,$res2);
+        $res    = file_get_contents('php://input');
+        $result = $this->app->payment->wxPayCallback($res);
+        $str    = '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
+        echo $str;
+        return $str;
 
     }
 }
