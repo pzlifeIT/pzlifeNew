@@ -29,7 +29,7 @@ class Order extends CommonIndex {
         if (empty($order)) {
             return ['code' => '3003'];//没有可取消的订单
         }
-        $orderChild    = DbOrder::getOrderChild('id', [['order_id', 'in', $order['id']]]);
+        $orderChild    = DbOrder::getOrderChild('id', [['order_id', '=', $order['id']]]);
         $orderChildIds = array_column($orderChild, 'id');
         $orderGoods    = DbOrder::getOrderGoods('id,sku_id,goods_num', [['order_child_id', 'in', $orderChildIds]]);
         $data          = [

@@ -30,9 +30,9 @@ class Pzlife extends Command {
 //        $output->writeln(self::class);die;
         $className = 'app\console\com\\' . ucfirst($commond);
         $params    = explode('}{', rtrim(ltrim($params, '{'), '}'));
-        if($commond=='curl'){
-            $method  = trim($input->getOption('method'));
-            $method  = !empty($method) ? $method : 'get';
+        if ($commond == 'curl') {
+            $method = trim($input->getOption('method'));
+            $method = !empty($method) ? $method : 'get';
             array_unshift($params, $method);
         }
         call_user_func_array([new $className(), $name], $params);

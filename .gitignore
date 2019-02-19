@@ -4,3 +4,4 @@
 thinkphp/
 public/doc/
 apidoc.json
+*.sh

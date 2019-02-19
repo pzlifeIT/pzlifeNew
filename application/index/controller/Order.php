@@ -27,7 +27,7 @@ class Order extends MyController {
      * @author rzc
      */
     public function getUserOrderList() {
-        $con_id       = trim($this->request->post('con_id'));
+        $con_id = trim($this->request->post('con_id'));
         // $con_id = 1;
         $order_status = $this->request->post('orderStatus');
         $page         = trim($this->request->post('page'));
@@ -53,7 +53,7 @@ class Order extends MyController {
                 return ['code' => 3004];
             }
         }
-       
+
         $result = $this->app->order->getUserOrderList($con_id, $order_status, $page, $pagenum);
         return $result;
     }
@@ -176,7 +176,7 @@ class Order extends MyController {
      * @apiName          cancelOrder
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} order_no 订单号
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:订单号错误 / 3002.con_id错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:订单号错误 / 3002.con_id错误 / 3003:没有可取消的订单 / 3005:取消失败
      * @apiSampleRequest /index/order/cancelorder
      * @author zyr
      */
