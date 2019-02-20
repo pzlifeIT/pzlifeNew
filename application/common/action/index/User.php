@@ -266,12 +266,12 @@ class User extends CommonIndex {
             $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
             $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
-            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $id);
             if ($conUid === false) {
                 $this->redis->zDelete($this->redisConIdTime, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
-            DbUser::updateUser(['last_time' => time()], $uid);
+            DbUser::updateUser(['last_time' => time()], $id);
             $this->saveOpenid($id, $wxInfo['openid'], $platform);
             return ['code' => '200', 'con_id' => $conId];
         }
@@ -553,8 +553,8 @@ class User extends CommonIndex {
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级名称'];
         }
-       
-       
+
+
         $data                = [];
         $data['uid']         = $uid;
         $data['province_id'] = $province['id'];
@@ -563,7 +563,7 @@ class User extends CommonIndex {
         $data['address']     = $address;
         $data['mobile']      = $mobile;
         $data['name']        = $name;
-        $data['default']     =   2;
+        $data['default']     = 2;
         $add                 = DbUser::addUserAddress($data);
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
@@ -626,7 +626,7 @@ class User extends CommonIndex {
         $data['address']     = $address;
         $data['mobile']      = $mobile;
         $data['name']        = $name;
-        DbUser::updateUserAddress($data, ['id'=>$address_id]);
+        DbUser::updateUserAddress($data, ['id' => $address_id]);
         return ['code' => 200, 'msg' => '修改成功'];
     }
 
@@ -654,9 +654,9 @@ class User extends CommonIndex {
 
             // $field = 'id,area_name,pid,level';
             // $where = ['id' => $city_id];
-            $result['province_name']    = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
-            $result['city_name']    = DbProvinces::getAreaOne('*', ['id' => $result['city_id'],'level'=>2])['area_name'];
-            $result['area_name']    = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+            $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+            $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
+            $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
 
             return ['code' => 200, 'data' => $result];
         }
@@ -666,9 +666,9 @@ class User extends CommonIndex {
             return ['code' => 3000];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['province_name']    = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
-            $result[$key]['city_name']    = DbProvinces::getAreaOne('*', ['id' => $value['city_id'],'level'=>2])['area_name'];
-            $result[$key]['area_name']    = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
+            $result[$key]['province_name'] = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
+            $result[$key]['city_name']     = DbProvinces::getAreaOne('*', ['id' => $value['city_id'], 'level' => 2])['area_name'];
+            $result[$key]['area_name']     = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
         }
         return ['code' => 200, 'data' => $result];
     }
