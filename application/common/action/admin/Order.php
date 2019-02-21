@@ -83,7 +83,7 @@ class Order{
             $has_order_goods_id = [];
             foreach ($has_order_express as $has => $express) {
                 $has_order_goods_id[] =$express['order_goods_id'];
-                $goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','=',$express['order_goods_id']]]);
+                $goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','=',$express['order_goods_id']]],false,false,true);
                 $goods['express'] = $express;
                 $has_deliver_goods[$has]['goods'] = $goods;
             }
@@ -96,7 +96,7 @@ class Order{
             $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$order_goods_ids]]);
         }
         $no_deliver_goods_num = count($no_deliver_goods);
-        // print_r($no_deliver_goods);die;
+        // print_r($has_deliver_goods);die;
         return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child,'no_deliver_goods' => $no_deliver_goods,'has_deliver_goods' => $has_deliver_goods,'no_deliver_goods_num'=>$no_deliver_goods_num];
     }
 
