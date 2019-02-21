@@ -105,13 +105,13 @@ class Order extends AdminController
      * @apiSuccess (order_pack[order_goods]) {String} goods_num 商品成交数量
      * @apiSuccess (order_pack[order_goods]) {String} sku_json 商品规格详情列表
      * @apiSuccess (no_deliver_goods) {object_array} no_deliver_goods 未发货商品及属性及订单商品ID
-     * @apiSuccess (no_deliver_goods) {object_array} id 
-     * @apiSuccess (no_deliver_goods) {object_array} goods_name 商品名称
-     * @apiSuccess (no_deliver_goods) {object_array} sku_json 商品规格详情列表
+     * @apiSuccess (no_deliver_goods) {String} id 
+     * @apiSuccess (no_deliver_goods) {String} goods_name 商品名称
+     * @apiSuccess (no_deliver_goods) {String} sku_json 商品规格详情列表
      * @apiSuccess (has_deliver_goods) {object_array} has_deliver_goods 已发货商品及属性及订单商品ID
-     * @apiSuccess (has_deliver_goods) {object_array} id 
-     * @apiSuccess (has_deliver_goods) {object_array} goods_name 商品名称
-     * @apiSuccess (has_deliver_goods) {object_array} sku_json 商品规格详情列表
+     * @apiSuccess (has_deliver_goods) {String} id 
+     * @apiSuccess (has_deliver_goods) {String} goods_name 商品名称
+     * @apiSuccess (has_deliver_goods) {String} sku_json 商品规格详情列表
      * @apiSampleRequest /admin/Order/getOrderInfo
      * @apiParamExample (order_info) {Array} 返回订单详情
      * [
