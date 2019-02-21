@@ -78,22 +78,26 @@ class Order{
         }
         // print_r($order_pack);die;
         $has_deliver_goods = [];
-        $has_order_express =  DbOrder::getOrderExpress('order_goods_id', [['order_goods_id' ,'IN', $order_goods_ids]] );
+        $has_order_express =  DbOrder::getOrderExpress('order_goods_id,express_no,express_key,express_name', [['order_goods_id' ,'IN', $order_goods_ids]] );
         if ($has_order_express) {
             $has_order_goods_id = [];
             foreach ($has_order_express as $has => $express) {
                 $has_order_goods_id[] =$express['order_goods_id'];
+                $goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','=',$express['order_goods_id']]]);
+                $goods['express'] = $express;
+                $has_deliver_goods[$has]['goods'] = $goods;
             }
             $no_order_goods_id = array_diff($order_goods_ids,$has_order_goods_id);
            
             $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$no_order_goods_id]]);
-            $has_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$has_order_goods_id]]);
+            // $has_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$has_order_goods_id]]);
             
         }else{
             $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$order_goods_ids]]);
         }
+        $no_deliver_goods_num = count($no_deliver_goods);
         // print_r($no_deliver_goods);die;
-        return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child,'no_deliver_goods' => $no_deliver_goods,'has_deliver_goods' => $has_deliver_goods];
+        return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child,'no_deliver_goods' => $no_deliver_goods,'has_deliver_goods' => $has_deliver_goods,'no_deliver_goods_num'=>$no_deliver_goods_num];
     }
 
     /**
