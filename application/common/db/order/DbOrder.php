@@ -6,6 +6,7 @@ use app\common\model\Orders;
 use app\common\model\OrderChild;
 use app\common\model\OrderGoods;
 use app\common\model\MemberOrder;
+use app\common\model\OrderExpress;
 use app\common\model\LogPay;
 
 class DbOrder {
@@ -62,8 +63,12 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where) {
-        return OrderChild::field($field)->where($where)->select()->toArray();
+    public function getOrderChild($field, $where ,$row = false) {
+        $obj = OrderChild::field($field)->where($where);
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
     }
 
     public function addOrderGoods($data) {
@@ -73,11 +78,14 @@ class DbOrder {
 
     /**
      * 获取订单商品
-     * @param $where
      * @param $field
+     * @param $where
+     * @param $group
+     * @param $distinct
+     * @param $row
      * @return array
      */
-    public function getOrderGoods($field, $where ,$group = false, $distinct = false) {
+    public function getOrderGoods($field, $where ,$group = false, $distinct = false,$row = false) {
         $obj = OrderGoods::field($field)->where($where);
         
         if ($distinct === true) {
@@ -86,7 +94,45 @@ class DbOrder {
         if ($group) {
             $obj = $obj->group($group);
         }
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
         return $obj->select()->toArray();
+    }
+
+    /**
+     * 获取订单商品物流单分配
+     * @param $field
+     * @param $where
+     * @param $group
+     * @param $distinct
+     * @param $row
+     * @return array
+     */
+    public function getOrderExpress($field, $where ,$group = false, $distinct = false,$row = false){
+        $obj = OrderExpress::field($field)->where($where);
+        
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
+        if ($group) {
+            $obj = $obj->group($group);
+        }
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
+    }
+
+    /**
+     * 新增订单商品物流单分配
+     * @param $data
+     * @return array
+     */
+    public function addOrderExpress($data){
+        $OrderExpress = new OrderExpress;
+        $OrderExpress->save($data);
+        return $OrderExpress->id;
     }
 
     /**
