@@ -210,7 +210,6 @@ class Goods extends AdminController {
      * @apiSuccess (data) {String} freight_title 运费模版标题
      * @apiSuccess (data) {Array} attr 属性列表
      * @apiSuccess (data) {Number} integral_price 积分售价
-     * @apiSuccess (data) {Number} integral_active 积分赠送
      * @apiSuccess (data) {Number} weight 重量(单位kg)用作计算运费
      * @apiSuccess (data) {Number} volume 体积(单位m³)用作计算运费
      * @apiSampleRequest /admin/goods/getgoodssku
@@ -240,7 +239,6 @@ class Goods extends AdminController {
      * @apiParam (入参) {Decimal} cost_price 成本价
      * @apiParam (入参) {Decimal} margin_price 其他运费成本
      * @apiParam (入参) {Int} integral_price 积分售价
-     * @apiParam (入参) {Int} integral_active 积分赠送
      * @apiParam (入参) {String} sku_image 规格详情图
      * @apiParam (入参) {Decimal} [weight] 重量(单位kg)用作计算运费
      * @apiParam (入参) {Decimal} [volume] 体积(单位m³)用作计算运费
@@ -258,7 +256,6 @@ class Goods extends AdminController {
         $costPrice      = trim($this->request->post('cost_price'));//成本价
         $marginPrice    = trim($this->request->post('margin_price'));//其他运费成本
         $integralPrice  = trim($this->request->post('integral_price'));//积分售价
-        $integralActive = trim($this->request->post('integral_active'));//积分赠送
         $weight         = trim($this->request->post('weight'));//重量
         $volume         = trim($this->request->post('volume'));//体积
         $skuImage       = trim($this->request->post('sku_image'));//规格详情图
@@ -287,7 +284,6 @@ class Goods extends AdminController {
             'cost_price'      => $costPrice,
             'margin_price'    => $marginPrice,
             'integral_price'  => $integralPrice,
-            'integral_active' => $integralActive,
             'sku_image'       => $skuImage,
         ];
         $result = $this->app->goods->editGoodsSku($skuId, $data, $weight, $volume);
