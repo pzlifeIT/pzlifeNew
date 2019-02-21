@@ -69,23 +69,51 @@ class Order extends AdminController
      * @apiName          getOrderInfo
      * @apiParam (入参) {Number} id 订单ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3002:订单ID只能是数字
-     * @apiSuccess (返回) {String} totle 总结果条数
-     * @apiSuccess (data) {object_array} order_list 结果
-     * @apiSuccess (data) {String} id 订单ID
-     * @apiSuccess (data) {String} order_no 生成唯一订单号
-     * @apiSuccess (data) {String} third_order_id 第三方订单id
-     * @apiSuccess (data) {String} uid 用户id
-     * @apiSuccess (data) {String} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
-     * @apiSuccess (data) {String} order_money 订单金额(优惠金额+实际支付的金额)
-     * @apiSuccess (data) {String} deduction_money 商票抵扣金额
-     * @apiSuccess (data) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
-     * @apiSuccess (data) {String} goods_money 商品金额
-     * @apiSuccess (data) {String} discount_money 优惠金额
-     * @apiSuccess (data) {String} pay_type 支付类型 1.所有第三方支付 2.商票
-     * @apiSuccess (data) {String} third_money 第三方支付金额
-     * @apiSuccess (data) {String} third_pay_type 第三方支付类型1.支付宝 2.微信 3.银联
+     * @apiSuccess (order_info) {object_array} order_info 结果
+     * @apiSuccess (order_info) {String} id 订单ID
+     * @apiSuccess (order_info) {String} order_no 生成唯一订单号
+     * @apiSuccess (order_info) {String} third_order_id 第三方订单id
+     * @apiSuccess (order_info) {String} uid 用户id
+     * @apiSuccess (order_info) {String} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
+     * @apiSuccess (order_info) {String} order_money 订单金额(优惠金额+实际支付的金额)
+     * @apiSuccess (order_info) {String} deduction_money 商票抵扣金额
+     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_info) {String} goods_money 商品金额
+     * @apiSuccess (order_info) {String} discount_money 优惠金额
+     * @apiSuccess (order_info) {String} pay_type 支付类型 1.所有第三方支付 2.商票
+     * @apiSuccess (order_info) {String} third_money 第三方支付金额
+     * @apiSuccess (order_info) {String} linkman 订单联系人
+     * @apiSuccess (order_info) {String} linkphone 联系人电话
+     * @apiSuccess (order_info) {String} province_name 省份名称
+     * @apiSuccess (order_info) {String} city_name 城市名称
+     * @apiSuccess (order_info) {String} area_name 区域名称
+     * @apiSuccess (order_info) {String} address 收货地址
+     * @apiSuccess (order_info) {String} message 买家留言信息
+     * @apiSuccess (order_info) {String} third_time 第三方支付时间
+     * @apiSuccess (order_info) {String} pay_time 支付时间
+     * @apiSuccess (order_info) {String} create_time 生成订单时间
+     * @apiSuccess (order_info) {String} rece_time 收货时间
+     * @apiSuccess (order_pack[order_goods]) {String} goods_id 商品ID
+     * @apiSuccess (order_pack[order_goods]) {String} goods_name 商品名称
+     * @apiSuccess (order_pack[order_goods]) {String} order_child_id 订单字订单ID
+     * @apiSuccess (order_pack[order_goods]) {String} sku_id 商品规格ID
+     * @apiSuccess (order_pack[order_goods]) {String} sup_id 商品供应商ID
+     * @apiSuccess (order_pack[order_goods]) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (order_pack[order_goods]) {String} goods_price 商品成交价
+     * @apiSuccess (order_pack[order_goods]) {String} margin_price 实际成交毛利
+     * @apiSuccess (order_pack[order_goods]) {String} integral 赠送积分
+     * @apiSuccess (order_pack[order_goods]) {String} goods_num 商品成交数量
+     * @apiSuccess (order_pack[order_goods]) {String} sku_json 商品规格详情列表
+     * @apiSuccess (no_deliver_goods) {object_array} no_deliver_goods 未发货商品及属性及订单商品ID
+     * @apiSuccess (no_deliver_goods) {object_array} id 
+     * @apiSuccess (no_deliver_goods) {object_array} goods_name 商品名称
+     * @apiSuccess (no_deliver_goods) {object_array} sku_json 商品规格详情列表
+     * @apiSuccess (has_deliver_goods) {object_array} has_deliver_goods 已发货商品及属性及订单商品ID
+     * @apiSuccess (has_deliver_goods) {object_array} id 
+     * @apiSuccess (has_deliver_goods) {object_array} goods_name 商品名称
+     * @apiSuccess (has_deliver_goods) {object_array} sku_json 商品规格详情列表
      * @apiSampleRequest /admin/Order/getOrderInfo
-     * @apiParamExample (data) {Array} 返回用户列表
+     * @apiParamExample (order_info) {Array} 返回订单详情
      * [
      * "code":"200",返回code码
      * "totle":"82",总记录条数
@@ -100,6 +128,20 @@ class Order extends AdminController
      *   "pay_type": 1,
      *   "third_money": "0.01",
      *   "third_pay_type": 2
+     *  },
+     * ]
+     * @apiParamExample (no_deliver_goods) {Array} 返回订单未发货商品
+     * [
+     *  {"id": 12,
+     *   "goods_name": "天然碱性苏打水5",
+     *   "sku_json": "[\"24\\u74f6\",\"\\u767d\\u8272\"]"
+     *  },
+     * ]
+     * @apiParamExample (has_deliver_goods) {Array} 返回订单已发货商品
+     * [
+     *  {"id": 12,
+     *   "goods_name": "天然碱性苏打水5",
+     *   "sku_json": "[\"24\\u74f6\",\"\\u767d\\u8272\"]"
      *  },
      * ]
      * @author rzc

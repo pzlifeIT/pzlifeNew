@@ -50,10 +50,12 @@ class Order{
         $order_info['area_name']    = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
         $order_child = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
         $express_money = 0;
+        $order_goods_ids = [];
         foreach ($order_child as $order => $child) {
             $order_goods = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
             foreach ($order_goods as $og => $goods) {
                 $order_goods[$og]['sku_json'] = json_decode($goods['sku_json']);
+                $order_goods_ids[] = $goods['id'];
             }
             $order_child[$order]['order_goods'] = $order_goods;
             $express_money += $child['express_money'] ;
@@ -75,7 +77,23 @@ class Order{
             // dump( Db::getLastSql());die;
         }
         // print_r($order_pack);die;
-        return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child];
+        $has_deliver_goods = [];
+        $has_order_express =  DbOrder::getOrderExpress('order_goods_id', [['order_goods_id' ,'IN', $order_goods_ids]] );
+        if ($has_order_express) {
+            $has_order_goods_id = [];
+            foreach ($has_order_express as $has => $express) {
+                $has_order_goods_id[] =$express['order_goods_id'];
+            }
+            $no_order_goods_id = array_diff($order_goods_ids,$has_order_goods_id);
+           
+            $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$no_order_goods_id]]);
+            $has_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$has_order_goods_id]]);
+            
+        }else{
+            $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','IN',$order_goods_ids]]);
+        }
+        // print_r($no_deliver_goods);die;
+        return ['code' => 200,'order_info' => $order_info, 'order_pack' => $order_pack,'order_child' => $order_child,'no_deliver_goods' => $no_deliver_goods,'has_deliver_goods' => $has_deliver_goods];
     }
 
     /**
