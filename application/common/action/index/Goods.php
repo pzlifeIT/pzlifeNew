@@ -97,9 +97,7 @@ class Goods
         $goods_data['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
         $goods_data['max_retail_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
 
-        $field = 'integral_active';
-        $goods_data['min_integral_active'] = DbGoods:: getOneSkuMost($where, 1, $field);
-        $goods_data['max_integral_active'] = DbGoods:: getOneSkuMost($where, 2, $field);
+       
 
         /* 查询商品轮播图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
@@ -114,7 +112,12 @@ class Goods
         /* 商品对应规格及SKU价格 */
 
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
-
+        $integral_active = [];
+        foreach ($goods_sku as $key => $value) {
+            $integral_active[] = $value['integral_active'];
+        }
+        $goods_data['max_integral_active'] = max($integral_active);
+        $goods_data['min_integral_active'] = min($integral_active);
         // $goods_sku = $goods_sku;
 
         return [
@@ -165,12 +168,14 @@ class Goods
         }
          
         
-        $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,integral_active,spec,sku_image';
-        $where = [["goods_id", "=", $goods_id],["status", "=",1]];
+        $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
+        $where = [["goods_id", "=", $goods_id],["status", "=",1],['stock','<>',0]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
+        /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
         foreach ($goods_sku as $goods => $sku) {
             $goods_sku[$goods]['brokerage'] = bcmul(bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),0.9),0.75,2);
+            $goods_sku[$goods]['integral_active'] = bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),2,2);
         }
         return [$goods_spec, $goods_sku];
     }
@@ -224,29 +229,35 @@ class Goods
         $field = 'id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image';
         $order = 'id';
         // $where = ['status' => 1, 'cate_id' => $cate_id];
+        
         $where = [['status','=', 1], ['id' ,'IN', $goodsid]];
         $result = DbGoods::getGoods($field, $limit, $order, $where);
-
+        
         if(empty($result)){
             return ['code' => 200, 'data' => []];
         }
-
+        // print_r($result);die;
         /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
         foreach ($result as $key => $value) {
            /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             $result[$key]['spec'] = $goods_spec;
             $result[$key]['goods_sku'] = $goods_sku; */
-            $where = ['goods_id' => $value['id'],'status' => 1];
+            $where = [['goods_id', '=', $value['id']],['status', '=' , 1],['stock','<>',0]];
+           
             $field = 'market_price';
             $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             $field = 'retail_price';
             $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
+            // print_r($value['id']);die;
             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+           
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']] = $sku['brokerage'];
+                $integral_active[$sku['id']] = $sku['integral_active'];
             }
             $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+            $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
             
         }
         return ['code' => 200, 'data' => $result];

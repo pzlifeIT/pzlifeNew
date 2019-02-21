@@ -31,7 +31,7 @@ class Cart extends CommonIndex {
         }
 
         /* 获取该商品规格属性ID */
-        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
+        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image';
         $where     = [["id", "=", $goods_skuid]];
         $goods_sku = DbGoods::getOneSku($where, $field);
 
@@ -53,6 +53,9 @@ class Cart extends CommonIndex {
         }
         if ($goods_sku['stock'] < 1) {
             return ['code' => 3004, 'msg' => '该规格库存不足'];
+        }
+        if ($buy_num> $goods_sku['stock']) {
+            return ['code' => '3006', 'msg' => '库存不足购买数量'];
         }
         /* 获取商品基础信息 */
         $where      = [["id", "=", $goods_sku['goods_id']], ["status", "=", 1]];
@@ -129,7 +132,7 @@ class Cart extends CommonIndex {
                     /* 获取店铺信息 */
                    
                     /* 查询商品信息 */
-                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,cost_price,active_end_time,margin_price,integral_price,integral_active,spec,sku_image,status';
+                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,cost_price,active_end_time,margin_price,integral_price,spec,sku_image,status';
                     $where     = [["id", "=", $skuid]];
                     $goods_sku = DbGoods::getOneSku($where, $field);
                     /* 该规格查询不到直接失效 */
@@ -236,7 +239,7 @@ class Cart extends CommonIndex {
             return ['code' => '3007'];//此条信息不存在
         }
         /* 获取该商品规格属性ID */
-        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,integral_active,spec,sku_image';
+        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image';
         $where     = [["id", "=", $goods_skuid]];
         $goods_sku = DbGoods::getOneSku($where, $field);
         if (!$goods_sku) {

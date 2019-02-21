@@ -68,6 +68,7 @@ class Order{
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                         $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'],true);
                     }
                 }
@@ -83,7 +84,8 @@ class Order{
             $has_order_goods_id = [];
             foreach ($has_order_express as $has => $express) {
                 $has_order_goods_id[] =$express['order_goods_id'];
-                $goods = DbOrder::getOrderGoods('id,goods_name,sku_json',[['id','=',$express['order_goods_id']]],false,false,true);
+                $goods = DbOrder::getOrderGoods('id,goods_name,sku_json,sku_id',[['id','=',$express['order_goods_id']]],false,false,true);
+                $goods['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                 $goods['express'] = $express;
                 $has_deliver_goods[$has]['goods'] = $goods;
             }
@@ -101,7 +103,7 @@ class Order{
     }
 
     /**
-     * 获取订单详情
+     * 订单发货
      * @param $order_goods_id
      * @param $express_no
      * @param $express_key
@@ -172,5 +174,31 @@ class Order{
             return ['code' => '3006','msg' => '添加失败','no_deliver_goods' => $no_deliver_goods];
         }
 
+    }
+
+    /**
+     * 修改订单发货信息
+     * @param $order_goods_id
+     * @param $express_no
+     * @param $express_key
+     * @param $express_name
+     * @return array
+     * @author rzc
+     */
+    public function updateDeliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name){
+        $order_express = DbOrder::getOrderExpress('id', ['order_goods_id' => $order_goods_id] , false, false,true);
+        // dump( Db::getLastSql());die;
+        if (!$order_express) {
+            return ['code' => 3005, 'msg' => '未添加的订单商品物流分配关系，无法修改'];
+        }
+        $order_child_id = DbOrder::getOrderGoods('order_child_id', ['id' => $order_goods_id],false,false,true)['order_child_id'];
+        
+        $order_id = DbOrder::getOrderChild('order_id', ['id' => $order_child_id],true)['order_id'];
+
+        $order_status = DbOrder::getOrder('order_status', ['id' => $order_id], true)['order_status'] ;
+
+        if ($order_status!=4) {
+            return ['code' => 3004,'msg' => '非待发货订单无法发货'];
+        }
     }
 }

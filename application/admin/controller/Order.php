@@ -201,4 +201,35 @@ class Order extends AdminController
         return $result;
     }
 
+    /**
+     * @api              {post} / 修改订单发货信息
+     * @apiGroup         admin_Orders
+     * @apiName          updateDeliverOrderGoods
+     * @apiParam (入参) {Number} order_goods_id 订单商品关系表id
+     * @apiParam (入参) {Number} express_no 快递单号
+     * @apiParam (入参) {Number} express_key 快递key
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码
+     * @apiSuccess (返回) {String} totle 总结果条数
+     * @apiSuccess (data) {object_array} ExpressList 结果
+     * @apiSampleRequest /admin/Order/updateDeliverOrderGoods
+     * @author rzc
+     */
+    public function updateDeliverOrderGoods(){
+        $order_goods_id = trim($this->request->post('order_goods_id'));
+        $express_no = trim($this->request->post('express_no'));
+        $express_key = trim($this->request->post('express_key'));
+
+        if (empty($express_key) || empty($express_no)) {
+            return ['code' => 3001];
+        }
+        $ExpressList = getExpressList();
+       
+        if (!array_key_exists($express_key,$ExpressList)) {
+            return ['code' => 3002];
+        }
+        $express_name = $ExpressList[$express_key];
+        $result = $this->app->order->updateDeliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name);
+        return $result;
+    }
+
 }
