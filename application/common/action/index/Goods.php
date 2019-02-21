@@ -250,14 +250,20 @@ class Goods
             $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             // print_r($value['id']);die;
             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-           
-            foreach ($goods_sku as $goods => $sku) {
-                $retail_price[$sku['id']] = $sku['retail_price'];
-                $brokerage[$sku['id']] = $sku['brokerage'];
-                $integral_active[$sku['id']] = $sku['integral_active'];
+            if ($goods_sku) {
+                foreach ($goods_sku as $goods => $sku) {
+                
+                    $retail_price[$sku['id']] = $sku['retail_price'];
+                    $brokerage[$sku['id']] = $sku['brokerage'];
+                    $integral_active[$sku['id']] = $sku['integral_active'];
+                }
+                $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+                $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+            }else{
+                $result[$key]['min_brokerage'] = 0;
+                $result[$key]['min_integral_active'] = 0;
             }
-            $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
-            $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+            
             
         }
         return ['code' => 200, 'data' => $result];
