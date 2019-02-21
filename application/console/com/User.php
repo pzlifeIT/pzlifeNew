@@ -45,7 +45,7 @@ class User extends Pzlife
         ini_set('memory_limit', '1024M');
         $password = hash_hmac('sha1', '123456', 'userpass');
 
-        $member = "SELECT `mw`.`unionid`,`m`.* FROM pre_member_wxunion AS mw LEFT JOIN pre_member AS m USING(`uid`)  ";
+        $member = "SELECT `mw`.`unionid`,`m`.* FROM pre_member_wxunion AS mw LEFT JOIN pre_member AS m USING(`uid`) ";
 
         $memberdata = $mysql_connect->query($member);
         // print_r(count($memberdata));die;
@@ -69,8 +69,8 @@ class User extends Pzlife
                 // $user_relation['my_boss'] = $hierarchy[0];
                 if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $hierarchy[0])) {
                     /* do { */
-                        $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $hierarchy[0]);
-                        $new_relation[] = $relationship[0]['uid'];
+                        // $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $hierarchy[0]);
+                        // $new_relation[] = $relationship[0]['uid'];
                    /*  } while (!$relationship); */
                 }
 
@@ -149,16 +149,18 @@ class User extends Pzlife
                 $new_user['commission'] = $member_count[0]['commission'];
                 $new_user['integral'] = $member_count[0]['bonuspoints'];
             }
-
+           
             $user_relation['relation'] = join(',', $hierarchy);
+           
             if ($new_relation) {
                 $user_relation['relation'] = join(',', $new_relation) . ',' . $user_relation['relation'];
             }
+            
             $new_user = $this->delDataEmptyKey($new_user);
             $user_relation = $this->delDataEmptyKey($user_relation);
             // print_r( $member_relationship );
-            // print_r( $user_relation );
-    
+            
+            // print_r( $user_relation );die;
            // 启动事务
             Db::startTrans();
             try {
