@@ -113,9 +113,11 @@ class Goods
 
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
         $integral_active = [];
+        // print_r($goods_sku);die;
         foreach ($goods_sku as $key => $value) {
             $integral_active[] = $value['integral_active'];
         }
+       
         $goods_data['max_integral_active'] = max($integral_active);
         $goods_data['min_integral_active'] = min($integral_active);
         // $goods_sku = $goods_sku;
@@ -169,7 +171,8 @@ class Goods
          
         
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
-        $where = [["goods_id", "=", $goods_id],["status", "=",1],['stock','<>',0]];
+        $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
+        // $where = [["goods_id", "=", $goods_id],["status", "=",1]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
