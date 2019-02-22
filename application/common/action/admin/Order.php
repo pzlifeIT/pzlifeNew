@@ -28,6 +28,9 @@ class Order{
         if (empty($orderList)) {
             return ['code' => 3000];
         }
+        foreach ($orderList as $key => $value) {
+            $orderList[$key]['nick_name'] =  getUserInfo(['id'=>$value['uid']], 'nick_name', true)['nick_name'];
+        }
         $totle = DbOrder::getOrderCount([['1','=','1']]);
         return ['code' => 200 , 'totle' => $totle, 'order_list' => $orderList];
     }

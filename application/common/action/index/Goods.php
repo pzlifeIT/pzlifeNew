@@ -113,11 +113,14 @@ class Goods
 
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
         $integral_active = [];
+        // print_r($goods_sku);die;
         foreach ($goods_sku as $key => $value) {
             $integral_active[] = $value['integral_active'];
         }
+        $min_integral_active = [0];
+        
         $goods_data['max_integral_active'] = max($integral_active);
-        $goods_data['min_integral_active'] = min($integral_active);
+        $goods_data['min_integral_active'] = min(array_diff($integral_active,$min_integral_active));
         // $goods_sku = $goods_sku;
 
         return [
@@ -169,13 +172,23 @@ class Goods
          
         
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
-        $where = [["goods_id", "=", $goods_id],["status", "=",1],['stock','<>',0]];
+        // $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
+        $where = [["goods_id", "=", $goods_id],["status", "=",1]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
         foreach ($goods_sku as $goods => $sku) {
             $goods_sku[$goods]['brokerage'] = bcmul(bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),0.9),0.75,2);
-            $goods_sku[$goods]['integral_active'] = bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),2,2);
+            $goods_sku[$goods]['integral_active'] = bcmul(bcsub($sku['retail_price'],$sku['cost_price'],$sku['margin_price']),2);
+            $sku_json = DbGoods::getAttrList( [['id', 'in', $sku['spec']]], 'attr_name');
+            $sku_name = [];
+            if ($sku_json) {
+                foreach ($sku_json as $sj => $json) {
+                    $sku_name[] = $json['attr_name'];
+                }
+            }
+            $goods_sku[$goods]['sku_name'] = $sku_name;
+            
         }
         return [$goods_spec, $goods_sku];
     }
@@ -250,14 +263,20 @@ class Goods
             $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             // print_r($value['id']);die;
             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-           
-            foreach ($goods_sku as $goods => $sku) {
-                $retail_price[$sku['id']] = $sku['retail_price'];
-                $brokerage[$sku['id']] = $sku['brokerage'];
-                $integral_active[$sku['id']] = $sku['integral_active'];
+            if ($goods_sku) {
+                foreach ($goods_sku as $goods => $sku) {
+                
+                    $retail_price[$sku['id']] = $sku['retail_price'];
+                    $brokerage[$sku['id']] = $sku['brokerage'];
+                    $integral_active[$sku['id']] = $sku['integral_active'];
+                }
+                $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+                $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+            }else{
+                $result[$key]['min_brokerage'] = 0;
+                $result[$key]['min_integral_active'] = 0;
             }
-            $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
-            $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+            
             
         }
         return ['code' => 200, 'data' => $result];
