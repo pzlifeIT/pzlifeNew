@@ -22,7 +22,7 @@ class Order{
         if ($offset<0) {
             return ['code' => 3000];
         }
-        $field = 'id,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
+        $field = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
         $orderList = DbOrder::getOrder($field, [['1','=','1']], false, $offset.','.$pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
