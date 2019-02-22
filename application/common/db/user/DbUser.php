@@ -4,6 +4,8 @@ namespace app\common\db\user;
 
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
+use app\common\model\UserRecommend;
+use app\common\model\UserRelation;
 use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
@@ -209,7 +211,7 @@ class DbUser {
         return $obj->select()->toArray();
     }
 
-    public function getUserWxinfo($where, $field, $row = false,$orderBy = '',$sc = '',$limit = '') {
+    public function getUserWxinfo($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = UserWxinfo::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
@@ -236,5 +238,51 @@ class DbUser {
         $user          = Users::get($uid);
         $user->balance = [$modify, $balance];
         $user->save();
+    }
+
+    public function addUserRecommend($data) {
+        $userRecommend = new UserRecommend();
+        $userRecommend->save($data);
+        return $userRecommend->id;
+    }
+
+    public function getUserRelation($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = UserRelation::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    public function addUserRelation($data) {
+        $userRelation = new UserRelation();
+        $userRelation->save($data);
+        return $userRelation->id;
+    }
+
+    public function updateUserRelation($data, $id) {
+        $userRelation = new UserRelation();
+        return $userRelation->save($data, ['id' => $id]);
+    }
+
+    /**
+     * @param $obj
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc
+     * @param string $limit
+     * @return mixed
+     * @author zyr
+     */
+    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
     }
 }

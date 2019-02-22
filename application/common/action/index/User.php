@@ -76,10 +76,11 @@ class User extends CommonIndex {
      * @param $encrypteddata
      * @param $iv
      * @param $platform
+     * @param $buid
      * @return array
      * @author zyr
      */
-    public function quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform) {
+    public function quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid) {
         $stype = 3;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
@@ -91,9 +92,12 @@ class User extends CommonIndex {
         $updateData = [];
         $addData    = [];
         $uid        = $this->checkAccount($mobile);//通过手机号获取uid
-        if (empty($uid)) {
-            $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');//手机号获取不到就通过微信获取
+        if (empty($uid)) {//该手机未注册过
+            $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');//手机号获取不到就通过微信获取
             if (!empty($user)) {//注册了微信的老用户
+                if (!empty($user['mobile'])) {//该微信号已绑定
+                    return ['code' => '3009'];
+                }
                 $uid        = $user['id'];
                 $updateData = [
                     'mobile' => $mobile,
@@ -111,13 +115,42 @@ class User extends CommonIndex {
         if (!empty($uid)) {
             $userCon = DbUser::getUserCon(['uid' => $uid], 'id,con_id', true);
         }
+        $isBoss         = 3;
+        $userRelationId = 0;
+        $relationRes    = '';
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $relationRes   = $bUserRelation['relation'];
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if (!empty($uid) && $isBoss == 1) {//不是个新用户
+                $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $uid) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
         Db::startTrans();
         try {
             $conId = $this->createConId();
+            if (!empty($userRelationId)) {
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+            }
             if (!empty($updateData)) {
                 DbUser::updateUser($updateData, $uid);
             } else if (!empty($addData)) {
                 $uid = DbUser::addUser($addData);//添加后生成的uid
+                DbUser::addUserRecommend(['uid' => $uid, 'pid' => $buid]);
+                if ($isBoss == 1) {
+                    $relation = $buid . ',' . $uid;
+                } else if ($isBoss == 3) {
+                    $relation = $uid;
+                } else {
+                    $relation = $relationRes . ',' . $uid;
+                }
+                DbUser::addUserRelation(['uid' => $uid, 'pid' => $buid, 'relation' => $relation]);
             }
             if (!empty($userCon)) {
                 DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
@@ -155,10 +188,11 @@ class User extends CommonIndex {
      * @param $encrypteddata
      * @param $iv
      * @param $platform
+     * @param $buid
      * @return array
      * @author zyr
      */
-    public function register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform) {
+    public function register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform, $buid) {
         $stype = 1;
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006'];//验证码错误
@@ -171,8 +205,11 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         $uid  = 0;
-        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
+        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
+            if (!empty($user['mobile'])) {//该微信号已绑定
+                return ['code' => '3009'];
+            }
             $uid = $user['id'];
         }
         $cipherPassword = $this->getPassword($password, $this->cipherUserKey);//加密后的password
@@ -184,12 +221,41 @@ class User extends CommonIndex {
             'avatar'    => $wxInfo['avatarurl'],
             'last_time' => time(),
         ];
+        $isBoss         = 3;
+        $userRelationId = 0;
+        $relationRes    = '';
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $relationRes   = $bUserRelation['relation'];
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if (!empty($uid) && $isBoss == 1) {//不是哥新用户
+                $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $uid) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
         Db::startTrans();
         try {
             if (empty($uid)) {//新用户,直接添加
                 $uid = DbUser::addUser($data);//添加后生成的uid
+                DbUser::addUserRecommend(['uid' => $uid, 'pid' => $buid]);
+                if ($isBoss == 1) {
+                    $relation = $buid . ',' . $uid;
+                } else if ($isBoss == 3) {
+                    $relation = $uid;
+                } else {
+                    $relation = $relationRes . ',' . $uid;
+                }
+                DbUser::addUserRelation(['uid' => $uid, 'pid' => $buid, 'relation' => $relation]);
             } else {//老版本用户
                 DbUser::updateUser($data, $uid);
+                if (!empty($userRelationId)) {
+                    DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+                }
             }
             $conId = $this->createConId();
             DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
@@ -249,7 +315,7 @@ class User extends CommonIndex {
             return ['code' => '3001'];
         }
         $user = DbUser::getUser(['unionid' => $wxInfo['unionid']]);
-        if (empty($user)) {
+        if (empty($user) || empty($user['mobile'])) {
             return ['code' => '3000'];
         }
         $uid = enUid($user['id']);

@@ -42,6 +42,7 @@ class Order extends CommonIndex {
             }
             DbOrder::updataOrder($data, $order['id']);//改订单状态
             DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
+            $this->resetUserInfo($uid);
             Db::commit();
             return ['code' => '200'];//取消成功
         } catch (\Exception $e) {
@@ -293,6 +294,7 @@ class Order extends CommonIndex {
             DbGoods::decStock($stockSku);
             DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
             $this->summaryCart($skuIdList, $uid);
+            $this->resetUserInfo($uid);
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
@@ -315,7 +317,7 @@ class Order extends CommonIndex {
         if ($cart === false) {
             return ['code' => '3005'];
         }
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,integral_active,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
             $eGoodsList = [];

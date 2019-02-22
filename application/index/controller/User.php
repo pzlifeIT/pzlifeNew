@@ -48,7 +48,8 @@ class User extends MyController {
      * @apiParam (入参) {String} encrypteddata 微信加密信息
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误
+     * @apiParam (入参) {String} [buid] 推荐人uid
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误 / 3009:该微信号已绑定手机号
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
      * @return array
@@ -61,6 +62,8 @@ class User extends MyController {
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
         $platform      = trim($this->request->post('platform'));
+        $buid          = trim($this->request->post('buid'));
+        $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
@@ -71,8 +74,8 @@ class User extends MyController {
         if (strlen($code) != 32) {
             return ['code' => '3002'];//code有误
         }
-        $resule = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform);
-        return $resule;
+        $result = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+        return $result;
     }
 
     /**
@@ -87,6 +90,7 @@ class User extends MyController {
      * @apiParam (入参) {String} encrypteddata 微信加密信息
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
+     * @apiParam (入参) {String} [buid] 推荐人uid
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/register
@@ -101,6 +105,8 @@ class User extends MyController {
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
         $platform      = trim($this->request->post('platform'));
+        $buid          = trim($this->request->post('buid'));
+        $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
@@ -115,8 +121,8 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
-        $resule   = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform);
-        return $resule;
+        $result   = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform, $buid);
+        return $result;
     }
 
     /**
@@ -227,7 +233,7 @@ class User extends MyController {
      * @apiName          loginUserByWx
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
      * @apiSuccess (data) {String} con_id
      * @apiSampleRequest /index/user/loginuserbywx
      * @return array
