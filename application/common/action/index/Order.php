@@ -406,7 +406,7 @@ class Order extends CommonIndex {
                     if ($fl['unit_price'] <= $freightWeight[$flk]) {//购买重量超过当前模版的满件包邮条件可以包邮
                         continue;
                     }
-                    $price = bcadd(bcmul(bcsub($freightWeight[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                    $price = bcadd(bcmul(bcsub(ceil($freightWeight[$flk]), 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                 } else if ($fl['stype'] == 3) {//体积
                     if ($fl['unit_price'] <= $freightVolume[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
                         continue;

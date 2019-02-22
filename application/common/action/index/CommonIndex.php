@@ -90,7 +90,6 @@ class CommonIndex {
 
     protected function resetUserInfo($uid) {
         $user = DbUser::getUser(['id' => $uid]);
-        $this->saveUser($uid, $user);
         $saveTime = 600;//保存10分钟
         $this->redis->hMSet($this->redisKey . 'userinfo:' . $uid, $user);
         $this->redis->expireAt($this->redisKey . 'userinfo:' . $uid, bcadd(time(), $saveTime, 0));//设置过期
