@@ -18,6 +18,10 @@ class Order extends Pzlife {
 //        $this->connect = Db::connect(Config::get('database.db_config'));
     }
 
+    /**
+     * 定时取消订单
+     * 每分钟执行一次
+     */
     public function cancelOrder() {
         $this->orderInit();
         $orderOutTime = Config::get('conf.order_out_time');//订单过期时间
@@ -55,5 +59,199 @@ class Order extends Pzlife {
             exit('rollback');
         }
         exit('ok!!');
+    }
+
+    /**
+     * 分利结算
+     * 没半小时结算一次
+     */
+    public function bonusSettlement() {
+        $constShop = 0.7;//购物的门店bos分利拿7成
+//        $redisListKey = Config::get('redisKey.order.redisOrderBonus');
+//        $orderNo      = $this->redis->lPop($redisListKey);
+        $orderNo  = 'odr19021816234650535452';
+        $orderSql = sprintf("select id,uid from pz_orders where delete_time=0 and order_no = '%s'", $orderNo);
+        $orderRes = Db::query($orderSql);
+        $uid      = $orderRes[0]['uid'];//购买人的uid
+        $orderId  = $orderRes[0]['id'];//购买订单id
+        $identity = $this->getIdentity($uid);//获取自己的身份
+//        $uid      = 262;
+        $bossList = $this->getBossList($uid, $identity);
+
+        $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
+        $orderChildRes = Db::query($orderChildSql);
+        $orderChildRes = array_column($orderChildRes, 'id');
+
+        $orderGoodsSql = sprintf("select id,goods_price,margin_price,boss_uid,goods_id,sku_id,sup_id,integral,goods_num,sku_json from pz_order_goods where delete_time=0 and order_child_id in (%s)", implode(',', $orderChildRes));
+        $orderGoodsRes = Db::query($orderGoodsSql);
+        $orderGoods    = [];
+        foreach ($orderGoodsRes as $ogrVal) {
+            if (key_exists($ogrVal['sku_id'], $orderGoods)) {
+                $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
+                continue;
+            }
+            $orderGoods[$ogrVal['sku_id']] = $ogrVal;
+        }
+//        print_r($orderGoodsRes);die;
+//        $bossUidList = array_column($orderGoodsRes, 'boss_uid');
+//        print_r($bossUidList);die;
+        $data = [];
+        foreach ($orderGoods as $ogVal) {
+            $o        = [
+                'order_no'     => $orderNo,
+                'from_uid'     => $uid,
+                'sku_id'       => $ogVal['sku_id'],
+                'goods_id'     => $ogVal['goods_id'],
+                'goods_price'  => $ogVal['goods_price'],
+                'margin_price' => $ogVal['margin_price'],
+                'sup_id'       => $ogVal['sup_id'],
+                'sku_json'     => $ogVal['sku_json'],
+                'buy_sum'      => $ogVal['goods_num'],
+                'create_time'  => time(),
+            ];
+            $shopBoss = $ogVal['boss_uid'];//购买店铺boss的uid
+//            $upShopBoss = $this->getBoss($shopBoss);//购买店铺boss的上级boss的uid
+            $calculate = $this->calculate($ogVal['margin_price'], $ogVal['goods_num']);//所有三层分利
+//            print_r($calculate);die;
+            if ($identity == 1) {//普通用户
+//                $upupShopBoss      = $this->getBoss($upShopBoss);//购买店铺boss的上级boss的上级boss的uid
+                $firstShopPrice    = bcmul($calculate['first_price'], $constShop, 2);//购买店铺的分利
+                $o['result_price'] = $firstShopPrice;//实际得到分利
+                $o['to_uid']       = $shopBoss;
+                $o['stype']        = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                array_push($data, $o);
+            } else {
+                $firstShopPrice    = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
+                $o['result_price'] = $firstShopPrice;//实际得到分利
+                $o['to_uid']       = $shopBoss;
+                $o['stype']        = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                array_push($data, $o);
+            }
+            $o['result_price'] = bcsub($calculate['first_price'], $firstShopPrice, 2);//实际得到分利
+            $o['to_uid']       = $bossList['first_uid'];
+            $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+            $o['layer']        = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+            array_push($data, $o);
+            $o['result_price'] = $calculate['second_price'];//实际得到分利
+            $o['to_uid']       = $bossList['second_uid'];
+            $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+            $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+            array_push($data, $o);
+            $o['result_price'] = $calculate['third_price'];//实际得到分利
+            $o['to_uid']       = $bossList['third_uid'];
+            $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+            $o['layer']        = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+            array_push($data, $o);
+
+            Db::name('log_bonus')->insertAll($data);
+        }
+    }
+
+    /**
+     * 获取三层分利的用户id列表
+     * @param $uid
+     * @param $identity
+     * @return array
+     * @author zyr
+     */
+    private function getBossList($uid, $identity) {
+        $myRelation = $this->getRelation($uid);//获取自己的boss关系
+        $pBossUid   = $this->getBoss($uid);
+        if ($pBossUid == 1) {
+            $firstUid = 1;
+            if ($identity != 1) {
+                $firstUid = $uid;
+            }
+            return ['first_uid' => $firstUid, 'second_uid' => 1, 'third_uid' => 1];
+        }
+        $firstUid  = 1;//默认总店
+        $secondUid = 1;//默认总店
+        $thirdUid  = 1;//默认总店
+        if ($identity = 1) {//自己是普通会员
+            $myPid         = $myRelation['pid'] ?: 1;//直属上级uid
+            $myPidIdentity = $this->getIdentity($myPid);//上级的身份(判断是不是分享大v)
+            $ppUid         = $this->getBoss($pBossUid);
+            if ($myPidIdentity == 3) {
+                $firstUid  = $myPid;
+                $secondUid = $pBossUid;
+                $thirdUid  = $ppUid;
+            } else {
+                $firstUid  = $pBossUid;
+                $secondUid = $ppUid;
+                $thirdUid  = $this->getBoss($ppUid);
+            }
+        } else if ($identity == 2) {//自己是钻石会员
+            $myPid         = $myRelation['pid'];//直属上级uid
+            $myPidIdentity = $this->getIdentity($myPid);//上级的身份(判断是不是分享大v)
+            $firstUid      = $uid;
+            if ($myPidIdentity == 3) {
+                $secondUid = $myPid;
+                $thirdUid  = $pBossUid;
+            } else {
+                $secondUid = $pBossUid;
+                $thirdUid  = $this->getBoss($pBossUid);
+            }
+        } else if ($identity == 3 || $identity == 4) {
+            $firstUid  = $uid;
+            $secondUid = $pBossUid;
+            $thirdUid  = $this->getBoss($pBossUid);
+        }
+        return ['first_uid' => $firstUid, 'second_uid' => $secondUid, 'third_uid' => $thirdUid];
+    }
+
+    /**
+     * 计算分利
+     * @param $marginPrice
+     * @param $num
+     * @author zyr
+     * @return array
+     */
+    private function calculate($marginPrice, $num) {
+        $firstBonus  = 0.75;
+        $secondBonus = 0.15;
+        $thirdBonus  = 0.15;
+        $firstPrice  = bcmul(bcmul($marginPrice, $firstBonus, 5), $num, 2);
+        $secondPrice = bcmul($firstPrice, $secondBonus, 2);
+        $thirdPrice  = bcmul($secondPrice, $thirdBonus, 2);
+        return ['first_price' => $firstPrice, 'second_price' => $secondPrice, 'third_price' => $thirdPrice];
+    }
+
+    /**
+     * 获取用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    private function getIdentity($uid) {
+        if ($uid == 1) {
+            return 4;
+        }
+        $userSql = sprintf("select user_identity from pz_users where delete_time=0 and id=%d", $uid);
+        $user    = Db::query($userSql);
+        return $user[0]['user_identity'];
+    }
+
+    private function getBoss($uid) {
+        if ($uid == 1) {
+            return 1;
+        }
+        $relation = $this->getRelation($uid);
+        $bossUid  = explode(',', $relation['relation'])[0];
+        if ($uid == $bossUid) {
+            return 1;
+        }
+        $pBossUidCheck = $this->getIdentity($bossUid);
+        if ($pBossUidCheck != 4) {//relation第一个关系人不是boss说明是总店下的用户
+            return 1;
+        }
+        return $bossUid;
+    }
+
+    private function getRelation($uid) {
+        $userRelationSql = sprintf("select id,pid,is_boss,relation from pz_user_relation where delete_time=0 and uid = %d", $uid);
+        $userRelation    = Db::query($userRelationSql);
+        return $userRelation[0];
     }
 }

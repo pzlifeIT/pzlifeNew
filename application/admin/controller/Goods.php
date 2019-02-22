@@ -248,17 +248,17 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function editGoodsSku() {
-        $skuId          = trim($this->request->post('sku_id'));
-        $stock          = trim($this->request->post('stock'));//库存
-        $freightId      = trim($this->request->post('freight_id'));//运费模版
-        $marketPrice    = trim($this->request->post('market_price'));//市场价
-        $retailPrice    = trim($this->request->post('retail_price'));//零售价
-        $costPrice      = trim($this->request->post('cost_price'));//成本价
-        $marginPrice    = trim($this->request->post('margin_price'));//其他运费成本
-        $integralPrice  = trim($this->request->post('integral_price'));//积分售价
-        $weight         = trim($this->request->post('weight'));//重量
-        $volume         = trim($this->request->post('volume'));//体积
-        $skuImage       = trim($this->request->post('sku_image'));//规格详情图
+        $skuId         = trim($this->request->post('sku_id'));
+        $stock         = trim($this->request->post('stock'));//库存
+        $freightId     = trim($this->request->post('freight_id'));//运费模版
+        $marketPrice   = trim($this->request->post('market_price'));//市场价
+        $retailPrice   = trim($this->request->post('retail_price'));//零售价
+        $costPrice     = trim($this->request->post('cost_price'));//成本价
+        $marginPrice   = trim($this->request->post('margin_price'));//其他运费成本
+        $integralPrice = trim($this->request->post('integral_price'));//积分售价
+        $weight        = trim($this->request->post('weight'));//重量
+        $volume        = trim($this->request->post('volume'));//体积
+        $skuImage      = trim($this->request->post('sku_image'));//规格详情图
         if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
             return ['code' => '3001'];
         }
@@ -268,7 +268,7 @@ class Goods extends AdminController {
         if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || !is_numeric($marketPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || floatval($marginPrice) < 0) {//价格必须为大于或等于0的数字
             return ['code' => '3003'];
         }
-        if (!is_numeric($integralPrice) || !is_numeric($integralActive) || intval($integralPrice) < 0 || intval($integralActive) < 0) {//积分必须为大于或等于0的数字
+        if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
             return ['code' => '3004'];
         }
         $retailPrice = floatval($retailPrice);
@@ -277,14 +277,14 @@ class Goods extends AdminController {
             return ['code' => '3006'];//零售价不能小于成本价
         }
         $data   = [
-            'stock'           => $stock,
-            'freight_id'      => $freightId,
-            'market_price'    => $marketPrice,
-            'retail_price'    => $retailPrice,
-            'cost_price'      => $costPrice,
-            'margin_price'    => $marginPrice,
-            'integral_price'  => $integralPrice,
-            'sku_image'       => $skuImage,
+            'stock'          => $stock,
+            'freight_id'     => $freightId,
+            'market_price'   => $marketPrice,
+            'retail_price'   => $retailPrice,
+            'cost_price'     => $costPrice,
+            'margin_price'   => $marginPrice,
+            'integral_price' => $integralPrice,
+            'sku_image'      => $skuImage,
         ];
         $result = $this->app->goods->editGoodsSku($skuId, $data, $weight, $volume);
         return $result;
