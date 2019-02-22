@@ -135,6 +135,12 @@ class DbOrder {
         return $OrderExpress->id;
     }
 
+    public function updateOrderExpress($data,$id){
+        $OrderExpress = new OrderExpress;
+       
+        return $OrderExpress->save($data,$id);
+    }
+
     /**
      * 新增权益订单
      * @param $data

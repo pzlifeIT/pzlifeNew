@@ -541,8 +541,8 @@ class Order extends CommonIndex {
      * @author rzc
      */
     public function getUserOrderList($conId, $order_status = false, $page, $pagenum) {
-        // $uid = $this->getUidByConId($conId);
-        $uid = 23697;
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3005'];
         }

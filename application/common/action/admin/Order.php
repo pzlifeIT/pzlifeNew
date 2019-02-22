@@ -200,8 +200,15 @@ class Order{
 
         $order_status = DbOrder::getOrder('order_status', ['id' => $order_id], true)['order_status'] ;
 
-        if ($order_status!=4) {
-            return ['code' => 3004,'msg' => '非待发货订单无法发货'];
+        if ($order_status!=4 || $order_status!=5) {
+            return ['code' => 3004,'msg' => '非待发货订单无法发货或已发货订单无法变更'];
         }
+        $update_order_express = [];
+
+        $update_order_express['express_no'] = $express_no;
+        $update_order_express['express_key'] = $express_key;
+        $update_order_express['express_name'] = $express_name;
+        DbOrder::updateOrderExpress($update_order_express,$order_express['id']);
+        return ['code' => 200];
     }
 }

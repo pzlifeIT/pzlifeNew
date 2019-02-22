@@ -607,13 +607,13 @@ class User extends CommonIndex {
         if (empty($province) || $province['level'] != '1') {
             return ['code' => '3006', 'msg' => '错误的省份名称'];
         }
-        $field = 'id,area_name,pid,level';
+        // $field = 'id,area_name,pid,level';
         $where = ['area_name' => $city_name, 'level' => 2];
         $city  = DbProvinces::getAreaOne($field, $where);
         if (empty($city)) {
             return ['code' => '3004', 'msg' => '错误的市级名称'];
         }
-        $field = 'id,area_name,pid,level';
+        // $field = 'id,area_name,pid,level';
         $where = ['area_name' => $area_name];
         $area  = DbProvinces::getAreaOne($field, $where);
         if (empty($area) || $area['level'] != '3') {
