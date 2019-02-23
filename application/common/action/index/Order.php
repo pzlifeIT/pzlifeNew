@@ -196,7 +196,7 @@ class Order extends CommonIndex {
                         'goods_name'   => $gList['goods_name'],
                         'sku_id'       => $gList['id'],
                         'sup_id'       => $gList['supplier_id'],
-                        'boss_uid'     => $shopList[$kgl],
+                        'boss_uid'     => $shopList[$kgl] ?: 1,
                         'goods_price'  => $gList['retail_price'],
                         'margin_price' => $this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
                         'integral'     => $gList['integral'],
