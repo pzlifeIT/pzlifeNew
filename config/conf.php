@@ -2,6 +2,7 @@
 return [
     'order_out_time' => 1800,//订单过期时间
     'platform_conf'  => ['production' => 1, 'development' => 2],
+    'bonus_days'     => Env::get('conf.bonusDays', 15),//付款后多少天分利正式给到账户
 
     'env_protocol' => Env::get('host.envProtocol', 'http'),
     'api_host'     => Env::get('host.apiHost'),
