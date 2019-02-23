@@ -609,7 +609,7 @@ class Order extends CommonIndex {
             $pay_money = 15000;
         } elseif ($user_type == 3) {
             $user_type = 1;
-            $pay_money = 1000;
+            $pay_money = 500;
         }
         /* 判断会员身份，低于当前层级可购买升级 */
         $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];/* 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人 */
