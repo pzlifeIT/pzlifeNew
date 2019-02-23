@@ -12,6 +12,30 @@ class User extends MyController {
     ];
 
     /**
+     * @api              {post} / 处理推荐关系
+     * @apiDescription   indexMain
+     * @apiGroup         index_user
+     * @apiName          indexMain
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {String} [buid] 推荐人uid
+     * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误
+     * @apiSuccess (返回) {Array} data 用户信息
+     * @apiSampleRequest /index/user/indexmain
+     * @return array
+     * @author zyr
+     */
+    public function indexMain() {
+        $conId = trim($this->request->post('con_id'));
+        $buid  = trim($this->request->post('buid'));
+        $buid  = empty(deUid($buid)) ? 1 : deUid($buid);
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $res = $this->app->user->indexMain($conId, $buid);
+        return $res;
+    }
+
+    /**
      * @api              {post} / 账号密码登录
      * @apiDescription   login
      * @apiGroup         index_user

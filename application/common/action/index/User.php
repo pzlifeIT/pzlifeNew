@@ -477,6 +477,31 @@ class User extends CommonIndex {
         return '0';
     }
 
+    public function indexMain($conId, $buid) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $userRelationId = 0;
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if ($isBoss == 1) {
+                $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $uid) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
+        if (!empty($userRelationId)) {
+            DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+        }
+        return ['code' => 200];
+    }
+
     /**
      * 获取用户信息
      * @param $conId
