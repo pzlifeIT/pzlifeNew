@@ -2,6 +2,7 @@
 
 namespace app\common\db\order;
 
+use app\common\model\LogBonus;
 use app\common\model\Orders;
 use app\common\model\OrderChild;
 use app\common\model\OrderGoods;
@@ -52,7 +53,7 @@ class DbOrder {
         return $order->saveAll($data);
     }
 
-    public function getOrderCount($where){
+    public function getOrderCount($where) {
         $obj = Orders::where($where);
         return $obj->count();
     }
@@ -63,7 +64,7 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where ,$row = false) {
+    public function getOrderChild($field, $where, $row = false) {
         $obj = OrderChild::field($field)->where($where);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
@@ -85,9 +86,9 @@ class DbOrder {
      * @param $row
      * @return array
      */
-    public function getOrderGoods($field, $where ,$group = false, $distinct = false,$row = false) {
+    public function getOrderGoods($field, $where, $group = false, $distinct = false, $row = false) {
         $obj = OrderGoods::field($field)->where($where);
-        
+
         if ($distinct === true) {
             $obj = $obj->distinct(true);
         }
@@ -109,9 +110,9 @@ class DbOrder {
      * @param $row
      * @return array
      */
-    public function getOrderExpress($field, $where ,$group = false, $distinct = false,$row = false){
+    public function getOrderExpress($field, $where, $group = false, $distinct = false, $row = false) {
         $obj = OrderExpress::field($field)->where($where);
-        
+
         if ($distinct === true) {
             $obj = $obj->distinct(true);
         }
@@ -129,16 +130,16 @@ class DbOrder {
      * @param $data
      * @return array
      */
-    public function addOrderExpress($data){
+    public function addOrderExpress($data) {
         $OrderExpress = new OrderExpress;
         $OrderExpress->save($data);
         return $OrderExpress->id;
     }
 
-    public function updateOrderExpress($data,$id){
+    public function updateOrderExpress($data, $id) {
         $OrderExpress = new OrderExpress;
-       
-        return $OrderExpress->save($data,$id);
+
+        return $OrderExpress->save($data, $id);
     }
 
     /**
@@ -216,6 +217,11 @@ class DbOrder {
     public function updateLogPay($data, $id) {
         $logPay = new LogPay();
         return $logPay->save($data, ['id' => $id]);
+    }
+
+    public function updateLogBonus($data, $where) {
+        $logBonus = new LogBonus();
+        return $logBonus->save($data, $where);
     }
 
     /**

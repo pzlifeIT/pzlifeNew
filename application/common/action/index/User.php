@@ -359,10 +359,14 @@ class User extends CommonIndex {
         }
         $conId   = $this->createConId();
         $userCon = DbUser::getUserCon(['uid' => $id], 'id,con_id', true);
-        if (!empty($userRelationId)) {
-            DbUser::updateUserRelation(['relation' => $buid . ',' . $id], $userRelationId);
-        }
-        if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+        Db::startTrans();
+        try {
+            if (!empty($userRelationId)) {
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $id], $userRelationId);
+            }
+            DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
+            DbUser::updateUser(['last_time' => time()], $id);
+            $this->saveOpenid($id, $wxInfo['openid'], $platform);
             $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
             $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
@@ -371,11 +375,11 @@ class User extends CommonIndex {
                 $this->redis->zDelete($this->redisConIdTime, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
-            DbUser::updateUser(['last_time' => time()], $id);
-            $this->saveOpenid($id, $wxInfo['openid'], $platform);
             return ['code' => '200', 'con_id' => $conId];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3003'];
         }
-        return ['code' => '3003'];
     }
 
     /**
