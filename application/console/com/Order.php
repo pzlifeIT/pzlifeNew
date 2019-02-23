@@ -65,11 +65,11 @@ class Order extends Pzlife {
 
     /**
      * 分利发放
-     * 每天执行一次
+     * 每15天执行一次
      */
     public function bonusSend() {
         $this->orderInit();
-        $days      = 0;//付款后15天分利正式给到账户
+        $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
         $times     = bcmul($days, 86400, 0);
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
         $sql       = sprintf("select id,to_uid,result_price,user_identity from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
@@ -105,19 +105,19 @@ class Order extends Pzlife {
 
     /**
      * 分利结算
-     * 没半小时结算一次
+     * 没一小时结算一次
      */
     public function bonusSettlement() {
         $this->orderInit();
-        $constShop    = 0.7;//购物的门店bos分利拿7成
-        $redisListKey = Config::get('redisKey.order.redisOrderBonus');
-        $orderNo = $this->redis->lPop($redisListKey);
-        $orderSql = sprintf("select id,uid from pz_orders where delete_time=0 and order_no = '%s'", $orderNo);
-        $orderRes = Db::query($orderSql);
-        $uid      = $orderRes[0]['uid'];//购买人的uid
-        $orderId  = $orderRes[0]['id'];//购买订单id
-        $identity = $this->getIdentity($uid);//获取自己的身份
-        $bossList = $this->getBossList($uid, $identity);
+        $constShop     = 0.7;//购物的门店bos分利拿7成
+        $redisListKey  = Config::get('redisKey.order.redisOrderBonus');
+        $orderNo       = $this->redis->lPop($redisListKey);
+        $orderSql      = sprintf("select id,uid from pz_orders where delete_time=0 and order_no = '%s'", $orderNo);
+        $orderRes      = Db::query($orderSql);
+        $uid           = $orderRes[0]['uid'];//购买人的uid
+        $orderId       = $orderRes[0]['id'];//购买订单id
+        $identity      = $this->getIdentity($uid);//获取自己的身份
+        $bossList      = $this->getBossList($uid, $identity);
         $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
         $orderChildRes = Db::query($orderChildSql);
         $orderChildRes = array_column($orderChildRes, 'id');
@@ -135,17 +135,16 @@ class Order extends Pzlife {
         $data = [];
         foreach ($orderGoods as $ogVal) {
             $o         = [
-                'order_no'      => $orderNo,
-                'from_uid'      => $uid,
-                'sku_id'        => $ogVal['sku_id'],
-//                'user_identity' => $ogVal['identity'],
-                'goods_id'      => $ogVal['goods_id'],
-                'goods_price'   => $ogVal['goods_price'],
-                'margin_price'  => $ogVal['margin_price'],
-                'sup_id'        => $ogVal['sup_id'],
-                'sku_json'      => $ogVal['sku_json'],
-                'buy_sum'       => $ogVal['goods_num'],
-                'create_time'   => time(),
+                'order_no'     => $orderNo,
+                'from_uid'     => $uid,
+                'sku_id'       => $ogVal['sku_id'],
+                'goods_id'     => $ogVal['goods_id'],
+                'goods_price'  => $ogVal['goods_price'],
+                'margin_price' => $ogVal['margin_price'],
+                'sup_id'       => $ogVal['sup_id'],
+                'sku_json'     => $ogVal['sku_json'],
+                'buy_sum'      => $ogVal['goods_num'],
+                'create_time'  => time(),
             ];
             $shopBoss  = $ogVal['boss_uid'];//购买店铺boss的uid
             $calculate = $this->calculate($ogVal['margin_price'], $ogVal['goods_num']);//所有三层分利
