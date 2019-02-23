@@ -18,6 +18,7 @@ class User extends MyController {
      * @apiName          login
      * @apiParam (入参) {String} mobile 接收的手机号
      * @apiParam (入参) {String} password 密码
+     * @apiParam (入参) {String} [buid] 推荐人uid
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:账号不存在 / 3003:密码错误 / 3004:登录失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/login
@@ -27,13 +28,15 @@ class User extends MyController {
     public function login() {
         $mobile   = trim($this->request->post('mobile'));
         $password = trim($this->request->post('password'));
+        $buid     = trim($this->request->post('buid'));
+        $buid     = empty(deUid($buid)) ? 1 : deUid($buid);
         if (checkMobile($mobile) === false) {
             return ['code' => '3001'];//手机号格式错误
         }
         if (checkPassword($password) === false) {
             return ['code' => '3005'];
         }
-        $res = $this->app->user->login($mobile, $password);
+        $res = $this->app->user->login($mobile, $password, $buid);
         return $res;
     }
 
@@ -233,6 +236,7 @@ class User extends MyController {
      * @apiName          loginUserByWx
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
+     * @apiParam (入参) {String} [buid] 推荐人uid
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
      * @apiSuccess (data) {String} con_id
      * @apiSampleRequest /index/user/loginuserbywx
@@ -242,12 +246,14 @@ class User extends MyController {
     public function loginUserByWx() {
         $code        = trim($this->request->post('code'));
         $platform    = trim($this->request->post('platform'));
+        $buid        = trim($this->request->post('buid'));
+        $buid        = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr = [1, 2];
         if (strlen($code) != 32) {
             return ['code' => 3001];
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
-        $res      = $this->app->user->loginUserByWx($code, $platform);
+        $res      = $this->app->user->loginUserByWx($code, $platform, $buid);
         return $res;
     }
 
