@@ -200,6 +200,8 @@ class Payment {
                     }
                     if (!empty($memOrderData)) {
                         DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes]);
+                        $redisListKey = Config::get('redisKey.order.redisMemberOrder');
+                        $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
                 } catch (\Exception $e) {

@@ -64,7 +64,7 @@ class Order extends Pzlife {
     }
 
     /**
-     * 分利发放
+     * 分利正式发放到用户账户
      * 每15天执行一次
      */
     public function bonusSend() {
@@ -74,7 +74,10 @@ class Order extends Pzlife {
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
         $sql       = sprintf("select id,to_uid,result_price,user_identity from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
         $result    = Db::query($sql);
-        $data      = [];
+        if (empty($result)) {
+            exit('log_bonus_null');
+        }
+        $data = [];
         foreach ($result as $rVal) {
             if (!key_exists($rVal['to_uid'], $data)) {
                 $data[$rVal['to_uid']]['uid']           = $rVal['to_uid'];
@@ -105,17 +108,23 @@ class Order extends Pzlife {
 
     /**
      * 分利结算
-     * 没一小时结算一次
+     * 每一小时结算一次
      */
     public function bonusSettlement() {
         $this->orderInit();
-        $constShop     = 0.7;//购物的门店bos分利拿7成
-        $redisListKey  = Config::get('redisKey.order.redisOrderBonus');
-        $orderNo       = $this->redis->lPop($redisListKey);
-        $orderSql      = sprintf("select id,uid from pz_orders where delete_time=0 and order_no = '%s'", $orderNo);
-        $orderRes      = Db::query($orderSql);
+        $constShop    = 0.7;//购物的门店bos分利拿7成
+        $redisListKey = Config::get('redisKey.order.redisOrderBonus');
+        $orderId      = $this->redis->lPop($redisListKey);
+        if (empty($orderId)) {
+            exit('order_bonus_null');
+        }
+        $orderSql = sprintf("select id,uid,order_no from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
+        $orderRes = Db::query($orderSql);
+        if (empty($orderRes)) {
+            exit('order_id_error');//订单id有误
+        }
         $uid           = $orderRes[0]['uid'];//购买人的uid
-        $orderId       = $orderRes[0]['id'];//购买订单id
+        $orderNo       = $orderRes[0]['order_no'];//购买订单号
         $identity      = $this->getIdentity($uid);//获取自己的身份
         $bossList      = $this->getBossList($uid, $identity);
         $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
@@ -184,6 +193,33 @@ class Order extends Pzlife {
             $o['user_identity'] = 4;
             array_push($data, $o);
             Db::name('log_bonus')->insertAll($data);
+        }
+    }
+
+    /**
+     * 购买会员订单结算
+     * 每分钟结算
+     */
+    public function memberOrderSettlement() {
+        $this->orderInit();
+        $redisListKey = Config::get('redisKey.order.redisMemberOrder');
+        $this->redis->rPush($redisListKey, 1);
+        $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
+        if (empty($memberOrderId)) {
+            exit('member_order_null');
+        }
+        $memberSql   = sprintf("select id,uid,order_no,user_type,pay_money from pz_member_order where delete_time=0 and pay_status=4 and id = '%d'", $memberOrderId);
+        $memberOrder = Db::query($memberSql);
+        if (empty($memberOrder)) {
+            exit('order_id_error');//订单id有误
+        }
+        $memberOrder = $memberOrder[0];
+        $userType    = $memberOrder['user_type'];
+        if ($userType == 1) {//钻石会员
+            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money']);
+        }
+        if ($userType == 2) {//boss
+            $this->bossSettlement($memberOrder['id'], $memberOrder['uid']);
         }
     }
 
@@ -291,5 +327,23 @@ class Order extends Pzlife {
         $userRelationSql = sprintf("select id,pid,is_boss,relation from pz_user_relation where delete_time=0 and uid = %d", $uid);
         $userRelation    = Db::query($userRelationSql);
         return $userRelation[0];
+    }
+
+    /**
+     * @param $memberOrderId
+     * @param $uid
+     * @author zyr
+     */
+    private function bossSettlement($memberOrderId, $uid) {
+
+    }
+
+    /**
+     * @param $memberOrderId
+     * @param $uid
+     * @param $payMoney
+     */
+    private function diamondvipSettlement($memberOrderId, $uid, $payMoney) {
+        echo 'vip';
     }
 }
