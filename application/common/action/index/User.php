@@ -662,6 +662,9 @@ class User extends CommonIndex {
         if (empty($address)) {
             return ['code' => '3007', 'msg' => '请填写详细街道地址'];
         }
+        if (empty($name)) {
+            return ['code' => '3010', 'msg' => '请填写收货人姓名'];
+        }
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
         $where    = ['area_name' => $province_name];
@@ -697,7 +700,7 @@ class User extends CommonIndex {
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
         } else {
-            return ['code' => '3006', 'msg' => '添加失败'];
+            return ['code' => '3008', 'msg' => '添加失败'];
         }
     }
 
