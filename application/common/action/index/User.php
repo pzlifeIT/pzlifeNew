@@ -700,7 +700,7 @@ class User extends CommonIndex {
         if ($add) {
             return ['code' => '200', 'msg' => '添加成功'];
         } else {
-            return ['code' => '3006', 'msg' => '添加失败'];
+            return ['code' => '3008', 'msg' => '添加失败'];
         }
     }
 
