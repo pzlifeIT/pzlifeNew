@@ -137,14 +137,14 @@ class Goods extends MyController
     }
 
     /**
-     * @api              {post} / 搜索商品列表(未完成)
+     * @api              {post} / 搜索商品列表
      * @apiDescription   getSearchGoods
      * @apiGroup         index_Goods
      * @apiName          getSearchGoods
      * @apiParam (入参) {String} search 搜索内容
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.page和page_num必须是数字 / 3002.搜索参数不存在 
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
@@ -163,6 +163,18 @@ class Goods extends MyController
      * @author rzc
      */
     public function getSearchGoods(){
-
+        $search = trim($this->request->post('search'));
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
+        $page = $page ? $page : 1;
+        $page_num = $page_num ? $page_num : 10;
+        if (empty($search)) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($page) || !is_numeric($page_num)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->goods->getSearchGoods($search,$page,$page_num);
+        return $result;
     }
 }

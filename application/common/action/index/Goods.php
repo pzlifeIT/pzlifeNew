@@ -193,7 +193,7 @@ class Goods
         return [$goods_spec, $goods_sku];
     }
 
- /**
+    /**
      * 专题商品列表
      * @param $cate_id
      * @param $page
@@ -282,4 +282,41 @@ class Goods
         return ['code' => 200, 'data' => $result];
     }
 
+    /**
+     * 搜索商品列表
+     * @param $search
+     * @param $page
+     * @param $page_num
+     * @return array
+     * @author rzc
+     */
+    public function getSearchGoods($search,$page,$page_num){
+        $offset = ($page - 1) * $page_num;
+        if ($offset<0) {
+            return ['code' => 200,'goods_data' => []];
+        }
+        $result = DbGoods::getGoodsList('*', [['goods_name','LIKE','%'.$search.'%'],['status' ,'=',1 ]], $offset, $page_num);
+        // print_r($goods_data);die;
+        if (empty($result)) {
+            return ['code' => 200,'goods_data' => []];
+        }
+        foreach ($result as $key => $value) {
+            /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+             $result[$key]['spec'] = $goods_spec;
+             $result[$key]['goods_sku'] = $goods_sku; */
+             $where = ['goods_id'=>$value['id']];
+             $field = 'market_price';
+             $result[$key]['min_market_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
+             $field = 'retail_price';
+             $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
+             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
+             foreach ($goods_sku as $goods => $sku) {
+                 $retail_price[$sku['id']] = $sku['retail_price'];
+                 $brokerage[$sku['id']] = $sku['brokerage'];
+             }
+             $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+             
+        }
+        return ['code' => 200,'goods_data' => $result];
+    }
 }

@@ -82,12 +82,12 @@ class User extends Pzlife
             /* 用户信息初始化 */
             $new_user = [];
             $new_user['id'] = $value['uid'];
-
+            
             /* 当用户为BOSS时 */
             if ($value['boss'] == 1) {
                 $user_relation['is_boss'] = 1;
                 $shop = $mysql_connect->query('SELECT * FROM pre_shop WHERE `uid` = ' . $value['uid']);
-
+                
                 if ($shop) {
                     // $new_user['sex'] = $shop[0]['sex'];
                     // $new_user['idcard'] = $shop[0]['idcard'];
@@ -97,18 +97,31 @@ class User extends Pzlife
                         $new_user['user_identity'] = 3;
                     } else {
                         $new_user['user_identity'] = 4;
+                        $new_shop = [];
+                        $new_shop['id'] = $shop[0]['shopid'];
+                        $new_shop['uid'] = $shop[0]['uid'];
+                        $new_shop['shop_name'] = $shop[0]['name'];
+                        $new_shop['server_mobile'] = $shop[0]['service'];
+                        $new_shop['status'] = $shop[0]['status'];
+                        $new_shop['create_time'] = time();
+                        $new_shop['shop_right'] = ' ';
+                        
+                        // print_r($new_shop);die;
+                        $new_shop = $this->delDataEmptyKey($new_shop);
+                        Db::table('pz_shops')->insert($new_shop);
+                        
                     }
                 }
-                // if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid'])) {
-                //     /* do { */
-                //         $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid']);
+                if ($mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid'])) {
+                    /* do { */
+                        $relationship = $mysql_connect->query('SELECT * FROM pre_shop_relationship WHERE `target_uid` = ' . $value['uid']);
 
-                //         if ($relationship) {
-                //             $new_relation[] = $relationship[0]['uid'];
-                //         }
+                        if ($relationship) {
+                            $new_relation[] = $relationship[0]['uid'];
+                        }
 
-                //    /*  } while (!$relationship); */
-                // }
+                   /*  } while (!$relationship); */
+                }
 
             }
 
@@ -158,6 +171,8 @@ class User extends Pzlife
             
             $new_user = $this->delDataEmptyKey($new_user);
             $user_relation = $this->delDataEmptyKey($user_relation);
+            
+           
             // print_r( $member_relationship );
             
             // print_r( $user_relation );die;
@@ -166,11 +181,12 @@ class User extends Pzlife
             try {
                 Db::table('pz_users')->insert($new_user);
                 Db::table('pz_user_relation')->insert($user_relation);
+                
                 // 提交事务
                 Db::commit();
             } catch (\Exception $e) {
                 // 回滚事务
-                // print_r($e);die;
+                print_r($e);die;
                 Db::rollback();
                 continue;
             }
