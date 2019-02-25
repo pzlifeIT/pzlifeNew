@@ -342,19 +342,89 @@ class Order extends Pzlife {
      * @param $memberOrderId
      * @param $uid
      * @param $payMoney
+     * @param $from_uid
      */
-    private function diamondvipSettlement($memberOrderId, $uid, $payMoney) {
-        $diamondvipGet = $this->diamondvipGet($uid);
-        if ($payMoney == 500) {
-
-        }elseif ($payMoney == 100) {
-
+    private function diamondvipSettlement($memberOrderId, $uid, $payMoney,$from_uid) {
+        $fromDiamondvipGet = $this->diamondvipGet($from_uid);
+        Db::startTrans();
+        try {
+            if ($payMoney == 500) {
+                Db::name('pz_users')->where('id',$uid)->update(['user_identity'=>2]);
+            }elseif ($payMoney == 100) {
+                $from_user = $this->getUserInfo($from_uid);
+                $from_balance = 0;
+                if (!$fromDiamondvipGet) {
+                    
+                    if ($from_user['user_type']>1) {
+                        $from_diamondvip_get = [];
+                        $from_diamondvip_get['uid'] = $from_uid;
+                        $from_diamondvip_get['share_redmoney'] = 50;
+                        $from_diamondvip_get['share_num'] = 1;
+                        $from_diamondvip_get['create_time'] = time();
+                        Db::name('pz_diamondvip_get')->insert($from_diamondvip_get);
+                        $from_balance = $from_user['balance']+50;
+                        Db::name('pz_users')->where('id',$from_uid)->update(['balance' => $from_balance]);
+                        Db::name('pz_log_trading')->insert(
+                            [
+                                'uid' => $from_uid,
+                                'trading_type' => 1,
+                                'change_type' => 5,
+                                'money' => 50,
+                                'befor_money' => $from_user['balance'],
+                                'after_money' => $from_balance,
+                                'create_time' => time()
+                            ]
+                        );
+                    }
+                }else{
+                    $from_diamondvip_get = [];
+                    $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num']+1;
+                    Db::name('pz_diamondvip_get')->where('id',$fromDiamondvipGet['id'])->update($from_diamondvip_get);
+                    $from_balance = $from_user['balance']+50;
+                    Db::name('pz_users')->where('id',$from_uid)->update(['balance' => $from_balance]);
+                    Db::name('pz_log_trading')->insert(
+                        [
+                            'uid' => $from_uid,
+                            'trading_type' => 1,
+                            'change_type' => 5,
+                            'money' => 50,
+                            'befor_money' => $from_user['balance'],
+                            'after_money' => $from_balance,
+                            'create_time' => time()
+                        ]
+                    );
+                }
+    
+                $diamondvip_get = [];
+                $diamondvip_get['uid'] = $uid;
+                $diamondvip_get['share_uid'] = $from_uid;
+                $diamondvip_get['create_time'] = time();
+                Db::name('pz_diamondvip_get')->insert($diamondvip_get);
+                Db::name('pz_users')->where('id',$uid)->update(['user_identity'=>2]);
+            }
+            Db::commit();
+            exit('ok!');
+        } catch (\Exception $e) {
+            Db::rollback();
+            exit('rollback');
         }
     }
 
+    /**
+     * @param $uid
+     */
     private function diamondvipGet($uid){
         $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
         $diamondvipGet = Db::query($diamondvipGetSql);
         return $diamondvipGet[0];
+    }
+
+    /**
+     * @param $uid
+     */
+    private function getUserInfo($uid){
+        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and uid = %d", $uid);
+        $userInfo = Db::query($getUserSql);
+        return $userInfo[0];
     }
 }

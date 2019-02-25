@@ -603,6 +603,18 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
+        if (!$parent_id) {
+            $parent_id = 1;
+        }else{
+            $parent_info = DbUser::getUserInfo(['id' => $parent_id],'user_identity',true);
+            if ($parent_info['user_identity'] < 2) {
+                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+            }
+            if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+            }
+        }
+        
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
@@ -612,6 +624,7 @@ class Order extends CommonIndex {
             $user_type = 1;
             $pay_money = 500;
         }
+        
         /* 判断会员身份，低于当前层级可购买升级 */
         $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];/* 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人 */
 
