@@ -22,10 +22,11 @@ class User extends CommonIndex {
      * 账号密码登录
      * @param $mobile
      * @param $password
+     * @param $buid
      * @return array
      * @author zyr
      */
-    public function login($mobile, $password) {
+    public function login($mobile, $password, $buid) {
         $user = DbUser::getUserOne(['mobile' => $mobile], 'id,passwd');
         $uid  = $user['id'];
         if (empty($uid)) {
@@ -35,8 +36,22 @@ class User extends CommonIndex {
         if ($cipherPassword != $user['passwd']) {
             return ['code' => '3003'];
         }
-        $conId   = $this->createConId();
-        $userCon = DbUser::getUserCon(['uid' => $uid], 'id,con_id', true);
+        $conId          = $this->createConId();
+        $userCon        = DbUser::getUserCon(['uid' => $uid], 'id,con_id', true);
+        $userRelationId = 0;
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if ($isBoss == 1) {
+                $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $uid) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
         Db::startTrans();
         try {
             if (empty($userCon)) {//第一次登录，未生成过con_id
@@ -44,28 +59,29 @@ class User extends CommonIndex {
                     'uid'    => $uid,
                     'con_id' => $conId,
                 ];
-                $res  = DbUser::addUserCon($data);
+                DbUser::addUserCon($data);
             } else {
-                $res = DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
+                DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
                 $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
                 $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             }
-            if ($res) {
-                $this->redis->zAdd($this->redisConIdTime, time(), $conId);
-                $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
-                if ($conUid === false) {
-                    $this->redis->zDelete($this->redisConIdTime, $conId);
-                    $this->redis->hDel($this->redisConIdUid, $conId);
-                }
-                DbUser::updateUser(['last_time' => time()], $uid);
-                Db::commit();
-                return ['code' => '200', 'con_id' => $conId];
+            if (!empty($userRelationId)) {
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
             }
+            DbUser::updateUser(['last_time' => time()], $uid);
+            $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+            $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+            if ($conUid === false) {
+                $this->redis->zDelete($this->redisConIdTime, $conId);
+                $this->redis->hDel($this->redisConIdUid, $conId);
+            }
+            Db::commit();
+            return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
+            return ['code' => '3004'];
+
         }
-        Db::rollback();
-        return ['code' => '3004'];
     }
 
     /**
@@ -306,10 +322,11 @@ class User extends CommonIndex {
      * 微信登录
      * @param $code
      * @param $platform
+     * @param $buid
      * @return array
      * @author zyr
      */
-    public function loginUserByWx($code, $platform) {
+    public function loginUserByWx($code, $platform, $buid) {
         $wxInfo = $this->getOpenid($code);
         if ($wxInfo === false) {
             return ['code' => '3001'];
@@ -326,9 +343,30 @@ class User extends CommonIndex {
         if (empty($user['mobile'])) {
             return ['code' => '3002'];
         }
+        $userRelationId = 0;
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if ($isBoss == 1) {
+                $userRelation = DbUser::getUserRelation(['uid' => $id], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $id) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
         $conId   = $this->createConId();
         $userCon = DbUser::getUserCon(['uid' => $id], 'id,con_id', true);
-        if (DbUser::updateUserCon(['con_id' => $conId], $userCon['id'])) {
+        Db::startTrans();
+        try {
+            if (!empty($userRelationId)) {
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $id], $userRelationId);
+            }
+            DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
+            DbUser::updateUser(['last_time' => time()], $id);
+            $this->saveOpenid($id, $wxInfo['openid'], $platform);
             $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
             $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
@@ -337,11 +375,11 @@ class User extends CommonIndex {
                 $this->redis->zDelete($this->redisConIdTime, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
-            DbUser::updateUser(['last_time' => time()], $id);
-            $this->saveOpenid($id, $wxInfo['openid'], $platform);
             return ['code' => '200', 'con_id' => $conId];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3003'];
         }
-        return ['code' => '3003'];
     }
 
     /**
@@ -437,6 +475,31 @@ class User extends CommonIndex {
             return $code;
         }
         return '0';
+    }
+
+    public function indexMain($conId, $buid) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $userRelationId = 0;
+        if ($buid != 1) {//不是总店
+            $bUserRelation = DbUser::getUserRelation(['uid' => $buid], 'id,is_boss,relation', true);
+            $isBoss        = $bUserRelation['is_boss'] ?? 3;//推荐人是否是boss
+            if ($isBoss == 1) {
+                $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,is_boss,relation', true);
+                if ($userRelation['is_boss'] == 2) {
+                    $uRelation = $userRelation['relation'];
+                    if ($uRelation == $uid) {//总店下的关系,跟着新boss走
+                        $userRelationId = $userRelation['id'];
+                    }
+                }
+            }
+        }
+        if (!empty($userRelationId)) {
+            DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+        }
+        return ['code' => 200];
     }
 
     /**

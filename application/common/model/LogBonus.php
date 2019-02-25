@@ -5,7 +5,7 @@ namespace app\common\model;
 use think\Model;
 use think\model\concern\SoftDelete;
 
-class logBonus extends Model {
+class LogBonus extends Model {
     use SoftDelete;
     protected $pk = 'id';
     // 设置当前模型对应的完整数据表名称
