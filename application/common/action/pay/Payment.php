@@ -195,12 +195,12 @@ class Payment {
                     DbOrder::updateLogPay($data, $logPayRes['id']);
                     if (!empty($orderData)) {
                         DbOrder::updataOrder($orderData, $orderRes['id']);
-                        $redisListKey = Config::get('redisKey.order.redisOrderBonus');
+                        $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
                     }
                     if (!empty($memOrderData)) {
                         DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes]);
-                        $redisListKey = Config::get('redisKey.order.redisMemberOrder');
+                        $redisListKey = Config::get('rediskey.order.redisMemberOrder');
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();

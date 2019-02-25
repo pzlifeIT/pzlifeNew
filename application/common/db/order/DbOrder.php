@@ -3,6 +3,7 @@
 namespace app\common\db\order;
 
 use app\common\model\LogBonus;
+use app\common\model\LogTrading;
 use app\common\model\Orders;
 use app\common\model\OrderChild;
 use app\common\model\OrderGoods;
@@ -222,6 +223,12 @@ class DbOrder {
     public function updateLogBonus($data, $where) {
         $logBonus = new LogBonus();
         return $logBonus->save($data, $where);
+    }
+
+    public function addLogTrading($data) {
+        $logTrading = new LogTrading();
+        $logTrading->save($data);
+        return $logTrading->id;
     }
 
     /**

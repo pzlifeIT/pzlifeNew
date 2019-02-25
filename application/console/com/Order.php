@@ -43,12 +43,26 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             foreach ($order as $o) {
-                $orderUpdateSql    = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
-                $userUpdateSql     = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
-                $logBonusUpdateSql = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no=%s", $o['order_no']);
+                $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                $user           = Db::query($userSql);
+                $user           = $user[0];
+                $tradingData    = [
+                    'uid'          => $o['uid'],
+                    'trading_type' => 1,
+                    'change_type'  => 2,
+                    'money'        => $o['deduction_money'],
+                    'befor_money'  => $user['balance'],
+                    'after_money'  => bcadd($user['balance'], $o['deduction_money'], 2),
+                    'message'      => '',
+                    'create_time'  => time(),
+                ];
+                $orderUpdateSql = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
+                $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+//                $logBonusUpdateSql = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no=%s", $o['order_no']);
                 Db::execute($orderUpdateSql);
                 Db::execute($userUpdateSql);
-                Db::execute($logBonusUpdateSql);
+//                Db::execute($logBonusUpdateSql);
+                Db::name('log_trading')->insert($tradingData);
             }
             foreach ($orderGoods as $og) {
                 $goodsSkuSql = sprintf("update pz_goods_sku set stock=stock+%d where delete_time=0 and id=%d", $og['goods_num'], $og['sku_id']);
@@ -108,91 +122,151 @@ class Order extends Pzlife {
 
     /**
      * 分利结算
-     * 每5分钟结算一条订单
+     * 每2分钟结算一条订单
      */
     public function bonusSettlement() {
         $this->orderInit();
         $constShop    = 0.7;//购物的门店bos分利拿7成
         $redisListKey = Config::get('redisKey.order.redisOrderBonus');
-        $orderId      = $this->redis->lPop($redisListKey);
-        if (empty($orderId)) {
-            exit('order_bonus_null');
-        }
-        $orderSql = sprintf("select id,uid,order_no from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
-        $orderRes = Db::query($orderSql);
-        if (empty($orderRes)) {
-            exit('order_id_error');//订单id有误
-        }
-        $uid           = $orderRes[0]['uid'];//购买人的uid
-        $orderNo       = $orderRes[0]['order_no'];//购买订单号
-        $identity      = $this->getIdentity($uid);//获取自己的身份
-        $bossList      = $this->getBossList($uid, $identity);
-        $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
-        $orderChildRes = Db::query($orderChildSql);
-        $orderChildRes = array_column($orderChildRes, 'id');
+        $data        = [];
+        $tradingData = [];
+        while (true) {
+            $orderId = $this->redis->lPop($redisListKey);
+            if (empty($orderId)) {
+                break;
+            }
+            $orderSql = sprintf("select id,uid,order_no,deduction_money from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
+            $orderRes = Db::query($orderSql);
+            $orderRes = $orderRes[0];
+            if (empty($orderRes)) {
+                exit('order_id_error');//订单id有误
+            }
+            $uid      = $orderRes['uid'];//购买人的uid
+            $orderNo  = $orderRes['order_no'];//购买订单号
+            $identity = $this->getIdentity($uid);//获取自己的身份
 
-        $orderGoodsSql = sprintf("select id,goods_price,margin_price,boss_uid,goods_id,sku_id,sup_id,integral,goods_num,sku_json from pz_order_goods where delete_time=0 and order_child_id in (%s)", implode(',', $orderChildRes));
-        $orderGoodsRes = Db::query($orderGoodsSql);
-        $orderGoods    = [];
-        foreach ($orderGoodsRes as $ogrVal) {
-            if (key_exists($ogrVal['sku_id'], $orderGoods)) {
-                $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
-                continue;
+            $bossList      = $this->getBossList($uid, $identity);
+            $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
+            $orderChildRes = Db::query($orderChildSql);
+            $orderChildRes = array_column($orderChildRes, 'id');
+
+            $orderGoodsSql = sprintf("select id,goods_price,margin_price,boss_uid,goods_id,sku_id,sup_id,integral,goods_num,sku_json from pz_order_goods where delete_time=0 and order_child_id in (%s)", implode(',', $orderChildRes));
+            $orderGoodsRes = Db::query($orderGoodsSql);
+            $orderGoods    = [];
+            foreach ($orderGoodsRes as $ogrVal) {
+                if (key_exists($ogrVal['sku_id'], $orderGoods)) {
+                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
+                    continue;
+                }
+                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
             }
-            $orderGoods[$ogrVal['sku_id']] = $ogrVal;
-        }
-        $data = [];
-        foreach ($orderGoods as $ogVal) {
-            $o         = [
-                'order_no'     => $orderNo,
-                'from_uid'     => $uid,
-                'sku_id'       => $ogVal['sku_id'],
-                'goods_id'     => $ogVal['goods_id'],
-                'goods_price'  => $ogVal['goods_price'],
-                'margin_price' => $ogVal['margin_price'],
-                'sup_id'       => $ogVal['sup_id'],
-                'sku_json'     => $ogVal['sku_json'],
-                'buy_sum'      => $ogVal['goods_num'],
-                'create_time'  => time(),
-            ];
-            $shopBoss  = $ogVal['boss_uid'];//购买店铺boss的uid
-            $calculate = $this->calculate($ogVal['margin_price'], $ogVal['goods_num']);//所有三层分利
-            if ($identity == 1) {//普通用户
-                $firstShopPrice     = bcmul($calculate['first_price'], $constShop, 2);//购买店铺的分利
-                $o['result_price']  = $firstShopPrice;//实际得到分利
-                $o['to_uid']        = $shopBoss;
-                $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+            $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
+            $user    = Db::query($userSql);
+            $user    = $user[0];
+            foreach ($orderGoods as $ogVal) {
+                $o              = [
+                    'order_no'     => $orderNo,
+                    'from_uid'     => $uid,
+                    'sku_id'       => $ogVal['sku_id'],
+                    'goods_id'     => $ogVal['goods_id'],
+                    'goods_price'  => $ogVal['goods_price'],
+                    'margin_price' => $ogVal['margin_price'],
+                    'sup_id'       => $ogVal['sup_id'],
+                    'sku_json'     => $ogVal['sku_json'],
+                    'buy_sum'      => $ogVal['goods_num'],
+                    'create_time'  => time(),
+                ];
+                $t              = [
+                    'trading_type' => 1,
+                    'change_type'  => 4,
+//                    'money'        => $orderRes['deduction_money'],
+                    'befor_money'  => $user['balance'],
+                    'message'      => '',
+                    'create_time'  => time(),
+                ];
+                $shopBoss       = $ogVal['boss_uid'];//购买店铺boss的uid
+                $calculate      = $this->calculate($ogVal['margin_price'], $ogVal['goods_num']);//所有三层分利
+                $f              = 3;//购买用户是否普通用户
+                $firstShopPrice = 0;
+                if ($identity == 1 && $shopBoss != 1) {//普通用户
+                    $f                  = 1;
+                    $firstShopPrice     = bcmul($calculate['first_price'], $constShop, 2);//购买店铺的分利
+                    $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['to_uid']        = $shopBoss;
+                    $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['user_identity'] = 4;
+                    $t['uid']           = $shopBoss;
+                    $t['trading_type']  = 2;
+                    $t['money']         = $firstShopPrice;
+                    $t['after_money']   = bcadd($user['balance'], $firstShopPrice, 2);
+                    array_push($data, $o);
+                    array_push($tradingData, $t);
+                } else if ($identity != 1 && $shopBoss != 1) {
+                    $f                  = 2;
+                    $firstShopPrice     = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
+                    $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['to_uid']        = $shopBoss;
+                    $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['user_identity'] = 4;
+                    $t['uid']           = $shopBoss;
+                    $t['trading_type']  = 2;
+                    $t['money']         = $firstShopPrice;
+                    $t['after_money']   = bcadd($user['balance'], $firstShopPrice, 2);
+                    array_push($data, $o);
+                    array_push($tradingData, $t);
+                }
+                $o['result_price']  = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
+                $o['to_uid']        = $bossList['first_uid'];
+                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-                $o['user_identity'] = 4;
+                $userIden           = $this->getIdentity($bossList['first_uid']);
+                $o['user_identity'] = $userIden;
+                $t['uid']           = $bossList['first_uid'];
+                $t['trading_type']  = $userIden == 4 ? 2 : 1;
+                $t['money']         = $o['result_price'];
+                $t['after_money']   = bcadd($user['balance'], $o['result_price'], 2);
                 array_push($data, $o);
-            } else {
-                $firstShopPrice     = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
-                $o['result_price']  = $firstShopPrice;//实际得到分利
-                $o['to_uid']        = $shopBoss;
-                $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
+                array_push($tradingData, $t);
+                $o['result_price']  = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
+                $o['to_uid']        = $bossList['second_uid'];
+                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-                $o['user_identity'] = 4;
+                $userIden           = $this->getIdentity($bossList['second_uid']);
+                $o['user_identity'] = $userIden;
+                $t['uid']           = $bossList['second_uid'];
+                $t['trading_type']  = $userIden == 4 ? 2 : 1;
+                $t['money']         = $o['result_price'];
+                $t['after_money']   = bcadd($user['balance'], $o['result_price'], 2);
                 array_push($data, $o);
+                array_push($tradingData, $t);
+                $o['result_price']  = $calculate['third_price'];//实际得到分利
+                $o['to_uid']        = $bossList['third_uid'];
+                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                $o['user_identity'] = 4;
+                $t['uid']           = $bossList['third_uid'];
+                $t['trading_type']  = 2;
+                $t['money']         = $calculate['third_price'];
+                $t['after_money']   = $calculate['third_price'];
+                array_push($data, $o);
+                array_push($tradingData, $t);
             }
-            $o['result_price']  = bcsub($calculate['first_price'], $firstShopPrice, 2);//实际得到分利
-            $o['to_uid']        = $bossList['first_uid'];
-            $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-            $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-            $o['user_identity'] = $this->getIdentity($bossList['first_uid']);
-            array_push($data, $o);
-            $o['result_price']  = $calculate['second_price'];//实际得到分利
-            $o['to_uid']        = $bossList['second_uid'];
-            $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-            $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-            $o['user_identity'] = $this->getIdentity($bossList['first_uid']);
-            array_push($data, $o);
-            $o['result_price']  = $calculate['third_price'];//实际得到分利
-            $o['to_uid']        = $bossList['third_uid'];
-            $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-            $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-            $o['user_identity'] = 4;
-            array_push($data, $o);
-            Db::name('log_bonus')->insertAll($data);
+        }
+        Db::startTrans();
+        try {
+            if (!empty($data)) {
+                Db::name('log_bonus')->insertAll($data);
+            }
+            if (!empty($tradingData)) {
+                Db::name('log_trading')->insertAll($tradingData);
+            }
+            Db::commit();
+            exit('ok!');
+        } catch (\Exception $e) {
+            Db::rollback();
+            exit('rollback');
         }
     }
 
@@ -217,7 +291,7 @@ class Order extends Pzlife {
         $userType    = $memberOrder['user_type'];
 //        print_r($memberOrder);die;
         if ($userType == 1) {//钻石会员
-            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid']);
+            $this->diamondvipSettlement($memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid']);
         }
         if ($userType == 2) {//boss
             $this->bossSettlement($memberOrder['uid'], $memberOrder['from_uid']);
@@ -244,7 +318,7 @@ class Order extends Pzlife {
         $firstUid  = 1;//默认总店
         $secondUid = 1;//默认总店
         $thirdUid  = 1;//默认总店
-        if ($identity = 1) {//自己是普通会员
+        if ($identity == 1) {//自己是普通会员
             $myPid         = $myRelation['pid'] ?: 1;//直属上级uid
             $myPidIdentity = $this->getIdentity($myPid);//上级的身份(判断是不是分享大v)
             $ppUid         = $this->getBoss($pBossUid);
@@ -391,63 +465,63 @@ class Order extends Pzlife {
      * @param $payMoney
      * @param $from_uid
      */
-    private function diamondvipSettlement($memberOrderId, $uid, $payMoney,$from_uid) {
+    private function diamondvipSettlement($uid, $payMoney, $from_uid) {
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
         Db::startTrans();
         try {
             if ($payMoney == 500) {
-                Db::name('pz_users')->where('id',$uid)->update(['user_identity'=>2]);
-            }elseif ($payMoney == 100) {
-                $from_user = $this->getUserInfo($from_uid);
+                Db::name('pz_users')->where('id', $uid)->update(['user_identity' => 2]);
+            } elseif ($payMoney == 100) {
+                $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
                 if (!$fromDiamondvipGet) {
-                    
-                    if ($from_user['user_type']>1) {
-                        $from_diamondvip_get = [];
-                        $from_diamondvip_get['uid'] = $from_uid;
+
+                    if ($from_user['user_type'] > 1) {
+                        $from_diamondvip_get                   = [];
+                        $from_diamondvip_get['uid']            = $from_uid;
                         $from_diamondvip_get['share_redmoney'] = 50;
-                        $from_diamondvip_get['share_num'] = 1;
-                        $from_diamondvip_get['create_time'] = time();
+                        $from_diamondvip_get['share_num']      = 1;
+                        $from_diamondvip_get['create_time']    = time();
                         Db::name('pz_diamondvip_get')->insert($from_diamondvip_get);
-                        $from_balance = $from_user['balance']+50;
-                        Db::name('pz_users')->where('id',$from_uid)->update(['balance' => $from_balance]);
+                        $from_balance = $from_user['balance'] + 50;
+                        Db::name('pz_users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                         Db::name('pz_log_trading')->insert(
                             [
-                                'uid' => $from_uid,
+                                'uid'          => $from_uid,
                                 'trading_type' => 1,
-                                'change_type' => 5,
-                                'money' => 50,
-                                'befor_money' => $from_user['balance'],
-                                'after_money' => $from_balance,
-                                'create_time' => time()
+                                'change_type'  => 5,
+                                'money'        => 50,
+                                'befor_money'  => $from_user['balance'],
+                                'after_money'  => $from_balance,
+                                'create_time'  => time()
                             ]
                         );
                     }
-                }else{
-                    $from_diamondvip_get = [];
-                    $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num']+1;
-                    Db::name('pz_diamondvip_get')->where('id',$fromDiamondvipGet['id'])->update($from_diamondvip_get);
-                    $from_balance = $from_user['balance']+50;
-                    Db::name('pz_users')->where('id',$from_uid)->update(['balance' => $from_balance]);
+                } else {
+                    $from_diamondvip_get              = [];
+                    $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
+                    Db::name('pz_diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
+                    $from_balance = $from_user['balance'] + 50;
+                    Db::name('pz_users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                     Db::name('pz_log_trading')->insert(
                         [
-                            'uid' => $from_uid,
+                            'uid'          => $from_uid,
                             'trading_type' => 1,
-                            'change_type' => 5,
-                            'money' => 50,
-                            'befor_money' => $from_user['balance'],
-                            'after_money' => $from_balance,
-                            'create_time' => time()
+                            'change_type'  => 5,
+                            'money'        => 50,
+                            'befor_money'  => $from_user['balance'],
+                            'after_money'  => $from_balance,
+                            'create_time'  => time()
                         ]
                     );
                 }
-    
-                $diamondvip_get = [];
-                $diamondvip_get['uid'] = $uid;
-                $diamondvip_get['share_uid'] = $from_uid;
+
+                $diamondvip_get                = [];
+                $diamondvip_get['uid']         = $uid;
+                $diamondvip_get['share_uid']   = $from_uid;
                 $diamondvip_get['create_time'] = time();
                 Db::name('pz_diamondvip_get')->insert($diamondvip_get);
-                Db::name('pz_users')->where('id',$uid)->update(['user_identity'=>2]);
+                Db::name('pz_users')->where('id', $uid)->update(['user_identity' => 2]);
             }
             Db::commit();
             exit('ok!');
@@ -460,18 +534,18 @@ class Order extends Pzlife {
     /**
      * @param $uid
      */
-    private function diamondvipGet($uid){
+    private function diamondvipGet($uid) {
         $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
-        $diamondvipGet = Db::query($diamondvipGetSql);
+        $diamondvipGet    = Db::query($diamondvipGetSql);
         return $diamondvipGet[0];
     }
 
     /**
      * @param $uid
      */
-    private function getUserInfo($uid){
+    private function getUserInfo($uid) {
         $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and uid = %d", $uid);
-        $userInfo = Db::query($getUserSql);
+        $userInfo   = Db::query($getUserSql);
         return $userInfo[0];
     }
 }

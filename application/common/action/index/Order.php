@@ -35,6 +35,17 @@ class Order extends CommonIndex {
         $data          = [
             'order_status' => 2,
         ];
+        $userInfo      = DbUser::getUserInfo(['id' => $uid], 'balance', true);
+        $tradingData   = [
+            'uid'          => $uid,
+            'trading_type' => 1,
+            'change_type'  => 2,
+            'money'        => $order['deduction_money'],
+            'befor_money'  => $userInfo['balance'],
+            'after_money'  => bcadd($userInfo['balance'], $order['deduction_money'], 2),
+            'message'      => '',
+            'create_time'  => time(),
+        ];
         Db::startTrans();
         try {
             foreach ($orderGoods as $og) {
@@ -42,7 +53,10 @@ class Order extends CommonIndex {
             }
             DbOrder::updataOrder($data, $order['id']);//改订单状态
             DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
-            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
+//            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
+            if (!empty($tradingData)) {
+                DbOrder::addLogTrading($tradingData);
+            }
             $this->resetUserInfo($uid);
             Db::commit();
             return ['code' => '200'];//取消成功
@@ -235,6 +249,7 @@ class Order extends CommonIndex {
         $thirdMoney     = 0;//第三方支付金额
         $discountMoney  = 0;//优惠金额
         $isPay          = false;
+        $tradingData    = [];//交易日志
         if ($payType == 2) {//商票支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
             if ($userInfo['balance_freeze'] == '2') {//商票未冻结
@@ -248,6 +263,16 @@ class Order extends CommonIndex {
             } else {
                 $thirdMoney = $summary['total_price'];
             }
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 1,
+                'money'        => -$deductionMoney,
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcsub($userInfo['balance'], $deductionMoney, 2),
+                'message'      => '',
+                'create_time'  => time(),
+            ];
         } else if ($payType == 1) {//第三方支付
             $thirdMoney = $summary['total_price'];
         }
@@ -294,6 +319,13 @@ class Order extends CommonIndex {
             DbOrder::addOrderGoods($orderGoodsData);
             DbGoods::decStock($stockSku);
             DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
+            if (!empty($tradingData)) {
+                DbOrder::addLogTrading($tradingData);
+            }
+            if ($isPay) {
+                $redisListKey = Config::get('rediskey.order.redisOrderBonus');
+                $this->redis->rPush($redisListKey, $orderId);
+            }
             $this->summaryCart($skuIdList, $uid);
             $this->resetUserInfo($uid);
             Db::commit();
@@ -598,23 +630,23 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type,$parent_id = false) {
+    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
         if (!$parent_id) {
             $parent_id = 1;
-        }else{
-            $parent_info = DbUser::getUserInfo(['id' => $parent_id],'user_identity',true);
+        } else {
+            $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
             if ($parent_info['user_identity'] < 2) {
-                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+                return ['code' => '3003', 'msg' => '邀请用户层级不在可邀请范围内'];
             }
             if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+                return ['code' => '3003', 'msg' => '邀请用户层级不在可邀请范围内'];
             }
         }
-        
+
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
@@ -624,7 +656,7 @@ class Order extends CommonIndex {
             $user_type = 1;
             $pay_money = 500;
         }
-        
+
         /* 判断会员身份，低于当前层级可购买升级 */
         $user_identity = DbUser::getUserOne(['id' => $uid], 'user_identity')['user_identity'];/* 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人 */
 
