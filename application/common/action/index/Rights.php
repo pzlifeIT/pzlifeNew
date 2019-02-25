@@ -55,7 +55,7 @@ class Rights extends CommonIndex {
      * @author zyr
      */
     public function IsGetDominos($parent_id){
-        $userInfo = DbUser::getUserInfo(['id'=>$parent_id],'user_identity');
+        $userInfo = DbUser::getUserInfo(['id'=>$parent_id],'user_identity',true);
         if ($userInfo['user_identity']<4) {
             return ['code' => '3004','msg' => '非BOSS无法开启分享钻石接龙资格（200名额）'];
         }
@@ -78,7 +78,7 @@ class Rights extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        $userInfo = DbUser::getUserInfo(['id'=>$uid],'user_identity');
+        $userInfo = DbUser::getUserInfo(['id'=>$uid],'user_identity',true);
         if ($userInfo['user_identity']<4) {
             return ['code' => '3004','msg' => '非BOSS无法开启分享钻石接龙资格（200名额）'];
         }
