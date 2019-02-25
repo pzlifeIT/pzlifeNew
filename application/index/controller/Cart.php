@@ -94,7 +94,7 @@ class Cart extends MyController {
             return ['code' => '3001'];
         }
         // 5a3f0e0196fdebb4737c0851849c2005
-       
+
         if (empty($goods_skuid)) {
             return ['code' => '3009', 'msg' => '缺少参数:uid或者商品SKUID'];
         }
@@ -104,9 +104,7 @@ class Cart extends MyController {
         if (!is_numeric($goods_num)) {
             return ['code' => '3004', 'msg' => '购买数量必须是数字'];
         }
-       
-        $parent_id = deUid($parent_id);
-        
+        $parent_id = empty(deUid($parent_id)) ? 1 : deUid($parent_id);
         $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
         return $result;
     }
