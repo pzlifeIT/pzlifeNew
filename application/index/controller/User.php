@@ -324,7 +324,7 @@ class User extends MyController {
      * @apiParam (入参) {String} address 详细地址
      * @apiParam (入参) {String} mobile 电话号码
      * @apiParam (入参) {String} name 姓名
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3002:缺少con_id / 3003:conId有误查不到uid
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3002:缺少con_id / 3003:手机格式有误 / 3004:错误的市级名称 / 3005:错误的区级名称 / 3006:错误的省份名称 / 3007:请填写详细街道地址 / 3008:添加失败 / 3009:uid为空 / 3010:请填写收货人姓名
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/addUserAddress
      * @return array
