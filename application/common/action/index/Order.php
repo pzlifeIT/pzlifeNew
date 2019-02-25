@@ -566,12 +566,13 @@ class Order extends CommonIndex {
 
         foreach ($result as $key => $value) {
             $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
-
+            $integral = 0;
             $express_money = 0;
             foreach ($order_child as $order => $child) {
                 $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
                 $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
                 foreach ($order_goods as $og => $goods) {
+                    $integral += $goods['integral'];
                     foreach ($order_goods_num as $ogn => $goods_num) {
                         if ($goods_num['sku_id'] == $goods['sku_id']) {
                             $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
@@ -586,6 +587,7 @@ class Order extends CommonIndex {
                 $express_money += $child['express_money'];
             }
             $result[$key]['express_money'] = $express_money;
+            $result[$key]['integral'] = $integral;
             $result[$key]['order_child']   = $order_child;
         }
         return ['code' => '200', 'order_list' => $result];
