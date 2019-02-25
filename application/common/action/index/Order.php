@@ -608,10 +608,10 @@ class Order extends CommonIndex {
         }else{
             $parent_info = DbUser::getUserInfo(['id' => $parent_id],'user_identity',true);
             if ($parent_info['user_identity'] < 2) {
-                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+                $parent_id = 1;
             }
             if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                return ['code' => '3003','msg' => '邀请用户层级不在可邀请范围内'];
+                $parent_id = 1;
             }
         }
         
