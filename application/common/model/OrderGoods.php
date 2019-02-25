@@ -13,6 +13,7 @@ class OrderGoods extends Model {
     // 设置当前模型的数据库连接
     protected $connection = '';
     protected $deleteTime = 'delete_time';
+    protected $updateTime = false;//关闭update_time
     protected $defaultSoftDelete = 0;
     private $goodsType = [1 => '普通商品', 2 => '虚拟商品'];// 1.普通(正常发货)商品 2.虚拟商品
 

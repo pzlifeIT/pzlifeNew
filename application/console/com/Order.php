@@ -56,7 +56,7 @@ class Order extends Pzlife {
             }
             Db::commit();
         } catch (\Exception $e) {
-            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/cancel_order_error.log');
+//            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/cancel_order_error.log');
             Db::rollback();
             exit('rollback');
         }
@@ -108,7 +108,7 @@ class Order extends Pzlife {
 
     /**
      * 分利结算
-     * 每一小时结算一次
+     * 每5分钟结算一条订单
      */
     public function bonusSettlement() {
         $this->orderInit();
@@ -215,11 +215,12 @@ class Order extends Pzlife {
         }
         $memberOrder = $memberOrder[0];
         $userType    = $memberOrder['user_type'];
+//        print_r($memberOrder);die;
         if ($userType == 1) {//钻石会员
-            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money'],$memberOrder['from_uid']);
+            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid']);
         }
         if ($userType == 2) {//boss
-            $this->bossSettlement($memberOrder['id'], $memberOrder['uid']);
+            $this->bossSettlement($memberOrder['uid'], $memberOrder['from_uid']);
         }
     }
 
@@ -330,12 +331,58 @@ class Order extends Pzlife {
     }
 
     /**
-     * @param $memberOrderId
      * @param $uid
+     * @param $fromUid
      * @author zyr
      */
-    private function bossSettlement($memberOrderId, $uid) {
-
+    private function bossSettlement($uid, $fromUid) {
+        $buyBossMoney = 5000;//推荐购买boss可获得奖励佣金额度
+        //修改用户关系及身份
+        $myBoss           = $this->getBoss($uid);
+        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%" . $uid . ',' . "%'";
+        $userOther        = Db::query($otherUserSql);
+        $userRelationData = [];
+        if (!empty($userOther)) {
+            foreach ($userOther as $uo) {
+//                $uo['relation'] = $uid . ',' . $uo['uid'];
+                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], $uid . ','));
+                unset($uo['uid']);
+                array_push($userRelationData, $uo);
+            }
+        }
+        //推荐人分利5000
+        $fromUserInfoSql = sprintf("select commission from pz_users where delete_time=0 and id = %d", $fromUid);
+        $fromUserInfo    = Db::query($fromUserInfoSql);
+        $fromUserInfo    = $fromUserInfo[0];
+        $fromTradingDate = [
+            'uid'          => $fromUid,
+            'trading_type' => 2,
+            'change_type'  => 5,
+            'money'        => $buyBossMoney,
+            'befor_money'  => $fromUserInfo['commission'],
+            'after_money'  => bcadd($fromUserInfo['commission'], $buyBossMoney, 2),
+            'message'      => '',
+            'create_time'  => time(),
+        ];
+        Db::startTrans();
+        try {
+            if (!empty($userRelationData)) {
+                foreach ($userRelationData as $urd) {
+                    Db::name('user_relation')->update($urd);
+                }
+            }
+            if ($fromUid != 1) {
+                Db::table('pz_users')->where('id', $fromUid)->setInc('commission', $buyBossMoney);
+            }
+            Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4]);
+            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1]);
+            Db::name('log_trading')->insert($fromTradingDate);
+            Db::commit();
+        } catch (\Exception $e) {
+//            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
+            Db::rollback();
+            exit('rollback');
+        }
     }
 
     /**
