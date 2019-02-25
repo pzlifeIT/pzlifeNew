@@ -597,7 +597,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type) {
+    public function createMemberOrder($conId, $user_type, $pay_type,$parent_id = false) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -635,6 +635,9 @@ class Order extends CommonIndex {
             $order['user_type'] = $user_type;
             $order['pay_money'] = $pay_money;
             $order['pay_type']  = $pay_type;
+            if ($parent_id) {
+                $order['from_uid'] = $parent_id;
+            }
             DbOrder::addMemberOrder($order);
             return ['code' => '200', 'order_data' => $order];
         }

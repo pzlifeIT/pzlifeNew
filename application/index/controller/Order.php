@@ -174,7 +174,7 @@ class Order extends MyController {
      * @apiDescription   cancelOrder
      * @apiGroup         index_order
      * @apiName          cancelOrder
-     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} order_no 订单号
      * @apiSuccess (返回) {String} code 200:成功 / 3001:订单号错误 / 3002.con_id错误 / 3003:没有可取消的订单 / 3005:取消失败
      * @apiSampleRequest /index/order/cancelorder
@@ -201,9 +201,10 @@ class Order extends MyController {
      * @apiDescription   createMemberOrder
      * @apiGroup         index_order
      * @apiName          createMemberOrder
-     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} pay_type 支付类型 1.支付宝 2.微信 3.银联 4.线下 [目前只支持微信]
-     * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员1000
+     * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员500
+     * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type和pay_type必须是数字
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/createMemberOrder
@@ -213,6 +214,7 @@ class Order extends MyController {
         $conId     = trim($this->request->post('con_id'));
         $user_type = trim($this->request->post('user_type'));
         $pay_type  = trim($this->request->post('pay_type'));
+        $parent_id    = trim($this->request->post('parent_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -222,7 +224,8 @@ class Order extends MyController {
         if (!is_numeric($user_type) || !is_numeric($pay_type)) {
             return ['code' => 3003];
         }
-        $result = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type));
+        $parent_id = deUid($parent_id);
+        $result = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type),$parent_id);
         return $result;
     }
 }

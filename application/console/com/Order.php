@@ -208,7 +208,7 @@ class Order extends Pzlife {
         if (empty($memberOrderId)) {
             exit('member_order_null');
         }
-        $memberSql   = sprintf("select id,uid,order_no,user_type,pay_money from pz_member_order where delete_time=0 and pay_status=4 and id = '%d'", $memberOrderId);
+        $memberSql   = sprintf("select id,uid,order_no,user_type,pay_money,from_uid from pz_member_order where delete_time=0 and pay_status=4 and id = '%d'", $memberOrderId);
         $memberOrder = Db::query($memberSql);
         if (empty($memberOrder)) {
             exit('order_id_error');//订单id有误
@@ -216,7 +216,7 @@ class Order extends Pzlife {
         $memberOrder = $memberOrder[0];
         $userType    = $memberOrder['user_type'];
         if ($userType == 1) {//钻石会员
-            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money']);
+            $this->diamondvipSettlement($memberOrder['id'], $memberOrder['uid'], $memberOrder['pay_money'],$memberOrder['from_uid']);
         }
         if ($userType == 2) {//boss
             $this->bossSettlement($memberOrder['id'], $memberOrder['uid']);
@@ -344,6 +344,17 @@ class Order extends Pzlife {
      * @param $payMoney
      */
     private function diamondvipSettlement($memberOrderId, $uid, $payMoney) {
-        echo 'vip';
+        $diamondvipGet = $this->diamondvipGet($uid);
+        if ($payMoney == 500) {
+
+        }elseif ($payMoney == 100) {
+
+        }
+    }
+
+    private function diamondvipGet($uid){
+        $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
+        $diamondvipGet = Db::query($diamondvipGetSql);
+        return $diamondvipGet[0];
     }
 }
