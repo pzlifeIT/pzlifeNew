@@ -59,6 +59,34 @@ class Order extends MyController {
     }
 
     /**
+     * @api              {post} / 获取用户订单详情
+     * @apiDescription   getUserOrderInfo
+     * @apiGroup         index_order
+     * @apiName          getUserOrderInfo
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} order_id 订单ID
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_id必须是数字 / 3004:订单不存在
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/order/getUserOrderInfo
+     * @return array
+     * @author rzc
+     */
+    public function getUserOrderInfo(){
+        $con_id = trim($this->request->post('con_id'));
+        // $con_id = 1;
+        $order_id = trim($this->request->post('order_id'));
+        if (empty($order_id)) {
+            return ['code' => 3001];
+        }
+        if (!is_numeric($order_id)) {
+            return ['code' => 3003];
+        }
+        $result = $this->app->order->getUserOrderInfo($con_id, $order_id);
+        return $result;
+
+    }
+
+    /**
      * @api              {post} / 创建结算页
      * @apiDescription   createSettlement
      * @apiGroup         index_order

@@ -597,17 +597,19 @@ class Order extends CommonIndex {
         }
 
         foreach ($result as $key => $value) {
-            $order_child = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
-
+            $order_child   = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
+            $integral      = 0;
             $express_money = 0;
             foreach ($order_child as $order => $child) {
                 $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
                 $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
                 foreach ($order_goods as $og => $goods) {
+
                     foreach ($order_goods_num as $ogn => $goods_num) {
                         if ($goods_num['sku_id'] == $goods['sku_id']) {
                             $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
+                            $integral                      += $goods['integral'] * $goods_num['goods_num'];
                         }
                     }
                 }
@@ -618,9 +620,61 @@ class Order extends CommonIndex {
                 $express_money += $child['express_money'];
             }
             $result[$key]['express_money'] = $express_money;
+            $result[$key]['integral']      = $integral;
             $result[$key]['order_child']   = $order_child;
         }
         return ['code' => '200', 'order_list' => $result];
+    }
+
+    /**
+     * 获取用户订单详情
+     * @param $conId
+     * @param $order_id
+     * @return array
+     * @author rzc
+     */
+    public function getUserOrderInfo($conId, $order_id) {
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
+        if (empty($uid)) {
+            return ['code' => '3005'];
+        }
+        $field  = '*';
+        $where  = ['uid' => $uid, 'id' => $order_id];
+        $result = DbOrder::getOrder($field, $where, true);
+        if (empty($result)) {
+            return ['code' => '3004', 'msg' => '订单不存在'];
+        }
+        $order_child   = DbOrder::getOrderChild('*', ['order_id' => $result['id']]);
+        $integral      = 0;
+        $express_money = 0;
+        foreach ($order_child as $order => $child) {
+            $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
+            $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
+            foreach ($order_goods as $og => $goods) {
+
+                foreach ($order_goods_num as $ogn => $goods_num) {
+                    if ($goods_num['sku_id'] == $goods['sku_id']) {
+                        $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                        $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
+                        $integral                      += $goods['integral'] * $goods_num['goods_num'];
+                    }
+                }
+            }
+            // dump( Db::getLastSql());die;
+
+            $order_child[$order]['order_goods'] = $order_goods;
+
+            $express_money += $child['express_money'];
+
+        }
+        $result['express_money'] = $express_money;
+        $result['integral']      = $integral;
+        $result['order_child']   = $order_child;
+        $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+        $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
+        $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        return ['code' => '200', 'order_info' => $result];
     }
 
     /**
@@ -640,10 +694,10 @@ class Order extends CommonIndex {
         } else {
             $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
             if ($parent_info['user_identity'] < 2) {
-                return ['code' => '3003', 'msg' => '邀请用户层级不在可邀请范围内'];
+                $parent_id = 1;
             }
             if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                return ['code' => '3003', 'msg' => '邀请用户层级不在可邀请范围内'];
+                $parent_id = 1;
             }
         }
 
