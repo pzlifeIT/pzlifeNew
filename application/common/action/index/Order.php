@@ -8,6 +8,7 @@ use Config;
 use app\facade\DbGoods;
 use app\facade\DbOrder;
 use think\Db;
+use app\facade\DbProvinces;
 
 class Order extends CommonIndex {
     private $redisCartUserKey;
