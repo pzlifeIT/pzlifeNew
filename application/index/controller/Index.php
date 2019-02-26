@@ -32,12 +32,12 @@ class Index extends MyController {
 
     public function enUid() {
         $uid = $this->request->request('uid');
-        return $this->enUid($uid);
+        echo enUid($uid);die;
     }
 
     public function deUid() {
         $uid = $this->request->request('uid');
-        return $this->deUid($uid);
+        echo deUid($uid);die;
     }
 
     public function hello() {
