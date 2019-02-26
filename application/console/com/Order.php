@@ -158,7 +158,8 @@ class Order extends Pzlife {
 //                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
 //                    continue;
 //                }
-                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
+//                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
+                array_push($orderGoods, $ogrVal);
             }
             $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
             $user    = Db::query($userSql);
@@ -516,24 +517,24 @@ class Order extends Pzlife {
                         ]
                     );
                     // if ($fromDiamondvipGet['']) {}
-                        $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
-                        $share_from_user    = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
-                        if ($share_from_user['user_identity'] == 4) {
-                            $share_from_balance = 0;
-                            $share_from_balance = $share_from_user['balance'] + 50;
-                            Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
-                            Db::name('log_trading')->insert(
-                                [
-                                    'uid'          => $share_from_user['id'],
-                                    'trading_type' => 1,
-                                    'change_type'  => 5,
-                                    'money'        => 50,
-                                    'befor_money'  => $share_from_balance['balance'],
-                                    'after_money'  => $share_from_balance,
-                                    'create_time'  => time()
-                                ]
-                            );
-                        }
+                    $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
+                    $share_from_user        = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
+                    if ($share_from_user['user_identity'] == 4) {
+                        $share_from_balance = 0;
+                        $share_from_balance = $share_from_user['balance'] + 50;
+                        Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
+                        Db::name('log_trading')->insert(
+                            [
+                                'uid'          => $share_from_user['id'],
+                                'trading_type' => 1,
+                                'change_type'  => 5,
+                                'money'        => 50,
+                                'befor_money'  => $share_from_balance['balance'],
+                                'after_money'  => $share_from_balance,
+                                'create_time'  => time()
+                            ]
+                        );
+                    }
                 }
 
                 $diamondvip_get                = [];
