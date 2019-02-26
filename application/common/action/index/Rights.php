@@ -26,8 +26,12 @@ class Rights extends CommonIndex {
             return ['code' => '3004','msg' => '当前身份等级大于或等于钻石会员，无法领取'];
         }
         $DiamondvipDominos = DbRights::getDiamondvips(['uid' => $parent_id,'status' => 1,'type' => 1],'*',true);
-        if (!$DiamondvipDominos || $DiamondvipDominos['stock']<$DiamondvipDominos['num']+1) {
+        if (!$DiamondvipDominos  ) {
             return ['code' => '3005','分享用户没有分享机会'];
+        }
+        if ($DiamondvipDominos['stock']<$DiamondvipDominos['num']+1) {
+            DbRights::updateDiamondvip(['status' => 3],$DiamondvipDominos['id']);
+            return ['code' => '3006','该机会已领完'];
         }
         $receiveDiamondvip = [];
         $receiveDiamondvip['uid'] = $uid;

@@ -91,7 +91,8 @@ class Rights extends AdminController
      * @apiGroup         admin_Rights
      * @apiName          passBossShareDiamondvip
      * @apiParam (入参) {Number} id 分享钻石会员机会ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:id必须是数字 / 3002: / 
+     * @apiParam (入参) {Number} status 分享钻石会员机会ID 1:审核通过 2:不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002: / 
      * @apiSuccess (data) {object_array} data 结果
      * @apiSuccess (data) {String} id 用户ID
      * @apiSampleRequest /admin/Rights/passBossShareDiamondvip
@@ -109,10 +110,11 @@ class Rights extends AdminController
      */
     public function passBossShareDiamondvip(){
         $id = trim($this->request->post('id'));
-        if (!is_numeric($id)) {
+        $status = trim($this->request->post('status'));
+        if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => 3001];
         }
-        $result = $this->app->rights->passBossShareDiamondvip($id);
+        $result = $this->app->rights->passBossShareDiamondvip($id,$status);
         return $result;
     }
 
