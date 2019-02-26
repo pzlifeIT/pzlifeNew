@@ -87,6 +87,11 @@ class User extends Pzlife
             if ($value['boss'] == 1) {
                 $user_relation['is_boss'] = 1;
                 $shop = $mysql_connect->query('SELECT * FROM pre_shop WHERE `uid` = ' . $value['uid']);
+                if (!$value['mobile']) {
+                    $new_user['mobile'] = $shop[0]['service'];
+                }else{
+                    $new_user['mobile'] = $value['mobile'];
+                }
                 
                 if ($shop) {
                     // $new_user['sex'] = $shop[0]['sex'];
@@ -140,6 +145,9 @@ class User extends Pzlife
             else {
                 $new_user['user_identity'] = 1;
                 $user_relation['is_boss'] = 2;
+                if ($value['mobile']) {
+                    $new_user['mobile'] = $value['mobile'];
+                }
             }
 
             /* 新用户信息 */

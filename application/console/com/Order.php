@@ -470,22 +470,22 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             if ($payMoney == 500) {
-                Db::name('pz_users')->where('id', $uid)->update(['user_identity' => 2]);
+                Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
             } elseif ($payMoney == 100) {
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
                 if (!$fromDiamondvipGet) {
 
-                    if ($from_user['user_type'] > 1) {
+                    if ($from_user['user_identity'] > 1) {
                         $from_diamondvip_get                   = [];
                         $from_diamondvip_get['uid']            = $from_uid;
                         $from_diamondvip_get['share_redmoney'] = 50;
                         $from_diamondvip_get['share_num']      = 1;
                         $from_diamondvip_get['create_time']    = time();
-                        Db::name('pz_diamondvip_get')->insert($from_diamondvip_get);
+                        Db::name('diamondvip_get')->insert($from_diamondvip_get);
                         $from_balance = $from_user['balance'] + 50;
-                        Db::name('pz_users')->where('id', $from_uid)->update(['balance' => $from_balance]);
-                        Db::name('pz_log_trading')->insert(
+                        Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
+                        Db::name('log_trading')->insert(
                             [
                                 'uid'          => $from_uid,
                                 'trading_type' => 1,
@@ -498,12 +498,13 @@ class Order extends Pzlife {
                         );
                     }
                 } else {
+                    /* 给上级 */
                     $from_diamondvip_get              = [];
                     $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
-                    Db::name('pz_diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
+                    Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
                     $from_balance = $from_user['balance'] + 50;
-                    Db::name('pz_users')->where('id', $from_uid)->update(['balance' => $from_balance]);
-                    Db::name('pz_log_trading')->insert(
+                    Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
+                    Db::name('log_trading')->insert(
                         [
                             'uid'          => $from_uid,
                             'trading_type' => 1,
@@ -514,14 +515,33 @@ class Order extends Pzlife {
                             'create_time'  => time()
                         ]
                     );
+                    // if ($fromDiamondvipGet['']) {}
+                        $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
+                        $share_from_user    = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
+                        if ($share_from_user['user_identity'] == 4) {
+                            $share_from_balance = 0;
+                            $share_from_balance = $share_from_user['balance'] + 50;
+                            Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
+                            Db::name('log_trading')->insert(
+                                [
+                                    'uid'          => $share_from_user['id'],
+                                    'trading_type' => 1,
+                                    'change_type'  => 5,
+                                    'money'        => 50,
+                                    'befor_money'  => $share_from_balance['balance'],
+                                    'after_money'  => $share_from_balance,
+                                    'create_time'  => time()
+                                ]
+                            );
+                        }
                 }
 
                 $diamondvip_get                = [];
                 $diamondvip_get['uid']         = $uid;
                 $diamondvip_get['share_uid']   = $from_uid;
                 $diamondvip_get['create_time'] = time();
-                Db::name('pz_diamondvip_get')->insert($diamondvip_get);
-                Db::name('pz_users')->where('id', $uid)->update(['user_identity' => 2]);
+                Db::name('diamondvip_get')->insert($diamondvip_get);
+                Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
             }
             Db::commit();
             exit('ok!');

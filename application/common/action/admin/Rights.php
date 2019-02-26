@@ -71,12 +71,12 @@ class Rights{
     }
 
     /**
-     * 列表查询分享钻石会员机会
+     * 审核分享钻石会员机会
      * @param $id
      * @return array
      * @author rzc
      */
-    public function passBossShareDiamondvip($id){
+    public function passBossShareDiamondvip($id,$status){
         $diamondvips = DbRights::getDiamondvips([['id','=',$id]],'*',true);
         if (!$diamondvips) {
             return ['code' => 3000];
@@ -84,23 +84,29 @@ class Rights{
         if ($diamondvips['status'] != 0) {
             return ['code' => 3002,'msg' => '已审核过的申请无法再次申请'];
         }
-        
+        if ($status == $diamondvips['status']) {
+            return ['code' => '3003','msg' => '无法再次进行当前状态审核'];
+        }
         Db::startTrans();
             try {
-                if ($diamondvips['type'] == 2) {
-                    $binding = [];
-                    $binding['diamondvips_id'] = $id;
-                    $binding['coupon_money'] = $diamondvips['coupon_money'];
-                    $binding['status'] = 1;
-                    $i = 0;
-                    do {
-                        $code = hash_hmac('sha1', $i . 'diamondvip' . $id . 'TIME' . time(), 'diamondvipbinding');
-                        $binding['code'] = $code;
-                        DbRights::creatDiamondvipBinding($binding);
-                        $i++;
-                    } while ($i < $diamondvips['stock']);
+                if ($status == 1) {
+                    if ($diamondvips['type'] == 2) {
+                        $binding = [];
+                        $binding['diamondvips_id'] = $id;
+                        $binding['coupon_money'] = $diamondvips['coupon_money'];
+                        $binding['status'] = 1;
+                        $i = 0;
+                        do {
+                            $code = hash_hmac('sha1', $i . 'diamondvip' . $id . 'TIME' . time(), 'diamondvipbinding');
+                            $binding['code'] = $code;
+                            DbRights::creatDiamondvipBinding($binding);
+                            $i++;
+                        } while ($i < $diamondvips['stock']);
+                    }
+                    DbRights::updateDiamondvip(['status'=>1],$id);
+                }elseif ($status == 2){
+                    DbRights::updateDiamondvip(['status'=>2],$id);
                 }
-                DbRights::updateDiamondvip(['status'=>1],$id);
                 // 提交事务
                 Db::commit();
                 return ['code' => '200','msg' => '审核通过'];

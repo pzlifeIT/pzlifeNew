@@ -26,7 +26,7 @@ class DbRights {
      */
     public function updateDiamondvip($data,$id){
         $Diamondvips = new Diamondvips;
-        return $Diamondvips -> save($data,$id);
+        return $Diamondvips -> save($data,['id' => $id]);
     }
 
     /**
@@ -118,7 +118,7 @@ class DbRights {
      */
     public function editGetDiamondvip($data,$id){
         $DiamondvipGet = new DiamondvipGet;
-        return $DiamondvipGet->save($data,$id);
+        return $DiamondvipGet->save($data,['id' => $id]);
     }
 
     /**
