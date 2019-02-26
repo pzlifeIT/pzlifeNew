@@ -154,10 +154,10 @@ class Order extends Pzlife {
             $orderGoodsRes = Db::query($orderGoodsSql);
             $orderGoods    = [];
             foreach ($orderGoodsRes as $ogrVal) {
-                if (key_exists($ogrVal['sku_id'], $orderGoods)) {
-                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
-                    continue;
-                }
+//                if (key_exists($ogrVal['sku_id'], $orderGoods)) {
+//                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
+//                    continue;
+//                }
                 $orderGoods[$ogrVal['sku_id']] = $ogrVal;
             }
             $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
