@@ -128,8 +128,8 @@ class Order extends Pzlife {
         $this->orderInit();
         $constShop    = 0.7;//购物的门店bos分利拿7成
         $redisListKey = Config::get('redisKey.order.redisOrderBonus');
-        $data        = [];
-        $tradingData = [];
+        $data         = [];
+        $tradingData  = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -154,11 +154,12 @@ class Order extends Pzlife {
             $orderGoodsRes = Db::query($orderGoodsSql);
             $orderGoods    = [];
             foreach ($orderGoodsRes as $ogrVal) {
-                if (key_exists($ogrVal['sku_id'], $orderGoods)) {
-                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
-                    continue;
-                }
-                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
+//                if (key_exists($ogrVal['sku_id'], $orderGoods)) {
+//                    $orderGoods[$ogrVal['sku_id']]['goods_num'] += 1;
+//                    continue;
+//                }
+//                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
+                array_push($orderGoods, $ogrVal);
             }
             $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
             $user    = Db::query($userSql);
@@ -332,7 +333,7 @@ class Order extends Pzlife {
                 $thirdUid  = $this->getBoss($ppUid);
             }
         } else if ($identity == 2) {//自己是钻石会员
-            $myPid         = $myRelation['pid'];//直属上级uid
+            $myPid         = $myRelation['pid'] ?: 1;//直属上级uid
             $myPidIdentity = $this->getIdentity($myPid);//上级的身份(判断是不是分享大v)
             $firstUid      = $uid;
             if ($myPidIdentity == 3) {
