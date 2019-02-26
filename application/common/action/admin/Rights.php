@@ -67,7 +67,7 @@ class Rights{
         if (empty($result)) {
             return ['code' => 3000];
         }
-        return ['code' => 200 ,'totle' => $totle,'data' => '$result'];
+        return ['code' => 200 ,'totle' => $totle,'data' => $result];
     }
 
     /**
