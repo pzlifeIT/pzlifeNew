@@ -7,7 +7,7 @@ use think\Model;
 class Diamondvips extends Model {
     protected $pk = 'id';
     // 设置当前模型对应的完整数据表名称
-    protected $table = 'pz_diamondvip_get';
+    protected $table = 'pz_diamondvips';
     // 设置当前模型的数据库连接
     protected $connection = '';
     protected $autoWriteTimestamp = true;
