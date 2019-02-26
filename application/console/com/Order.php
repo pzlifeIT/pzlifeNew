@@ -94,27 +94,55 @@ class Order extends Pzlife {
         $data = [];
         foreach ($result as $rVal) {
             if (!key_exists($rVal['to_uid'], $data)) {
-                $data[$rVal['to_uid']]['uid']           = $rVal['to_uid'];
-                $data[$rVal['to_uid']]['user_identity'] = $rVal['user_identity'];
+                $data[$rVal['to_uid']]['uid'] = $rVal['to_uid'];
+//                $data[$rVal['to_uid']]['user_identity'] = $rVal['user_identity'];
             }
-            $data[$rVal['to_uid']]['balance'] = isset($data[$rVal['to_uid']]['balance']) ? bcadd($data[$rVal['to_uid']]['balance'], $rVal['result_price'], 2) : $rVal['result_price'];
+            if ($rVal['user_identity'] == 4) {
+                $data[$rVal['to_uid']]['commission'] = isset($data[$rVal['to_uid']]['commission']) ? bcadd($data[$rVal['to_uid']]['commission'], $rVal['result_price'], 2) : $rVal['result_price'];
+            } else {
+                $data[$rVal['to_uid']]['balance'] = isset($data[$rVal['to_uid']]['balance']) ? bcadd($data[$rVal['to_uid']]['balance'], $rVal['result_price'], 2) : $rVal['result_price'];
+            }
         }
-        $data      = array_values($data);
-        $idList    = implode(',', array_column($result, 'id'));
-        $updateSql = sprintf("update pz_log_bonus set status=2 where delete_time=0 and id in (%s)", $idList);//更新分利发放日志状态为已结算
+        $data            = array_values($data);
+        $idList          = implode(',', array_column($result, 'id'));
+        $updateSql       = sprintf("update pz_log_bonus set status=2 where delete_time=0 and id in (%s)", $idList);//更新分利发放日志状态为已结算
+        $userSql         = sprintf("select id,balance,commission from pz_users where delete_time=0 and id in (%s)", implode(',', array_unique(array_column($result, 'to_uid'))));
+        $userInfo        = Db::query($userSql);
+        $userBalance     = array_column($userInfo, 'balance', 'id');
+        $userCommission  = array_column($userInfo, 'commission', 'id');
+        $fromTradingData = [
+            'change_type' => 4,//层级分利
+            'message'     => '',
+            'create_time' => time(),
+        ];
         Db::startTrans();
         try {
+            $tradingData = [];
             foreach ($data as $d) {
-                if ($d['user_identity'] == 4) {
-                    Db::table('pz_users')->where('id', $d['uid'])->setInc('commission', $d['balance']);
-                    continue;
+                $fromTradingData['uid'] = $d['uid'];
+                if (isset($d['balance']) && $d['balance'] > 0) {
+                    $fromTradingData['money']        = $d['balance'];
+                    $fromTradingData['trading_type'] = 1;
+                    $fromTradingData['befor_money']  = $userBalance[$d['uid']];
+                    $fromTradingData['after_money']  = bcadd($userBalance[$d['uid']], $d['balance'], 2);
+                    array_push($tradingData, $fromTradingData);
+                    Db::table('pz_users')->where('id', $d['uid'])->setInc('balance', $d['balance']);
                 }
-                Db::table('pz_users')->where('id', $d['uid'])->setInc('balance', $d['balance']);
+                if (isset($d['commission']) && $d['commission'] > 0) {
+                    $fromTradingData['money']        = $d['commission'];
+                    $fromTradingData['trading_type'] = 2;
+                    $fromTradingData['befor_money']  = $userCommission[$d['uid']];
+                    $fromTradingData['after_money']  = bcadd($userCommission[$d['uid']], $d['commission'], 2);
+                    array_push($tradingData, $fromTradingData);
+                    Db::table('pz_users')->where('id', $d['uid'])->setInc('commission', $d['commission']);
+                }
             }
+            Db::name('log_trading')->insertAll($tradingData);
             Db::execute($updateSql);
             Db::commit();
             exit('ok!');
         } catch (\Exception $e) {
+//            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
             Db::rollback();
             exit('rollback');
         }
@@ -165,7 +193,7 @@ class Order extends Pzlife {
             $user    = Db::query($userSql);
             $user    = $user[0];
             foreach ($orderGoods as $ogVal) {
-                $o              = [
+                $o = [
                     'order_no'     => $orderNo,
                     'from_uid'     => $uid,
                     'sku_id'       => $ogVal['sku_id'],
@@ -177,15 +205,10 @@ class Order extends Pzlife {
                     'buy_sum'      => $ogVal['goods_num'],
                     'create_time'  => time(),
                 ];
-                $t              = [
-                    'trading_type' => 1,
-                    'change_type'  => 4,
-//                    'money'        => $orderRes['deduction_money'],
-                    'befor_money'  => $user['balance'],
-                    'message'      => '',
-                    'create_time'  => time(),
-                ];
-                $shopBoss       = $ogVal['boss_uid'];//购买店铺boss的uid
+                $shopBoss = $ogVal['boss_uid'];//购买店铺boss的uid
+//                $shopBossSql     = sprintf("select balance,commission from pz_users where delete_time=0 and id=%d", $shopBoss);
+//                $shopBossBalance = Db::query($shopBossSql);
+//                $shopBossBalance = $shopBossBalance[0];
                 $calculate      = $this->calculate($ogVal['margin_price'], $ogVal['goods_num']);//所有三层分利
                 $f              = 3;//购买用户是否普通用户
                 $firstShopPrice = 0;
@@ -197,12 +220,7 @@ class Order extends Pzlife {
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
                     $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                     $o['user_identity'] = 4;
-                    $t['uid']           = $shopBoss;
-                    $t['trading_type']  = 2;
-                    $t['money']         = $firstShopPrice;
-                    $t['after_money']   = bcadd($user['balance'], $firstShopPrice, 2);
                     array_push($data, $o);
-                    array_push($tradingData, $t);
                 } else if ($identity != 1 && $shopBoss != 1) {
                     $f                  = 2;
                     $firstShopPrice     = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
@@ -211,12 +229,7 @@ class Order extends Pzlife {
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
                     $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                     $o['user_identity'] = 4;
-                    $t['uid']           = $shopBoss;
-                    $t['trading_type']  = 2;
-                    $t['money']         = $firstShopPrice;
-                    $t['after_money']   = bcadd($user['balance'], $firstShopPrice, 2);
                     array_push($data, $o);
-                    array_push($tradingData, $t);
                 }
                 $o['result_price']  = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
                 $o['to_uid']        = $bossList['first_uid'];
@@ -224,44 +237,26 @@ class Order extends Pzlife {
                 $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                 $userIden           = $this->getIdentity($bossList['first_uid']);
                 $o['user_identity'] = $userIden;
-                $t['uid']           = $bossList['first_uid'];
-                $t['trading_type']  = $userIden == 4 ? 2 : 1;
-                $t['money']         = $o['result_price'];
-                $t['after_money']   = bcadd($user['balance'], $o['result_price'], 2);
                 array_push($data, $o);
-                array_push($tradingData, $t);
                 $o['result_price']  = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
                 $o['to_uid']        = $bossList['second_uid'];
                 $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                 $userIden           = $this->getIdentity($bossList['second_uid']);
                 $o['user_identity'] = $userIden;
-                $t['uid']           = $bossList['second_uid'];
-                $t['trading_type']  = $userIden == 4 ? 2 : 1;
-                $t['money']         = $o['result_price'];
-                $t['after_money']   = bcadd($user['balance'], $o['result_price'], 2);
                 array_push($data, $o);
-                array_push($tradingData, $t);
                 $o['result_price']  = $calculate['third_price'];//实际得到分利
                 $o['to_uid']        = $bossList['third_uid'];
                 $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                 $o['user_identity'] = 4;
-                $t['uid']           = $bossList['third_uid'];
-                $t['trading_type']  = 2;
-                $t['money']         = $calculate['third_price'];
-                $t['after_money']   = $calculate['third_price'];
                 array_push($data, $o);
-                array_push($tradingData, $t);
             }
         }
         Db::startTrans();
         try {
             if (!empty($data)) {
                 Db::name('log_bonus')->insertAll($data);
-            }
-            if (!empty($tradingData)) {
-                Db::name('log_trading')->insertAll($tradingData);
             }
             Db::commit();
             exit('ok!');
