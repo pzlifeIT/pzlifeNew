@@ -622,6 +622,7 @@ class Order extends CommonIndex {
             $result[$key]['express_money'] = $express_money;
             $result[$key]['integral']      = $integral;
             $result[$key]['order_child']   = $order_child;
+            unset($result[$key]['id']);
         }
         return ['code' => '200', 'order_list' => $result];
     }
@@ -633,14 +634,14 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getUserOrderInfo($conId, $order_id) {
+    public function getUserOrderInfo($conId, $order_no) {
         $uid = $this->getUidByConId($conId);
         // $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3005'];
         }
         $field  = '*';
-        $where  = ['uid' => $uid, 'id' => $order_id];
+        $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
@@ -742,6 +743,19 @@ class Order extends CommonIndex {
             return ['code' => '200', 'order_data' => $order];
         }
 
+    }
+
+    public function confirmOrder($orderNo,$conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $order = DbOrder::getOrder('id', ['order_no' => $orderNo, 'uid' => $uid, 'order_status' => 5], true);
+        if (empty($order)) {
+            return ['code' => '3003'];//没有可确认的订单
+        }
+        DbOrder::updataOrder(['order_status'=>6], $order['id']);
+        return ['code' => 200,'msg' =>'确认成功'];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

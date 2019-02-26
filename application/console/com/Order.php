@@ -466,6 +466,7 @@ class Order extends Pzlife {
      * @param $from_uid
      */
     private function diamondvipSettlement($uid, $payMoney, $from_uid) {
+        $redisListKey = Config::get('redisKey.order.redisMemberShare');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
         Db::startTrans();
         try {
@@ -496,6 +497,9 @@ class Order extends Pzlife {
                                 'create_time'  => time()
                             ]
                         );
+                        /* 写入缓存 */
+                        $this->redis->expire($this->redisListKey . $from_uid, 2592000);
+                        $this->redis->hset($this->redisListKey . $from_uid, $from_uid, time());
                     }
                 } else {
                     /* 给上级 */
@@ -515,9 +519,9 @@ class Order extends Pzlife {
                             'create_time'  => time()
                         ]
                     );
-                    // if ($fromDiamondvipGet['']) {}
+                    
                         $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
-                        $share_from_user    = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
+                        $share_from_user        = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
                         if ($share_from_user['user_identity'] == 4) {
                             $share_from_balance = 0;
                             $share_from_balance = $share_from_user['balance'] + 50;
@@ -533,6 +537,9 @@ class Order extends Pzlife {
                                     'create_time'  => time()
                                 ]
                             );
+                            /* 写入缓存 */
+                            $this->redis->expire($this->redisListKey . $share_from_user['id'], 2592000);
+                            $this->redis->hset($this->redisListKey . $share_from_user['id'], $share_from_user['id'], time());
                         }
                 }
 
