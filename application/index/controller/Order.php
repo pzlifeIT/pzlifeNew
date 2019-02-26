@@ -64,8 +64,8 @@ class Order extends MyController {
      * @apiGroup         index_order
      * @apiName          getUserOrderInfo
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiParam (入参) {Number} order_id 订单ID
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_id必须是数字 / 3004:订单不存在
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_no长度只能是23位 / 3004:订单不存在
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/order/getUserOrderInfo
      * @return array
@@ -74,14 +74,14 @@ class Order extends MyController {
     public function getUserOrderInfo(){
         $con_id = trim($this->request->post('con_id'));
         // $con_id = 1;
-        $order_id = trim($this->request->post('order_id'));
-        if (empty($order_id)) {
+        $order_no = trim($this->request->post('order_no'));
+        if (empty($order_no)) {
             return ['code' => 3001];
         }
-        if (!is_numeric($order_id)) {
-            return ['code' => 3003];
+        if (strlen($order_no) != 23) {
+            return ['code' => '3003'];
         }
-        $result = $this->app->order->getUserOrderInfo($con_id, $order_id);
+        $result = $this->app->order->getUserOrderInfo($con_id, $order_no);
         return $result;
 
     }
@@ -221,6 +221,33 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->cancelOrder($orderNo, $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 确认收货
+     * @apiDescription   confirmOrder
+     * @apiGroup         index_order
+     * @apiName          confirmOrder
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:订单号错误 / 3002.con_id错误 / 3003:没有可确认的订单 / 3005:取消失败
+     * @apiSampleRequest /index/order/confirmOrder
+     * @author rzc
+     */
+    public function confirmOrder(){
+        $conId   = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        if (strlen($orderNo) != 23) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->order->confirmOrder($orderNo, $conId);
         return $result;
     }
 
