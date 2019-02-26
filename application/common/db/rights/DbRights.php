@@ -1,6 +1,6 @@
 <?php
 
-namespace app\common\db\user;
+namespace app\common\db\rights;
 
 use app\common\model\DiamondvipBinding;
 use app\common\model\DiamondvipGet;
