@@ -138,6 +138,155 @@ class Order extends CommonIndex {
         return $summary;
     }
 
+    public function quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $userAddress = DbUser::getUserAddress('uid,mobile,name,province_id,city_id,area_id,address', ['id' => $userAddressId], true);
+        if (empty($userAddress)) {
+            return ['code' => '3003'];
+        }
+        $cityId  = $userAddress['city_id'];
+        $summary = $this->quickSummary($uid, $buid, $skuId, $num, $cityId);
+//        print_r($summary);die;
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        $goods    = $summary['goods_list'][0];
+//        print_r($goods);die;
+        $orderGoodsData = [];
+        foreach ($goods['shopBuySum'] as $kgl => $gl) {
+            for ($i = 0; $i < $gl; $i++) {
+                $goodsData = [
+                    'goods_id'     => $goods['goods_id'],
+                    'goods_name'   => $goods['goods_name'],
+                    'sku_id'       => $goods['id'],
+                    'sup_id'       => $goods['supplier_id'],
+                    'boss_uid'     => $buid,
+                    'goods_price'  => $goods['retail_price'],
+                    'margin_price' => $this->getDistrProfits($goods['retail_price'], $goods['cost_price'], $goods['margin_price']),
+                    'integral'     => $goods['integral'],
+                    'goods_num'    => 1,
+                    'sku_json'     => json_encode($goods['attr']),
+                ];
+                array_push($orderGoodsData, $goodsData);
+            }
+        }
+//        print_r($orderGoodsData);die;
+
+        /*
+         * 子订单内容
+         */
+        $freightSupplierPrice = $summary['freight_supplier_price'];
+        $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
+        $supplierData         = [];
+        foreach ($supplier as $sval) {
+            $sval['express_money'] = $freightSupplierPrice[$sval['id']];
+            $sval['supplier_id']   = $sval['id'];
+            $sval['supplier_name'] = $sval['name'];
+            unset($sval['id']);
+            unset($sval['name']);
+            array_push($supplierData, $sval);
+        }
+//        print_r($supplierData);die;
+        /*
+         * 子订单内容
+         */
+
+        $orderNo        = createOrderNo();//创建订单号
+        $deductionMoney = 0;//商票抵扣金额
+        $thirdMoney     = 0;//第三方支付金额
+        $discountMoney  = 0;//优惠金额
+        $isPay          = false;
+        $tradingData    = [];//交易日志
+        if ($payType == 2) {//商票支付
+            $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
+            if ($userInfo['balance_freeze'] == '2') {//商票未冻结
+                if ($summary['total_price'] > $userInfo['balance']) {
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商票
+                    $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
+                } else {
+                    $isPay          = true;//可以直接商票支付完成
+                    $deductionMoney = $summary['total_price'];
+                }
+            } else {
+                $thirdMoney = $summary['total_price'];
+            }
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 1,
+                'money'        => -$deductionMoney,
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcsub($userInfo['balance'], $deductionMoney, 2),
+                'message'      => '',
+                'create_time'  => time(),
+            ];
+        } else if ($payType == 1) {//第三方支付
+            $thirdMoney = $summary['total_price'];
+        }
+        $orderData = [
+            'order_no'        => $orderNo,
+            'third_order_id'  => 0,
+            'uid'             => $uid,
+            'order_status'    => $isPay ? 4 : 1,
+            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney,//商票抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商票抵扣金额)
+            'goods_money'     => $summary['total_goods_price'],//商品金额
+            'third_money'     => $thirdMoney,//第三方支付金额
+            'discount_money'  => $discountMoney,//优惠金额
+            'pay_type'        => $payType,
+            'third_pay_type'  => 2,//第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
+            'linkman'         => $userAddress['name'],
+            'linkphone'       => $userAddress['mobile'],
+            'province_id'     => $userAddress['province_id'],
+            'city_id'         => $userAddress['city_id'],
+            'area_id'         => $userAddress['area_id'],
+            'address'         => $userAddress['address'],
+            'message'         => '',
+            'pay_time'        => $isPay ? time() : 0,
+        ];
+//        print_r($orderData);die;
+        $stockSku = [$skuId => $goods['buySum']];
+
+        Db::startTrans();
+        try {
+            $orderId = DbOrder::addOrder($orderData);
+            if (empty($orderId)) {
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+            foreach ($supplierData as $sdkey => $sdval) {
+                $supplierData[$sdkey]['order_id'] = $orderId;
+            }
+            $childOrder    = DbOrder::addOrderChilds($supplierData);
+            $childSupplier = $childOrder->toArray();
+            $childSupplier = array_column($childSupplier, 'id', 'supplier_id');
+            foreach ($orderGoodsData as $ogdK => $ogdV) {
+                $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
+            }
+            DbOrder::addOrderGoods($orderGoodsData);
+            DbGoods::decStock($stockSku);
+            DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
+            if (!empty($tradingData)) {
+                DbOrder::addLogTrading($tradingData);
+            }
+            if ($isPay) {
+                $redisListKey = Config::get('rediskey.order.redisOrderBonus');
+                $this->redis->rPush($redisListKey, $orderId);
+            }
+            $this->resetUserInfo($uid);
+            Db::commit();
+            return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3009'];
+        }
+    }
+
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $goodsSku = $goodsSku[0];
@@ -386,7 +535,7 @@ class Order extends CommonIndex {
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
             if ($userInfo['balance_freeze'] == '2') {//商票未冻结
                 if ($summary['total_price'] > $userInfo['balance']) {
-                    $deductionMoney = $userInfo['balance'];//可支付的商票
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商票
                     $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
                 } else {
                     $isPay          = true;//可以直接商票支付完成
