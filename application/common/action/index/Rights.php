@@ -21,7 +21,7 @@ class Rights extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        $userInfo = DbUser::getUserInfo(['id'=>$uid],'user_identity');
+        $userInfo = DbUser::getUserInfo(['id'=>$uid],'user_identity',true);
         if ($userInfo['user_identity']>1) {
             return ['code' => '3004','msg' => '当前身份等级大于或等于钻石会员，无法领取'];
         }
