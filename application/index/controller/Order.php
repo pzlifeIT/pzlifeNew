@@ -333,7 +333,7 @@ class Order extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} pay_type 支付类型 1.支付宝 2.微信 3.银联 4.线下 [目前只支持微信]
      * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员500
-     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {String} parent_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type和pay_type必须是数字
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/createMemberOrder
@@ -355,6 +355,34 @@ class Order extends MyController {
         }
         $parent_id = deUid($parent_id);
         $result    = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询订单物流分包信息
+     * @apiDescription   getOrderSubpackage
+     * @apiGroup         index_order
+     * @apiName          getOrderSubpackage
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo长度必须为23位 / 3002.con_id长度为32位或者不能为空 /3004:订单不存在 / 3005:uid为空 / 3006:未发货的订单无法查询分包信息
+     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSampleRequest /index/order/getOrderSubpackage
+     * @author rzc
+     */
+    public function getOrderSubpackage(){
+        $conId   = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        if (strlen($orderNo) != 23) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->order->getOrderSubpackage($orderNo, $conId);
         return $result;
     }
 }

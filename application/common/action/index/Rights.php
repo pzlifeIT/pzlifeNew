@@ -14,7 +14,7 @@ class Rights extends CommonIndex {
      * @param $con_id
      * @param $parent_id
      * @return array
-     * @author zyr
+     * @author rzc
      */
     public function receiveDiamondvip($con_id,$parent_id){
         $uid = $this->getUidByConId($con_id);
@@ -56,7 +56,7 @@ class Rights extends CommonIndex {
      * 判断会员是否有分享钻石接龙的的资格
      * @param $parent_id
      * @return array
-     * @author zyr
+     * @author rzc
      */
     public function IsGetDominos($parent_id){
         $userInfo = DbUser::getUserInfo(['id'=>$parent_id],'user_identity',true);
@@ -75,7 +75,7 @@ class Rights extends CommonIndex {
      * 判断登录会员钻石接龙的的名额是否用完
      * @param $parent_id
      * @return array
-     * @author zyr
+     * @author rzc
      */
     public function IsBossDominos($con_id){
         $uid = $this->getUidByConId($con_id);
@@ -91,6 +91,27 @@ class Rights extends CommonIndex {
             return ['code' => '3005','分享用户没有分享机会'];
         } else {
             return ['code' => 200];
+        }
+    }
+
+    /**
+     * 获取用户红包提示
+     * @param $con_id
+     * @return array
+     * @author rzc
+     */
+    public function getDominosBalanceHint($con_id){
+        $uid = $this->getUidByConId($con_id);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $redisListKey = Config::get('redisKey.order.redisMemberShare');
+        $uer_balance_hint = $this->redis->hgetall($this->redisListKey . $uid);
+        if ($uer_balance_hint) {
+            $this->redis->hdel($this->redisListKey . $uid);
+            return ['code' => 200,'msg' => '用户有到账红包'];
+        }else{
+            return ['code' => '3000'];
         }
     }
 
