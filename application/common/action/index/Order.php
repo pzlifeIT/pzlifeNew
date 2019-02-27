@@ -339,8 +339,8 @@ class Order extends CommonIndex {
                         $totalFreightPrice = bcadd(bcmul(bcsub(ceil($freightVolume), 1, 2), $freightList['after_price'], 2), $freightList['price'], 2);
                     }
                 }
-                $freightSupplierPrice[$freightList['supid']] = $totalFreightPrice;
             }
+            $freightSupplierPrice[$freightList['supid']] = $totalFreightPrice;
         }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice];
