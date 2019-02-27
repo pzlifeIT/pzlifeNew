@@ -66,7 +66,7 @@ class User extends CommonIndex {
                 $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             }
             if (!empty($userRelationId)) {
-                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
             }
             DbUser::updateUser(['last_time' => time()], $uid);
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
@@ -152,7 +152,7 @@ class User extends CommonIndex {
         try {
             $conId = $this->createConId();
             if (!empty($userRelationId)) {
-                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
             }
             if (!empty($updateData)) {
                 DbUser::updateUser($updateData, $uid);
@@ -270,7 +270,7 @@ class User extends CommonIndex {
             } else {//老版本用户
                 DbUser::updateUser($data, $uid);
                 if (!empty($userRelationId)) {
-                    DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+                    DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
                 }
             }
             $conId = $this->createConId();
@@ -362,7 +362,7 @@ class User extends CommonIndex {
         Db::startTrans();
         try {
             if (!empty($userRelationId)) {
-                DbUser::updateUserRelation(['relation' => $buid . ',' . $id], $userRelationId);
+                DbUser::updateUserRelation(['relation' => $buid . ',' . $id, 'pid' => $buid], $userRelationId);
             }
             DbUser::updateUserCon(['con_id' => $conId], $userCon['id']);
             DbUser::updateUser(['last_time' => time()], $id);
@@ -497,7 +497,7 @@ class User extends CommonIndex {
             }
         }
         if (!empty($userRelationId)) {
-            DbUser::updateUserRelation(['relation' => $buid . ',' . $uid], $userRelationId);
+            DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
         }
         return ['code' => 200];
     }
@@ -561,7 +561,7 @@ class User extends CommonIndex {
      * @author zyr
      */
     private function saveUser($id, $user) {
-        $saveTime = 600;//保存10分钟
+        $saveTime = 300;//保存5分钟
         $this->redis->hMSet($this->redisKey . 'userinfo:' . $id, $user);
         $this->redis->expireAt($this->redisKey . 'userinfo:' . $id, bcadd(time(), $saveTime, 0));//设置过期
     }
