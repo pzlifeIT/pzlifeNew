@@ -122,7 +122,7 @@ class Order extends CommonIndex {
                 $ggList = [];
                 foreach ($glList as $kg => $g) {
                     if (in_array($s['id'], array_keys($shopList))) {
-                        $bSum        = $shopList[$s['id']];//店铺购买的数量
+                        $bSum        = $num;//店铺购买的数量
                         $g['buySum'] = $bSum;
                         $ggList[$kg] = $g;
                     }
