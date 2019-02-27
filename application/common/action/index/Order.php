@@ -67,6 +67,137 @@ class Order extends CommonIndex {
         }
     }
 
+    public function quickSettlement($conId, $buid, $skuId, $num, $userAddressId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $cityId = 0;
+        if (!empty($userAddressId)) {
+            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
+            if (empty($userAddress)) {
+                return ['code' => '3003'];
+            }
+            $cityId = $userAddress['city_id'];
+        }
+        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
+        $balance = $balance['balance'] ?? 0;
+        $summary = $this->quickSummary($uid, $buid, $skuId, $num, $cityId);
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        $shopList     = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image');//购买的所有店铺信息列表
+        $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
+        $supplierId   = $summary['goods_list'][0]['supplier_id'];//供应商id
+        $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+
+        $supplier = [];
+        foreach ($supplierList as $sl) {
+            $glList = [];
+            $sList  = [];//门店
+            foreach ($summary['goods_list'] as $gl) {
+                if ($gl['supplier_id'] == $sl['id']) {
+                    unset($gl['freight_id']);
+                    unset($gl['cost_price']);
+                    unset($gl['margin_price']);
+                    unset($gl['weight']);
+                    unset($gl['volume']);
+                    unset($gl['spec']);
+                    unset($gl['status']);
+                    unset($gl['stock']);
+                    unset($gl['supplier_id']);
+                    unset($gl['buySum']);
+                    unset($gl['shopBuySum']);
+                    $glList[$gl['id']] = $gl;
+//                    $shopKey           = array_keys($cart[$gl['id']]['track']);
+                    $shopKey = array_keys($shopList);
+                    foreach ($shopKey as $s) {
+                        if (!isset($sList[$s])) {
+                            $sList[$s] = $shopList[$s];
+                        }
+                    }
+                }
+            }
+            foreach ($sList as $sk => $s) {
+                $ggList = [];
+                foreach ($glList as $kg => $g) {
+                    if (in_array($s['id'], array_keys($shopList))) {
+                        $bSum        = $shopList[$s['id']];//店铺购买的数量
+                        $g['buySum'] = $bSum;
+                        $ggList[$kg] = $g;
+                    }
+                }
+                $sList[$sk]['goods_list'] = $ggList;
+            }
+            $sl['shop_list'] = $sList;
+            array_push($supplier, $sl);
+        }
+        unset($summary['goods_list']);
+        $summary['supplier_list'] = $supplier;
+        $summary['balance']       = $balance;
+        return $summary;
+    }
+
+    private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = $goodsSku[0];
+        if ($goodsSku['stock'] < $num) {
+            return ['code' => '3007'];//库存不足商品
+        }
+        $shopInfo                = DbShops::getShopInfo('id', ['uid' => $buid]);
+        $shopId                  = $shopInfo['id'];
+        $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
+        $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
+        $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
+        $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
+        $goodsSku['status']      = $goodsSku['goods']['status'];
+        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr']        = array_column($attr, 'attr_name');
+        unset($goodsSku['goods']);
+        $goodsSku['buySum']     = $num;
+        $goodsSku['shopBuySum'] = [$shopId => $num];
+        $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2);//商品总价
+
+        $distrProfits         = $this->getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);//可分配利润
+        $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
+        $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);
+        $freightPrice         = bcmul($goodsSku['retail_price'], $num, 2);//同一个供应商模版id的商品价格累加
+        $freightCount         = bcmul(1, $num, 2);//同一个供应商模版id的商品数量累加
+        $freightWeight        = bcmul($goodsSku['weight'], $num, 2);//同一个供应商模版id的商品重量累加
+        $freightVolume        = bcmul($goodsSku['volume'], $num, 2);//同一个供应商模版id的商品体积累加
+
+        $totalFreightPrice    = 0;
+        $freightSupplierPrice = [];//各个供应商的运费
+        if (!empty($cityId)) {
+            /* 运费模版 运费计算 start */
+            $freightId   = $goodsSku['freight_id'];
+            $freightList = DbGoods::getFreightAndDetail([['freight_id', 'in', [$freightId]]], $cityId, 'id,freight_id,price,after_price,total_price,unit_price', 'id,supid,stype', 'freight_detail_id,city_id', [$freightId]);
+            if (empty($freightList)) {
+                return ['code' => '3006'];//商品不支持配送
+            }
+            $freightList = array_values($freightList)[0];
+            if ($freightList['total_price'] > $freightPrice) {//该供应商的当前运费模版下购买的总价超过包邮价可以包邮
+                if ($freightList['stype'] == 1) {//件数
+                    if ($freightList['unit_price'] > $freightCount) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        $totalFreightPrice = bcadd(bcmul(bcsub($freightCount, 1, 2), $freightList['after_price'], 2), $freightList['price'], 2);
+                    }
+                } else if ($freightList['stype'] == 2) {//重量
+                    if ($freightList['unit_price'] > $freightWeight) {//购买重量超过当前模版的满件包邮条件可以包邮
+                        $totalFreightPrice = bcadd(bcmul(bcsub(ceil($freightWeight), 1, 2), $freightList['after_price'], 2), $freightList['price'], 2);
+                    }
+                } else if ($freightList['stype'] == 3) {//体积
+                    if ($freightList['unit_price'] > $freightVolume) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        $totalFreightPrice = bcadd(bcmul(bcsub(ceil($freightVolume), 1, 2), $freightList['after_price'], 2), $freightList['price'], 2);
+                    }
+                }
+                $freightSupplierPrice[$freightList['supid']] = $totalFreightPrice;
+            }
+        }
+        $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
+        return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice];
+    }
+
+
     /**
      * 结算页面
      * @param $conId
@@ -478,7 +609,7 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function getRebate($distrProfits, $num = 1) {
-        $rebate = bcmul($distrProfits, 0.75, 2);
+        $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
     }
@@ -508,7 +639,7 @@ class Order extends CommonIndex {
      */
     private function getIntegral($retailPrice, $costPrice, $marginPrice, $num = 1) {
         $profits  = bcsub(bcsub($retailPrice, $costPrice, 2), $marginPrice, 2);//利润(售价-进价-其他成本)
-        $integral = bcmul($profits, 2, 0);
+        $integral = bcmul($profits, 2, 5);
         $integral = bcmul($integral, $num, 0);
         return $integral;
     }
@@ -609,7 +740,7 @@ class Order extends CommonIndex {
                     foreach ($order_goods_num as $ogn => $goods_num) {
                         if ($goods_num['sku_id'] == $goods['sku_id']) {
                             $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                            $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id'=>$goods['sku_id']], 'sku_image', true)['sku_image'];
+                            $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
                         }
@@ -659,7 +790,7 @@ class Order extends CommonIndex {
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id'=>$goods['sku_id']], 'sku_image', true)['sku_image'];
+                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                         $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                      += $goods['integral'] * $goods_num['goods_num'];
                     }
@@ -748,6 +879,7 @@ class Order extends CommonIndex {
 
     }
 
+
     /**
      * 确认收货
      * @param $conId
@@ -755,7 +887,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function confirmOrder($orderNo,$conId){
+    public function confirmOrder($orderNo, $conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -764,8 +896,8 @@ class Order extends CommonIndex {
         if (empty($order)) {
             return ['code' => '3003'];//没有可确认的订单
         }
-        DbOrder::updataOrder(['order_status'=>6], $order['id']);
-        return ['code' => 200,'msg' =>'确认成功'];
+        DbOrder::updataOrder(['order_status' => 6], $order['id']);
+        return ['code' => 200, 'msg' => '确认成功'];
     }
 
     /**
@@ -775,7 +907,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOrderSubpackage ($order_no, $conId){
+    public function getOrderSubpackage($order_no, $conId) {
         $uid = $this->getUidByConId($conId);
         // $uid = 23697;
         if (empty($uid)) {
@@ -785,40 +917,40 @@ class Order extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
-        
-        if ($result['order_status'] < 5 ) {
-            return ['code' => '3006','msg' => '未发货的订单无法查询分包信息'];
+
+        if ($result['order_status'] < 5) {
+            return ['code' => '3006', 'msg' => '未发货的订单无法查询分包信息'];
         }
-        $order_child   = DbOrder::getOrderChild('id', ['order_id' => $result['id']]);
+        $order_child  = DbOrder::getOrderChild('id', ['order_id' => $result['id']]);
         $order_childs = [];
-        
+
         foreach ($order_child as $key => $value) {
             $order_childs[] = $value['id'];
         }
-        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id' ,'IN', $order_childs]]);
-       
+        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
+
         $order_goods_ids = [];
         foreach ($order_goods_id as $goods => $goods_id) {
             $order_goods_ids[] = $goods_id['id'];
         }
         // print_r($order_goods_id);die;
-        $has_order_express =  DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id' ,'IN', $order_goods_ids]],false,true );
-        $order_subpackage = [];
+        $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
+        $order_subpackage  = [];
         foreach ($has_order_express as $order => $express) {
-            $where = [
+            $where               = [
                 'express_no'   => $express['express_no'],
                 'express_key'  => $express['express_key'],
                 'express_name' => $express['express_name']
             ];
-            $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id',$where);
+            $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
             foreach ($has_express_goodsid as $has_express => $goods) {
-                $express_goods= DbOrder::getOrderGoods('goods_name,sku_json', [['id' ,'=', $goods['order_goods_id']]]);
+                $express_goods            = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]]);
                 $express['express_goods'] = $express_goods;
             }
             $order_subpackage[] = $express;
         }
         $package_num = count($has_order_express);
-        return ['code' => 200 ,'package_num'=>$package_num,'order_no'=>$order_no,'order_subpackage' => $order_subpackage];
+        return ['code' => 200, 'package_num' => $package_num, 'order_no' => $order_no, 'order_subpackage' => $order_subpackage];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
