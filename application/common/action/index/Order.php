@@ -783,6 +783,9 @@ class Order extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
+        if ($result['order_status'] < 5 ) {
+            return ['code' => '3006','msg' => '未发货的订单无法查询分包信息'];
+        }
         $order_child   = DbOrder::getOrderChild('id', ['order_id' => $result['id']]);
         $order_childs = [];
         

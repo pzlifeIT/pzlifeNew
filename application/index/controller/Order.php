@@ -291,7 +291,7 @@ class Order extends MyController {
      * @apiName          getOrderSubpackage
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} order_no 订单号
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type和pay_type必须是数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo长度必须为23位 / 3002.con_id长度为32位或者不能为空 /3004:订单不存在 / 3005:uid为空 / 3006:未发货的订单无法查询分包信息
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSampleRequest /index/order/getOrderSubpackage
      * @author rzc
