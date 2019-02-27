@@ -609,6 +609,7 @@ class Order extends CommonIndex {
                     foreach ($order_goods_num as $ogn => $goods_num) {
                         if ($goods_num['sku_id'] == $goods['sku_id']) {
                             $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                            $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id'=>$goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
                         }
@@ -658,6 +659,7 @@ class Order extends CommonIndex {
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
+                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id'=>$goods['sku_id']], 'sku_image', true)['sku_image'];
                         $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                      += $goods['integral'] * $goods_num['goods_num'];
                     }
