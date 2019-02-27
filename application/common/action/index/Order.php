@@ -781,10 +781,11 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $result = DbOrder::getOrder('id', ['uid' => $uid, 'order_no' => $order_no], true);
+        $result = DbOrder::getOrder('id,order_status', ['uid' => $uid, 'order_no' => $order_no], true);
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
+        
         if ($result['order_status'] < 5 ) {
             return ['code' => '3006','msg' => '未发货的订单无法查询分包信息'];
         }
