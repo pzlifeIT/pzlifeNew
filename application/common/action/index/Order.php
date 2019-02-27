@@ -746,6 +746,13 @@ class Order extends CommonIndex {
 
     }
 
+    /**
+     * 确认收货
+     * @param $conId
+     * @param $orderNo
+     * @return array
+     * @author rzc
+     */
     public function confirmOrder($orderNo,$conId){
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -757,6 +764,55 @@ class Order extends CommonIndex {
         }
         DbOrder::updataOrder(['order_status'=>6], $order['id']);
         return ['code' => 200,'msg' =>'确认成功'];
+    }
+
+    /**
+     * 查询订单分包
+     * @param $conId
+     * @param $order_no
+     * @return array
+     * @author rzc
+     */
+    public function getOrderSubpackage ($order_no, $conId){
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
+        if (empty($uid)) {
+            return ['code' => '3005'];
+        }
+        $result = DbOrder::getOrder('id', ['uid' => $uid, 'order_no' => $order_no], true);
+        if (empty($result)) {
+            return ['code' => '3004', 'msg' => '订单不存在'];
+        }
+        $order_child   = DbOrder::getOrderChild('id', ['order_id' => $result['id']]);
+        $order_childs = [];
+        
+        foreach ($order_child as $key => $value) {
+            $order_childs[] = $value['id'];
+        }
+        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id' ,'IN', $order_childs]]);
+       
+        $order_goods_ids = [];
+        foreach ($order_goods_id as $goods => $goods_id) {
+            $order_goods_ids[] = $goods_id['id'];
+        }
+        // print_r($order_goods_id);die;
+        $has_order_express =  DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id' ,'IN', $order_goods_ids]],false,true );
+        $order_subpackage = [];
+        foreach ($has_order_express as $order => $express) {
+            $where = [
+                'express_no'   => $express['express_no'],
+                'express_key'  => $express['express_key'],
+                'express_name' => $express['express_name']
+            ];
+            $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id',$where);
+            foreach ($has_express_goodsid as $has_express => $goods) {
+                $express_goods= DbOrder::getOrderGoods('goods_name,sku_json', [['id' ,'=', $goods['order_goods_id']]]);
+                $express['express_goods'] = $express_goods;
+            }
+            $order_subpackage[] = $express;
+        }
+        $package_num = count($has_order_express);
+        return ['code' => 200 ,'package_num'=>$package_num,'order_no'=>$order_no,'order_subpackage' => $order_subpackage];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
