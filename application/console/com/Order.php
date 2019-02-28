@@ -468,7 +468,7 @@ class Order extends Pzlife {
         try {
             if ($payMoney == 500) {
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
-            } elseif ($payMoney == 100) {
+            } elseif ($payMoney == 1) {
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
                 if (!$fromDiamondvipGet) {
