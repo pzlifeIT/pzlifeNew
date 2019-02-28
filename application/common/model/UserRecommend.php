@@ -13,6 +13,8 @@ class UserRecommend extends Model {
     // 设置当前模型的数据库连接
     protected $connection = '';
     protected $deleteTime = 'delete_time';
+    protected $autoWriteTimestamp = true;
+    protected $updateTime = false;//关闭update_time
     protected $defaultSoftDelete = 0;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
