@@ -183,7 +183,7 @@ class Payment {
                     'third_time'     => time(),
                 ];
             } else if ($logPayRes['payment'] == 2) {//2.购买会员订单
-                $memOrderRes  = DbOrder::getMemberOrder(['id' => $logPayRes['order_id'], 'pay_status' => 1], 'id');
+                $memOrderRes  = DbOrder::getMemberOrder(['id' => $logPayRes['order_id'], 'pay_status' => 1], 'id', true);
                 $memOrderData = [
                     'pay_time'   => time(),
                     'pay_status' => 4,
@@ -199,7 +199,7 @@ class Payment {
                         $this->redis->rPush($redisListKey, $orderRes['id']);
                     }
                     if (!empty($memOrderData)) {
-                        DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes]);
+                        DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes['id']]);
                         $redisListKey = Config::get('rediskey.order.redisMemberOrder');
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
