@@ -106,9 +106,10 @@ class Rights extends CommonIndex {
             return ['code' => '3003'];
         }
         $redisListKey = Config::get('redisKey.order.redisMemberShare');
-        $uer_balance_hint = $this->redis->hgetall($this->redisListKey . $uid);
+        $uer_balance_hint = $this->redis->hgetall($redisListKey.$uid);
+        
         if ($uer_balance_hint) {
-            $this->redis->hdel($this->redisListKey . $uid);
+            $this->redis->hdel($redisListKey . $uid);
             return ['code' => 200,'msg' => '用户有到账红包'];
         }else{
             return ['code' => '3000'];

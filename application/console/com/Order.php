@@ -273,7 +273,8 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-//        $this->redis->rPush($redisListKey, 1);
+        // $this->redis->rPush($redisListKey, 3);
+        print_r($this->redis->rPush($redisListKey, 3));die;
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -464,6 +465,8 @@ class Order extends Pzlife {
     private function diamondvipSettlement($uid, $payMoney, $from_uid) {
         $redisListKey = Config::get('redisKey.order.redisMemberShare');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
+        
+        
         Db::startTrans();
         try {
             if ($payMoney == 500) {
@@ -471,6 +474,7 @@ class Order extends Pzlife {
             } elseif ($payMoney == 1) {
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
+                
                 if (!$fromDiamondvipGet) {
 
                     if ($from_user['user_identity'] > 1) {
@@ -494,8 +498,9 @@ class Order extends Pzlife {
                             ]
                         );
                         /* 写入缓存 */
-                        $this->redis->expire($this->redisListKey . $from_uid, 2592000);
-                        $this->redis->hset($this->redisListKey . $from_uid, $from_uid, time());
+                        $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
+                        $this->redis->expire($redisListKey . $from_uid, 2592000);
+                        
                     }
                 } else {
                     /* 给上级 */
@@ -534,8 +539,9 @@ class Order extends Pzlife {
                                 ]
                             );
                             /* 写入缓存 */
-                            $this->redis->expire($this->redisListKey . $share_from_user['id'], 2592000);
-                            $this->redis->hset($this->redisListKey . $share_from_user['id'], $share_from_user['id'], time());
+                            $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
+                            $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
+                            
                         }
                 }
 
@@ -549,6 +555,7 @@ class Order extends Pzlife {
             Db::commit();
             exit('ok!');
         } catch (\Exception $e) {
+            print_r($e);
             Db::rollback();
             exit('rollback');
         }
@@ -560,6 +567,9 @@ class Order extends Pzlife {
     private function diamondvipGet($uid) {
         $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
         $diamondvipGet    = Db::query($diamondvipGetSql);
+        if (!$diamondvipGet) {
+            return [];
+        }
         return $diamondvipGet[0];
     }
 
@@ -567,7 +577,7 @@ class Order extends Pzlife {
      * @param $uid
      */
     private function getUserInfo($uid) {
-        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and uid = %d", $uid);
+        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
         $userInfo   = Db::query($getUserSql);
         return $userInfo[0];
     }
