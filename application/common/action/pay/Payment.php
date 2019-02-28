@@ -35,9 +35,9 @@ class Payment {
             } else if ($memberOrderRow['pay_status'] == 4) {//已付款
                 return ['code' => '3006'];//订单已付款
             }
-            if ($memberOrderRow['create_time'] < date('Y-m-d H:i:s', time() - $orderOutTime)) {
-                return ['code' => '3007'];//订单已过期
-            }
+//            if ($memberOrderRow['create_time'] < date('Y-m-d H:i:s', time() - $orderOutTime)) {
+//                return ['code' => '3007'];//订单已过期
+//            }
             $orderId    = $memberOrderRow['id'];
             $payMoney   = $memberOrderRow['pay_money'];//要支付的金额
             $uid        = $memberOrderRow['uid'];
