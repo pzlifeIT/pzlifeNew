@@ -274,7 +274,6 @@ class Order extends Pzlife {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
         // $this->redis->rPush($redisListKey, 3);
-        print_r($this->redis->rPush($redisListKey, 3));die;
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
