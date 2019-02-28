@@ -988,6 +988,7 @@ class Order extends CommonIndex {
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
+            $pay_money = 1;/* 测试一元 */
         } elseif ($user_type == 2) {
             $pay_money = 15000;
         } elseif ($user_type == 3) {
