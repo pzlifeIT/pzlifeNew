@@ -381,6 +381,7 @@ class User extends CommonIndex {
                 $this->redis->zDelete($this->redisConIdTime, $conId);
                 $this->redis->hDel($this->redisConIdUid, $conId);
             }
+            Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
