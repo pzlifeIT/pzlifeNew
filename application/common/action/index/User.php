@@ -364,7 +364,6 @@ class User extends CommonIndex {
             if (!empty($userRelationId)) {
                 DbUser::updateUserRelation(['relation' => $buid . ',' . $id, 'pid' => $buid], $userRelationId);
             }
-
             if (empty($userCon)) {
                 DbUser::addUserCon(['uid' => $id, 'con_id' => $conId]);
             } else {
@@ -372,8 +371,10 @@ class User extends CommonIndex {
             }
             DbUser::updateUser(['last_time' => time()], $id);
             $this->saveOpenid($id, $wxInfo['openid'], $platform);
-            $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
-            $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
+            if(!empty($userCon)){
+                $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
+                $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
+            }
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
             $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $id);
             if ($conUid === false) {
