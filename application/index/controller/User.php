@@ -422,4 +422,33 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 获取用户二维码
+     * @apiDescription   getUserQrcode
+     * @apiGroup         index_user
+     * @apiName          getUserQrcode
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {String} link 生成二维码内容
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:link不能为空
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/getUserQrcode
+     * @return array
+     * @author rzc
+     */
+    public function getUserQrcode(){
+        $link = trim($this->request->post('link'));
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (empty($link)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->user->getUserQrcode($link);
+        return $result;
+    }
+
 }

@@ -10,6 +10,7 @@ use think\Db;
 use \upload\Imageupload;
 use third\Zthy;
 use \third\PHPTree;
+use Endroid\QrCode\QrCode;
 
 class Index extends MyController {
     protected $beforeActionList = [
@@ -155,4 +156,21 @@ class Index extends MyController {
 ////        $upload->deleteImage('head_01.jpg');
 //        die;
 //    }
+
+    public function Qrcode(){
+        $link       = 'https://imagesdev.pzlive.vip/20190105/839ef10d157330a451e670c5b55604015c308e165f3d6.png';
+        $sha1       = sha1($link);
+        $qrcode_dir = 'https://imagesdev.pzlive.vip' . '/qrcode/' . substr($sha1, 0, 2) . '/' . substr($sha1, 2, 3) . '/';
+        if (!file_exists($qrcode_dir)) mkdir($qrcode_dir, 0777, true);
+        $file_name = $qrcode_dir . $sha1 . '.png';
+        header('Content-Type: image/png');
+//        if (is_file($file_name)) {
+//            echo file_get_contents($file_name);
+//        } else {
+            $qrCode = new QrCode($link);
+            echo $qrCode->writeString();
+//            $qrCode->writeFile($file_name);
+//        }
+        die();
+    }
 }
