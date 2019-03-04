@@ -12,12 +12,15 @@ class CommonIndex {
     /**
      * user模块
      */
-    protected $redisKey = 'index:user:';
-    protected $redisConIdTime = 'index:user:conId:expiration';//conId到期时间的zadd
-    protected $redisConIdUid = 'index:user:conId:uid';//conId和uid的hSet
+    protected $redisKey;
+    protected $redisConIdTime;//conId到期时间的zadd
+    protected $redisConIdUid;//conId和uid的hSet
 
     public function __construct() {
-        $this->redis = Phpredis::getConn();
+        $this->redis          = Phpredis::getConn();
+        $this->redisKey       = Config::get('rediskey.user.redisKey');
+        $this->redisConIdTime = Config::get('rediskey.user.redisConIdTime');
+        $this->redisConIdUid  = Config::get('rediskey.user.redisConIdUid');
     }
 
     /**
@@ -89,7 +92,7 @@ class CommonIndex {
     }
 
     protected function resetUserInfo($uid) {
-        $user = DbUser::getUser(['id' => $uid]);
+        $user     = DbUser::getUser(['id' => $uid]);
         $saveTime = 300;//保存5分钟
         $this->redis->hMSet($this->redisKey . 'userinfo:' . $uid, $user);
         $this->redis->expireAt($this->redisKey . 'userinfo:' . $uid, bcadd(time(), $saveTime, 0));//设置过期
