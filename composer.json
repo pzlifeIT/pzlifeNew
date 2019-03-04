@@ -20,7 +20,8 @@
         "topthink/framework": "5.1.*",
         "qiniu/php-sdk": "^7.2",
         "jjonline/aliyun-dysms-php-sdk": "^2.0",
-        "houdunwang/wechat": "^2.0"
+        "houdunwang/wechat": "^2.0",
+        "endroid/qr-code": "^3.5"
     },
     "autoload": {
         "psr-4": {
