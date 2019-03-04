@@ -15,6 +15,9 @@ class AdminController extends Controller {
         if (Config::get('app.deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
         }
+        if (Config::get('deploy') == 'production') {//生产环境
+            header('Access-Control-Allow-Origin:*');
+        }
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
