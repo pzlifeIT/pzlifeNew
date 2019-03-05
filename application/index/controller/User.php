@@ -101,7 +101,8 @@ class User extends MyController {
         if (strlen($code) != 32) {
             return ['code' => '3002'];//code有误
         }
-        $result = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+        $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
+        $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
         return $result;
     }
 
