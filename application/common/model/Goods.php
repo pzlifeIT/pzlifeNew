@@ -51,6 +51,16 @@ class Goods extends Model {
         return $status[$value];
     }
 
+    public function getImageAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
+
     public function goodsSku() {
         return $this->hasMany('goodsSku', 'goods_id', 'id');
     }
