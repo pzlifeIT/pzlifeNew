@@ -126,7 +126,7 @@ class Recommend extends AdminController
         $model_order     = trim($this->request->post('model_order'));
         $model_son_order = trim($this->request->post('model_son_order'));
         $tier            = trim($this->request->post('tier'));
-        $is_show            = trim($this->request->post('is_show'));
+        $is_show         = trim($this->request->post('is_show'));
         $model_order     = $model_order ? $model_order : 0;
         $parent_id       = $parent_id ? $parent_id : 0;
         $tier            = $tier ? $tier : 1;
