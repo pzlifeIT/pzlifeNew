@@ -31,7 +31,6 @@ class Recommend{
      */
     public function saveRecommend($data,$id = 0){
         $data = $this->delDataEmptyKey($data);
-        
         if (!empty($id)){//更新操作
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
@@ -69,6 +68,16 @@ class Recommend{
                 return ['code' => '3011'];//修改失败
             }
         }else{//添加操作
+            
+        if ($data['parent_id']) {
+            $parent_info = DbRecommend::getRecommends('*',['id' => $$data['parent_id']],true);
+            if (empty($parent_info)) {
+                return ['code' => '3012'];
+            }
+            if ($parent_info['model_id'] != $data['model_id']) {
+                return ['code' => '3013'];
+            }
+        }
             if ($data['tier'] > 1) {
                 if ($data['model_id']<8 && $data['model_id'] > 1) {
                     $model_num = [
