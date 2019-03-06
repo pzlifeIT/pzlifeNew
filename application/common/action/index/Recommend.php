@@ -39,6 +39,6 @@ class Recommend extends CommonIndex {
             }
             // print_r($value);die;
         }
-        return ['code' => 200,'indexShow' => $indexShow ];
+        return ['code' => 200,'recommends' => $indexShow ];
     }
 }
