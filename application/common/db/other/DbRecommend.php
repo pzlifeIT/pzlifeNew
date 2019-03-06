@@ -43,7 +43,8 @@ class DbRecommend {
      */
     public function addRecommends($data){
         $Recommends  = new Recommends;
-        return $Recommends->save($data);
+        $Recommends->save($data);
+        return $Recommends->id;
     }
 
     /**
