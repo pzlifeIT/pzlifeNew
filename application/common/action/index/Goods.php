@@ -17,7 +17,7 @@ class Goods
      */
     public function getCategoryGoods($cate_id, $page, $page_num)
     {
-        $page = $page ? 1 : 1;
+        $page = $page ? $page : 1;
         $page_num = $page_num ? 10 : 10;
         if (!$cate_id) {
             return ['code' => 3002, 'msg' => '参数不存在'];
