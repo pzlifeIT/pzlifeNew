@@ -72,6 +72,7 @@ class Recommend extends MyController {
      * @apiSuccess (recommends[son][third]) {String} goods_subtitle 商品副标题
      * @apiSuccess (recommends[son][third]) {String} goods_image 商品图片
      * @apiSuccess (recommends[son][third]) {String} goods_status 商品状态
+     * @apiSuccess (recommends[son][third]) {String} goods_retail_price 商品零售价
      * @apiSuccess (recommends[son][third]) {String} goods_min_brokerage 商品最小钻石返利
      * @apiSuccess (recommends[son][third]) {String} goods_min_integral_active 商品最小赠送积分
      * @author rzc

@@ -154,6 +154,7 @@ class Recommend{
                                 $recommends_son[$recommend]['goods_subtitle'] = $goods_data['subtitle'];
                                 $recommends_son[$recommend]['goods_image'] = $goods_data['image'];
                                 $recommends_son[$recommend]['goods_status'] = $goods_data['status'];
+                                $recommends_son[$recommend]['goods_retail_price'] = $goods_data['retail_price'];
                                 $recommends_son[$recommend]['goods_min_brokerage'] = $goods_data['min_brokerage'];
                                 $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                             }
@@ -174,6 +175,7 @@ class Recommend{
                                             $third[$thi]['goods_subtitle'] = $goods_data['subtitle'];
                                             $third[$thi]['goods_image'] = $goods_data['image'];
                                             $third[$thi]['goods_status'] = $goods_data['status'];
+                                            $third[$thi]['goods_retail_price'] = $goods_data['retail_price'];
                                             $third[$thi]['goods_min_brokerage'] = $goods_data['min_brokerage'];
                                             $third[$thi]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                                         }
@@ -219,6 +221,7 @@ class Recommend{
                                 $recommends_son[$recommend]['goods_subtitle'] = $goods_data['subtitle'];
                                 $recommends_son[$recommend]['goods_image'] = $goods_data['image'];
                                 $recommends_son[$recommend]['goods_status'] = $goods_data['status'];
+                                $recommends_son[$recommend]['goods_retail_price'] = $goods_data['retail_price'];
                                 $recommends_son[$recommend]['goods_min_brokerage'] = $goods_data['min_brokerage'];
                                 $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                             }
@@ -239,6 +242,7 @@ class Recommend{
                                             $third[$thi]['goods_subtitle'] = $goods_data['subtitle'];
                                             $third[$thi]['goods_image'] = $goods_data['image'];
                                             $third[$thi]['goods_status'] = $goods_data['status'];
+                                            $third[$thi]['goods_retail_price'] = $goods_data['retail_price'];
                                             $third[$thi]['goods_min_brokerage'] = $goods_data['min_brokerage'];
                                             $third[$thi]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                                         }
@@ -326,11 +330,13 @@ class Recommend{
                 $brokerage[$sku['id']] = $sku['brokerage'];
                 $integral_active[$sku['id']] = $sku['integral_active'];
             }
+            $goods_data['retail_price'] = min($retail_price);
             $goods_data['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
             $goods_data['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
         }else{
             $goods_data['min_brokerage'] = 0;
             $goods_data['min_integral_active'] = 0;
+            $goods_data['retail_price'] = 0;
         }
         return $goods_data;
     }
