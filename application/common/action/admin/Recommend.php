@@ -2,6 +2,7 @@
 namespace app\common\action\admin;
 
 use app\facade\DbRecommend;
+use app\facade\DbGoods;
 use think\Db;
 use Config;
 use cache\Phpredis;
@@ -115,7 +116,7 @@ class Recommend{
                 }
                 if ($add) {
                     Db::commit();
-                    return ['code' => '200'];
+                    return ['code' => '200','add_id'=>$add];
                 }
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
@@ -136,18 +137,54 @@ class Recommend{
     public function getRecommendOrderBy(){
         
         $recommends = [];
-        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order',['tier'=>1],false,'model_order','desc');
+        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_order','desc');
         if ($recommends) {
             foreach ($recommends as $key => $value) {
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'model_order','desc');
                 if ($recommends_son) {
-                    if ($value['model_id'] == 10){
-                        foreach ($recommends_son as $recommend => $son) {
+                    foreach ($recommends_son as $recommend => $son) {
+                        if ($son['show_type'] == 2 && $son['show_data']) {
+                            $goods_data = $this->getGoods($son['show_data']);
+                            if ($goods_data){
+                                $recommends_son[$recommend]['goods_id'] = $goods_data['id'];
+                                $recommends_son[$recommend]['supplier_id'] = $goods_data['supplier_id'];
+                                $recommends_son[$recommend]['cate_id'] = $goods_data['cate_id'];
+                                $recommends_son[$recommend]['goods_name'] = $goods_data['goods_name'];
+                                $recommends_son[$recommend]['goods_title'] = $goods_data['title'];
+                                $recommends_son[$recommend]['goods_subtitle'] = $goods_data['subtitle'];
+                                $recommends_son[$recommend]['goods_image'] = $goods_data['image'];
+                                $recommends_son[$recommend]['goods_status'] = $goods_data['status'];
+                                $recommends_son[$recommend]['goods_min_brokerage'] = $goods_data['min_brokerage'];
+                                $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
+                            }
+                        }
+                        if ($value['model_id'] == 10){
                             $third = [];
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'model_order','desc');
+                            if ($third) {
+                                foreach ($third as $thi => $rd) {
+                                    if ($rd['show_type'] == 2 && $rd['show_data']) {
+                                        $goods_data = $this->getGoods($rd['show_data']);
+                                        if ($goods_data){
+                                            $third[$thi]['goods_id'] = $goods_data['id'];
+                                            $third[$thi]['supplier_id'] = $goods_data['supplier_id'];
+                                            $third[$thi]['cate_id'] = $goods_data['cate_id'];
+                                            $third[$thi]['goods_name'] = $goods_data['goods_name'];
+                                            $third[$thi]['goods_title'] = $goods_data['title'];
+                                            $third[$thi]['goods_subtitle'] = $goods_data['subtitle'];
+                                            $third[$thi]['goods_image'] = $goods_data['image'];
+                                            $third[$thi]['goods_status'] = $goods_data['status'];
+                                            $third[$thi]['goods_min_brokerage'] = $goods_data['min_brokerage'];
+                                            $third[$thi]['goods_min_integral_active'] = $goods_data['min_integral_active'];
+                                        }
+                                    }
+                                }
+                            }
                             $recommends_son[$recommend]['third'] = $third;
+
                         }
                     }
+                    
                    
                 }
                 $recommends[$key]['son'] = $recommends_son;
@@ -165,18 +202,54 @@ class Recommend{
         
         $recommends = [];
         $recommends_ids = [];
-        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order',['tier'=>1],false,'model_id','asc');
+        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_id','asc');
         if ($recommends) {
             foreach ($recommends as $key => $value) {
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'id','asc');
                 if ($recommends_son) {
-                    if ($value['model_id'] == 10){
-                        foreach ($recommends_son as $recommend => $son) {
+                    foreach ($recommends_son as $recommend => $son) {
+                        if ($son['show_type'] == 2 && $son['show_data']) {
+                            $goods_data = $this->getGoods($son['show_data']);
+                            if ($goods_data){
+                                $recommends_son[$recommend]['goods_id'] = $goods_data['id'];
+                                $recommends_son[$recommend]['supplier_id'] = $goods_data['supplier_id'];
+                                $recommends_son[$recommend]['cate_id'] = $goods_data['cate_id'];
+                                $recommends_son[$recommend]['goods_name'] = $goods_data['goods_name'];
+                                $recommends_son[$recommend]['goods_title'] = $goods_data['title'];
+                                $recommends_son[$recommend]['goods_subtitle'] = $goods_data['subtitle'];
+                                $recommends_son[$recommend]['goods_image'] = $goods_data['image'];
+                                $recommends_son[$recommend]['goods_status'] = $goods_data['status'];
+                                $recommends_son[$recommend]['goods_min_brokerage'] = $goods_data['min_brokerage'];
+                                $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
+                            }
+                        }
+                        if ($value['model_id'] == 10){
                             $third = [];
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
+                            if ($third) {
+                                foreach ($third as $thi => $rd) {
+                                    if ($rd['show_type'] == 2 && $rd['show_data']) {
+                                        $goods_data = $this->getGoods($rd['show_data']);
+                                        if ($goods_data){
+                                            $third[$thi]['goods_id'] = $goods_data['id'];
+                                            $third[$thi]['supplier_id'] = $goods_data['supplier_id'];
+                                            $third[$thi]['cate_id'] = $goods_data['cate_id'];
+                                            $third[$thi]['goods_name'] = $goods_data['goods_name'];
+                                            $third[$thi]['goods_title'] = $goods_data['title'];
+                                            $third[$thi]['goods_subtitle'] = $goods_data['subtitle'];
+                                            $third[$thi]['goods_image'] = $goods_data['image'];
+                                            $third[$thi]['goods_status'] = $goods_data['status'];
+                                            $third[$thi]['goods_min_brokerage'] = $goods_data['min_brokerage'];
+                                            $third[$thi]['goods_min_integral_active'] = $goods_data['min_integral_active'];
+                                        }
+                                    }
+                                }
+                            }
                             $recommends_son[$recommend]['third'] = $third;
                         }
+                       
                     }
+                    
                    
                 }
                 $recommends[$key]['son'] = $recommends_son;
@@ -220,6 +293,13 @@ class Recommend{
         }
     }
 
+    /**
+     * 查询推荐详情
+     * @param $model_id
+     * @param $tier
+     * @return array
+     * @author rzc
+     */
     public function getRecommendInfo($id){
         $recommends = DbRecommend::getRecommends('*',['id' => $id],true);
             if ($recommends) {
@@ -229,5 +309,88 @@ class Recommend{
                 return ['code' => '3000'];
             }
     }
-    
+
+    function getGoods($goodsid){
+        /* 返回商品基本信息 （从商品库中直接查询）*/
+        $where = [["id", "=", $goodsid], ["status", "=", 1]];
+        $field = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+        $goods_data = DbGoods::getOneGoods($where, $field);
+        if (empty($goods_data)) {
+            return [];
+        }
+        list($goods_spec,$goods_sku) = $this->getGoodsSku($goodsid);
+        if ($goods_sku) {
+            foreach ($goods_sku as $goods => $sku) {
+                
+                $retail_price[$sku['id']] = $sku['retail_price'];
+                $brokerage[$sku['id']] = $sku['brokerage'];
+                $integral_active[$sku['id']] = $sku['integral_active'];
+            }
+            $goods_data['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
+            $goods_data['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+        }else{
+            $goods_data['min_brokerage'] = 0;
+            $goods_data['min_integral_active'] = 0;
+        }
+        return $goods_data;
+    }
+     /**
+     * 获取商品SKU及规格名称等
+     * @param $goods_id
+     * @param $source
+     * @return array
+     * @author rzc
+     */
+    public function getGoodsSku($goods_id)
+    {
+        $field = 'goods_id,spec_id';
+        $where = [["goods_id", "=", $goods_id]];
+        $goods_first_spec = DbGoods::getOneGoodsSpec($where, $field, 1);
+        $goods_spec = [];
+        if ($goods_first_spec) {
+            $field = 'id,spe_name';
+            foreach ($goods_first_spec as $key => $value) {
+                $where = ['id' => $value['spec_id']];
+                $result = DbGoods::getOneSpec($where, $field);
+
+                $goods_attr_field = 'attr_id';
+                $goods_attr_where = ['goods_id' => $goods_id, 'spec_id' => $value['spec_id']];
+                $goods_first_attr = DbGoods::getOneGoodsSpec($goods_attr_where, $goods_attr_field);
+                $attr_where = [];
+                foreach ($goods_first_attr as $goods => $attr) {
+                    $attr_where[] = $attr['attr_id'];
+                }
+                
+                $attr_field = 'id,spec_id,attr_name';
+                $attr_where = [['id', 'in', $attr_where],['spec_id','=',$value['spec_id']]];
+                
+                $result['list'] = DbGoods::getAttrList($attr_where, $attr_field);
+                
+                $goods_spec[] = $result;
+            }
+         
+        }
+         
+        
+        $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
+        // $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
+        $where = [["goods_id", "=", $goods_id],["status", "=",1]];
+        $goods_sku = DbGoods::getOneGoodsSku($where, $field);
+        /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
+        /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
+        foreach ($goods_sku as $goods => $sku) {
+            $goods_sku[$goods]['brokerage'] = bcmul( bcmul(bcsub(bcsub($sku['retail_price'],$sku['cost_price'],4),$sku['margin_price'],2),0.9,2),0.75,2);
+            $goods_sku[$goods]['integral_active'] = bcmul(bcsub(bcsub($sku['retail_price'],$sku['cost_price'],4),$sku['margin_price'],2),2,2);
+            $sku_json = DbGoods::getAttrList( [['id', 'in', $sku['spec']]], 'attr_name');
+            $sku_name = [];
+            if ($sku_json) {
+                foreach ($sku_json as $sj => $json) {
+                    $sku_name[] = $json['attr_name'];
+                }
+            }
+            $goods_sku[$goods]['sku_name'] = $sku_name;
+            
+        }
+        return [$goods_spec, $goods_sku];
+    }
 }
