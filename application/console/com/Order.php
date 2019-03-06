@@ -43,10 +43,10 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             foreach ($order as $o) {
-                $userSql              = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
-                $user                 = Db::query($userSql);
-                $user                 = $user[0];
-                $tradingData          = [
+                $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                $user           = Db::query($userSql);
+                $user           = $user[0];
+                $tradingData    = [
                     'uid'          => $o['uid'],
                     'trading_type' => 1,
                     'change_type'  => 2,
@@ -56,8 +56,8 @@ class Order extends Pzlife {
                     'message'      => '',
                     'create_time'  => time(),
                 ];
-                $orderUpdateSql       = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
-                $userUpdateSql        = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+                $orderUpdateSql = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
+                $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
 //                $logBonusUpdateSql    = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
 //                $logIntegralUpdateSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
                 Db::execute($orderUpdateSql);
@@ -311,7 +311,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 3);
+        $this->redis->rPush($redisListKey, 1);
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -446,7 +446,12 @@ class Order extends Pzlife {
     private function bossSettlement($uid, $fromUid) {
         $buyBossMoney = 5000;//推荐购买boss可获得奖励佣金额度
         //修改用户关系及身份
-        $myBoss           = $this->getBoss($uid);
+        $myBoss = $this->getBoss($uid);
+        if ($myBoss == 1) {
+            $re = $uid;
+        } else {
+            $re = $myBoss . ',' . $uid;
+        }
         $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%" . $uid . ',' . "%'";
         $userOther        = Db::query($otherUserSql);
         $userRelationData = [];
@@ -462,6 +467,9 @@ class Order extends Pzlife {
         $fromUserInfoSql = sprintf("select commission from pz_users where delete_time=0 and id = %d", $fromUid);
         $fromUserInfo    = Db::query($fromUserInfoSql);
         $fromUserInfo    = $fromUserInfo[0];
+        if ($this->getIdentity($uid) == '4') {
+            exit('is_boss');
+        }
         $fromTradingDate = [
             'uid'          => $fromUid,
             'trading_type' => 2,
@@ -471,6 +479,12 @@ class Order extends Pzlife {
             'after_money'  => bcadd($fromUserInfo['commission'], $buyBossMoney, 2),
             'message'      => '',
             'create_time'  => time(),
+        ];
+        $shopData        = [
+            'uid'         => $uid,
+            'shop_right'  => 'all',
+            'status'      => 1,
+            'create_time' => time(),
         ];
         Db::startTrans();
         try {
@@ -482,8 +496,9 @@ class Order extends Pzlife {
             if ($fromUid != 1) {
                 Db::table('pz_users')->where('id', $fromUid)->setInc('commission', $buyBossMoney);
             }
-            Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4]);
-            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1]);
+            $shopId = Db::name('shops')->insertGetId($shopData);
+            Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4, 'bindshop' => $shopId]);
+            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re]);
             Db::name('log_trading')->insert($fromTradingDate);
             Db::commit();
         } catch (\Exception $e) {
