@@ -55,6 +55,7 @@ class Order extends CommonIndex {
             DbOrder::updataOrder($data, $order['id']);//改订单状态
             DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
 //            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
+//            DbOrder::updateLogIntegral(['status' => 3], ['order_no' => $orderNo]);//待结算积分取消结算(待付款取消的订单还未结算分利和积分不需要取消)
             if (!empty($tradingData)) {
                 DbOrder::addLogTrading($tradingData);
             }

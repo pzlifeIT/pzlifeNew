@@ -26,20 +26,6 @@ class User extends Pzlife {
     }
 
     /**
-     * 测试老数据库是否连接
-     *
-     */
-    public function shop() {
-        $mysql_connect = Db::connect(Config::get('database.db_config'));
-        ini_set('memory_limit', '1024M');
-        $shopSql = "SELECT * FROM pre_shop LIMIT 10 ";
-
-        $shop_data = $mysql_connect->query($shopSql);
-        print_r($shop_data);
-        die;
-    }
-
-    /**
      * 用户数据脚本转换
      *
      */

@@ -130,11 +130,12 @@ class DbGoods {
      * @param $where
      * @param $offset
      * @param $pageNum
+     * @param $orderBy
      * @return array
      * @author wujunjie
      * 2019/1/2-10:38
      */
-    public function getGoodsList($field, $where, $offset, $pageNum) {
+    public function getGoodsList($field, $where, $offset, $pageNum, $orderBy = '') {
 //        $obj = Goods::field($field)->withJoin(['supplier'=>['id','name']]);
         $obj = Goods::field($field)->with([
             'supplier'      => function ($query) {
@@ -144,6 +145,9 @@ class DbGoods {
             }]);
         if (!empty($where)) {
             $obj = $obj->where($where);
+        }
+        if (!empty($orderBy)) {
+            $obj = $obj->order($orderBy);
         }
         if (!empty($pageNum)) {
             $obj = $obj->limit($offset, $pageNum);

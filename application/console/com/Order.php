@@ -43,10 +43,10 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             foreach ($order as $o) {
-                $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
-                $user           = Db::query($userSql);
-                $user           = $user[0];
-                $tradingData    = [
+                $userSql              = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                $user                 = Db::query($userSql);
+                $user                 = $user[0];
+                $tradingData          = [
                     'uid'          => $o['uid'],
                     'trading_type' => 1,
                     'change_type'  => 2,
@@ -56,12 +56,14 @@ class Order extends Pzlife {
                     'message'      => '',
                     'create_time'  => time(),
                 ];
-                $orderUpdateSql = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
-                $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
-//                $logBonusUpdateSql = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no=%s", $o['order_no']);
+                $orderUpdateSql       = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
+                $userUpdateSql        = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+//                $logBonusUpdateSql    = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
+//                $logIntegralUpdateSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
                 Db::execute($orderUpdateSql);
                 Db::execute($userUpdateSql);
 //                Db::execute($logBonusUpdateSql);
+//                Db::execute($logIntegralUpdateSql);//待付款取消的订单还未结算分利和积分不需要取消
                 Db::name('log_trading')->insert($tradingData);
             }
             foreach ($orderGoods as $og) {
@@ -79,7 +81,7 @@ class Order extends Pzlife {
 
     /**
      * 分利正式发放到用户账户
-     * 每15天执行一次
+     * 每天执行一次
      */
     public function bonusSend() {
         $this->orderInit();
@@ -189,11 +191,12 @@ class Order extends Pzlife {
 //                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
                 array_push($orderGoods, $ogrVal);
             }
-            $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
-            $user    = Db::query($userSql);
-            $user    = $user[0];
+            $userSql      = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
+            $user         = Db::query($userSql);
+            $user         = $user[0];
+            $integralData = [];
             foreach ($orderGoods as $ogVal) {
-                $o = [
+                $o        = [
                     'order_no'     => $orderNo,
                     'from_uid'     => $uid,
                     'sku_id'       => $ogVal['sku_id'],
@@ -251,12 +254,47 @@ class Order extends Pzlife {
                 $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
                 $o['user_identity'] = 4;
                 array_push($data, $o);
+                if (key_exists($orderId, $integralData)) {
+                    $integralData[$orderId]['result_integral'] += $ogrVal['integral'];
+                } else {
+                    $integralData[$orderId] = ['order_no' => $orderNo, 'result_integral' => $ogrVal['integral'], 'uid' => $uid, 'create_time' => time()];
+                }
             }
         }
         Db::startTrans();
         try {
             if (!empty($data)) {
                 Db::name('log_bonus')->insertAll($data);
+                Db::name('log_integral')->insertAll(array_values($integralData));
+            }
+            Db::commit();
+            exit('ok!');
+        } catch (\Exception $e) {
+            Db::rollback();
+            exit('rollback');
+        }
+    }
+
+    /**
+     * 积分正式发放
+     * 每天结算
+     */
+    public function integralSettlement() {
+        $this->orderInit();
+        $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
+        $times     = bcmul($days, 86400, 0);
+        $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
+        $sql       = sprintf("select id,uid,result_integral from pz_log_integral where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
+        $result    = Db::query($sql);
+        if (empty($result)) {
+            exit('log_integral_null');
+        }
+        Db::startTrans();
+        try {
+            foreach ($result as $r) {
+                Db::table('pz_users')->where('id', $r['uid'])->setInc('integral', $r['result_integral']);
+                $logIntegralSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and id=%d", $r['id']);
+                Db::execute($logIntegralSql);
             }
             Db::commit();
             exit('ok!');
@@ -462,10 +500,10 @@ class Order extends Pzlife {
      * @param $from_uid
      */
     private function diamondvipSettlement($uid, $payMoney, $from_uid) {
-        $redisListKey = Config::get('redisKey.order.redisMemberShare');
+        $redisListKey      = Config::get('redisKey.order.redisMemberShare');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
-        
-        
+
+
         Db::startTrans();
         try {
             if ($payMoney == 500) {
@@ -473,7 +511,7 @@ class Order extends Pzlife {
             } elseif ($payMoney == 1) {
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
-                
+
                 if (!$fromDiamondvipGet) {
 
                     if ($from_user['user_identity'] > 1) {
@@ -499,7 +537,7 @@ class Order extends Pzlife {
                         /* 写入缓存 */
                         $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                         $this->redis->expire($redisListKey . $from_uid, 2592000);
-                        
+
                     }
                 } else {
                     /* 给上级 */
@@ -519,29 +557,29 @@ class Order extends Pzlife {
                             'create_time'  => time()
                         ]
                     );
-                    
-                        $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
-                        $share_from_user        = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
-                        if ($share_from_user['user_identity'] == 4) {
-                            $share_from_balance = 0;
-                            $share_from_balance = $share_from_user['balance'] + 50;
-                            Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
-                            Db::name('log_trading')->insert(
-                                [
-                                    'uid'          => $share_from_user['id'],
-                                    'trading_type' => 1,
-                                    'change_type'  => 5,
-                                    'money'        => 50,
-                                    'befor_money'  => $share_from_balance['balance'],
-                                    'after_money'  => $share_from_balance,
-                                    'create_time'  => time()
-                                ]
-                            );
-                            /* 写入缓存 */
-                            $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
-                            $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
-                            
-                        }
+
+                    $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
+                    $share_from_user        = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
+                    if ($share_from_user['user_identity'] == 4) {
+                        $share_from_balance = 0;
+                        $share_from_balance = $share_from_user['balance'] + 50;
+                        Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
+                        Db::name('log_trading')->insert(
+                            [
+                                'uid'          => $share_from_user['id'],
+                                'trading_type' => 1,
+                                'change_type'  => 5,
+                                'money'        => 50,
+                                'befor_money'  => $share_from_balance['balance'],
+                                'after_money'  => $share_from_balance,
+                                'create_time'  => time()
+                            ]
+                        );
+                        /* 写入缓存 */
+                        $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
+                        $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
+
+                    }
                 }
 
                 $diamondvip_get                = [];

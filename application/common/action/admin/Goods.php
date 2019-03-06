@@ -48,7 +48,7 @@ class Goods {
             array_push($where, ['pz_goods.goods_type', '=', $goodsType]);
         }
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
-        $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum);
+        $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum, 'id desc');
         $total      = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
             return ["msg" => "商品数据不存在", "code" => '3000'];
