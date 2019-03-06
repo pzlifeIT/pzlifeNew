@@ -13,4 +13,7 @@ return [
         'redisConIdTime' => 'index:user:conId:expiration',//conId到期时间的zadd
         'redisConIdUid'  => 'index:user:conId:uid',//conId和uid的hSet
     ],
+    'index' => [
+        'redisIndexShow' => 'index:index:show',
+    ],
 ];

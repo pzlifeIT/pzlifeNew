@@ -51,7 +51,7 @@ class DbRecommend {
      * @param $data 查询字段
      * @return array
      */
-    public function update($data,$id){
+    public function updateRecommends($data,$id){
         $Recommends  = new Recommends;
         return $Recommends->save($data,['id'=>$id]);
     }

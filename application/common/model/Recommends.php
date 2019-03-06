@@ -3,6 +3,7 @@
 namespace app\common\model;
 
 use think\Model;
+use Config;
 
 class Recommends extends Model {
     protected $pk = 'id';
@@ -21,4 +22,13 @@ class Recommends extends Model {
         //TODO:初始化内容
     }
 
+    public function getImagePathAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
 }
