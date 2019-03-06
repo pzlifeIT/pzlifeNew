@@ -126,11 +126,12 @@ class Recommend extends AdminController
         $model_order     = trim($this->request->post('model_order'));
         $model_son_order = trim($this->request->post('model_son_order'));
         $tier            = trim($this->request->post('tier'));
-        $is_show            = trim($this->request->post('is_show'));
+        $is_show         = trim($this->request->post('is_show'));
         $model_order     = $model_order ? $model_order : 0;
         $parent_id       = $parent_id ? $parent_id : 0;
         $tier            = $tier ? $tier : 1;
         $show_type       = $show_type ? $show_type : 1;
+        $is_show         = $is_show ? $is_show : 2;
         if (!is_numeric($model_id)) {
             return ['code' => '3001'];
         }
@@ -138,9 +139,7 @@ class Recommend extends AdminController
         if (!in_array($model_id,$model_arr)) {
             return ['code' => '3002'];
         }
-        if ($tier != 1) {
-            unset($is_show);
-        }
+        
         if ($model_id == 1 || $model_id == 2 || $model_id == 3 ) {
             if ($tier == 2  ) {
                 if (!$title  || !$jump_type || !$jump_content){
@@ -223,8 +222,10 @@ class Recommend extends AdminController
         $data['tier'] = $tier;
         $data['model_order'] = $model_order;
         $data['model_son_order'] = $model_son_order;
-        $data['is_show'] = $is_show ? $is_show : 2;
-
+        $data['is_show'] = $is_show;
+        if ($tier != 1) {
+            unset($data['is_show']);
+        }
         $result = $this->app->recommend->saveRecommend($data);
         return $result;
     }
