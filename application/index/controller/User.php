@@ -3,6 +3,8 @@
 namespace app\index\controller;
 
 use app\index\MyController;
+use Config;
+use function Qiniu\json_decode;
 
 class User extends MyController {
     protected $beforeActionList = [
@@ -423,4 +425,68 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 获取用户二维码
+     * @apiDescription   getUserQrcode
+     * @apiGroup         index_user
+     * @apiName          getUserQrcode
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {String} link 跳转页面
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:link不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSampleRequest /index/user/getUserQrcode
+     * @return array
+     * @author rzc
+     */
+    public function getUserQrcode(){
+        $link = trim($this->request->post('link'));
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (empty($link)) {
+            return ['code' => '3003'];
+        }
+        $appid         = Config::get('conf.weixin_miniprogram_appid');
+        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
+        if (!$requestUrl) {
+            return ['code' => '3004'];
+        }
+        $requsest_subject = json_decode(sendRequest($requestUrl),true);
+        $access_token     = $requsest_subject['access_token'];
+        if (!$access_token){
+            return ['code' => '3005'];
+        }
+        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
+        // print_r($requestUrl);die;
+        $result = $this->sendRequest2($requestUrl,['scene'=>$link]);
+        if (imagecreatefromstring($result)) {
+            
+            echo $result;die;
+        }else{
+            return ['code' => '3006'];
+        }
+        
+        
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER,['Content-Type: application/json; charset=utf-8','Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return  $res;
+    }
 }
