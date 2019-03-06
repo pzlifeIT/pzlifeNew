@@ -8,6 +8,7 @@ use app\facade\DbProvinces;
 use Env;
 use Config;
 use think\Db;
+use Endroid\QrCode\QrCode;
 
 class User extends CommonIndex {
     private $cipherUserKey = 'userpass';//用户密码加密key
@@ -859,5 +860,22 @@ class User extends CommonIndex {
         $conId = uniqid(date('ymdHis'));
         $conId = hash_hmac('ripemd128', $conId, '');
         return $conId;
+    }
+
+    /**
+     * 生成二维码
+     * @param $link
+     * @return string
+     * @author rzc
+     */
+    public function getUserQrcode($link){
+        $sha1       = sha1($link);
+        $qrcode_dir = 'https://imagesdev.pzlive.vip' . '/qrcode/' . substr($sha1, 0, 2) . '/' . substr($sha1, 2, 3) . '/';
+        if (!file_exists($qrcode_dir)) mkdir($qrcode_dir, 0777, true);
+        $file_name = $qrcode_dir . $sha1 . '.png';
+        header('Content-Type: image/png');
+        $qrCode = new QrCode($link);
+        echo $qrCode->writeString();
+        die();
     }
 }
