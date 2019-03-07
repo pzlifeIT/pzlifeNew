@@ -100,6 +100,12 @@ class Recommend{
                 return ['code' => '3013'];
             }
         }
+            if ($data['tier'] == 1 ) {
+
+                if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
+                    return ['code' => '3009'];//超出限定添加数量
+                }
+            }
             if ($data['tier'] > 1) {
                 $has_parent = DbRecommend::getRecommends('id',['tier'=>$data['tier']-1,'model_id'=>$data['model_id']]);
                 if (empty($has_parent)) {
@@ -130,11 +136,7 @@ class Recommend{
                 
             }else{
                 // print_r(DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1]));die;
-                if ($data['tier'] == 1 && $data['model_id'] == 10) {
-                    if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
-                        return ['code' => '3009'];//超出限定添加数量
-                    }
-                }
+                
                 
             }
             Db::startTrans();
