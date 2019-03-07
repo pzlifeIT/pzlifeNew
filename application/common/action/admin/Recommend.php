@@ -130,9 +130,12 @@ class Recommend{
                 
             }else{
                 // print_r(DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1]));die;
-                if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
-                    return ['code' => '3009'];//超出限定添加数量
+                if ($data['tier'] == 1 && $data['model_id'] == 10) {
+                    if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
+                        return ['code' => '3009'];//超出限定添加数量
+                    }
                 }
+                
             }
             Db::startTrans();
             try {
@@ -238,8 +241,10 @@ class Recommend{
         $recommends = [];
         $recommends_ids = [];
         $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_id','asc');
+        // print_r($recommends);die;
         if (!empty($recommends)) {
             foreach ($recommends as $key => $value) {
+                
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'id','asc');
                 if (!empty($recommends_son)) {
                     foreach ($recommends_son as $recommend => $son) {
@@ -259,7 +264,9 @@ class Recommend{
                                 $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                             }
                         }
+                       
                         if ($value['model_id'] == 10){
+                            
                             $third = [];
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
                             if (!empty($third)) {
@@ -287,7 +294,7 @@ class Recommend{
                        
                     }
                     
-                   
+                   die;
                 }else{
                     $recommends_son = [];
                 }
