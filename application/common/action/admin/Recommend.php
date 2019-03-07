@@ -3,6 +3,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbRecommend;
 use app\facade\DbGoods;
+use app\facade\DbImage;
 use think\Db;
 use Config;
 use cache\Phpredis;
