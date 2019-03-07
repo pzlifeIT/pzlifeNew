@@ -93,10 +93,8 @@ class User extends Pzlife {
             if ($value['boss'] == 1) {
                 $user_relation['is_boss'] = 1;
                 $shop                     = $mysql_connect->query('SELECT * FROM pre_shop WHERE `uid` = ' . $value['uid']);
-                if (!$value['mobile']) {
-                    $new_user['mobile'] = $shop[0]['service'];
-                } else {
-                    $new_user['mobile'] = $value['mobile'];
+                if ($value['mobile']) {
+                     $new_user['mobile'] = $value['mobile'];
                 }
                 if ($shop) {
                     // $new_user['sex'] = $shop[0]['sex'];
