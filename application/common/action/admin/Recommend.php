@@ -327,6 +327,22 @@ class Recommend{
     public function getRecommendInfo($id){
         $recommends = DbRecommend::getRecommends('*',['id' => $id],true);
             if ($recommends) {
+                $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $recommends['id']],false,'id','asc');
+                if (empty($recommends_son)) {
+                    $recommends_son = [];
+                }else{
+                    if ($recommends['model_id'] == 10) {
+                        foreach ($recommends_son as $rec => $son) {
+                            $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
+                            if (empty($third)) {
+                                $third = [];
+                            }
+                            $recommends_son[$rec]['third'] = $third;
+                        }
+                    }
+                }
+                
+                $recommends['son'] = $recommends_son;
                 // $recommends_id = $recommends['id'];
                 return ['code' => '200','recommends_info' => $recommends];
             }else{
