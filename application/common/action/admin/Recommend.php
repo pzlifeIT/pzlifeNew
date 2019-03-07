@@ -80,6 +80,10 @@ class Recommend{
             }
         }
             if ($data['tier'] > 1) {
+                $has_parent = DbRecommend::getRecommends('id',['tier'=>$data['tier']-1,'model_id'=>$data['model_id']]);
+                if (empty($has_parent)) {
+                    return ['code' => '3012'];//添加上级为空
+                }
                 if ($data['model_id']<8 && $data['model_id'] > 1) {
                     $model_num = [
                         2 => 8,
@@ -104,6 +108,7 @@ class Recommend{
                 }
                 
             }else{
+                // print_r(DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1]));die;
                 if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
                     return ['code' => '3009'];//超出限定添加数量
                 }
