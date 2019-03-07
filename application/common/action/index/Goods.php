@@ -222,7 +222,10 @@ class Goods
         $where = ['id'=>$subject_id];
         $subject = DbGoods::getSubject($where, $field, true);
         // print_r($subject);die;
-        if ($subject['tier'] !=3) {
+        if (empty($subject)) {
+            return ['code' => '3000'];
+        }
+        if ($subject['tier'] !=3 || empty($subject)) {
             return ['code' => 3003,'msg'=>'传入专题ID有误'];
         }
         // getSubjectRelation($where, $field, $row = false,$limit = false)
