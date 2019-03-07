@@ -41,18 +41,27 @@ class Recommend{
             try {
                 
                 $oldImage = $recommend_info['image_path'];
+                
                 $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
+                
                 if (!empty($oldImage)) {
-                    DbImage::updateLogImageStatus($oldImage, 3);//更新状态为已完成
+                   
+                    $oldImage_id = DbImage::getLogImage($oldImage,1);
+                    DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
+                    
                 }
                 if (!empty($data['image_path'])) {
+                   
                     $image    = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+                   
                     $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+                    
                     if (empty($logImage)) {//图片不存在
                         return ['code' => '3010'];//图片没有上传过
                     }
                     DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
                 }
+                
                 $updateRecommends = DbRecommend::updateRecommends($data,$id);
                 $has_recommends = $this->getRecommendOrderBy();
                 if ($has_recommends['recommends']) {
@@ -65,6 +74,7 @@ class Recommend{
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
             } catch (\Exception $e) {
+                print_r($e);die;
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
             }
