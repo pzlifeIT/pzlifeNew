@@ -32,7 +32,7 @@ class Recommend{
      */
     public function saveRecommend($data,$id = 0){
         $data = $this->delDataEmptyKey($data);
-        if (!$id){//更新操作
+        if ($id){//更新操作
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
@@ -418,5 +418,28 @@ class Recommend{
             
         }
         return [$goods_spec, $goods_sku];
+    }
+
+    /**
+     * 删除推荐
+     * @param $id
+     * @return array
+     * @author rzc
+     */
+    public function delRecommend($id){
+        $recommends = DbRecommend::getRecommends('id',['id' => $id],true);
+        if (empty($recommends)) {
+            return ['code' => '3000'];
+        }
+        $recommends_son = DbRecommend::getRecommends('id',['parent_id' => $id],false);
+        if ($recommends_son) {
+            return ['code' => '3002'];
+        }
+        DbRecommend::delRecommend($id);
+        $has_recommends = $this->getRecommendOrderBy();
+        if ($has_recommends['recommends']) {
+            $this->SetRedis($has_recommends['recommends']);
+        }
+        return ['code' =>'200'];
     }
 }

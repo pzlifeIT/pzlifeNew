@@ -451,4 +451,27 @@ class Recommend extends AdminController
         $result = $this->app->recommend->saveRecommend($data,$id);
         return $result;
     }
+
+    /**
+     * @api              {post} / 删除推荐
+     * @apiDescription   delRecommend
+     * @apiGroup         admin_Recommend
+     * @apiName          delRecommend
+     * @apiParam (入参) {Number} id 删除内容对应ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空，无法更改 / 3002:请先删除下级推荐
+     * @apiSampleRequest /admin/Recommend/delRecommend
+     * @apiParamExample (data) {Array} 返回
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function delRecommend(){
+        $id = trim($this->request->post('id'));
+        if (!is_numeric($id)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->recommend->delRecommend($id);
+        return $result;
+    }
 }
