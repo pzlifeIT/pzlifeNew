@@ -181,8 +181,8 @@ class Recommend{
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'model_order','desc');
                 if ($recommends_son) {
                     foreach ($recommends_son as $recommend => $son) {
-                        if ($son['show_type'] == 2 && $son['show_data']) {
-                            $goods_data = $this->getGoods($son['show_data']);
+                        if ($son['show_type'] == 2 && $son['jump_content']) {
+                            $goods_data = $this->getGoods($son['jump_content']);
                             if ($goods_data){
                                 $recommends_son[$recommend]['goods_id'] = $goods_data['id'];
                                 $recommends_son[$recommend]['supplier_id'] = $goods_data['supplier_id'];
@@ -202,8 +202,8 @@ class Recommend{
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'model_order','desc');
                             if ($third) {
                                 foreach ($third as $thi => $rd) {
-                                    if ($rd['show_type'] == 2 && $rd['show_data']) {
-                                        $goods_data = $this->getGoods($rd['show_data']);
+                                    if ($rd['show_type'] == 2 && $rd['jump_content']) {
+                                        $goods_data = $this->getGoods($rd['jump_content']);
                                         if ($goods_data){
                                             $third[$thi]['goods_id'] = $goods_data['id'];
                                             $third[$thi]['supplier_id'] = $goods_data['supplier_id'];
