@@ -60,7 +60,7 @@ class Recommend{
                 }
                 if ($updateRecommends) {
                     Db::commit();
-                    return ['code' => '200'];
+                    return ['code' => '200','id'=>$id];
                 }
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
