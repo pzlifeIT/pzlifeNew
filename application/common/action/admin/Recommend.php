@@ -215,10 +215,10 @@ class Recommend{
         $recommends = [];
         $recommends_ids = [];
         $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_id','asc');
-        if ($recommends) {
+        if (!empty($recommends)) {
             foreach ($recommends as $key => $value) {
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'id','asc');
-                if ($recommends_son) {
+                if (!empty($recommends_son)) {
                     foreach ($recommends_son as $recommend => $son) {
                         if ($son['show_type'] == 2 && $son['show_data']) {
                             $goods_data = $this->getGoods($son['show_data']);
@@ -239,7 +239,7 @@ class Recommend{
                         if ($value['model_id'] == 10){
                             $third = [];
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
-                            if ($third) {
+                            if (!empty($third)) {
                                 foreach ($third as $thi => $rd) {
                                     if ($rd['show_type'] == 2 && $rd['show_data']) {
                                         $goods_data = $this->getGoods($rd['show_data']);
