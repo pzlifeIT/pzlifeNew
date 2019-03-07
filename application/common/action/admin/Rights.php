@@ -20,7 +20,7 @@ class Rights{
      */
     public function creatBossShareDiamondvip($mobile,$linkman,$stock,$redmoney_status,$type,$coupon_money){
         
-        $user = DbUser::getUserOne(['mobile'=>$mobile], 'id');
+        $user = DbUser::getUserOne(['mobile'=>$mobile,'user_identity'=>4], 'id');
         if (!$user) {
             return ['code' => '3003','msg' => '该用户不存在'];
         }
