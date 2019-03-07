@@ -294,7 +294,7 @@ class Recommend{
                        
                     }
                     
-                   die;
+                //    die;
                 }else{
                     $recommends_son = [];
                 }
