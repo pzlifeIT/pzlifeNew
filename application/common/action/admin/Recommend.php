@@ -113,7 +113,7 @@ class Recommend{
                 }
                 if ($data['model_id']<8 && $data['model_id'] > 1) {
                     $model_num = [
-                        2 => 8,
+                        2 => 10,
                         3 => 2,
                         4 => 4,
                         5 => 7,
