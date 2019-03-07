@@ -2,6 +2,7 @@
 
 namespace app\common\db\user;
 
+use app\common\model\LogBonus;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -260,6 +261,11 @@ class DbUser {
     public function updateUserRelation($data, $id) {
         $userRelation = new UserRelation();
         return $userRelation->save($data, ['id' => $id]);
+    }
+
+    public function getLogBonus($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = LogBonus::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
     }
 
     /**

@@ -284,6 +284,70 @@ class User extends MyController {
         return $res;
     }
 
+
+    /**
+     * @api              {post} / 获取分利列表信息
+     * @apiDescription   getUserBonus
+     * @apiGroup         index_user
+     * @apiName          getUserBonus
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getuserbonus
+     * @return array
+     * @author zyr
+     */
+    public function getUserBonus() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserBonus($conId);
+        return $result;
+    }
+
+
+    /**
+     * @api              {post} / 获取所有下级关系网
+     * @apiDescription   getUserNextLevel
+     * @apiGroup         index_user
+     * @apiName          getUserNextLevel
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} page 当前页(默认:1)
+     * @apiParam (入参) {Number} [page_num] 每页数量(默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 用户列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getusernextlevel
+     * @return array
+     * @author zyr
+     */
+    public function getUserNextLevel() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserNextLevel($conId, intval($page), intval($pageNum));
+        return $result;
+    }
+
     /**
      * @api              {post} / 通过con_id获取用户添加地址信息
      * @apiDescription   getUserAddress
