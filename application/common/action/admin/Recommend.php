@@ -294,11 +294,14 @@ class Recommend{
                 return ['code' => '3000'];
             }
         }else{
-            $recommends = DbRecommend::getRecommends('id',['tier'=>$tier,'model_id' => $model_id],false);
+            $recommends = DbRecommend::getRecommends('id,title',['tier'=>$tier,'model_id' => $model_id],false);
             if ($recommends) {
                 $recommends_id = [];
                 foreach ($recommends as $key => $value) {
                     $recommends_id[] = $value['id'];
+                }
+                if ($model_id == 10) {
+                    return ['code' => '200','recommends_id' => $recommends];
                 }
                 return ['code' => '200','recommends_id' => $recommends_id];
             }else{
