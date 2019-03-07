@@ -25,14 +25,14 @@ class Recommend{
         $this->redis->set($redisListKey,json_encode($data));
     }
     /**
-     * 添加新记录
+     * 修改新记录
      * @param $data
      * @return array
      * @author rzc
      */
-    public function saveRecommend($data,$id = 0){
+    public function saveRecommend($data,$id){
         $data = $this->delDataEmptyKey($data);
-        if ($id){//更新操作
+        
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
@@ -68,8 +68,19 @@ class Recommend{
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
             }
-        }else{//添加操作
-            // print_r($data);die;
+        
+  
+    
+    }
+
+    /**
+     * 添加新记录
+     * @param $data
+     * @return array
+     * @author rzc
+     */
+    public function addRecommend($data){
+        $data = $this->delDataEmptyKey($data);
         if (!empty($data['parent_id'])) {
             $parent_info = DbRecommend::getRecommends('*',['id' => $data['parent_id']],true);
             if (empty($parent_info)) {
@@ -134,14 +145,11 @@ class Recommend{
                     return ['code' => '200','add_id'=>$add];
                 }
                 Db::rollback();
-                return ['code' => '3011'];//修改失败
+                return ['code' => '3011'];//添加失败
             } catch (\Exception $e) {
                 Db::rollback();
-                return ['code' => '3011'];//修改失败
+                return ['code' => '3011'];//添加失败
             }
-        }
-  
-    
     }
     
     /**

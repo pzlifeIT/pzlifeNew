@@ -226,7 +226,7 @@ class Recommend extends AdminController
         if ($tier != 1) {
             unset($data['is_show']);
         }
-        $result = $this->app->recommend->saveRecommend($data);
+        $result = $this->app->recommend->addRecommend($data);
         return $result;
     }
 
