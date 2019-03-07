@@ -56,4 +56,14 @@ class DbRecommend {
         $Recommends  = new Recommends;
         return $Recommends->save($data,['id'=>$id]);
     }
+
+    /**
+     * 删除推荐
+     * @param $id 查询id
+     * @return array
+     */
+    public function delRecommend($id){
+        $Recommends  = new Recommends;
+        return $Recommends->destroy($id);
+    }
 }
