@@ -32,7 +32,7 @@ class Recommend{
      */
     public function saveRecommend($data,$id = 0){
         $data = $this->delDataEmptyKey($data);
-        if (!empty($id)){//更新操作
+        if (!$id){//更新操作
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
