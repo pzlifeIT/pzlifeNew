@@ -69,9 +69,9 @@ class Recommend{
                 return ['code' => '3011'];//修改失败
             }
         }else{//添加操作
-            
-        if ($data['parent_id']) {
-            $parent_info = DbRecommend::getRecommends('*',['id' => $$data['parent_id']],true);
+            // print_r($data);die;
+        if (!empty($data['parent_id'])) {
+            $parent_info = DbRecommend::getRecommends('*',['id' => $data['parent_id']],true);
             if (empty($parent_info)) {
                 return ['code' => '3012'];
             }
