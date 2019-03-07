@@ -368,13 +368,13 @@ class Recommend extends AdminController
                 if (!$title  || !$jump_type || !$jump_content){
                     return ['code' => '3003'];
                 }
-                if (!$image_path || !$parent_id) {
+                if (!$parent_id) {
                     return ['code' => '3004'];
                 }
                 
             }
         }elseif ($model_id == 5) {
-            if (!$title || !$image_path || !$jump_type || !$jump_content){
+            if (!$title || !$jump_type || !$jump_content){
                 return ['code' => '3003'];
             }
             if ($tier == 2 ){
@@ -387,17 +387,13 @@ class Recommend extends AdminController
                 if (!$title  || !$jump_type || !$jump_content){
                     return ['code' => '3003'];
                 }
-                if ($model_id == 7 || $model_id == 8 ) {
-                    if (!$image_path){
-                        return ['code' => '3004'];
-                    }
-                }
+                
             }elseif ($tier == 2){
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
                 if ($show_type == 1){
-                    if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                    if (!$title  || !$jump_type || !$jump_content  ){
                         return ['code' => '3003'];
                     }
                 }elseif($show_type == 2){
@@ -416,7 +412,7 @@ class Recommend extends AdminController
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                if (!$title  || !$jump_type || !$jump_content ){
                     return ['code' => '3003'];
                 }
             }elseif ($tier == 3) {
