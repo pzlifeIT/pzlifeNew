@@ -221,7 +221,11 @@ class Goods
         $field = 'subject,tier,id';
         $where = ['id'=>$subject_id];
         $subject = DbGoods::getSubject($where, $field, true);
-        if ($subject['tier'] !=3) {
+        // print_r($subject);die;
+        if (empty($subject)) {
+            return ['code' => '3000'];
+        }
+        if ($subject['tier'] !=3 || empty($subject)) {
             return ['code' => 3003,'msg'=>'传入专题ID有误'];
         }
         // getSubjectRelation($where, $field, $row = false,$limit = false)
@@ -264,6 +268,9 @@ class Goods
             // print_r($value['id']);die;
             list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             if ($goods_sku) {
+                $retail_price = [];
+                $brokerage = [];
+                $integral_active = [];
                 foreach ($goods_sku as $goods => $sku) {
                 
                     $retail_price[$sku['id']] = $sku['retail_price'];
@@ -272,6 +279,7 @@ class Goods
                 }
                 $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
                 $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+                
             }else{
                 $result[$key]['min_brokerage'] = 0;
                 $result[$key]['min_integral_active'] = 0;
