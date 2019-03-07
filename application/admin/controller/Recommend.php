@@ -105,7 +105,7 @@ class Recommend extends AdminController
      * @apiParam (入参) {Number} tier 层级
      * @apiParam (入参) {Number} is_show 主模块内容是否显示
      * @apiParam (入参) {Number} model_order 模板排序
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:model_id只能是数字 / 3002:无效的model_id / 3003:title,jump_type,jump_content参数不完整 / 3004:请上传图片 / 3005:未设置显示自然日或者未获取到parent_id / 3006:请设置展示商品 / 3007:未获取到parent_id / 3008:非法参数 / 3009:超出添加数量 / 3010:图片没有上传过 / 3011:添加失败 /3012:不存在的关联上级内容 / 3013:添加内容模板ID与父级模板ID不一致
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:model_id只能是数字 / 3002:无效的model_id / 3003:title,jump_type,jump_content参数不完整 / 3004:请上传图片(模板类型为3，或者未传入上级ID) / 3005:未设置显示自然日或者未获取到parent_id / 3006:请设置展示商品 / 3007:未获取到parent_id / 3008:非法参数 / 3009:超出添加数量 / 3010:图片没有上传过 / 3011:添加失败 /3012:不存在的关联上级内容 / 3013:添加内容模板ID与父级模板ID不一致
      * @apiSampleRequest /admin/Recommend/addRecommend
      * @apiParamExample (data) {Array} 返回
      * [
