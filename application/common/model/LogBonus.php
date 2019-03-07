@@ -24,4 +24,8 @@ class LogBonus extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function getskuJsonAttr($value) {
+        return json_decode($value, true);
+    }
 }
