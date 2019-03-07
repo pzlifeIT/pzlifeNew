@@ -495,11 +495,11 @@ class Order extends Pzlife {
             }
             if ($fromUid != 1) {
                 Db::table('pz_users')->where('id', $fromUid)->setInc('commission', $buyBossMoney);
+                Db::name('log_trading')->insert($fromTradingDate);
             }
             $shopId = Db::name('shops')->insertGetId($shopData);
             Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4, 'bindshop' => $shopId]);
             Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re]);
-            Db::name('log_trading')->insert($fromTradingDate);
             Db::commit();
         } catch (\Exception $e) {
 //            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
