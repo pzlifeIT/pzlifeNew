@@ -151,10 +151,11 @@ class Recommend extends AdminController
                 
             }
         }elseif ($model_id == 5) {
-            if (!$title || !$image_path || !$jump_type || !$jump_content){
-                return ['code' => '3003'];
-            }
+            
             if ($tier == 2 ){
+                if (!$title || !$image_path || !$jump_type || !$jump_content){
+                    return ['code' => '3003'];
+                }
                 if ( !$show_days || !$parent_id) {
                     return ['code' => '3005'];
                 }
