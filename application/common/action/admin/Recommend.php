@@ -265,6 +265,8 @@ class Recommend{
                     }
                     
                    
+                }else{
+                    $recommends_son = [];
                 }
                 $recommends[$key]['son'] = $recommends_son;
                 $recommends_ids[] = $value['id'];
