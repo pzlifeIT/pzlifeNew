@@ -37,21 +37,21 @@ class Recommend{
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
             }
+           
             Db::startTrans();
             try {
                 
-                $oldImage = $recommend_info['image_path'];
-                
-                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
-                
-                if (!empty($oldImage)) {
-                   
-                    $oldImage_id = DbImage::getLogImage($oldImage,1);
-                    DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
-                    
-                }
                 if (!empty($data['image_path'])) {
-                   
+                    $oldImage = $recommend_info['image_path'];
+                
+                    $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
+                    
+                    if (!empty($oldImage)) {
+                       
+                        $oldImage_id = DbImage::getLogImage($oldImage,1);
+                        DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
+                        
+                    }
                     $image    = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
                    
                     $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
