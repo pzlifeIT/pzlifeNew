@@ -105,7 +105,7 @@ class Recommend extends AdminController
      * @apiParam (入参) {Number} tier 层级
      * @apiParam (入参) {Number} is_show 主模块内容是否显示
      * @apiParam (入参) {Number} model_order 模板排序
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:model_id只能是数字 / 3002:无效的model_id / 3003:title,jump_type,jump_content参数不完整 / 3004:请上传图片 / 3005:未设置显示自然日或者未获取到parent_id / 3006:请设置展示商品 / 3007:未获取到parent_id / 3008:非法参数 / 3009:超出添加数量 / 3010:图片没有上传过 / 3011:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:model_id只能是数字 / 3002:无效的model_id / 3003:title,jump_type,jump_content参数不完整 / 3004:请上传图片(模板类型为3，或者未传入上级ID) / 3005:未设置显示自然日或者未获取到parent_id / 3006:请设置展示商品 / 3007:未获取到parent_id / 3008:非法参数 / 3009:超出添加数量 / 3010:图片没有上传过 / 3011:添加失败 /3012:不存在的关联上级内容 / 3013:添加内容模板ID与父级模板ID不一致
      * @apiSampleRequest /admin/Recommend/addRecommend
      * @apiParamExample (data) {Array} 返回
      * [
@@ -126,11 +126,12 @@ class Recommend extends AdminController
         $model_order     = trim($this->request->post('model_order'));
         $model_son_order = trim($this->request->post('model_son_order'));
         $tier            = trim($this->request->post('tier'));
-        $is_show            = trim($this->request->post('is_show'));
+        $is_show         = trim($this->request->post('is_show'));
         $model_order     = $model_order ? $model_order : 0;
         $parent_id       = $parent_id ? $parent_id : 0;
         $tier            = $tier ? $tier : 1;
         $show_type       = $show_type ? $show_type : 1;
+        $is_show         = $is_show ? $is_show : 2;
         if (!is_numeric($model_id)) {
             return ['code' => '3001'];
         }
@@ -138,9 +139,7 @@ class Recommend extends AdminController
         if (!in_array($model_id,$model_arr)) {
             return ['code' => '3002'];
         }
-        if ($tier != 1) {
-            unset($is_show);
-        }
+        
         if ($model_id == 1 || $model_id == 2 || $model_id == 3 ) {
             if ($tier == 2  ) {
                 if (!$title  || !$jump_type || !$jump_content){
@@ -152,10 +151,11 @@ class Recommend extends AdminController
                 
             }
         }elseif ($model_id == 5) {
-            if (!$title || !$image_path || !$jump_type || !$jump_content){
-                return ['code' => '3003'];
-            }
+            
             if ($tier == 2 ){
+                if (!$title || !$image_path || !$jump_type || !$jump_content){
+                    return ['code' => '3003'];
+                }
                 if ( !$show_days || !$parent_id) {
                     return ['code' => '3005'];
                 }
@@ -223,9 +223,11 @@ class Recommend extends AdminController
         $data['tier'] = $tier;
         $data['model_order'] = $model_order;
         $data['model_son_order'] = $model_son_order;
-        $data['is_show'] = $is_show ? $is_show : 2;
-
-        $result = $this->app->recommend->saveRecommend($data);
+        $data['is_show'] = $is_show;
+        if ($tier != 1) {
+            unset($data['is_show']);
+        }
+        $result = $this->app->recommend->addRecommend($data);
         return $result;
     }
 
@@ -351,6 +353,7 @@ class Recommend extends AdminController
         $parent_id       = $parent_id ? $parent_id : 0;
         $tier            = $tier ? $tier : 1;
         $show_type       = $show_type ? $show_type : 1;
+        $is_show         = $is_show ? $is_show : 2;
         if (!is_numeric($model_id) && !is_numeric($id)) {
             return ['code' => '3001'];
         }
@@ -359,21 +362,19 @@ class Recommend extends AdminController
             return ['code' => '3002'];
         }
         
-        if ($tier != 1) {
-           unset($is_show);
-        }
+        
         if ($model_id == 1 || $model_id == 2 || $model_id == 3 ) {
             if ($tier == 2  ) {
                 if (!$title  || !$jump_type || !$jump_content){
                     return ['code' => '3003'];
                 }
-                if (!$image_path || !$parent_id) {
+                if (!$parent_id) {
                     return ['code' => '3004'];
                 }
                 
             }
         }elseif ($model_id == 5) {
-            if (!$title || !$image_path || !$jump_type || !$jump_content){
+            if (!$title || !$jump_type || !$jump_content){
                 return ['code' => '3003'];
             }
             if ($tier == 2 ){
@@ -386,17 +387,13 @@ class Recommend extends AdminController
                 if (!$title  || !$jump_type || !$jump_content){
                     return ['code' => '3003'];
                 }
-                if ($model_id == 7 || $model_id == 8 ) {
-                    if (!$image_path){
-                        return ['code' => '3004'];
-                    }
-                }
+                
             }elseif ($tier == 2){
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
                 if ($show_type == 1){
-                    if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                    if (!$title  || !$jump_type || !$jump_content  ){
                         return ['code' => '3003'];
                     }
                 }elseif($show_type == 2){
@@ -415,7 +412,7 @@ class Recommend extends AdminController
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                if (!$title  || !$jump_type || !$jump_content ){
                     return ['code' => '3003'];
                 }
             }elseif ($tier == 3) {
@@ -444,8 +441,34 @@ class Recommend extends AdminController
         $data['tier'] = $tier;
         $data['model_order'] = $model_order;
         $data['model_son_order'] = $model_son_order;
-        $data['is_show'] = $is_show ? $is_show : 2;
+        $data['is_show'] = $is_show ;
+        if ($tier != 1) {
+            unset($data['is_show']);
+         }
         $result = $this->app->recommend->saveRecommend($data,$id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 删除推荐
+     * @apiDescription   delRecommend
+     * @apiGroup         admin_Recommend
+     * @apiName          delRecommend
+     * @apiParam (入参) {Number} id 删除内容对应ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空，无法更改 / 3002:请先删除下级推荐
+     * @apiSampleRequest /admin/Recommend/delRecommend
+     * @apiParamExample (data) {Array} 返回
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function delRecommend(){
+        $id = trim($this->request->post('id'));
+        if (!is_numeric($id)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->recommend->delRecommend($id);
         return $result;
     }
 }

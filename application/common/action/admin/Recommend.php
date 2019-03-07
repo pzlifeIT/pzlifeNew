@@ -3,6 +3,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbRecommend;
 use app\facade\DbGoods;
+use app\facade\DbImage;
 use think\Db;
 use Config;
 use cache\Phpredis;
@@ -24,35 +25,43 @@ class Recommend{
         $this->redis->set($redisListKey,json_encode($data));
     }
     /**
-     * 添加新记录
+     * 修改新记录
      * @param $data
      * @return array
      * @author rzc
      */
-    public function saveRecommend($data,$id = 0){
+    public function saveRecommend($data,$id){
         $data = $this->delDataEmptyKey($data);
         
-        if (!empty($id)){//更新操作
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
             }
+           
             Db::startTrans();
             try {
                 
-                $oldImage = $recommend_info['image_path'];
-                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
-                if (!empty($oldImage)) {
-                    DbImage::updateLogImageStatus($oldImage, 3);//更新状态为已完成
-                }
                 if (!empty($data['image_path'])) {
+                    $oldImage = $recommend_info['image_path'];
+                
+                    $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
+                    
+                    if (!empty($oldImage)) {
+                       
+                        $oldImage_id = DbImage::getLogImage($oldImage,1);
+                        DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
+                        
+                    }
                     $image    = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+                   
                     $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+                    
                     if (empty($logImage)) {//图片不存在
                         return ['code' => '3010'];//图片没有上传过
                     }
                     DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
                 }
+                
                 $updateRecommends = DbRecommend::updateRecommends($data,$id);
                 $has_recommends = $this->getRecommendOrderBy();
                 if ($has_recommends['recommends']) {
@@ -60,16 +69,42 @@ class Recommend{
                 }
                 if ($updateRecommends) {
                     Db::commit();
-                    return ['code' => '200'];
+                    return ['code' => '200','id'=>$id];
                 }
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
             } catch (\Exception $e) {
+                print_r($e);die;
                 Db::rollback();
                 return ['code' => '3011'];//修改失败
             }
-        }else{//添加操作
+        
+  
+    
+    }
+
+    /**
+     * 添加新记录
+     * @param $data
+     * @return array
+     * @author rzc
+     */
+    public function addRecommend($data){
+        $data = $this->delDataEmptyKey($data);
+        if (!empty($data['parent_id'])) {
+            $parent_info = DbRecommend::getRecommends('*',['id' => $data['parent_id']],true);
+            if (empty($parent_info)) {
+                return ['code' => '3012'];
+            }
+            if ($parent_info['model_id'] != $data['model_id']) {
+                return ['code' => '3013'];
+            }
+        }
             if ($data['tier'] > 1) {
+                $has_parent = DbRecommend::getRecommends('id',['tier'=>$data['tier']-1,'model_id'=>$data['model_id']]);
+                if (empty($has_parent)) {
+                    return ['code' => '3012'];//添加上级为空
+                }
                 if ($data['model_id']<8 && $data['model_id'] > 1) {
                     $model_num = [
                         2 => 8,
@@ -94,9 +129,13 @@ class Recommend{
                 }
                 
             }else{
-                if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
-                    return ['code' => '3009'];//超出限定添加数量
+                // print_r(DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1]));die;
+                if ($data['tier'] == 1 && $data['model_id'] == 10) {
+                    if (DbRecommend::getRecommends('id',['model_id'=>$data['model_id'],'tier'=>1])) {
+                        return ['code' => '3009'];//超出限定添加数量
+                    }
                 }
+                
             }
             Db::startTrans();
             try {
@@ -119,14 +158,11 @@ class Recommend{
                     return ['code' => '200','add_id'=>$add];
                 }
                 Db::rollback();
-                return ['code' => '3011'];//修改失败
+                return ['code' => '3011'];//添加失败
             } catch (\Exception $e) {
                 Db::rollback();
-                return ['code' => '3011'];//修改失败
+                return ['code' => '3011'];//添加失败
             }
-        }
-  
-    
     }
     
     /**
@@ -205,10 +241,12 @@ class Recommend{
         $recommends = [];
         $recommends_ids = [];
         $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_id','asc');
-        if ($recommends) {
+        // print_r($recommends);die;
+        if (!empty($recommends)) {
             foreach ($recommends as $key => $value) {
+                
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'id','asc');
-                if ($recommends_son) {
+                if (!empty($recommends_son)) {
                     foreach ($recommends_son as $recommend => $son) {
                         if ($son['show_type'] == 2 && $son['show_data']) {
                             $goods_data = $this->getGoods($son['show_data']);
@@ -226,10 +264,12 @@ class Recommend{
                                 $recommends_son[$recommend]['goods_min_integral_active'] = $goods_data['min_integral_active'];
                             }
                         }
+                       
                         if ($value['model_id'] == 10){
+                            
                             $third = [];
                             $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
-                            if ($third) {
+                            if (!empty($third)) {
                                 foreach ($third as $thi => $rd) {
                                     if ($rd['show_type'] == 2 && $rd['show_data']) {
                                         $goods_data = $this->getGoods($rd['show_data']);
@@ -254,7 +294,9 @@ class Recommend{
                        
                     }
                     
-                   
+                //    die;
+                }else{
+                    $recommends_son = [];
                 }
                 $recommends[$key]['son'] = $recommends_son;
                 $recommends_ids[] = $value['id'];
@@ -284,11 +326,14 @@ class Recommend{
                 return ['code' => '3000'];
             }
         }else{
-            $recommends = DbRecommend::getRecommends('id',['tier'=>$tier,'model_id' => $model_id],false);
+            $recommends = DbRecommend::getRecommends('id,title',['tier'=>$tier,'model_id' => $model_id],false);
             if ($recommends) {
                 $recommends_id = [];
                 foreach ($recommends as $key => $value) {
                     $recommends_id[] = $value['id'];
+                }
+                if ($model_id == 10) {
+                    return ['code' => '200','recommends_id' => $recommends];
                 }
                 return ['code' => '200','recommends_id' => $recommends_id];
             }else{
@@ -307,6 +352,22 @@ class Recommend{
     public function getRecommendInfo($id){
         $recommends = DbRecommend::getRecommends('*',['id' => $id],true);
             if ($recommends) {
+                $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $recommends['id']],false,'id','asc');
+                if (empty($recommends_son)) {
+                    $recommends_son = [];
+                }else{
+                    if ($recommends['model_id'] == 10) {
+                        foreach ($recommends_son as $rec => $son) {
+                            $third = DbRecommend::getRecommends('*',['tier'=>3,'parent_id' => $son['id']],false,'id','asc');
+                            if (empty($third)) {
+                                $third = [];
+                            }
+                            $recommends_son[$rec]['third'] = $third;
+                        }
+                    }
+                }
+                
+                $recommends['son'] = $recommends_son;
                 // $recommends_id = $recommends['id'];
                 return ['code' => '200','recommends_info' => $recommends];
             }else{
@@ -398,5 +459,28 @@ class Recommend{
             
         }
         return [$goods_spec, $goods_sku];
+    }
+
+    /**
+     * 删除推荐
+     * @param $id
+     * @return array
+     * @author rzc
+     */
+    public function delRecommend($id){
+        $recommends = DbRecommend::getRecommends('id',['id' => $id],true);
+        if (empty($recommends)) {
+            return ['code' => '3000'];
+        }
+        $recommends_son = DbRecommend::getRecommends('id',['parent_id' => $id],false);
+        if ($recommends_son) {
+            return ['code' => '3002'];
+        }
+        DbRecommend::delRecommend($id);
+        $has_recommends = $this->getRecommendOrderBy();
+        if ($has_recommends['recommends']) {
+            $this->SetRedis($has_recommends['recommends']);
+        }
+        return ['code' =>'200'];
     }
 }
