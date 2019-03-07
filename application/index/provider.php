@@ -18,4 +18,5 @@ return [
 //    'collect'  => \app\common\action\index\Collect::class,
     'order'     => app\common\action\index\Order::class,
     'rights'     => app\common\action\index\Rights::class,
+    'recommend'     => app\common\action\index\Recommend::class,
 ];
