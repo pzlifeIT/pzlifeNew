@@ -35,9 +35,9 @@ class Recommend{
         if ($data['tier']) {
             unset($data['tier']);
         }
-        
+        if ($data['parent_id']) {
             unset($data['parent_id']);
-        
+        }
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
@@ -132,7 +132,7 @@ class Recommend{
                    
                 }elseif ($data['model_id'] == 10) {
                     if ($data['tier'] == 3){
-                        $has_num = DbRecommend::CountRecommends(['model_id'=>$data['model_id'],'tier'=>3]);
+                        $has_num = DbRecommend::CountRecommends(['model_id'=>$data['model_id'],'parent_id'=>$data['parent_id'],'tier'=>3]);
                         if ($has_num+1 > 5) {
                             return ['code' => '3009'];//超出限定添加数量
                         }
