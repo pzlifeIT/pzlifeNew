@@ -131,7 +131,9 @@ class Goods extends MyController
         $subject_id = trim($this->request->post('subject_id'));
         $page = trim($this->request->post('page'));
         $page_num = trim($this->request->post('page_num'));
-
+        if (!is_numeric($subject_id) || empty($subject_id)) {
+            return ['code' => '3001'];
+        }
         $goodslist = $this->app->goods->getSubjectGoods($subject_id,$page,$page_num);
         return $goodslist;
     }
