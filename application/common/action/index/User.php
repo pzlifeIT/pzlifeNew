@@ -649,7 +649,7 @@ class User extends CommonIndex {
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
         // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
-        if (empty($result['unionid']) || empty($result['session_key'])) {
+        if (empty($result['session_key'])) {
             return false;
         }
         $sessionKey = $result['session_key'];
