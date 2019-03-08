@@ -14,7 +14,8 @@ class AdminController extends Controller {
         parent::__construct($app);
         if (Config::get('app.deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
-            header("Access-Control-Allow-Methods: POST,GET");
+//            header("Access-Control-Allow-Methods: POST,GET");
+            header('Access-Control-Allow-Headers:x-requested-with,content-type');
         }
         if (Config::get('deploy') == 'production') {//生产环境
             header('Access-Control-Allow-Origin:*');
