@@ -284,6 +284,70 @@ class User extends MyController {
         return $res;
     }
 
+
+    /**
+     * @api              {post} / 获取分利列表信息
+     * @apiDescription   getUserBonus
+     * @apiGroup         index_user
+     * @apiName          getUserBonus
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getuserbonus
+     * @return array
+     * @author zyr
+     */
+    public function getUserBonus() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserBonus($conId);
+        return $result;
+    }
+
+
+    /**
+     * @api              {post} / 获取所有下级关系网
+     * @apiDescription   getUserNextLevel
+     * @apiGroup         index_user
+     * @apiName          getUserNextLevel
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} page 当前页(默认:1)
+     * @apiParam (入参) {Number} [page_num] 每页数量(默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 用户列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getusernextlevel
+     * @return array
+     * @author zyr
+     */
+    public function getUserNextLevel() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserNextLevel($conId, intval($page), intval($pageNum));
+        return $result;
+    }
+
     /**
      * @api              {post} / 通过con_id获取用户添加地址信息
      * @apiDescription   getUserAddress
@@ -432,7 +496,7 @@ class User extends MyController {
      * @apiName          getUserQrcode
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {String} link 跳转页面
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:link不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:link不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:link最大长度32
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserQrcode
      * @return array
@@ -441,7 +505,7 @@ class User extends MyController {
     public function getUserQrcode(){
         $link = trim($this->request->get('link'));
         $conId = trim($this->request->get('con_id'));
-        print_r($conId);die;
+        // print_r($conId);die;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -450,6 +514,9 @@ class User extends MyController {
         }
         if (empty($link)) {
             return ['code' => '3003'];
+        }
+        if (strlen($link) > 32) {
+            return ['code' => '3007'];
         }
         $appid         = Config::get('conf.weixin_miniprogram_appid');
         $secret        = Config::get('conf.weixin_miniprogram_appsecret');
@@ -463,10 +530,9 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
-        // print_r($requestUrl);die;
+        // print_r($link);die;
         $result = $this->sendRequest2($requestUrl,['scene'=>$link]);
         if (imagecreatefromstring($result)) {
-            
             echo $result;die;
         }else{
             return ['code' => '3006'];

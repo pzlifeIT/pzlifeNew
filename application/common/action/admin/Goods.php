@@ -451,8 +451,8 @@ class Goods {
         $imagesCarousel = [];
         if (in_array(3, $getType)) {
             $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
-            $field          = "goods_id,image_type,image_path";
-            $images_data    = DbGoods::getOneGoodsImage($where, $field);
+            $field          = "goods_id,image_type,image_path,order_by";
+            $images_data    = DbGoods::getOneGoodsImage($where, $field, 'order_by asc');
             $imagesDetatil  = [];//商品详情图
             $imagesCarousel = [];//商品轮播图
             foreach ($images_data as $im) {
@@ -578,6 +578,35 @@ class Goods {
                 DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
             }
             DbGoods::delGoodsImage($goodsImageId);
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3003"];
+        }
+    }
+
+    /**
+     * 对图片排序
+     * @param $imagePath
+     * @param $orderBy
+     * @return array
+     */
+    public function sortImageDetail($imagePath, $orderBy) {
+        $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要排序的图片
+        $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id,order_by');
+        if (empty($goodsImage)) {
+            return ['code' => '3002'];
+        }
+        $goodsImageId = array_column($goodsImage, 'id');
+        $goodsImageId = $goodsImageId[0];
+        $oldOrderBy   = $goodsImage[0]['order_by'];
+        if ($oldOrderBy == $orderBy) {//排序不改变无需更新
+            return ["code" => '200'];
+        }
+        Db::startTrans();
+        try {
+            DbGoods::updateGoodsImage(['order_by' => $orderBy], $goodsImageId);
             Db::commit();
             return ["code" => '200'];
         } catch (\Exception $e) {

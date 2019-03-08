@@ -372,7 +372,7 @@ class User extends CommonIndex {
             }
             DbUser::updateUser(['last_time' => time()], $id);
             $this->saveOpenid($id, $wxInfo['openid'], $platform);
-            if(!empty($userCon)){
+            if (!empty($userCon)) {
                 $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
                 $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             }
@@ -388,6 +388,66 @@ class User extends CommonIndex {
             Db::rollback();
             return ['code' => '3003'];
         }
+    }
+
+    public function getUserBonus($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] == '1') {//普通用户
+            return ['code' => '3000'];//普通用户没有权限查看
+        }
+        $where = [['to_uid', '=', $uid], ['status', 'in', [1, 2]]];
+        $field = 'result_price,order_no,status,create_time';
+        $bonus = DbUser::getLogBonus($where, $field, false, 'id', 'desc');
+//        print_r($bonus);die;
+//        $orderNoList = array_unique(array_column($bonus,'order_no'));
+        $result = [];
+        foreach ($bonus as $b) {
+            if (!key_exists($b['order_no'], $result)) {
+                $result[$b['order_no']] = $b;
+                continue;
+            }
+            $result[$b['order_no']]['result_price'] += $b['result_price'];
+        }
+        if (empty($result)) {
+            return ['code' => '3000'];//没有分利
+        }
+        $result = array_values($result);
+        return ['code' => '200', 'data' => $result];
+    }
+
+    public function getUserNextLevel($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $offset   = $pageNum * ($page - 1) . ',' . $pageNum;
+        $redisKey = Config::get('rediskey.user.redisUserNextLevel') . $uid;
+        if ($this->redis->exists($redisKey)) {
+            $uidList = json_decode($this->redis->get($redisKey), true);
+        } else {
+            $userList = DbUser::getUserRelation([['relation', 'like', '%' . $uid . ',%']], 'relation');
+            $uidList  = [];
+            foreach ($userList as $ul) {
+                $ul['relation'] = substr($ul['relation'], bcadd(stripos($ul['relation'], $uid . ','), strlen($uid . ','), 0));
+                $uidList        = array_merge($uidList, explode(',', $ul['relation']));
+            }
+            $uidList = array_values(array_unique($uidList));
+            $this->redis->setEx($redisKey, 600, json_encode($uidList));
+        }
+        $result = DbUser::getUserInfo([['id', 'in', $uidList], ['user_identity', '<>', '4']], 'id,user_identity,nick_name,avatar', false, 'id', 'asc', $offset);
+        foreach ($result as &$r) {
+            $r['uid'] = enUid($r['id']);
+            unset($r['id']);
+        }
+        unset($r);
+        return ['code' => '200', 'data' => $result];
     }
 
     /**
@@ -589,12 +649,12 @@ class User extends CommonIndex {
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
         // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
-        if (empty($result['unionid']) || empty($result['session_key'])) {
+        if (empty($result['session_key'])) {
             return false;
         }
         $sessionKey = $result['session_key'];
         unset($result['session_key']);
-        if (!empty($encrypteddata) && !empty($iv)) {
+        if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
             $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
         }
         if (is_array($result)) {
@@ -868,7 +928,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserQrcode($link){
+    public function getUserQrcode($link) {
         $sha1       = sha1($link);
         $qrcode_dir = 'https://imagesdev.pzlive.vip' . '/qrcode/' . substr($sha1, 0, 2) . '/' . substr($sha1, 2, 3) . '/';
         if (!file_exists($qrcode_dir)) mkdir($qrcode_dir, 0777, true);

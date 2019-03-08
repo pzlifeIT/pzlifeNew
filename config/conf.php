@@ -40,4 +40,5 @@ return [
     'curl_proxy_host'              => Env::get('weixin.curlProxyHost'),
     'curl_proxy_port'              => Env::get('weixin.curlProxyPort'),
 
+    'image_path' => Env::get('conf.imagePath'),//本地图片存放路径
 ];

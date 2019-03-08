@@ -32,12 +32,6 @@ class Recommend{
      */
     public function saveRecommend($data,$id){
         $data = $this->delDataEmptyKey($data);
-        if ($data['tier']) {
-            unset($data['tier']);
-        }
-        if ($data['parent_id']) {
-            unset($data['parent_id']);
-        }
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
                 return ['code' => '3000'];
