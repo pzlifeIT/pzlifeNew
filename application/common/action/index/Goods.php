@@ -114,16 +114,19 @@ class Goods
 
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
         $integral_active = [];
+        $brokerage = [];
         // print_r($goods_sku);die;
         foreach ($goods_sku as $key => $value) {
             $integral_active[] = $value['integral_active'];
+            $brokerage [] =  $value['brokerage'];
         }
         $min_integral_active = [0];
-        
+        $min_brokerage = [0];
         $goods_data['max_integral_active'] = max($integral_active);
         $goods_data['min_integral_active'] = min(array_diff($integral_active,$min_integral_active));
         // $goods_sku = $goods_sku;
-
+        $goods_data['max_brokerage'] = max($brokerage);
+        $goods_data['min_brokerage'] = min(array_diff($brokerage,$min_brokerage));
         return [
             'code' => 200,
             'goods_data' => $goods_data,
