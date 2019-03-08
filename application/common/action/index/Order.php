@@ -713,20 +713,17 @@ class Order extends CommonIndex {
                 }
                 $price = 0;
                 if ($fl['stype'] == 1) {//件数
-                    if ($fl['unit_price'] <= $freightCount[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
-                        continue;
+                    if ($fl['unit_price'] > $freightCount[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        $price = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                     }
-                    $price = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                 } else if ($fl['stype'] == 2) {//重量
-                    if ($fl['unit_price'] <= $freightWeight[$flk]) {//购买重量超过当前模版的满件包邮条件可以包邮
-                        continue;
+                    if ($fl['unit_price'] > $freightWeight[$flk]) {//购买重量超过当前模版的满件包邮条件可以包邮
+                        $price = bcadd(bcmul(bcsub(ceil($freightWeight[$flk]), 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                     }
-                    $price = bcadd(bcmul(bcsub(ceil($freightWeight[$flk]), 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                 } else if ($fl['stype'] == 3) {//体积
-                    if ($fl['unit_price'] <= $freightVolume[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
-                        continue;
+                    if ($fl['unit_price'] > $freightVolume[$flk]) {//购买件数超过当前模版的满件包邮条件可以包邮
+                        $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                     }
-                    $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
                 }
                 $freightSupplierPrice[$fl['supid']] = isset($freightSupplierPrice[$fl['supid']]) ? bcadd($freightSupplierPrice[$fl['supid']], $price, 0) : $price;
                 $totalFreightPrice                  = bcadd($totalFreightPrice, $price, 2);
