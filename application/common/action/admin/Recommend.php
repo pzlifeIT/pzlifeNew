@@ -32,6 +32,11 @@ class Recommend{
      */
     public function saveRecommend($data,$id){
         $data = $this->delDataEmptyKey($data);
+        if ($data['tier']) {
+            unset($data['tier']);
+        }
+        
+            unset($data['parent_id']);
         
             $recommend_info = DbRecommend::getRecommends('*',['id' => $id],true);
             if (empty($recommend_info)) {
@@ -175,7 +180,7 @@ class Recommend{
     public function getRecommendOrderBy(){
         
         $recommends = [];
-        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_order','desc');
+        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show,tier',['tier'=>1],false,'model_order','desc');
         if ($recommends) {
             foreach ($recommends as $key => $value) {
                 $recommends_son = DbRecommend::getRecommends('*',['tier'=>2,'parent_id' => $value['id']],false,'model_order','desc');
@@ -242,7 +247,7 @@ class Recommend{
         
         $recommends = [];
         $recommends_ids = [];
-        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show',['tier'=>1],false,'model_id','asc');
+        $recommends = DbRecommend::getRecommends('id,model_id,title,image_path,jump_type,jump_content,model_order,is_show,tier',['tier'=>1],false,'model_id','asc');
         // print_r($recommends);die;
         if (!empty($recommends)) {
             foreach ($recommends as $key => $value) {
@@ -475,6 +480,7 @@ class Recommend{
             return ['code' => '3000'];
         }
         $recommends_son = DbRecommend::getRecommends('id',['parent_id' => $id],false);
+        // print_r($recommends_son);die;
         if ($recommends_son) {
             return ['code' => '3002'];
         }
