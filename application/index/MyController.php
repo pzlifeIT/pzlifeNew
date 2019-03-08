@@ -85,7 +85,7 @@ class MyController extends Controller {
      * 验证con_id登录
      */
     protected function isLogin() {
-        $conId = trim($this->request->post('con_id'));
+        $conId = trim($this->request->request('con_id'));
         if (!empty($conId) && strlen($conId) == 32) {
             $res = $this->app->user->isLogin($conId);//判断是否登录
             if ($res['code'] == '200') {
