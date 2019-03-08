@@ -426,7 +426,7 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 获取用户二维码
+     * @api              {get} / 获取用户二维码
      * @apiDescription   getUserQrcode
      * @apiGroup         index_user
      * @apiName          getUserQrcode
@@ -439,8 +439,9 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserQrcode(){
-        $link = trim($this->request->post('link'));
-        $conId = trim($this->request->post('con_id'));
+        $link = trim($this->request->get('link'));
+        $conId = trim($this->request->get('con_id'));
+        print_r($conId);die;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
