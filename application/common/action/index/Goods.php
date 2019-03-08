@@ -222,7 +222,7 @@ class Goods
         $field = 'subject,tier,id';
         $where = ['id'=>$subject_id];
         $subject = DbGoods::getSubject($where, $field, true);
-        echo Db::getLastSql();die;
+        // echo Db::getLastSql();die;
         // print_r($subject);die;
         if (empty($subject)) {
             return ['code' => '3000'];
