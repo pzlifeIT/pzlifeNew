@@ -654,7 +654,7 @@ class User extends CommonIndex {
         }
         $sessionKey = $result['session_key'];
         unset($result['session_key']);
-        if (!empty($encrypteddata) && !empty($iv)) {
+        if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
             $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
         }
         if (is_array($result)) {
