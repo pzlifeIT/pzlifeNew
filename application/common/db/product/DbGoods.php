@@ -1028,8 +1028,12 @@ class DbGoods {
      * @param $where
      * @return array
      */
-    public function getGoods($field, $limit, $order, $where) {
-        return Goods::field($field)->where($where)->order($order, 'desc')->limit($limit)->select()->toArray();
+    public function getGoods($field, $limit = false, $order, $where) {
+        $obj = Goods::field($field)->where($where)->order($order, 'desc');
+        if ($limit == true) {
+            $obj = $obj->limit($limit);
+        }
+        return $obj->select()->toArray();
     }
 
     /**

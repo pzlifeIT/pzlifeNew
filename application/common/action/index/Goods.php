@@ -3,6 +3,7 @@ namespace app\common\action\index;
 
 use app\facade\DbGoods;
 use third\PHPTree;
+use think\Db;
 
 class Goods
 {
@@ -233,6 +234,7 @@ class Goods
         $field = 'goods_id';
         $where = ['subject_id'=>$subject_id];
         $goodslist = DbGoods::getSubjectRelation($where, $field, false,$limit);
+       
         foreach ($goodslist as $goods => $list) {
            $goodsid[]=$list['goods_id'];
         }
@@ -248,8 +250,9 @@ class Goods
         // $where = ['status' => 1, 'cate_id' => $cate_id];
         
         $where = [['status','=', 1], ['id' ,'IN', $goodsid]];
-        $result = DbGoods::getGoods($field, $limit, $order, $where);
-        
+        $result = DbGoods::getGoods($field, false, $order, $where);
+        // echo Db::getLastSql();die;
+        // print_r($result);die;
         if(empty($result)){
             return ['code' => 200, 'data' => []];
         }
