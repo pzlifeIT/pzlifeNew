@@ -432,13 +432,11 @@ class Recommend extends AdminController
         $data['model_id'] = $model_id;
         $data['title'] = $title;
         $data['image_path'] = $image_path;
-        $data['parent_id'] = $parent_id;
         $data['jump_type'] = $jump_type;
         $data['jump_content'] = $jump_content;
         $data['show_type'] = $show_type;
         $data['show_data'] = $show_data;
         $data['show_days'] = $show_days;
-        $data['tier'] = $tier;
         $data['model_order'] = $model_order;
         $data['model_son_order'] = $model_son_order;
         $data['is_show'] = $is_show ;
