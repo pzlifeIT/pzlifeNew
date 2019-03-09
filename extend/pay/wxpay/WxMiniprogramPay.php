@@ -22,7 +22,7 @@ class WxMiniprogramPay {
         $this->appid        = Config::get('conf.weixin_miniprogram_appid');
         $this->mch_id       = Config::get('conf.wx_pay_mchid');
         $this->key          = Config::get('conf.wx_pay_key');
-        $this->notify_url   = Config::get('conf.env_protocol') . '://' . Config::get('conf.pay_host') . 'pay/wxPayCallback';
+        $this->notify_url   = Config::get('conf.env_protocol') . '://' . Config::get('conf.pay_host') . '/pay/wxPayCallback';
         $this->openid       = $openid;
         $this->out_trade_no = $out_trade_no;
         $this->body         = $body;
