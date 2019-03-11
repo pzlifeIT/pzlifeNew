@@ -291,4 +291,74 @@ class User extends Pzlife {
             $this->redis->hDel($redisConIdUid, $r);
         }
     }
+
+    public function userAddress(){
+        $addressdata = file_get_contents('./addressdata.json');//读取地址文件
+        
+        $addressdata = json_decode($addressdata, true);
+        $mysql_connect = Db::connect(Config::get('database.db_config'));
+        $old_address_sql = 'SELECT * FROM pre_member_address';
+        $old_address = $mysql_connect->query($old_address_sql);
+        // print_r($old_address);die;
+        foreach ($old_address as $old => $address) {
+            $user = $this->getUserInfo($address['uid']);
+            // print_r($address);die;
+            // print_r($user);die;
+            if (empty($user)) {
+                continue;
+            }
+            $province = $addressdata['0'][$address['province']];
+            $city = $addressdata['0,' . $address['province']][$address['city']];
+            if ($city == '市辖区') {
+                $city = $province;
+            }
+            $district = $addressdata['0,' . $address['province'] . ',' . $address['city']][$address['district']];
+            
+            $province_id = $this->getArea($province,1)['id'];
+            $city_id = $this->getArea($city,2)['id'];
+            $area_id = $this->getArea($district,3)['id'];
+            
+            $user_address = [];
+            $user_address['uid']         = $address['uid'];
+            $user_address['province_id'] = $province_id;
+            $user_address['city_id']     = $city_id;
+            $user_address['area_id']     = $area_id;
+            $user_address['address']     = $address['address'];
+            $user_address['mobile']      = $address['linkphone'];
+            $user_address['name']        = $address['linkman'];
+            $user_address['default']     = 2;
+            $user_address['create_time']     = time();
+            // print_r($user_address);die;
+            Db::startTrans();
+            try {
+                Db::table('pz_user_address')->insert($user_address);
+    
+                // 提交事务
+                Db::commit();
+            } catch (\Exception $e) {
+                // 回滚事务
+                
+                Db::rollback();
+                print_r($e);
+                die;
+            }
+        }
+    }
+    
+    
+    
+    function getArea($name,$level){
+        $areaSql = "select * from pz_areas where delete_time=0 and area_name = '". $name."' and level =  ".$level;
+        $areaInfo   = Db::query($areaSql);
+        return $areaInfo[0];
+    }
+
+    /**
+     * @param $uid
+     */
+    private function getUserInfo($uid) {
+        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
+        $userInfo   = Db::query($getUserSql);
+        return $userInfo;
+    }
 }
