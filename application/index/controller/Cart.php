@@ -203,4 +203,27 @@ class Cart extends MyController {
         $result = $this->app->cart->editUserCart($conId, $del_shopid, $del_skuid);
         return $result;
     }
+
+    /**
+     * @api              {post} / 查询购物车商品数量
+     * @apiDescription   getUserCartNum
+     * @apiGroup         index_Cart
+     * @apiName          getUserCartNum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数
+     * @apiSuccess (返回) {Number} total 总条数
+     * @apiSampleRequest /index/cart/getUserCartNum
+     * @author rzc
+     */
+    public function getUserCartNum(){
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->cart->getUserCartNum($conId);
+        return $result;
+    }
 }
