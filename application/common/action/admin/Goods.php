@@ -452,7 +452,7 @@ class Goods {
         if (in_array(3, $getType)) {
             $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
             $field          = "goods_id,image_type,image_path,order_by";
-            $images_data    = DbGoods::getOneGoodsImage($where, $field, 'order_by asc');
+            $images_data    = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
             $imagesDetatil  = [];//商品详情图
             $imagesCarousel = [];//商品轮播图
             foreach ($images_data as $im) {
