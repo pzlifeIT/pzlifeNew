@@ -495,65 +495,38 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserQrcode
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiParam (入参) {String} link 跳转页面
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:link不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:link最大长度32
+     * @apiParam (入参) {String} page 跳转页面
+     * @apiParam (入参) {String} scene 跳转页面
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserQrcode
      * @return array
      * @author rzc
      */
     public function getUserQrcode(){
-        $link = trim($this->request->get('link'));
+        $page = trim($this->request->get('page'));
+        $scene = trim($this->request->get('scene'));
         $conId = trim($this->request->get('con_id'));
-        // print_r($conId);die;
+        // print_r(Config::get('conf.image_path'));die;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        if (empty($link)) {
+        if (empty($page)) {
+            return ['code' => '3008'];
+        }
+        if (empty($scene)) {
             return ['code' => '3003'];
         }
-        if (strlen($link) > 32) {
+        if (strlen($scene) > 32) {
             return ['code' => '3007'];
         }
-        $appid         = Config::get('conf.weixin_miniprogram_appid');
-        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
-        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
-        if (!$requestUrl) {
-            return ['code' => '3004'];
-        }
-        $requsest_subject = json_decode(sendRequest($requestUrl),true);
-        $access_token     = $requsest_subject['access_token'];
-        if (!$access_token){
-            return ['code' => '3005'];
-        }
-        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
-        // print_r($link);die;
-        $result = $this->sendRequest2($requestUrl,['scene'=>$link]);
-        if (imagecreatefromstring($result)) {
-            echo $result;die;
-        }else{
-            return ['code' => '3006'];
-        }
-        
-        
+
+        $result = $this->app->user->getQrcode($conId,$page,$scene,1);
+        return $result;
     }
 
-    function sendRequest2($requestUrl, $data = []) {
-        $curl = curl_init();
-        $data = json_encode($data);
-        curl_setopt($curl, CURLOPT_URL, $requestUrl);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_HTTPHEADER,['Content-Type: application/json; charset=utf-8','Content-Length:' . strlen($data)]);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $res = curl_exec($curl);
-        curl_close($curl);
-        return  $res;
-    }
+
 }
