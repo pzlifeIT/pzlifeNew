@@ -353,12 +353,13 @@ class DbGoods {
      * 获取一个商品的图片
      * @param $where
      * @param $field
+     * @param $orderBy
      * @return array
      * @author wujunjie
      * 2019/1/2-16:26
      */
-    public function getOneGoodsImage($where, $field) {
-        return GoodsImage::where($where)->field($field)->select()->toArray();
+    public function getOneGoodsImage($where, $field, $orderBy = '') {
+        return GoodsImage::where($where)->field($field)->order($orderBy)->select()->toArray();
     }
 
     /**
@@ -525,6 +526,17 @@ class DbGoods {
             return $this->goods->id;
         }
         return $res;
+    }
+
+    /**
+     * 更新商品图片
+     * @param $data
+     * @param $id
+     * @author zyr
+     */
+    public function updateGoodsImage($data, $id) {
+        $goodsImage = new GoodsImage();
+        $goodsImage->save($data, ['id' => $id]);
     }
 
     /**

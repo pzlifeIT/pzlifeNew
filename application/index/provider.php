@@ -19,4 +19,5 @@ return [
     'order'     => app\common\action\index\Order::class,
     'rights'     => app\common\action\index\Rights::class,
     'recommend'     => app\common\action\index\Recommend::class,
+    'upload'     => app\common\action\index\Upload::class,
 ];

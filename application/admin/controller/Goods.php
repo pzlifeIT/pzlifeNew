@@ -469,6 +469,31 @@ class Goods extends AdminController {
     }
 
     /**
+     * @api              {post} / 对商品图进行排序
+     * @apiDescription   sortImageDetail
+     * @apiGroup         admin_goods
+     * @apiName          sortImageDetail
+     * @apiParam (入参) {Number} image_path 商品id
+     * @apiParam (入参) {Number} order_by 排序
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:排序字段只能为数字 / 3004:上传失败
+     * @apiSampleRequest /admin/goods/sortimagedetail
+     * @return array
+     * @author zyr
+     */
+    public function sortImageDetail() {
+        $imagePath = trim($this->request->post('image_path'));
+        $orderBy   = trim($this->request->post('order_by'));
+        if (empty($imagePath)) {
+            return ['code' => '3001'];//图片不能为空
+        }
+        if (!is_numeric($orderBy)) {
+            return ['code' => '3003'];//排序字段只能为数字
+        }
+        $result  = $this->app->goods->sortImageDetail($imagePath, intval($orderBy));
+        return $result;
+    }
+
+    /**
      * @api              {post} / 上下架
      * @apiDescription   upDownGoods
      * @apiGroup         admin_goods

@@ -373,7 +373,7 @@ class User extends CommonIndex {
             }
             DbUser::updateUser(['last_time' => time()], $id);
             $this->saveOpenid($id, $wxInfo['openid'], $platform);
-            if(!empty($userCon)){
+            if (!empty($userCon)) {
                 $this->redis->hDel($this->redisConIdUid, $userCon['con_id']);
                 $this->redis->zDelete($this->redisConIdTime, $userCon['con_id']);
             }
@@ -389,6 +389,66 @@ class User extends CommonIndex {
             Db::rollback();
             return ['code' => '3003'];
         }
+    }
+
+    public function getUserBonus($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] == '1') {//普通用户
+            return ['code' => '3000'];//普通用户没有权限查看
+        }
+        $where = [['to_uid', '=', $uid], ['status', 'in', [1, 2]]];
+        $field = 'result_price,order_no,status,create_time';
+        $bonus = DbUser::getLogBonus($where, $field, false, 'id', 'desc');
+//        print_r($bonus);die;
+//        $orderNoList = array_unique(array_column($bonus,'order_no'));
+        $result = [];
+        foreach ($bonus as $b) {
+            if (!key_exists($b['order_no'], $result)) {
+                $result[$b['order_no']] = $b;
+                continue;
+            }
+            $result[$b['order_no']]['result_price'] += $b['result_price'];
+        }
+        if (empty($result)) {
+            return ['code' => '3000'];//没有分利
+        }
+        $result = array_values($result);
+        return ['code' => '200', 'data' => $result];
+    }
+
+    public function getUserNextLevel($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $offset   = $pageNum * ($page - 1) . ',' . $pageNum;
+        $redisKey = Config::get('rediskey.user.redisUserNextLevel') . $uid;
+        if ($this->redis->exists($redisKey)) {
+            $uidList = json_decode($this->redis->get($redisKey), true);
+        } else {
+            $userList = DbUser::getUserRelation([['relation', 'like', '%' . $uid . ',%']], 'relation');
+            $uidList  = [];
+            foreach ($userList as $ul) {
+                $ul['relation'] = substr($ul['relation'], bcadd(stripos($ul['relation'], $uid . ','), strlen($uid . ','), 0));
+                $uidList        = array_merge($uidList, explode(',', $ul['relation']));
+            }
+            $uidList = array_values(array_unique($uidList));
+            $this->redis->setEx($redisKey, 600, json_encode($uidList));
+        }
+        $result = DbUser::getUserInfo([['id', 'in', $uidList], ['user_identity', '<>', '4']], 'id,user_identity,nick_name,avatar', false, 'id', 'asc', $offset);
+        foreach ($result as &$r) {
+            $r['uid'] = enUid($r['id']);
+            unset($r['id']);
+        }
+        unset($r);
+        return ['code' => '200', 'data' => $result];
     }
 
     /**
@@ -590,12 +650,12 @@ class User extends CommonIndex {
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
         // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
-        if (empty($result['unionid']) || empty($result['session_key'])) {
+        if (empty($result['session_key'])) {
             return false;
         }
         $sessionKey = $result['session_key'];
         unset($result['session_key']);
-        if (!empty($encrypteddata) && !empty($iv)) {
+        if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
             $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
         }
         if (is_array($result)) {
@@ -871,11 +931,13 @@ class User extends CommonIndex {
      */
     public function getQrcode($conId,$page,$scene,$type){
         $uid = $this->getUidByConId($conId);
+        $Upload = new Upload;
         if (empty($uid)) {
             return ['code' => '3000'];
         }
+       
         // 先查询是否有已存在图片
-        $has_QrImage = ;
+        $has_QrImage = DbImage::getUserImage('*',['uid'=>$uid,'stype'=>1],true);
         if (!empty($has_QrImage)) {
             $Qrcode = $has_QrImage['image'];
             return ['code' => '200','Qrcode' => $Qrcode];
@@ -888,9 +950,10 @@ class User extends CommonIndex {
             fwrite($file, $result); //写入
             fclose($file); //关闭  
             // 开始上传,调用上传方法 
-            $upload = '';
-            if (!empty($upload)) {
+            $upload = $Upload->uploadUserImage($conId.'.png');
+            if ($upload['code'] == 200) {
                 $logImage = DbImage::getLogImage($upload, 2);//判断时候有未完成的图片
+                // print_r($logImage);die;
                 if (empty($logImage)) {//图片不存在
                     return ['code' => '3010'];//图片没有上传过
                 }
@@ -898,10 +961,20 @@ class User extends CommonIndex {
                 $upUserInfo = [];
                 $upUserInfo['uid'] = $uid;
                 $upUserInfo['stype'] = $type;
-                $upUserInfo['image'] = $upload;
+                $upUserInfo['image'] = $upload['image_path'];
+                Db::startTrans();
+                try {
+                    DbImage::saveUserImage($upUserInfo);
+                    DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                    $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
+
+                    return ['code' => '200','Qrcode' =>$new_Qrcode];
+                } catch (\Exception $e) {
+                    print_r($e);
+                    Db::rollback();
+                    return ['code' => '3011'];//添加失败
+                }
                 
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
-                return ['code' => '200','Qrcode' =>Config::get('qiniu.domain').$upload];
                 
             }else{
                 return ['code' => '3009'];
