@@ -13,9 +13,15 @@ class MyController extends Controller {
         parent::__construct($app);
         if (Config::get('deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
+            header("Access-Control-Allow-Methods:GET,POST");
+            header('Access-Control-Allow-Headers:content-type,token,id');
+            header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
         }
         if (Config::get('deploy') == 'production') {//生产环境
             header('Access-Control-Allow-Origin:*');
+            header("Access-Control-Allow-Methods:GET,POST");
+            header('Access-Control-Allow-Headers:content-type,token,id');
+            header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
         }
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
@@ -85,7 +91,7 @@ class MyController extends Controller {
      * 验证con_id登录
      */
     protected function isLogin() {
-        $conId = trim($this->request->request('con_id'));
+        $conId = trim($this->request->param('con_id'));
         if (!empty($conId) && strlen($conId) == 32) {
             $res = $this->app->user->isLogin($conId);//判断是否登录
             if ($res['code'] == '200') {
