@@ -40,4 +40,10 @@ return [
     'curl_proxy_host'              => Env::get('weixin.curlProxyHost'),
     'curl_proxy_port'              => Env::get('weixin.curlProxyPort'),
 
+    /**
+     * 二维码写入地址
+     * @var unknown_type
+     */
+    'image_path'              => Env::get('image_path.image_path'),
+
 ];

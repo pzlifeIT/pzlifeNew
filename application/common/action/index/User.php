@@ -5,6 +5,7 @@ namespace app\common\action\index;
 use app\common\action\notify\Note;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
+use app\facade\DbImage;
 use Env;
 use Config;
 use think\Db;
@@ -868,14 +869,83 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserQrcode($link){
-        $sha1       = sha1($link);
-        $qrcode_dir = 'https://imagesdev.pzlive.vip' . '/qrcode/' . substr($sha1, 0, 2) . '/' . substr($sha1, 2, 3) . '/';
-        if (!file_exists($qrcode_dir)) mkdir($qrcode_dir, 0777, true);
-        $file_name = $qrcode_dir . $sha1 . '.png';
-        header('Content-Type: image/png');
-        $qrCode = new QrCode($link);
-        echo $qrCode->writeString();
-        die();
+    public function getQrcode($conId,$page,$scene,$type){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        // 先查询是否有已存在图片
+        $has_QrImage = ;
+        if (!empty($has_QrImage)) {
+            $Qrcode = $has_QrImage['image'];
+            return ['code' => '200','Qrcode' => $Qrcode];
+        }
+        $result = $this->createQrcode($scene,$page);
+        
+        if (imagecreatefromstring($result)) {
+            // $img_file = 'd:/test.png';
+            $file = fopen(Config::get('conf.image_path') . $conId.'.png', "w"); //打开文件准备写入
+            fwrite($file, $result); //写入
+            fclose($file); //关闭  
+            // 开始上传,调用上传方法 
+            $upload = '';
+            if (!empty($upload)) {
+                $logImage = DbImage::getLogImage($upload, 2);//判断时候有未完成的图片
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                
+                $upUserInfo = [];
+                $upUserInfo['uid'] = $uid;
+                $upUserInfo['stype'] = $type;
+                $upUserInfo['image'] = $upload;
+                
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                return ['code' => '200','Qrcode' =>Config::get('qiniu.domain').$upload];
+                
+            }else{
+                return ['code' => '3009'];
+            }
+            // echo $result;die;
+        }else{
+            return ['code' => '3006'];
+        }
+
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER,['Content-Type: application/json; charset=utf-8','Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return  $res;
+    }
+
+    public function createQrcode($scene,$page){
+        $appid         = Config::get('conf.weixin_miniprogram_appid');
+        $appid         = 'wx1771b2e93c87e22c';
+        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
+        $secret        = '1566dc764f46b71b33085ba098f58317';
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
+        if (!$requestUrl) {
+            return ['code' => '3004'];
+        }
+        $requsest_subject = json_decode(sendRequest($requestUrl),true);
+        $access_token     = $requsest_subject['access_token'];
+        if (!$access_token){
+            return ['code' => '3005'];
+        }
+        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
+        // print_r($link);die;
+        $result = $this->sendRequest2($requestUrl,['scene' => $scene,'page' => $page]);
+        return $result;
     }
 }
