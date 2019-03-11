@@ -4,6 +4,7 @@ namespace app\common\model;
 
 use think\Model;
 use think\model\concern\SoftDelete;
+use Config;
 
 class UserImage extends Model {
     use SoftDelete;
@@ -23,5 +24,14 @@ class UserImage extends Model {
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
+    }
+    public function getImageAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
     }
 }

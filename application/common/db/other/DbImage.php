@@ -3,6 +3,7 @@
 namespace app\common\db\other;
 
 use app\common\model\LogImage;
+use app\common\model\UserImage;
 
 class DbImage {
     private $logImage;
@@ -80,6 +81,38 @@ class DbImage {
 
     public function updateLogImageStatusList($data) {
         return $this->logImage->saveAll($data);
+    }
+
+    /**
+     * 查询用户图片
+     * @param $id
+     * @param $status
+     * @return bool
+     */
+    public function getUserImage($file,$where,$row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = UserImage::field($file)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    /**
+     * 保存用户图片
+     * @param $data
+     * @return bool
+     */
+    public function saveUserImage($data){
+        $UserImage = new UserImage;
+        return $UserImage->save($data);
     }
 
 }
