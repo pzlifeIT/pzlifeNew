@@ -343,4 +343,74 @@ class Cart extends CommonIndex {
         }
         return ['code' => '200', 'msg' => '删除成功'];
     }
+
+    public function getUserCartNum($conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $total = 0;
+        $cart = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        if ($cart) {
+            $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);
+            
+            foreach ($cart as $key => $value) {
+                /* $key示例：$key = 'skuid:18'; */
+                $buy_goods     = [];
+                $skuid         = substr($key, 6);
+                $buy_goods     = json_decode($value, true);
+                $buy_track_num = $buy_goods['track'];
+                /*  $buy_goods_sku = []; */
+
+                foreach ($buy_track_num as $track_id => $num) {
+                    $cart_buy = [];
+
+                    /* $track_id = $track_id; */
+                    /* 获取店铺信息 */
+                   
+                    /* 查询商品信息 */
+                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,cost_price,active_end_time,margin_price,integral_price,spec,sku_image,status';
+                    $where     = [["id", "=", $skuid]];
+                    $goods_sku = DbGoods::getOneSku($where, $field);
+                    /* 该规格查询不到直接失效 */
+
+                    /* 获取商品基础信息 */
+                    $where                  = [["id", "=", $buy_goods['goods_id']]];
+                    $field                  = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+                    $goods_data             = DbGoods::getOneGoods($where, $field);
+                    $goods_data['track_id'] = $track_id;
+                    $goods_data['buy_num']  = $num;
+                    /* print_r($goods_data); */
+                   
+                    /* 获取购物车购买规格属性 */
+                    $attr_field = 'id,spec_id,attr_name';
+                    $attr_where = [['id', 'in', $goods_sku['spec']]];
+
+                    $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
+
+                    
+                    /*  print_r($goods_sku_name);die; */
+
+                    /* 获取商品所在分类 */
+                    $field       = 'id,type_name';
+                    $where       = [["id", '=', $goods_data['cate_id']]];
+                    $goods_class = DbGoods::getOneCate($where, $field);
+
+                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
+                     if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                        
+                        continue;
+                    }
+                    /* 若无此规格，则该商品暂时以失效处理 */
+                    if (!$goods_sku_name) {
+                       
+                        continue;
+                    }
+                   $total = $total + $num;
+                }
+
+            }
+        }
+        return ['code' => '200','total' => $total];
+    }
 }
