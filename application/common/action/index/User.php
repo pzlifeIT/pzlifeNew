@@ -767,7 +767,7 @@ class User extends CommonIndex {
         $data['default']     = 2;
         $add                 = DbUser::addUserAddress($data);
         if ($add) {
-            return ['code' => '200', 'msg' => '添加成功'];
+            return ['code' => '200', 'msg' => '添加成功','id' => $add];
         } else {
             return ['code' => '3008', 'msg' => '添加失败'];
         }
