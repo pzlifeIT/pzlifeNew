@@ -16,15 +16,19 @@ class ShopManage extends MyController{
 
     /**
      * @api              {post} / 处理推荐关系
-     * @apiDescription   indexMain
+     * @apiDescription   getShopGoods
      * @apiGroup         index_user
-     * @apiName          indexMain
+     * @apiName          getShopGoods
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} [buid] 推荐人uid
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误
      * @apiSuccess (返回) {Array} data 用户信息
-     * @apiSampleRequest /index/user/indexmain
+     * @apiSampleRequest /index/user/getShopGoods
      * @return array
      * @author zyr
      */
+    public function getShopGoods(){
+        $conId = trim($this->request->post('con_id'));
+        
+    }
 }
