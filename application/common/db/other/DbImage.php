@@ -15,13 +15,15 @@ class DbImage {
      * 写入文件上传日志
      * @param $image_path
      * @param string $username
+     * @param int $stype
      * @return int
      * @author zyr
      */
-    public function saveLogImage($image_path, $username = '') {
+    public function saveLogImage($image_path, $username = '', $stype = 2) {
         $data = [
             'username'   => $username,
             'image_path' => $image_path,
+            'stype'      => $stype,
         ];
         return $this->logImage->save($data);
     }

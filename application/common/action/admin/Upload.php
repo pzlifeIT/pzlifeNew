@@ -75,7 +75,7 @@ class Upload {
      */
     private function delImg($filenameArr) {
         if (!is_array($filenameArr)) {
-            $this->upload->deleteImage($$filenameArr);//删除上传的图片
+            $this->upload->deleteImage($filenameArr);//删除上传的图片
         } else {
             foreach ($filenameArr as $v) {
                 $this->upload->deleteImage($v);//删除上传的图片
