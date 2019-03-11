@@ -230,7 +230,7 @@ class Recommend{
                
             }
             // print_r($redisListKey);die;
-            
+            // $this->SetRedis($recommends);
             return ['code' => '200','recommends' => $recommends];
         }else{
             return ['code' => '3000'];
