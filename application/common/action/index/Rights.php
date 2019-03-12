@@ -156,7 +156,7 @@ class Rights extends CommonIndex {
             if ($diamondvips_id){
                 $where = ['diamondvips_id' => $diamondvips_id];
             }else{
-                $where = ['share_uid' => $diamondvips_id];
+                $where = ['share_uid' => $con_id];
             }
             $getDiamondvipDominos = DbRights::getDiamondvip($where,'*');
             if (empty($getDiamondvipDominos)){
