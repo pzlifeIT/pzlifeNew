@@ -964,21 +964,21 @@ class User extends CommonIndex {
                 $upUserInfo['uid'] = $uid;
                 $upUserInfo['stype'] = $type;
                 $upUserInfo['image'] = $upload['image_path'];
-                // Db::startTrans();
-                // try {
-                $save = DbImage::saveUserImage($upUserInfo);
-                if (!$save){
-                    return ['code' => '3011'];
+                Db::startTrans();
+                try {
+                    $save = DbImage::saveUserImage($upUserInfo);
+                    if (!$save){
+                        return ['code' => '3011'];
+                    }
+                    DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                    $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
+                    Db::commit();
+                    return ['code' => '200','Qrcode' =>$new_Qrcode];
+                } catch (\Exception $e) {
+                    print_r($e);
+                    Db::rollback();
+                    return ['code' => '3011'];//添加失败
                 }
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
-                $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
-
-                return ['code' => '200','Qrcode' =>$new_Qrcode];
-                // } catch (\Exception $e) {
-                //     print_r($e);
-                //     Db::rollback();
-                //     return ['code' => '3011'];//添加失败
-                // }
                 
                 
             }else{
