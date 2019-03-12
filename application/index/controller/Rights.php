@@ -45,7 +45,7 @@ class Rights extends MyController {
      * @apiName          IsGetDominos
      * @apiParam (入参) {String} parent_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:parent_id长度只能是32位 / 3002:传入用户为空  / 3004:非BOSS无法开启分享钻石接龙资格（200名额）/ 3005:分享用户没有分享机会
-     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {String} code
      * @apiSampleRequest /index/rights/IsGetDominos
      * @return array
      * @author rzc
@@ -71,7 +71,7 @@ class Rights extends MyController {
      * @apiName          IsBossDominos
      * @apiParam (入参) {String} con_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:非BOSS无法开启分享钻石接龙资格（200名额） / 3005:分享用户没有分享机会
-     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {String} code 
      * @apiSampleRequest /index/rights/IsBossDominos
      * @return array
      * @author rzc
@@ -109,6 +109,71 @@ class Rights extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->rights->getDominosBalanceHint($con_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取用户钻石会员领取机会记录
+     * @apiDescription   getDominosChance
+     * @apiGroup         index_rights
+     * @apiName          getDominosChance
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:非BOSS无法开启分享钻石接龙资格（200名额） / 3005:分享用户没有分享机会
+     * @apiSuccess (Diamondvips) {String} id 主键
+     * @apiSuccess (Diamondvips) {String} uid 用户UID
+     * @apiSuccess (Diamondvips) {String} shopid 商店ID
+     * @apiSuccess (Diamondvips) {String} linkman boss姓名
+     * @apiSuccess (Diamondvips) {String} mobile 手机号
+     * @apiSuccess (Diamondvips) {String} stock 库存
+     * @apiSuccess (Diamondvips) {String} num 已领取数量
+     * @apiSuccess (DiamondvipDominos) {String} DiamondvipDominos 购买100元数量
+     * @apiSampleRequest /index/rights/getDominosChance
+     * @return array
+     * @author rzc
+     */
+    public function getDominosChance(){
+        $con_id = $this->request->post('con_id');
+        if (empty($con_id)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($con_id) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->rights->getDominosChance($con_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取用户钻石会员领取详情
+     * @apiDescription   getDominosReceive
+     * @apiGroup         index_rights
+     * @apiName          getDominosReceive
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {Number} diamondvips_id diamondvips_id（不传则查购买100元接龙信息）
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:diamondvips_id必须为数字 / 3004:普通会员无法查看 / 3005:分享用户没有分享机会
+     * @apiSuccess (data) {String} uid 用户id
+     * @apiSuccess (data) {String} nick_name 用户昵称
+     * @apiSuccess (data) {String} avatar 用户头像
+     * @apiSampleRequest /index/rights/getDominosReceive
+     * @return array
+     * @author rzc
+     */
+    public function getDominosReceive(){
+        $con_id = trim($this->request->post('con_id'));
+        $diamondvips_id = trim($this->request->post('diamondvips_id'));
+        if (empty($con_id)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($con_id) != 32) {
+            return ['code' => '3001'];
+        }
+        if ($diamondvips_id) {
+            if (!is_numeric($diamondvips_id)) {
+                return ['code' => '3003'];
+            }
+        }
+       
+        $result = $this->app->rights->getDominosReceive($con_id,$diamondvips_id);
         return $result;
     }
 }

@@ -146,4 +146,17 @@ class DbRights {
         }
         return $obj->toArray();
     }
+
+
+    /**
+     * 查询钻石分享表记录条数
+     * @param $where
+     * @return number
+     */
+    public function getCountDiamondvips($where){
+        if ($where) {
+            return DiamondvipGet::where($where)->count();
+        }
+        return DiamondvipGet::count();
+    }
 }

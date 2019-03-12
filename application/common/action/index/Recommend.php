@@ -31,11 +31,14 @@ class Recommend extends CommonIndex {
         $indexShow = json_decode($indexShow,true);
         foreach ($indexShow as $key => $value) {
             if ($value['son'] && $value['model_id'] == 5) {
+               
                 foreach ($value['son'] as $val => $son) {
                     if ($son['show_days'] != $weekday){
                         unset($indexShow[$key]['son'][$val]);
                     }
                 }
+                $indexShow[$key]['son'] = array_values($indexShow[$key]['son']);
+
             }
             // print_r($value);die;
         }
