@@ -17,14 +17,14 @@ class Shopmanage extends MyController{
     /**
      * @api              {post} / 获取店铺商品
      * @apiDescription   getShopGoods
-     * @apiGroup         index_user
+     * @apiGroup         index_shopmanage
      * @apiName          getShopGoods
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} type 查询类型 1:已上架 2:已下架 3:未上架
      * @apiParam (入参) {String} search 查询字段
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:type:查询类型必须为数字 / 3004:非法的查询类型 / 3005:店铺不存在
      * @apiSuccess (返回) {Array} data 用户信息
-     * @apiSampleRequest /index/user/getShopGoods
+     * @apiSampleRequest /index/shopmanage/getShopGoods
      * @return array
      * @author rzc
      */
@@ -55,13 +55,13 @@ class Shopmanage extends MyController{
     /**
      * @api              {post} / 上下架店铺商品
      * @apiDescription   autoShopGoods
-     * @apiGroup         index_user
+     * @apiGroup         index_shopmanage
      * @apiName          autoShopGoods
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} type 查询类型 1:已上架 2:已下架 
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:type:查询类型必须为数字 / 3004:非法的查询类型 / 3005:店铺不存在
      * @apiSuccess (返回) {Array} data 用户信息
-     * @apiSampleRequest /index/user/autoShopGoods
+     * @apiSampleRequest /index/shopmanage/autoShopGoods
      * @return array
      * @author rzc
      */
