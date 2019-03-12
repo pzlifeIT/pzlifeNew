@@ -311,7 +311,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 1);
+        // $this->redis->rPush($redisListKey, 6);
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -532,8 +532,8 @@ class Order extends Pzlife {
                     if ($from_user['user_identity'] > 1) {
                         $from_diamondvip_get                   = [];
                         $from_diamondvip_get['uid']            = $from_uid;
-                        $from_diamondvip_get['share_redmoney'] = 50;
-                        $from_diamondvip_get['share_num']      = 1;
+                        // $from_diamondvip_get['redmoney'] = 50;
+                        // $from_diamondvip_get['share_num']      = 1;
                         $from_diamondvip_get['create_time']    = time();
                         Db::name('diamondvip_get')->insert($from_diamondvip_get);
                         $from_balance = $from_user['balance'] + 50;
@@ -557,7 +557,7 @@ class Order extends Pzlife {
                 } else {
                     /* 给上级 */
                     $from_diamondvip_get              = [];
-                    $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
+                    // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
                     $from_balance = $from_user['balance'] + 50;
                     Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
@@ -617,7 +617,7 @@ class Order extends Pzlife {
      * @param $uid
      */
     private function diamondvipGet($uid) {
-        $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
+        $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
         $diamondvipGet    = Db::query($diamondvipGetSql);
         if (!$diamondvipGet) {
             return [];
