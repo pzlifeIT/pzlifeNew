@@ -1004,9 +1004,9 @@ class User extends CommonIndex {
 
     public function createQrcode($scene,$page){
         $appid         = Config::get('conf.weixin_miniprogram_appid');
-        $appid         = 'wx1771b2e93c87e22c';
+        // $appid         = 'wx1771b2e93c87e22c';
         $secret        = Config::get('conf.weixin_miniprogram_appsecret');
-        $secret        = '1566dc764f46b71b33085ba098f58317';
+        // $secret        = '1566dc764f46b71b33085ba098f58317';
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
         if (!$requestUrl) {
             return ['code' => '3004'];
