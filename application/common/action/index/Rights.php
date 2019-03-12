@@ -164,7 +164,7 @@ class Rights extends CommonIndex {
             }
             foreach ($getDiamondvipDominos as $get => $Dominos) {
                 $userInfo = DbUser::getUserInfo(['id'=>$Dominos['uid']],'id,nick_name,avatar',true);
-                $getDiamondvipDominos[$get]['uid'] = $this->enuid($userInfo['id']);
+                $getDiamondvipDominos[$get]['uid'] = enuid($userInfo['id']);
                 $getDiamondvipDominos[$get]['nick_name'] = $userInfo['nick_name'];
                 $getDiamondvipDominos[$get]['avatar'] = $userInfo['avatar'];
             }
