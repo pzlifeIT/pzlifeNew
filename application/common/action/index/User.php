@@ -943,8 +943,10 @@ class User extends CommonIndex {
             return ['code' => '200','Qrcode' => $Qrcode];
         }
         $result = $this->createQrcode($scene,$page);
-        print_r($result);die;
-        if (imagecreatefromstring($result)) {
+        
+        // print_r(strlen($result));die;
+        // print_r (imagecreatefromstring($result));die;
+        if (strlen($result)>100) {
             // $img_file = 'd:/test.png';
             $file = fopen(Config::get('conf.image_path') . $conId.'.png', "w"); //打开文件准备写入
             fwrite($file, $result); //写入
@@ -962,18 +964,21 @@ class User extends CommonIndex {
                 $upUserInfo['uid'] = $uid;
                 $upUserInfo['stype'] = $type;
                 $upUserInfo['image'] = $upload['image_path'];
-                Db::startTrans();
-                try {
-                    DbImage::saveUserImage($upUserInfo);
-                    DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
-                    $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
-
-                    return ['code' => '200','Qrcode' =>$new_Qrcode];
-                } catch (\Exception $e) {
-                    print_r($e);
-                    Db::rollback();
-                    return ['code' => '3011'];//添加失败
+                // Db::startTrans();
+                // try {
+                $save = DbImage::saveUserImage($upUserInfo);
+                if (!$save){
+                    return ['code' => '3011'];
                 }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
+
+                return ['code' => '200','Qrcode' =>$new_Qrcode];
+                // } catch (\Exception $e) {
+                //     print_r($e);
+                //     Db::rollback();
+                //     return ['code' => '3011'];//添加失败
+                // }
                 
                 
             }else{
@@ -981,7 +986,7 @@ class User extends CommonIndex {
             }
             // echo $result;die;
         }else{
-            return ['code' => '3006'];
+            return json_decode($result);
         }
 
     }
