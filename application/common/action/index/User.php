@@ -886,7 +886,7 @@ class User extends CommonIndex {
             return ['code' => '3004'];
         }
         $field  = 'id,uid,province_id,city_id,area_id,address,default,name,mobile';
-        $where  = ['uid' => $uid, 'address_id' => $address_id];
+        $where  = ['uid' => $uid, 'id' => $address_id];
         $result = DbUser::getUserAddress($field, $where, true);
         if (empty($result)) {
             return ['code' => 3005, 'msg' => '该地址不存在，无法设为默认']; /*  */
