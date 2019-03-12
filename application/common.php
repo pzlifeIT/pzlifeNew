@@ -91,15 +91,24 @@ function randCaptcha($num) {
  * @author zyr
  */
 function enUid($uid) {
-    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
-    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
-    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
-    if (strlen($uid) > 15) {
-        return 0;
+    $str    = 'AcEgIkMoQs';
+    $newuid = strrev($uid);
+    $newStr = '';
+    for ($i = 0; $i < strlen($newuid); $i++) {
+        $newStr .= $str[$newuid[$i]];
     }
-    $uid     = intval($uid);
-    $encrypt = base64_encode(openssl_encrypt($uid, $cryptMethod, $cryptKey, 0, $cryptIv));
-    return $encrypt;
+    $tit    = getOneNum($newuid);
+    $result = $str[getOneNum($tit)] . $newStr;
+    return $result;
+//    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
+//    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+//    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+//    if (strlen($uid) > 15) {
+//        return 0;
+//    }
+//    $uid     = intval($uid);
+//    $encrypt = base64_encode(openssl_encrypt($uid, $cryptMethod, $cryptKey, 0, $cryptIv));
+//    return $encrypt;
 }
 
 /**
@@ -108,16 +117,35 @@ function enUid($uid) {
  * @author zyr
  */
 function deUid($enUid) {
-    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
-    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
-    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
-    $decrypt     = openssl_decrypt(base64_decode($enUid), $cryptMethod, $cryptKey, 0, $cryptIv);
-    if ($decrypt) {
-        return $decrypt;
-    } else {
-        return 0;
+    $str = 'AcEgIkMoQs';
+    $enUid = substr($enUid, 1);
+    $id    = '';
+    for ($i = 0; $i < strlen($enUid); $i++) {
+        $id .= strpos($str, $enUid[$i]);
     }
+    return strrev($id);
+//    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
+//    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+//    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+//    $decrypt     = openssl_decrypt(base64_decode($enUid), $cryptMethod, $cryptKey, 0, $cryptIv);
+//    if ($decrypt) {
+//        return $decrypt;
+//    } else {
+//        return 0;
+//    }
 }
+
+function getOneNum($num) {
+    if ($num < 10) {
+        return $num;
+    }
+    $res = 0;
+    for ($i = 0; $i < strlen($num); $i++) {
+        $res = bcadd($num[$i], $res, 0);
+    }
+    return getOneNum($res);
+}
+
 
 /**
  * 发送请求
@@ -194,26 +222,26 @@ function createOrderNo($prefix = 'odr') {
  * @return array
  * @author rzc
  */
-function getExpressList(){
+function getExpressList() {
     $ExpressList = [
-        'shunfeng' =>'顺丰速运',
-        'zhongtong' =>'中通快递',
-        'shentong' =>'申通快递',
-        'yunda' =>'韵达快递',
-        'tiantian' =>'天天快递',
-        'huitongkuaidi' =>'百世快递',
-        'ems' =>'EMS',
-        'youshuwuliu' =>'优速物流',
-        'kuayue' =>'跨越速运',
-        'debangwuliu' =>'德邦物流',
-        'yuantong' =>'圆通速递',
-        'jiuyescm' =>'九曳快递',
-        'zhaijibian' =>'黑猫宅急便(宅急便)',
-        'ane66' =>'安能快递',
-        'youzhengguonei' =>'中国邮政',
-        'rufengda' =>'如风达',
-        'wanxiangwuliu' =>'万象物流',
-        'SJPS' => '商家派送',
+        'shunfeng'       => '顺丰速运',
+        'zhongtong'      => '中通快递',
+        'shentong'       => '申通快递',
+        'yunda'          => '韵达快递',
+        'tiantian'       => '天天快递',
+        'huitongkuaidi'  => '百世快递',
+        'ems'            => 'EMS',
+        'youshuwuliu'    => '优速物流',
+        'kuayue'         => '跨越速运',
+        'debangwuliu'    => '德邦物流',
+        'yuantong'       => '圆通速递',
+        'jiuyescm'       => '九曳快递',
+        'zhaijibian'     => '黑猫宅急便(宅急便)',
+        'ane66'          => '安能快递',
+        'youzhengguonei' => '中国邮政',
+        'rufengda'       => '如风达',
+        'wanxiangwuliu'  => '万象物流',
+        'SJPS'           => '商家派送',
     ];
     return $ExpressList;
 }
