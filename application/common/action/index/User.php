@@ -943,7 +943,7 @@ class User extends CommonIndex {
             return ['code' => '200','Qrcode' => $Qrcode];
         }
         $result = $this->createQrcode($scene,$page);
-        
+        print_r($result);die;
         if (imagecreatefromstring($result)) {
             // $img_file = 'd:/test.png';
             $file = fopen(Config::get('conf.image_path') . $conId.'.png', "w"); //打开文件准备写入
