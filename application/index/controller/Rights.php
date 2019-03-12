@@ -45,7 +45,7 @@ class Rights extends MyController {
      * @apiName          IsGetDominos
      * @apiParam (入参) {String} parent_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:parent_id长度只能是32位 / 3002:传入用户为空  / 3004:非BOSS无法开启分享钻石接龙资格（200名额）/ 3005:分享用户没有分享机会
-     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {String} code
      * @apiSampleRequest /index/rights/IsGetDominos
      * @return array
      * @author rzc
@@ -71,7 +71,7 @@ class Rights extends MyController {
      * @apiName          IsBossDominos
      * @apiParam (入参) {String} con_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:非BOSS无法开启分享钻石接龙资格（200名额） / 3005:分享用户没有分享机会
-     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {String} code 
      * @apiSampleRequest /index/rights/IsBossDominos
      * @return array
      * @author rzc
@@ -142,7 +142,7 @@ class Rights extends MyController {
      * @apiGroup         index_rights
      * @apiName          getDominosReceive
      * @apiParam (入参) {String} con_id 用户con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:非BOSS无法开启分享钻石接龙资格（200名额） / 3005:分享用户没有分享机会
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:普通会员无法查看 / 3005:分享用户没有分享机会
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/rights/getDominosReceive
      * @return array

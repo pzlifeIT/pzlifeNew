@@ -122,8 +122,20 @@ class Rights extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getDominosChance(){
-        
+    public function getDominosChance($con_id){
+        $uid = $this->getUidByConId($con_id);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $userInfo = DbUser::getUserInfo(['id'=>$uid],'user_identity',true);
+        if ($userInfo['user_identity']>1) {
+            
+            $Diamondvips = DbRights::getDiamondvips(['uid' => $uid,'status' => 1,'type' => 1],'*');
+            $DiamondvipDominos = DbRights::getDiamondvip(['share_uid' => $uid]);
+        }else{
+            return ['code' => '3004'];
+        }
+       
     }
 
 }
