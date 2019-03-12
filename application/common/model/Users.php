@@ -14,6 +14,8 @@ class Users extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
+    protected $updateTime = false;//关闭update_time
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
         'last_time'   => 'timestamp:Y-m-d H:i:s',//最后登录时间
