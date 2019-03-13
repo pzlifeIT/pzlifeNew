@@ -332,6 +332,9 @@ class User extends CommonIndex {
         if ($wxInfo === false) {
             return ['code' => '3001'];
         }
+        if(empty($wxInfo['unionid'])){
+            return ['code' => '3000'];
+        }
         $user = DbUser::getUser(['unionid' => $wxInfo['unionid']]);
         if (empty($user) || empty($user['mobile'])) {
             return ['code' => '3000'];
