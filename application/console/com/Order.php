@@ -80,6 +80,33 @@ class Order extends Pzlife {
     }
 
     /**
+     * 自动收货(15天)
+     * 每天执行一次
+     */
+    public function orderTheGoods() {
+        $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
+        $times     = bcmul($days, 86400, 0);
+        $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
+        $sql       = sprintf("select id from pz_orders where delete_time=0 and order_status=5 and create_time<=%s", $diffTimes);
+        $result    = Db::query($sql);
+        if (empty($result)) {
+            exit('order_is_null');
+        }
+        $orderIdList = implode(',', array_column($result, 'id'));
+        $updateSql   = sprintf("update pz_orders set order_status=6 where delete_time=0 and id in (%s)", $orderIdList);
+        Db::startTrans();
+        try {
+            Db::execute($updateSql);
+            Db::commit();
+            exit('ok!');
+        } catch (\Exception $e) {
+//            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
+            Db::rollback();
+            exit('rollback');
+        }
+    }
+    
+    /**
      * 分利正式发放到用户账户
      * 每天执行一次
      */
