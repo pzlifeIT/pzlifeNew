@@ -22,6 +22,8 @@ class Shopmanage extends MyController{
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} type 查询类型 1:已上架 2:已下架 3:未上架
      * @apiParam (入参) {String} search 查询字段
+     * @apiParam (入参) {String} page 查询页数
+     * @apiParam (入参) {String} pagenum 查询条数
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:type:查询类型必须为数字 / 3004:非法的查询类型 / 3005:店铺不存在
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/shopmanage/getShopGoods
@@ -35,6 +37,8 @@ class Shopmanage extends MyController{
         $page = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pagenum'));
         $type = $type ? $type : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
+        $page = $page ? $page : 1;
         $types = [1,2,3];
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -58,9 +62,9 @@ class Shopmanage extends MyController{
      * @apiGroup         index_shopmanage
      * @apiName          autoShopGoods
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {String} type 1:已上架 2:已下架 
+     * @apiParam (入参) {String} type 1:上架 2:下架 
      * @apiParam (入参) {String} goods_id 操作商品id
-     * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:type和goods_id必须为数字 / 3004:非法的查询类型 / 3005:goods_id不能为空
+     * @apiSuccess (返回) {String} code 200:成功  / 3000:用户ID不存在 / 3001:con_id长度只能是32位 / 3002:conId有误 / 3003:type和goods_id必须为数字 / 3004:非法的查询类型 / 3005:goods_id不能为空 / 3006:店铺不存在 / 3007:该商品不存在或者已下架 / 3008:该商品已上架，无需重复上架,或者已下架，无法重复下架 / 3009:该商品不存在，无法下架
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/shopmanage/autoShopGoods
      * @return array
@@ -71,7 +75,7 @@ class Shopmanage extends MyController{
         $type = trim($this->request->post('type'));
         $goods_id = trim($this->request->post('goods_id'));
         $type = $type ? $type : 1;
-        $types = [1,2,3];
+        $types = [1,2];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -90,7 +94,7 @@ class Shopmanage extends MyController{
         if (!is_numeric($goods_id)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->shopmanage->autoShopGoods($conId,$type);
+        $result = $this->app->shopmanage->autoShopGoods($conId,$type,$goods_id);
         return $result;
     }
 }
