@@ -14,6 +14,7 @@ class ShopGoods extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//上架时间
     ];
@@ -34,5 +35,9 @@ class ShopGoods extends Model {
         }
         $status = array_flip($this->status);
         return $status[$value];
+    }
+
+    public function goods() {
+        return $this->belongsTo('goods', 'goods_id', 'id');
     }
 }
