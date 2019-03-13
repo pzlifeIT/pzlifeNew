@@ -52,7 +52,7 @@ class Rights extends MyController {
      */
     public function IsGetDominos(){
         $parent_id = $this->request->post('parent_id');
-        if (strlen($parent_id) != 32) {
+        if (strlen($parent_id) < 1) {
             return ['code' => '3001'];
         }
         $parent_id = deUid($parent_id);
