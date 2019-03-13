@@ -338,7 +338,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 6);
+        // $this->redis->rPush($redisListKey, 4);
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -559,6 +559,7 @@ class Order extends Pzlife {
                     if ($from_user['user_identity'] > 1) {
                         $from_diamondvip_get                   = [];
                         $from_diamondvip_get['uid']            = $from_uid;
+                        $from_diamondvip_get['share_uid']      = 1;
                         // $from_diamondvip_get['redmoney'] = 50;
                         // $from_diamondvip_get['share_num']      = 1;
                         $from_diamondvip_get['create_time']    = time();
@@ -601,7 +602,9 @@ class Order extends Pzlife {
                     );
 
                     $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
-                    $share_from_user        = $this->getUserInfo($sharefromDiamondvipGet['share_uid']);
+                    $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
+                    // Db::getLastSql();die;
+                    // print_r($fromDiamondvipGet['share_uid']);die;
                     if ($share_from_user['user_identity'] == 4) {
                         $share_from_balance = 0;
                         $share_from_balance = $share_from_user['balance'] + 50;
@@ -612,7 +615,7 @@ class Order extends Pzlife {
                                 'trading_type' => 1,
                                 'change_type'  => 5,
                                 'money'        => 50,
-                                'befor_money'  => $share_from_balance['balance'],
+                                'befor_money'  => $share_from_user['balance'],
                                 'after_money'  => $share_from_balance,
                                 'create_time'  => time()
                             ]
@@ -657,7 +660,11 @@ class Order extends Pzlife {
      */
     private function getUserInfo($uid) {
         $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
+        // print_r($getUserSql);die;
         $userInfo   = Db::query($getUserSql);
+        if (!$userInfo) {
+            return [];
+        }
         return $userInfo[0];
     }
 }
