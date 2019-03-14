@@ -131,7 +131,7 @@ class Rights extends CommonIndex {
         if ($userInfo['user_identity']>1) {
             
             $Diamondvips = DbRights::getDiamondvips(['uid' => $uid,'status' => 1,'type' => 1],'*');
-            $DiamondvipDominos = DbRights::getCountDiamondvips(['share_uid' => $uid]);
+            $DiamondvipDominos = DbRights::getCountDiamondvips(['share_uid' => $uid,'diamondvips_id' => 0]);
             return ['code' => 200,'Diamondvips' =>$Diamondvips,'DiamondvipDominos'=>$DiamondvipDominos];
         }else{
             return ['code' => '3004'];
@@ -156,7 +156,7 @@ class Rights extends CommonIndex {
             if ($diamondvips_id){
                 $where = ['diamondvips_id' => $diamondvips_id];
             }else{
-                $where = ['share_uid' => $uid];
+                $where = ['share_uid' => $uid,'diamondvips_id' => 0];
             }
             $getDiamondvipDominos = DbRights::getDiamondvip($where,'*');
             if (empty($getDiamondvipDominos)){
@@ -164,6 +164,7 @@ class Rights extends CommonIndex {
             }
             foreach ($getDiamondvipDominos as $get => $Dominos) {
                 $userInfo = DbUser::getUserInfo(['id'=>$Dominos['uid']],'id,nick_name,avatar',true);
+                // print_r($userInfo);die;
                 $getDiamondvipDominos[$get]['uid'] = enuid($userInfo['id']);
                 $getDiamondvipDominos[$get]['nick_name'] = $userInfo['nick_name'];
                 $getDiamondvipDominos[$get]['avatar'] = $userInfo['avatar'];
