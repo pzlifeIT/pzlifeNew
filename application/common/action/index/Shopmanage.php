@@ -134,10 +134,7 @@ class Shopmanage extends CommonIndex {
             if (empty($goods)) {
                 return ['code' => '3009'];
             }
-            if ($goods['status'] == 2) {
-                return ['code' => '3008'];
-            }
-            DbShops::updateShopGoods(['status'=>2],$goods['id']);
+            DbShops::deleteShopGoods($goods['id']);
             return ['code' => '200'];
         }
     }
