@@ -121,4 +121,16 @@ class DbShops {
         $ShopGoods->save($data,['id'=>$id]);
         return $id;
     }
+
+    /**
+     * 删除店铺商品
+     * @param $id 
+     * @return array
+     * @author rzc
+     */
+    public function deleteShopGoods($id){
+        $ShopGoods = new ShopGoods;
+        // return $ShopGoods->where('id',$id)->delete();
+        return $ShopGoods->destroy($id);
+    }
 }
