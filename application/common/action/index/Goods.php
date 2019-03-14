@@ -237,12 +237,12 @@ class Goods
 
         $field = 'goods_id';
         $where = ['subject_id'=>$subject_id];
-        $goodslist = DbGoods::getSubjectRelation($where, $field, false,$limit);
-       
+        $goodslist = DbGoods::getSubjectRelation($where, $field, false);
+    //    echo Db::getLastSql();die;
         foreach ($goodslist as $goods => $list) {
            $goodsid[]=$list['goods_id'];
         }
-
+        
         if(empty($goodslist)){
             return ['code' => 200, 'data' => []];
         }
@@ -254,7 +254,7 @@ class Goods
         // $where = ['status' => 1, 'cate_id' => $cate_id];
         
         $where = [['status','=', 1], ['id' ,'IN', $goodsid]];
-        $result = DbGoods::getGoods($field, false, $order, $where);
+        $result = DbGoods::getGoods($field, $limit, $order, $where);
         // echo Db::getLastSql();die;
         // print_r($result);die;
         if(empty($result)){
