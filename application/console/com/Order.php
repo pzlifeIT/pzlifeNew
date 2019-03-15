@@ -580,7 +580,8 @@ class Order extends Pzlife {
                         /* 写入缓存 */
                         $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                         $this->redis->expire($redisListKey . $from_uid, 2592000);
-
+                        $userRedisKey = Config::get('rediskey.user.redisKey');
+                        $this->redis->del( $userRedisKey. 'userinfo:' . $from_uid);
                     }
                 } else {
                     /* 给上级 */
@@ -600,7 +601,8 @@ class Order extends Pzlife {
                             'create_time'  => time()
                         ]
                     );
-
+                    $userRedisKey = Config::get('rediskey.user.redisKey');
+                    $this->redis->del( $userRedisKey. 'userinfo:' . $from_uid);
                     $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
                     $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
                     // Db::getLastSql();die;
@@ -623,7 +625,7 @@ class Order extends Pzlife {
                         /* 写入缓存 */
                         $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
                         $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
-
+                        $this->redis->del( $userRedisKey. 'userinfo:' . $share_from_user['id']);
                     }
                 }
 
