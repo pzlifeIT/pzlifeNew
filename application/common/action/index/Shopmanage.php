@@ -83,12 +83,15 @@ class Shopmanage extends CommonIndex {
             list($goods_spec,$goods_sku) = $Goods->getGoodsSku($value['goods_id']);
             
             
-            $value['min_retail_price'] =DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
-            $value['max_retail_price'] =DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
+            
             if ($type == 3){
                 $value['goods_sku'] = $goods_sku;
+                $value['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
+                $value['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
                 $new_goods[] = $value;
             }else{
+                $value['goods']['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
+                $value['goods']['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
                 $value['goods']['goods_sku'] = $goods_sku;
                 $new_goods[] = $value['goods'];
             }
