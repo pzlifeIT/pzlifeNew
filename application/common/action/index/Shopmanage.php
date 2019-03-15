@@ -72,10 +72,11 @@ class Shopmanage extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
+        // print_r($result);die;
         $new_goods = [];
         foreach ($result as $key => $value) {
             
-            // print_r($value);die;
+            // print_r($value);
             if ($type == 3) {
                 $value['goods_id'] = $value['id'];
                
@@ -90,14 +91,18 @@ class Shopmanage extends CommonIndex {
                 $value['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
                 $new_goods[] = $value;
             }else{
+                if (empty($value['goods'])) {
+                    continue;
+                }
                 $value['goods']['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
                 $value['goods']['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
                 $value['goods']['goods_sku'] = $goods_sku;
                 $new_goods[] = $value['goods'];
             }
-           
+        //    print_r($new_goods);
             // $result[$key]['goods_sku'] = $goods_sku;
         }
+        // die;
         return ['code' => '200','type' => $type,'goods_list' =>$new_goods];
     }
 
