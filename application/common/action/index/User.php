@@ -3,6 +3,7 @@
 namespace app\common\action\index;
 
 use app\common\action\notify\Note;
+use app\facade\DbOrder;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
 use app\facade\DbImage;
@@ -394,6 +395,82 @@ class User extends CommonIndex {
         }
     }
 
+    public function getBossShop($conId) {
+        $uid = $this->getUidByConId($conId);
+        $uid = 2;
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'user_identity,balance,balance_freeze,commission,commission_freeze,integral');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] != '4') {
+            return ['code' => '3004'];//不是boss
+        }
+//        $redisKey = 1;
+        $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
+        if ($this->redis->exists($redisKey)) {
+            $data = json_decode($this->redis->get($redisKey), true);
+        } else {
+            $toMonth              = strtotime(date('Y-m-01'));//当月的开始时间
+            $preMonth             = strtotime(date('Y-m-01', strtotime('-1 month')));//上月的开始时间
+            $balance              = $user['balance_freeze'] == '1' ? 0 : $user['balance'];//商票余额
+            $commission           = $user['commission_freeze'] == '1' ? 0 : $user['commission'];//佣金余额
+            $integral             = $user['integral'];//积分余额
+            $balanceNotSettlement = DbUser::getLogBonusSum([
+                ['status', '=', '1'],
+                ['to_uid', '=', $uid],
+            ], 'result_price');//未结算商票
+            $balanceUse           = abs(DbUser::getLogTradingSum([
+                ['trading_type', '=', '1'],
+                ['change_type', 'in', [1, 2]],
+                ['uid', '=', $uid],
+            ], 'money'));//已用商票总额
+            $orderSum             = DbOrder::getOrderDetailSum($uid, $toMonth);//销售总额
+            $toBonus              = DbUser::getLogTradingSum([
+                ['trading_type', '=', '2'],
+                ['change_type', 'in', [4, 5]],
+                ['uid', '=', $uid],
+                ['create_time', '>=', $toMonth],
+            ], 'money');//本月返利
+            $preBonus             = DbUser::getLogTradingSum([
+                ['trading_type', '=', '2'],
+                ['change_type', 'in', [4, 5]],
+                ['uid', '=', $uid],
+                ['create_time', '>=', $preMonth],
+                ['create_time', '<', $toMonth],
+            ], 'money');//上月返利
+            $userCount            = DbUser::getUserRelationCount([['relation', 'like', $uid . ',%']]);
+            $childId              = DbUser::getUserChild($uid);
+            $uidList              = DbUser::getUserInfo([['id', 'in', $childId], ['user_identity', '=', 2]], 'id');
+            $uidList              = array_column($uidList, 'id');
+            $userDiamondCount     = count($uidList);
+            $data                 = [
+                'balance_all'            => bcadd(bcadd($balance, $balanceNotSettlement, 4), $balanceUse, 2),//商票总额
+                'balance'                => $balance,//商票余额
+                'commission'             => $commission,//佣金余额
+                'integral'               => $integral,//积分余额
+                'balance_not_settlement' => $balanceNotSettlement,//未结算商票
+                'balance_use'            => $balanceUse,//已使用商票
+                'order_sum'              => $orderSum,//销售总额
+                'tobonus'                => $toBonus,//本月返利
+                'prebonus'               => $preBonus,//上月返利
+                'user_count_all'         => $userCount,//招商加盟人数
+                'user_diamond_count'     => $userDiamondCount,//钻石会员圈(直属钻石会员)
+                'user_count'             => bcsub($userCount, $userDiamondCount, 2),//(买主圈)
+            ];
+            $this->redis->setEx($redisKey, 600, json_encode($data));
+        }
+        return ['code' => '200', 'data' => $data];
+    }
+
+    /**
+     * 获取分利列表信息
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
     public function getUserBonus($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
@@ -426,6 +503,14 @@ class User extends CommonIndex {
         return ['code' => '200', 'data' => $result];
     }
 
+    /**
+     * 获取所有下级关系网
+     * @param $conId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
     public function getUserNextLevel($conId, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
