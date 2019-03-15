@@ -1010,6 +1010,7 @@ class Order extends CommonIndex {
                 /* 更新支付金额 */
                 DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
             }
+            unset($has_member_order['from_uid']);
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {
             $order              = [];
@@ -1018,9 +1019,9 @@ class Order extends CommonIndex {
             $order['user_type'] = $user_type;
             $order['pay_money'] = $pay_money;
             $order['pay_type']  = $pay_type;
-            if ($parent_id) {
-                $order['from_uid'] = $parent_id;
-            }
+         /*    if ($parent_id) {
+                $order['from_uid'] = enUid($parent_id);
+            } */
             DbOrder::addMemberOrder($order);
             return ['code' => '200', 'order_data' => $order];
         }
