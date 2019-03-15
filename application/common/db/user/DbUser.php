@@ -3,6 +3,7 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogTrading;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -247,6 +248,16 @@ class DbUser {
         return $userRecommend->id;
     }
 
+    public function getUserRelationCount($where) {
+        return UserRelation::where($where)->count();
+
+    }
+
+    public function getUserChild($pid) {
+        $res = UserRelation::field('uid')->where(['pid' => $pid])->select()->toArray();
+        return array_column($res, 'uid');
+    }
+
     public function getUserRelation($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = UserRelation::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
@@ -266,6 +277,14 @@ class DbUser {
     public function getLogBonus($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = LogBonus::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    public function getLogBonusSum($where, $field) {
+        return LogBonus::where($where)->sum($field);
+    }
+
+    public function getLogTradingSum($where, $field) {
+        return LogTrading::where($where)->sum($field);
     }
 
     /**

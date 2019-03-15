@@ -284,6 +284,42 @@ class User extends MyController {
         return $res;
     }
 
+    /**
+     * @api              {post} / boss店铺管理
+     * @apiDescription   getBossShop
+     * @apiGroup         index_user
+     * @apiName          getBossShop
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:用户不存在 / 3004:用户不是boss
+     * @apiSuccess (返回) {Array} data 店铺首页信息
+     * @apiSuccess (返回) {Decimal} balance_all 实际得到分利
+     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} commission 佣金余额
+     * @apiSuccess (返回) {Decimal} integral 积分余额
+     * @apiSuccess (返回) {Decimal} balance_not_settlement 未结算商票
+     * @apiSuccess (返回) {Decimal} balance_use 已使用商票
+     * @apiSuccess (返回) {Decimal} order_sum 销售总额
+     * @apiSuccess (返回) {Decimal} tobonus 本月返利
+     * @apiSuccess (返回) {Decimal} prebonus 上月返利
+     * @apiSuccess (返回) {Decimal} user_count_all 总人数
+     * @apiSuccess (返回) {Decimal} user_diamond_count 钻石会员圈
+     * @apiSuccess (返回) {Decimal} user_count 买主圈
+     * @apiSampleRequest /index/user/getbossshop
+     * @return array
+     * @author zyr
+     */
+    public function getBossShop() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getBossShop($conId);
+        return $result;
+    }
+
 
     /**
      * @api              {post} / 获取分利列表信息

@@ -9,10 +9,11 @@ return [
         'redisMemberShare' => 'index:member:share:list:',//购买会员成功支付的上级分享者获利提示队列
     ],
     'user'  => [
-        'redisKey'           => 'index:user:',
-        'redisConIdTime'     => 'index:user:conId:expiration',//conId到期时间的zadd
-        'redisConIdUid'      => 'index:user:conId:uid',//conId和uid的hSet
-        'redisUserNextLevel' => 'index:user:nextLevel:uid:',//用户关系下的所有关系网uid列表
+        'redisKey'                => 'index:user:',
+        'redisConIdTime'          => 'index:user:conId:expiration',//conId到期时间的zadd
+        'redisConIdUid'           => 'index:user:conId:uid',//conId和uid的hSet
+        'redisUserNextLevel'      => 'index:user:nextLevel:uid:',//用户关系下的所有关系网uid列表
+        'redisUserNextLevelCount' => 'index:user:nextLevelCount:uid:',//boss用户关系下的总人数
     ],
     'index' => [
         'redisIndexShow' => 'index:index:show',
