@@ -102,13 +102,13 @@ class Goods
 
         /* 查询商品轮播图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
-        $field = "goods_id,source_type,image_type,image_path";
-        $goods_banner = DbGoods::getOneGoodsImage($where, $field);
+        $field = "goods_id,source_type,image_type,image_path,order_by";
+        $goods_banner = DbGoods::getOneGoodsImage($where, $field,'order_by asc,id asc');
 
         /* 查询商品详情图 */
         $where = [["goods_id", "=", $goods_id], ["image_type", "=", 1], ["source_type", "IN", "1," . $source]];
-        $field = "goods_id,source_type,image_type,image_path";
-        $goods_details = DbGoods::getOneGoodsImage($where, $field);
+        $field = "goods_id,source_type,image_type,image_path,order_by";
+        $goods_details = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
 
         /* 商品对应规格及SKU价格 */
 
