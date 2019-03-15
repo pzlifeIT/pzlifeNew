@@ -9,6 +9,7 @@ use app\facade\DbGoods;
 use app\facade\DbOrder;
 use think\Db;
 use app\facade\DbProvinces;
+use function Qiniu\json_decode;
 
 class Order extends CommonIndex {
     private $redisCartUserKey;
@@ -1094,8 +1095,10 @@ class Order extends CommonIndex {
             ];
             $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
             foreach ($has_express_goodsid as $has_express => $goods) {
-                $express_goods            = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]]);
-                $express['express_goods'] = $express_goods;
+                $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+                // print_r($express_goods);die;
+                $express_goods['sku_json'] = json_decode($express_goods['sku_json'],true);
+                $express['express_goods'][]  = $express_goods;
             }
             $order_subpackage[] = $express;
         }
