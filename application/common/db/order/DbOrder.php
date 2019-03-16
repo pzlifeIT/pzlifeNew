@@ -74,15 +74,15 @@ class DbOrder {
      * @return float
      * @author zyr
      */
-    public function getOrderDetailSum($uid, $toMonth) {
+    public function getOrderDetailSum($uid, $toMonth = 0) {
         return Db::table('pz_orders')
             ->alias('o')
             ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
             ->join(['pz_order_goods' => 'og'], 'oc.id=og.order_child_id')
             ->where([
                 ['og.boss_uid', '=', $uid],
-//            ['o.create_time', '>=', $toMonth],
-//            ['order_status', 'in', [5, 6, 7]],
+                ['o.create_time', '>=', $toMonth],
+                ['order_status', 'in', [5, 6, 7]],
                 ['o.delete_time', '=', 0],
                 ['oc.delete_time', '=', 0],
                 ['og.delete_time', '=', 0],
