@@ -97,4 +97,31 @@ class Shopmanage extends MyController{
         $result = $this->app->shopmanage->autoShopGoods($conId,$type,$goods_id);
         return $result;
     }
+
+    /**
+     * @api              {post} / 判断商品是否上下架
+     * @apiDescription   getGoodsAway
+     * @apiGroup         index_shopmanage
+     * @apiName          getSearchGoods
+     * @apiParam (入参) {Number} goods_id 对应商品id
+     * @apiParam (入参) {String} con_id 用户登录id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001.3001必须是数字 / 3003:conId长度小于32位 / 3004:店铺不存在
+     * @apiSampleRequest /index/shopmanage/getGoodsAway
+     * @author rzc
+     */
+    public function getGoodsAway(){
+        $goods_id = trim($this->request->post('goods_id'));
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        
+        $result = $this->app->shopmanage->getGoodsAway($goods_id,$conId);
+        return $result;
+    }
+
+    
 }

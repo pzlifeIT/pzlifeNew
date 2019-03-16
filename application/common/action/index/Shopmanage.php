@@ -157,4 +157,36 @@ class Shopmanage extends CommonIndex {
             return ['code' => '200'];
         }
     }
+
+    
+    /**
+     * 判断商品是否上下架
+     * @param $goods_id
+     * @param $source
+     * @return array
+     * @author rzc
+     */
+    public function getGoodsAway($goods_id,$conId){
+        if (!is_numeric($goods_id)) {
+            return ['code' => 3001, 'msg' => '参数必须是数字'];
+        }
+        $uid = $this->getUidByConId($conId);
+        
+        if (empty($uid)) {
+            return ['code' => 3000];
+        }
+        $shopinfo = DbShops::getShopInfo('id', ['uid'=>$uid]);
+        if (empty($shopinfo)) {
+            return ['code' => 3004];
+        }
+        $has_goods = DbShops::getShopGoods(['shop_id'=>$shopinfo['id'],'goods_id'=>$goods_id],'id',true);
+        if (!empty($has_goods)) {
+            $putaway = 1;
+        }else{
+            $putaway = 2;
+        }
+        return ['code' => '200','putaway'=>$putaway];
+       
+    }
+
 }
