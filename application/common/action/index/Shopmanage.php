@@ -47,7 +47,15 @@ class Shopmanage extends CommonIndex {
         }
         // print_r($limit);die;
         if ($type == 1) {
-            $result = DbShops::getShopWithGoods($where1,$where2, '*','*',false,'','',$limit);
+            $query = "SELECT sg.*,g.* FROM pz_goods AS g LEFT JOIN pz_shop_goods AS sg ON g.`id` = sg.`goods_id` WHERE g.`delete_time` = 0 and sg.`delete_time` = 0 and sg.`status` = g.`status` and sg.`status` = 1 and `sg`.`goods_id` = `g`.`id` and sg.`shop_id` = ".$shopinfo['id'];
+            if ($search) {
+                $query = $query.' and g.goods_name like  "%'.$search.'%"';
+            }
+            $query = $query.' limit '.$offset. ','.$pagenum ;
+           
+            $result = Db::query($query);
+            // print_r($result);die;
+            // $result = DbShops::getShopWithGoods($where1,$where2, '*','*',false,'','',$limit);
         }elseif ($type == 2) {
             $result = DbShops::getShopWithGoods($where1,$where2, '*','*',false,'','',$limit);
         }elseif ($type == 3) {
@@ -72,26 +80,37 @@ class Shopmanage extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
+        // print_r($result);die;
         $new_goods = [];
         foreach ($result as $key => $value) {
             
-            // print_r($value);die;
+            // print_r($value);
             if ($type == 3) {
                 $value['goods_id'] = $value['id'];
                
             }
             list($goods_spec,$goods_sku) = $Goods->getGoodsSku($value['goods_id']);
             
-            if ($type == 3){
-                $value['goods_sku'] = $goods_sku;
-                $new_goods[] = $value;
+            $value['goods_sku'] = $goods_sku;
+            $value['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
+            $value['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
+            $new_goods[] = $value;
+            
+      /*       if ($type == 3){
+               
             }else{
+                if (empty($value['goods'])) {
+                    continue;
+                }
+                $value['goods']['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
+                $value['goods']['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
                 $value['goods']['goods_sku'] = $goods_sku;
                 $new_goods[] = $value['goods'];
-            }
-           
+            } */
+        //    print_r($new_goods);
             // $result[$key]['goods_sku'] = $goods_sku;
         }
+        // die;
         return ['code' => '200','type' => $type,'goods_list' =>$new_goods];
     }
 
