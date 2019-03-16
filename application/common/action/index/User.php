@@ -397,7 +397,6 @@ class User extends CommonIndex {
 
     public function getBossShop($conId) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
