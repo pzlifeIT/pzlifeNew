@@ -334,7 +334,7 @@ class User extends CommonIndex {
         if ($wxInfo === false) {
             return ['code' => '3001'];
         }
-        if(empty($wxInfo['unionid'])){
+        if (empty($wxInfo['unionid'])) {
             return ['code' => '3000'];
         }
         $user = DbUser::getUser(['unionid' => $wxInfo['unionid']]);
@@ -397,7 +397,6 @@ class User extends CommonIndex {
 
     public function getBossShop($conId) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -415,38 +414,54 @@ class User extends CommonIndex {
         } else {
             $toMonth              = strtotime(date('Y-m-01'));//当月的开始时间
             $preMonth             = strtotime(date('Y-m-01', strtotime('-1 month')));//上月的开始时间
+            $threeMonth           = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
             $balance              = $user['balance_freeze'] == '1' ? 0 : $user['balance'];//商票余额
             $commission           = $user['commission_freeze'] == '1' ? 0 : $user['commission'];//佣金余额
             $integral             = $user['integral'];//积分余额
             $balanceNotSettlement = DbUser::getLogBonusSum([
-                ['status', '=', '1'],
+                ['user_identity', '=', 2],//只查商票
+                ['status', '=', '1'],//待结算(未到账的)
                 ['to_uid', '=', $uid],
+                ['create_time', '>=', $threeMonth],//近三个月
             ], 'result_price');//未结算商票
             $balanceUse           = abs(DbUser::getLogTradingSum([
-                ['trading_type', '=', '1'],
-                ['change_type', 'in', [1, 2]],
+                ['trading_type', '=', '1'],//商票交易
+                ['change_type', 'in', [1, 2]],//消费和取消订单退还商票
                 ['uid', '=', $uid],
+//                ['create_time', '>=', $threeMonth],//近三个月
             ], 'money'));//已用商票总额
-            $orderSum             = DbOrder::getOrderDetailSum($uid, $toMonth);//销售总额
+            $orderSum             = DbOrder::getOrderDetailSum($uid, $threeMonth);//销售总额(近三个月)
             $toBonus              = DbUser::getLogTradingSum([
                 ['trading_type', '=', '2'],
-                ['change_type', 'in', [4, 5]],
+                ['change_type', 'in', [4]],
                 ['uid', '=', $uid],
                 ['create_time', '>=', $toMonth],
             ], 'money');//本月返利
             $preBonus             = DbUser::getLogTradingSum([
                 ['trading_type', '=', '2'],
-                ['change_type', 'in', [4, 5]],
+                ['change_type', 'in', [4]],
                 ['uid', '=', $uid],
                 ['create_time', '>=', $preMonth],
                 ['create_time', '<', $toMonth],
             ], 'money');//上月返利
-            $userCount            = DbUser::getUserRelationCount([['relation', 'like', $uid . ',%']]);
-            $childId              = DbUser::getUserChild($uid);
-            $uidList              = DbUser::getUserInfo([['id', 'in', $childId], ['user_identity', '=', 2]], 'id');
-            $uidList              = array_column($uidList, 'id');
-            $userDiamondCount     = count($uidList);
-            $data                 = [
+            $bonus                = DbUser::getLogTradingSum([
+                ['trading_type', '=', '2'],
+                ['change_type', 'in', [4]],
+                ['uid', '=', $uid],
+//                ['create_time', '>=', $threeMonth],//近三个月
+            ], 'money');//全部返利
+//            $userCount            = DbUser::getUserRelationCount([['relation', 'like', $uid . ',%']]);
+//            $childId              = DbUser::getUserChild($uid);
+//            $uidList              = DbUser::getUserInfo([['id', 'in', $childId], ['user_identity', '=', 2]], 'id');
+//            $uidList              = array_column($uidList, 'id');
+//            $userDiamondCount     = count($uidList);
+            $merchants = DbUser::getLogTradingSum([
+                ['trading_type', '=', '2'],
+                ['change_type', '=', 5],
+                ['uid', '=', $uid],
+                ['create_time', '>=', $threeMonth],//近三个月
+            ], 'money');//招商加盟收益
+            $data      = [
                 'balance_all'            => bcadd(bcadd($balance, $balanceNotSettlement, 4), $balanceUse, 2),//商票总额
                 'balance'                => $balance,//商票余额
                 'commission'             => $commission,//佣金余额
@@ -456,11 +471,13 @@ class User extends CommonIndex {
                 'order_sum'              => $orderSum,//销售总额
                 'tobonus'                => $toBonus,//本月返利
                 'prebonus'               => $preBonus,//上月返利
-                'user_count_all'         => $userCount,//招商加盟人数
-                'user_diamond_count'     => $userDiamondCount,//钻石会员圈(直属钻石会员)
-                'user_count'             => bcsub($userCount, $userDiamondCount, 2),//(买主圈)
+                'bonus'                  => $bonus,//全部返利
+//                'user_count_all'         => $userCount,//招商加盟人数
+//                'user_diamond_count'     => $userDiamondCount,//钻石会员圈(直属钻石会员)
+//                'user_count'             => bcsub($userCount, $userDiamondCount, 2),//(买主圈)
+                'merchants'              => $merchants,//招商加盟收益
             ];
-            $this->redis->setEx($redisKey, 600, json_encode($data));
+            $this->redis->setEx($redisKey, 120, json_encode($data));
         }
         return ['code' => '200', 'data' => $data];
     }
@@ -468,10 +485,12 @@ class User extends CommonIndex {
     /**
      * 获取分利列表信息
      * @param $conId
+     * @param $year
+     * @param $month
      * @return array
      * @author zyr
      */
-    public function getUserBonus($conId) {
+    public function getUserBonus($conId, $year, $month) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
@@ -483,9 +502,16 @@ class User extends CommonIndex {
         if ($user['user_identity'] == '1') {//普通用户
             return ['code' => '3000'];//普通用户没有权限查看
         }
-        $where = [['to_uid', '=', $uid], ['status', 'in', [1, 2]]];
+        $ct = strtotime(date($year . '-' . $month . '-01'));//当月的开始时间
+//        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
+        $where = [
+            ['to_uid', '=', $uid],
+            ['status', 'in', [1, 2]],
+            ['user_identity', '=', 4],//只查boss身份时的分利
+            ['create_time', '>=', $ct],
+        ];
         $field = 'result_price,order_no,status,create_time';
-        $bonus = DbUser::getLogBonus($where, $field, false, 'id', 'desc');
+        $bonus = DbUser::getLogBonus($where, $field, false, 'status asc,id desc');
 //        print_r($bonus);die;
 //        $orderNoList = array_unique(array_column($bonus,'order_no'));
         $result = [];
@@ -494,7 +520,7 @@ class User extends CommonIndex {
                 $result[$b['order_no']] = $b;
                 continue;
             }
-            $result[$b['order_no']]['result_price'] += $b['result_price'];
+            $result[$b['order_no']]['result_price'] = bcadd($b['result_price'], $result[$b['order_no']]['result_price'], 2);
         }
         if (empty($result)) {
             return ['code' => '3000'];//没有分利
@@ -855,7 +881,7 @@ class User extends CommonIndex {
         $data['default']     = 2;
         $add                 = DbUser::addUserAddress($data);
         if ($add) {
-            return ['code' => '200', 'msg' => '添加成功','id' => $add];
+            return ['code' => '200', 'msg' => '添加成功', 'id' => $add];
         } else {
             return ['code' => '3008', 'msg' => '添加失败'];
         }

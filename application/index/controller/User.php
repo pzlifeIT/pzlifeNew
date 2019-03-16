@@ -301,9 +301,8 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} order_sum 销售总额
      * @apiSuccess (返回) {Decimal} tobonus 本月返利
      * @apiSuccess (返回) {Decimal} prebonus 上月返利
-     * @apiSuccess (返回) {Decimal} user_count_all 总人数
-     * @apiSuccess (返回) {Decimal} user_diamond_count 钻石会员圈
-     * @apiSuccess (返回) {Decimal} user_count 买主圈
+     * @apiSuccess (返回) {Decimal} bonus 经营性总收益
+     * @apiSuccess (返回) {Decimal} merchants 招商加盟收益
      * @apiSampleRequest /index/user/getbossshop
      * @return array
      * @author zyr
@@ -327,7 +326,9 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBonus
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiParam (入参) {Int} year 年份
+     * @apiParam (入参) {Int} month 月份
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} result_price 实际得到分利
      * @apiSuccess (返回) {json} order_no 订单号
@@ -339,13 +340,15 @@ class User extends MyController {
      */
     public function getUserBonus() {
         $conId = trim($this->request->post('con_id'));
+        $year  = trim($this->request->post('year'));
+        $month = trim($this->request->post('month'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->getUserBonus($conId);
+        $result = $this->app->user->getUserBonus($conId, $year, $month);
         return $result;
     }
 
@@ -539,8 +542,8 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserQrcode(){
-        $page = trim($this->request->get('page'));
+    public function getUserQrcode() {
+        $page  = trim($this->request->get('page'));
         $scene = trim($this->request->get('scene'));
         $conId = trim($this->request->get('con_id'));
         // print_r(Config::get('conf.image_path'));die;
@@ -560,7 +563,7 @@ class User extends MyController {
             return ['code' => '3007'];
         }
 
-        $result = $this->app->user->getQrcode($conId,$page,$scene,1);
+        $result = $this->app->user->getQrcode($conId, $page, $scene, 1);
         return $result;
     }
 

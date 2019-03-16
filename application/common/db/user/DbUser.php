@@ -258,7 +258,7 @@ class DbUser {
         return array_column($res, 'uid');
     }
 
-    public function getUserRelation($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getUserRelation($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = UserRelation::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
     }
@@ -274,9 +274,9 @@ class DbUser {
         return $userRelation->save($data, ['id' => $id]);
     }
 
-    public function getLogBonus($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getLogBonus($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogBonus::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     public function getLogBonusSum($where, $field) {
@@ -291,14 +291,13 @@ class DbUser {
      * @param $obj
      * @param bool $row
      * @param string $orderBy
-     * @param string $sc
      * @param string $limit
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
-        if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy, $sc);
+    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+        if (!empty($orderBy)) {
+            $obj = $obj->order($orderBy);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
