@@ -263,7 +263,7 @@ class DbUser {
 
     public function getUserRelation($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = UserRelation::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     public function addUserRelation($data) {
