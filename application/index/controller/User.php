@@ -352,6 +352,61 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 获取店铺商票明细
+     * @apiDescription   getShopBalance
+     * @apiGroup         index_user
+     * @apiName          getShopBalance
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getshopbalance
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalance() {
+        $conId    = trim($this->request->post('con_id'));
+        $stype    = trim($this->request->post('stype'));
+        $stypeArr = [1, 2, 3];
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->getShopBalance($conId, $stype);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户社交圈
+     * @apiDescription   getUserSocial
+     * @apiGroup         index_user
+     * @apiName          getUserSocial
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getusersocial
+     * @return array
+     * @author zyr
+     */
+    public function getUserSocial(){
+
+    }
+
 
     /**
      * @api              {post} / 获取所有下级关系网
