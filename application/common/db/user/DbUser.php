@@ -205,8 +205,11 @@ class DbUser {
      * @return array
      * @author rzc
      */
-    public function getUserAddress($field, $where, $row = false) {
+    public function getUserAddress($field, $where, $row = false, $orderBy = '') {
         $obj = UserAddress::where($where)->field($field);
+        if (!empty($orderBy)) {
+            $obj = $obj->order($orderBy);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
