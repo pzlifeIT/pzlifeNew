@@ -693,8 +693,9 @@ class Order extends Pzlife {
                 }
                 $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
                 $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
+            }else{
+                $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
             }
-            $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
             
         }else{
             $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
