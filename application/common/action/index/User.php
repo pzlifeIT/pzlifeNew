@@ -5,6 +5,7 @@ namespace app\common\action\index;
 use app\common\action\notify\Note;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
+use app\facade\DbOrder;
 use app\facade\DbImage;
 use Env;
 use Config;
@@ -1023,5 +1024,24 @@ class User extends CommonIndex {
         // print_r($link);die;
         $result = $this->sendRequest2($requestUrl,['scene' => $scene,'page' => $page]);
         return $result;
+    }
+
+    /**
+     * 生成二维码
+     * @param $conId
+     * @return string
+     * @author rzc
+     */
+    public function getUserOrderCount($conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $obligation = DbOrder::getOrderCount(['order_status'=>1]);//待付款
+        $deliver    = DbOrder::getOrderCount(['order_status'=>4]);//待发货
+        $receive    = DbOrder::getOrderCount(['order_status'=>5]);//待收货
+        $rating     = DbOrder::getOrderCount(['order_status'=>7]);//待评价
+
+        return ['code' => '200','obligation' => $obligation,'deliver' => $deliver,'receive' => $receive,'rating' => $rating];
     }
 }
