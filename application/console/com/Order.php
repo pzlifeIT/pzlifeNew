@@ -105,7 +105,7 @@ class Order extends Pzlife {
             exit('rollback');
         }
     }
-    
+
     /**
      * 分利正式发放到用户账户
      * 每天执行一次
@@ -115,21 +115,23 @@ class Order extends Pzlife {
         $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
         $times     = bcmul($days, 86400, 0);
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
-        $sql       = sprintf("select id,to_uid,result_price,user_identity from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
+        $sql       = sprintf("select id,to_uid,result_price,user_identity,order_no from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
         $result    = Db::query($sql);
         if (empty($result)) {
             exit('log_bonus_null');
         }
         $data = [];
         foreach ($result as $rVal) {
-            if (!key_exists($rVal['to_uid'], $data)) {
-                $data[$rVal['to_uid']]['uid'] = $rVal['to_uid'];
+            $kkey = $rVal['to_uid'] . $rVal['order_no'];
+            if (!key_exists($kkey, $data)) {
+                $data[$kkey]['uid'] = $rVal['to_uid'];
 //                $data[$rVal['to_uid']]['user_identity'] = $rVal['user_identity'];
             }
+            $data[$kkey]['order_no'] = $rVal['order_no'];
             if ($rVal['user_identity'] == 4) {
-                $data[$rVal['to_uid']]['commission'] = isset($data[$rVal['to_uid']]['commission']) ? bcadd($data[$rVal['to_uid']]['commission'], $rVal['result_price'], 2) : $rVal['result_price'];
+                $data[$kkey]['commission'] = isset($data[$kkey]['commission']) ? bcadd($data[$kkey]['commission'], $rVal['result_price'], 2) : $rVal['result_price'];
             } else {
-                $data[$rVal['to_uid']]['balance'] = isset($data[$rVal['to_uid']]['balance']) ? bcadd($data[$rVal['to_uid']]['balance'], $rVal['result_price'], 2) : $rVal['result_price'];
+                $data[$kkey]['balance'] = isset($data[$kkey]['balance']) ? bcadd($data[$kkey]['balance'], $rVal['result_price'], 2) : $rVal['result_price'];
             }
         }
         $data            = array_values($data);
@@ -148,12 +150,14 @@ class Order extends Pzlife {
         try {
             $tradingData = [];
             foreach ($data as $d) {
-                $fromTradingData['uid'] = $d['uid'];
+                $fromTradingData['uid']      = $d['uid'];
+                $fromTradingData['order_no'] = $d['order_no'];
                 if (isset($d['balance']) && $d['balance'] > 0) {
                     $fromTradingData['money']        = $d['balance'];
                     $fromTradingData['trading_type'] = 1;
                     $fromTradingData['befor_money']  = $userBalance[$d['uid']];
-                    $fromTradingData['after_money']  = bcadd($userBalance[$d['uid']], $d['balance'], 2);
+                    $userBalance[$d['uid']]          = bcadd($userBalance[$d['uid']], $d['balance'], 2);
+                    $fromTradingData['after_money']  = $userBalance[$d['uid']];
                     array_push($tradingData, $fromTradingData);
                     Db::table('pz_users')->where('id', $d['uid'])->setInc('balance', $d['balance']);
                 }
@@ -161,7 +165,8 @@ class Order extends Pzlife {
                     $fromTradingData['money']        = $d['commission'];
                     $fromTradingData['trading_type'] = 2;
                     $fromTradingData['befor_money']  = $userCommission[$d['uid']];
-                    $fromTradingData['after_money']  = bcadd($userCommission[$d['uid']], $d['commission'], 2);
+                    $userCommission[$d['uid']]       = bcadd($userCommission[$d['uid']], $d['commission'], 2);
+                    $fromTradingData['after_money']  = $userCommission[$d['uid']];
                     array_push($tradingData, $fromTradingData);
                     Db::table('pz_users')->where('id', $d['uid'])->setInc('commission', $d['commission']);
                 }
@@ -352,10 +357,10 @@ class Order extends Pzlife {
         $userType    = $memberOrder['user_type'];
 //        print_r($memberOrder);die;
         if ($userType == 1) {//钻石会员
-            $this->diamondvipSettlement($memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid']);
+            $this->diamondvipSettlement($memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid'], $memberOrder['order_no']);
         }
         if ($userType == 2) {//boss
-            $this->bossSettlement($memberOrder['uid'], $memberOrder['from_uid']);
+            $this->bossSettlement($memberOrder['uid'], $memberOrder['from_uid'], $memberOrder['order_no']);
         }
     }
 
@@ -468,9 +473,10 @@ class Order extends Pzlife {
     /**
      * @param $uid
      * @param $fromUid
+     * @param $memberOrder
      * @author zyr
      */
-    private function bossSettlement($uid, $fromUid) {
+    private function bossSettlement($uid, $fromUid, $memberOrder) {
         $buyBossMoney = 5000;//推荐购买boss可获得奖励佣金额度
         //修改用户关系及身份
         $myBoss = $this->getBoss($uid);
@@ -501,6 +507,7 @@ class Order extends Pzlife {
             'uid'          => $fromUid,
             'trading_type' => 2,
             'change_type'  => 5,
+            'order_no'     => $memberOrder,
             'money'        => $buyBossMoney,
             'befor_money'  => $fromUserInfo['commission'],
             'after_money'  => bcadd($fromUserInfo['commission'], $buyBossMoney, 2),
@@ -540,8 +547,9 @@ class Order extends Pzlife {
      * @param $uid
      * @param $payMoney
      * @param $from_uid
+     * @param $memberOrder
      */
-    private function diamondvipSettlement($uid, $payMoney, $from_uid) {
+    private function diamondvipSettlement($uid, $payMoney, $from_uid, $memberOrder) {
         $redisListKey      = Config::get('redisKey.order.redisMemberShare');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
 
@@ -557,12 +565,12 @@ class Order extends Pzlife {
                 if (!$fromDiamondvipGet) {
 
                     if ($from_user['user_identity'] > 1) {
-                        $from_diamondvip_get                   = [];
-                        $from_diamondvip_get['uid']            = $from_uid;
-                        $from_diamondvip_get['share_uid']      = 1;
+                        $from_diamondvip_get              = [];
+                        $from_diamondvip_get['uid']       = $from_uid;
+                        $from_diamondvip_get['share_uid'] = 1;
                         // $from_diamondvip_get['redmoney'] = 50;
                         // $from_diamondvip_get['share_num']      = 1;
-                        $from_diamondvip_get['create_time']    = time();
+                        $from_diamondvip_get['create_time'] = time();
                         Db::name('diamondvip_get')->insert($from_diamondvip_get);
                         $from_balance = $from_user['balance'] + 50;
                         Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
@@ -571,6 +579,7 @@ class Order extends Pzlife {
                                 'uid'          => $from_uid,
                                 'trading_type' => 1,
                                 'change_type'  => 5,
+                                'order_no'     => $memberOrder,
                                 'money'        => 50,
                                 'befor_money'  => $from_user['balance'],
                                 'after_money'  => $from_balance,
@@ -581,11 +590,11 @@ class Order extends Pzlife {
                         $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                         $this->redis->expire($redisListKey . $from_uid, 2592000);
                         $userRedisKey = Config::get('rediskey.user.redisKey');
-                        $this->redis->del( $userRedisKey. 'userinfo:' . $from_uid);
+                        $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                     }
                 } else {
                     /* 给上级 */
-                    $from_diamondvip_get              = [];
+                    $from_diamondvip_get = [];
                     // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
                     $from_balance = $from_user['balance'] + 50;
@@ -595,6 +604,7 @@ class Order extends Pzlife {
                             'uid'          => $from_uid,
                             'trading_type' => 1,
                             'change_type'  => 5,
+                            'order_no'     => $memberOrder,
                             'money'        => 50,
                             'befor_money'  => $from_user['balance'],
                             'after_money'  => $from_balance,
@@ -602,7 +612,7 @@ class Order extends Pzlife {
                         ]
                     );
                     $userRedisKey = Config::get('rediskey.user.redisKey');
-                    $this->redis->del( $userRedisKey. 'userinfo:' . $from_uid);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                     $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
                     $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
                     // Db::getLastSql();die;
@@ -616,6 +626,7 @@ class Order extends Pzlife {
                                 'uid'          => $share_from_user['id'],
                                 'trading_type' => 1,
                                 'change_type'  => 5,
+                                'order_no'     => $memberOrder,
                                 'money'        => 50,
                                 'befor_money'  => $share_from_user['balance'],
                                 'after_money'  => $share_from_balance,
@@ -625,7 +636,7 @@ class Order extends Pzlife {
                         /* 写入缓存 */
                         $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
                         $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
-                        $this->redis->del( $userRedisKey. 'userinfo:' . $share_from_user['id']);
+                        $this->redis->del($userRedisKey . 'userinfo:' . $share_from_user['id']);
                     }
                 }
 
@@ -663,7 +674,7 @@ class Order extends Pzlife {
     private function getUserInfo($uid) {
         $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
         // print_r($getUserSql);die;
-        $userInfo   = Db::query($getUserSql);
+        $userInfo = Db::query($getUserSql);
         if (!$userInfo) {
             return [];
         }

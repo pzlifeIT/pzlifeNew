@@ -395,6 +395,12 @@ class User extends CommonIndex {
         }
     }
 
+    /**
+     * boss店铺管理
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
     public function getBossShop($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
@@ -504,29 +510,113 @@ class User extends CommonIndex {
         }
         $ct = strtotime(date($year . '-' . $month . '-01'));//当月的开始时间
 //        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
-        $where = [
+        $where    = [
             ['to_uid', '=', $uid],
             ['status', 'in', [1, 2]],
             ['user_identity', '=', 4],//只查boss身份时的分利
             ['create_time', '>=', $ct],
         ];
-        $field = 'result_price,order_no,status,create_time';
-        $bonus = DbUser::getLogBonus($where, $field, false, 'status asc,id desc');
+        $field    = 'from_uid,result_price,order_no,status,create_time';
+        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc');
+        $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar');
+        $userList = array_combine(array_column($userList, 'id'), $userList);
 //        print_r($bonus);die;
 //        $orderNoList = array_unique(array_column($bonus,'order_no'));
         $result = [];
         foreach ($bonus as $b) {
-            if (!key_exists($b['order_no'], $result)) {
-                $result[$b['order_no']] = $b;
+            $keyy = $b['order_no'] . $b['from_uid'];
+            if (!key_exists($keyy, $result)) {
+                $b['nick_name'] = $userList[$b['from_uid']]['nick_name'];
+                $b['avatar']    = $userList[$b['from_uid']]['avatar'];
+                $b['from_uid']  = enUid($b['from_uid']);
+                $result[$keyy]  = $b;
                 continue;
             }
-            $result[$b['order_no']]['result_price'] = bcadd($b['result_price'], $result[$b['order_no']]['result_price'], 2);
+            $result[$keyy]['result_price'] = bcadd($b['result_price'], $result[$keyy]['result_price'], 2);
         }
         if (empty($result)) {
             return ['code' => '3000'];//没有分利
         }
         $result = array_values($result);
         return ['code' => '200', 'data' => $result];
+    }
+
+    /**
+     * 获取店铺商票明细
+     * @param $conId
+     * @param $stype
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalance($conId, $stype) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] == '1') {//普通用户
+            return ['code' => '3000'];//普通用户没有权限查看
+        }
+        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
+        if ($stype == 1) {//已使用
+            $where = [
+                ['trading_type', '=', '1'],//商票交易
+                ['change_type', 'in', [1, 2]],//1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
+                ['uid', '=', $uid],
+                ['create_time', '>=', $threeMonth],//近三个月
+            ];
+            $field = 'change_type,order_no,money,create_time';
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+        }
+        if ($stype == 3) {//余额明细
+            $where = [
+                ['trading_type', '=', '1'],//商票交易
+                ['change_type', 'in', [1, 2, 4, 5, 7]],//1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
+                ['uid', '=', $uid],
+                ['create_time', '>=', $threeMonth],//近三个月
+            ];
+            $field = 'change_type,order_no,money,create_time';
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+        }
+        if ($stype == 2) {//未结算商票
+            $data = DbUser::getLogBonus([
+                ['user_identity', '=', 2],//只查商票
+                ['status', '=', '1'],//待结算(未到账的)
+                ['to_uid', '=', $uid],
+                ['create_time', '>=', $threeMonth],//近三个月
+            ], 'order_no,result_price as money,create_time');//未结算商票
+        }
+        $result = [];
+//        print_r($data);die;
+        foreach ($data as $d) {
+            $trType = $d['change_type'] ?? 4;
+            switch ($trType) {
+                case 1:
+                    $ctype = '已使用商票';
+                    break;
+                case 2:
+                    $ctype = '商票退款';
+                    break;
+                case 4:
+                    $ctype = '钻石返利';
+                    break;
+                case 5:
+                    $ctype = '钻石会员邀请奖励';
+                    break;
+                case 7:
+                    $ctype = '佣金转入';
+                    break;
+            }
+            $d['ctype'] = $ctype;
+            unset($d['change_type']);
+            array_push($result, $d);
+        }
+//        print_r($data);die;
+        return ['code' => '200', 'data' => $result];
+        //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
     }
 
     /**
@@ -1043,61 +1133,55 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getQrcode($conId,$page,$scene,$type){
-        $uid = $this->getUidByConId($conId);
+    public function getQrcode($conId, $page, $scene, $type) {
+        $uid    = $this->getUidByConId($conId);
         $Upload = new Upload;
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-       
         // 先查询是否有已存在图片
-        $has_QrImage = DbImage::getUserImage('*',['uid'=>$uid,'stype'=>1],true);
+        $has_QrImage = DbImage::getUserImage('*', ['uid' => $uid, 'stype' => 1], true);
         if (!empty($has_QrImage)) {
             $Qrcode = $has_QrImage['image'];
-            return ['code' => '200','Qrcode' => $Qrcode];
+            return ['code' => '200', 'Qrcode' => $Qrcode];
         }
-        $result = $this->createQrcode($scene,$page);
-        
+        $result = $this->createQrcode($scene, $page);
+
         if (imagecreatefromstring($result)) {
             // $img_file = 'd:/test.png';
-            $file = fopen(Config::get('conf.image_path') . $conId.'.png', "w"); //打开文件准备写入
+            $file = fopen(Config::get('conf.image_path') . $conId . '.png', "w"); //打开文件准备写入
             fwrite($file, $result); //写入
             fclose($file); //关闭  
             // 开始上传,调用上传方法 
-            $upload = $Upload->uploadUserImage($conId.'.png');
+            $upload = $Upload->uploadUserImage($conId . '.png');
             if ($upload['code'] == 200) {
                 $logImage = DbImage::getLogImage($upload, 2);//判断时候有未完成的图片
                 // print_r($logImage);die;
                 if (empty($logImage)) {//图片不存在
                     return ['code' => '3010'];//图片没有上传过
                 }
-                
-                $upUserInfo = [];
-                $upUserInfo['uid'] = $uid;
+                $upUserInfo          = [];
+                $upUserInfo['uid']   = $uid;
                 $upUserInfo['stype'] = $type;
                 $upUserInfo['image'] = $upload['image_path'];
                 Db::startTrans();
                 try {
                     DbImage::saveUserImage($upUserInfo);
                     DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
-                    $new_Qrcode = Config::get('qiniu.domain').'/'.$upload['image_path'];
+                    $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
 
-                    return ['code' => '200','Qrcode' =>$new_Qrcode];
+                    return ['code' => '200', 'Qrcode' => $new_Qrcode];
                 } catch (\Exception $e) {
-                    print_r($e);
                     Db::rollback();
                     return ['code' => '3011'];//添加失败
                 }
-                
-                
-            }else{
+            } else {
                 return ['code' => '3009'];
             }
             // echo $result;die;
-        }else{
+        } else {
             return ['code' => '3006'];
         }
-
     }
 
     function sendRequest2($requestUrl, $data = []) {
@@ -1109,30 +1193,30 @@ class User extends CommonIndex {
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_HTTPHEADER,['Content-Type: application/json; charset=utf-8','Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         $res = curl_exec($curl);
         curl_close($curl);
-        return  $res;
+        return $res;
     }
 
-    public function createQrcode($scene,$page){
-        $appid         = Config::get('conf.weixin_miniprogram_appid');
-        $appid         = 'wx1771b2e93c87e22c';
-        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
-        $secret        = '1566dc764f46b71b33085ba098f58317';
-        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
+    public function createQrcode($scene, $page) {
+        $appid      = Config::get('conf.weixin_miniprogram_appid');
+        $appid      = 'wx1771b2e93c87e22c';
+        $secret     = Config::get('conf.weixin_miniprogram_appsecret');
+        $secret     = '1566dc764f46b71b33085ba098f58317';
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
         if (!$requestUrl) {
             return ['code' => '3004'];
         }
-        $requsest_subject = json_decode(sendRequest($requestUrl),true);
+        $requsest_subject = json_decode(sendRequest($requestUrl), true);
         $access_token     = $requsest_subject['access_token'];
-        if (!$access_token){
+        if (!$access_token) {
             return ['code' => '3005'];
         }
-        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$access_token;
+        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $access_token;
         // print_r($link);die;
-        $result = $this->sendRequest2($requestUrl,['scene' => $scene,'page' => $page]);
+        $result = $this->sendRequest2($requestUrl, ['scene' => $scene, 'page' => $page]);
         return $result;
     }
 }
