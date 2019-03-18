@@ -279,6 +279,11 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogTrading::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
     public function getLogBonusSum($where, $field) {
         return LogBonus::where($where)->sum($field);
     }
