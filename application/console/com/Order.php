@@ -43,28 +43,30 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             foreach ($order as $o) {
-                $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
-                $user           = Db::query($userSql);
-                $user           = $user[0];
-                $tradingData    = [
-                    'uid'          => $o['uid'],
-                    'trading_type' => 1,
-                    'change_type'  => 2,
-                    'money'        => $o['deduction_money'],
-                    'befor_money'  => $user['balance'],
-                    'after_money'  => bcadd($user['balance'], $o['deduction_money'], 2),
-                    'message'      => '',
-                    'create_time'  => time(),
-                ];
+                if ($o['deduction_money'] != 0) {
+                    $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                    $user           = Db::query($userSql);
+                    $user           = $user[0];
+                    $tradingData    = [
+                        'uid'          => $o['uid'],
+                        'trading_type' => 1,
+                        'change_type'  => 2,
+                        'money'        => $o['deduction_money'],
+                        'befor_money'  => $user['balance'],
+                        'after_money'  => bcadd($user['balance'], $o['deduction_money'], 2),
+                        'message'      => '',
+                        'create_time'  => time(),
+                    ];
+                    $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+                    Db::execute($userUpdateSql);
+                    Db::name('log_trading')->insert($tradingData);
+                }
                 $orderUpdateSql = sprintf("update pz_orders set order_status=2 where delete_time=0 and id=%d", $o['id']);
-                $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
 //                $logBonusUpdateSql    = sprintf("update pz_log_bonus set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
 //                $logIntegralUpdateSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and order_no='%s'", $o['order_no']);
                 Db::execute($orderUpdateSql);
-                Db::execute($userUpdateSql);
 //                Db::execute($logBonusUpdateSql);
 //                Db::execute($logIntegralUpdateSql);//待付款取消的订单还未结算分利和积分不需要取消
-                Db::name('log_trading')->insert($tradingData);
             }
             foreach ($orderGoods as $og) {
                 $goodsSkuSql = sprintf("update pz_goods_sku set stock=stock+%d where delete_time=0 and id=%d", $og['goods_num'], $og['sku_id']);
