@@ -328,27 +328,43 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Int} year 年份
      * @apiParam (入参) {Int} month 月份
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误
+     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} result_price 实际得到分利
      * @apiSuccess (返回) {json} order_no 订单号
      * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
      * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSuccess (返回) {String} nick_name 昵称
+     * @apiSuccess (返回) {String} avatar 头像
+     * @apiSuccess (返回) {Int} from_uid 购买人uid
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
      * @apiSampleRequest /index/user/getuserbonus
      * @return array
      * @author zyr
      */
     public function getUserBonus() {
-        $conId = trim($this->request->post('con_id'));
-        $year  = trim($this->request->post('year'));
-        $month = trim($this->request->post('month'));
+        $conId    = trim($this->request->post('con_id'));
+        $year     = trim($this->request->post('year'));
+        $month    = trim($this->request->post('month'));
+        $stype    = trim($this->request->post('stype'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->getUserBonus($conId, $year, $month);
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3005'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
         return $result;
     }
 
@@ -361,10 +377,10 @@ class User extends MyController {
      * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
-     * @apiSuccess (返回) {json} order_no 订单号
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
-     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSuccess (返回) {Decimal} money 商票金额
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {String} ctype 类型
+     * @apiSuccess (返回) {json} create_time 明细生成时间
      * @apiSampleRequest /index/user/getshopbalance
      * @return array
      * @author zyr
@@ -403,7 +419,7 @@ class User extends MyController {
      * @return array
      * @author zyr
      */
-    public function getUserSocial(){
+    public function getUserSocial() {
 
     }
 

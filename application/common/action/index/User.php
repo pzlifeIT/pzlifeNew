@@ -493,10 +493,13 @@ class User extends CommonIndex {
      * @param $conId
      * @param $year
      * @param $month
+     * @param $stype
+     * @param $page
+     * @param $pageNum
      * @return array
      * @author zyr
      */
-    public function getUserBonus($conId, $year, $month) {
+    public function getUserBonus($conId, $year, $month, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
@@ -510,14 +513,24 @@ class User extends CommonIndex {
         }
         $ct = strtotime(date($year . '-' . $month . '-01'));//当月的开始时间
 //        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
+        $en = '=';
+        switch ($stype) {
+            case 1:
+                $en = '=';
+                break;
+            case 2:
+                $en = '<>';
+        }
         $where    = [
             ['to_uid', '=', $uid],
             ['status', 'in', [1, 2]],
             ['user_identity', '=', 4],//只查boss身份时的分利
             ['create_time', '>=', $ct],
+            ['from_uid', $en, $uid],
         ];
-        $field    = 'from_uid,result_price,order_no,status,create_time';
-        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc');
+        $offset   = ($page - 1) * $pageNum;
+        $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
+        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc', $offset . ',' . $pageNum);
         $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar');
         $userList = array_combine(array_column($userList, 'id'), $userList);
 //        print_r($bonus);die;
@@ -529,7 +542,9 @@ class User extends CommonIndex {
                 $b['nick_name'] = $userList[$b['from_uid']]['nick_name'];
                 $b['avatar']    = $userList[$b['from_uid']]['avatar'];
                 $b['from_uid']  = enUid($b['from_uid']);
-                $result[$keyy]  = $b;
+                unset($b['to_uid']);
+                $b['status']   = $b['status'] == 2 ? '已结算' : '待结算';
+                $result[$keyy] = $b;
                 continue;
             }
             $result[$keyy]['result_price'] = bcadd($b['result_price'], $result[$keyy]['result_price'], 2);
