@@ -689,7 +689,7 @@ class Order extends Pzlife {
         $redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
         // print_r($redisDeliverExpressList);die;
         // $this->redis->rPush($redisDeliverExpressList, 4);
-        $this->redis->rPush($redisDeliverExpressList, 'zhongtong&3915414258779');
+        // $this->redis->rPush($redisDeliverExpressList, 'zhongtong&3915414258779');
         $deliverexpresslist = $this->redis->lPop($redisDeliverExpressList);//购买会员的订单id
         if (empty($deliverexpresslist)) {
             exit('deliver_repress_null');
@@ -707,10 +707,10 @@ class Order extends Pzlife {
                 $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
                 $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
             }
-            $this->redis->rPush($redisDeliverExpressList, 'shentong&3701622486414');
+            $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
             
         }else{
-            $this->redis->rPush($redisDeliverExpressList, 'shentong&3701622486414');
+            $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
         }
         
     }
