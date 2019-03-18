@@ -1102,6 +1102,16 @@ class Order extends CommonIndex {
                 $express_goods['sku_json'] = json_decode($express_goods['sku_json'],true);
                 $express['express_goods'][]  = $express_goods;
             }
+            $key = $express['express_no'].'&'.$express['express_key'];
+        // $key = 'shentong&3701622486414';
+            $expresslog = $this->redis->get($this->redisDeliverOrderKey.$key);
+            if (!empty($expresslog)) {
+                $expresslog = json_decode($expresslog,true);
+                $express['express_info'] = $expresslog['data'][0]['context']; 
+            }else{
+                $express['express_info'] = '';
+            }
+            
             $order_subpackage[] = $express;
         }
         $package_num = count($has_order_express);
@@ -1110,7 +1120,7 @@ class Order extends CommonIndex {
 
 
     /**
-     * 查询订单分包
+     * 查询订单物流流转信息
      * @param $express_key
      * @param $express_no
      * @return array
@@ -1142,10 +1152,10 @@ class Order extends CommonIndex {
         }
 
         foreach ($has_express_goodsid as $has_express => $goods) {
-            $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+            $deliver_express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
             // print_r($express_goods);die;
-            $express_goods['sku_json'] = json_decode($express_goods['sku_json'],true);
-            $express_goods[]  = $express_goods;
+            $deliver_express_goods['sku_json'] = json_decode($deliver_express_goods['sku_json'],true);
+            $express_goods[]  = $deliver_express_goods;
         }
         $express = [];
         $express['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_address['province_id']])['area_name'];
@@ -1159,7 +1169,7 @@ class Order extends CommonIndex {
         if (empty($expresslog)) {
             $expresslog = [];
             $express['is_sign'] = 2;
-            return ['code' => 200,'express' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog];
+            return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog];
         }else{
             $expresslog = json_decode($expresslog,true);
         }
@@ -1168,7 +1178,7 @@ class Order extends CommonIndex {
         }else{
             $express['is_sign'] = 2;
         }
-        return ['code' => 200,'express' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog['data']];
+        return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog['data']];
         // $express = 
        
     }
