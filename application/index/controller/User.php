@@ -362,7 +362,9 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3005'];
         }
-        $result = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
         return $result;
     }
 
