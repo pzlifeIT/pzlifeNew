@@ -95,7 +95,10 @@ class Order extends CommonIndex {
         if ($summary['code'] != '200') {
             return $summary;
         }
-        $shopList     = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image');//购买的所有店铺信息列表
+        $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image');//购买的所有店铺信息列表
+        if (empty($shopList)) {
+            $shopList = DbShops::getShops([['id', '=', '1']], 'id,uid,shop_name,shop_image');//不是boss就查总店
+        }
         $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
         $supplierId   = $summary['goods_list'][0]['supplier_id'];//供应商id
         $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
@@ -163,7 +166,10 @@ class Order extends CommonIndex {
             return $summary;
         }
         $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
-        $goods    = $summary['goods_list'][0];
+        if (empty($shopInfo)) {
+            $buid = 1;
+        }
+        $goods = $summary['goods_list'][0];
 //        print_r($goods);die;
         $orderGoodsData = [];
         foreach ($goods['shopBuySum'] as $kgl => $gl) {
@@ -302,8 +308,12 @@ class Order extends CommonIndex {
         if ($goodsSku['stock'] < $num) {
             return ['code' => '3007'];//库存不足商品
         }
-        $shopInfo                = DbShops::getShopInfo('id', ['uid' => $buid]);
-        $shopId                  = $shopInfo['id'];
+        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        if (empty($shopInfo)) {
+            $shopId = 1;
+        } else {
+            $shopId = $shopInfo['id'];
+        }
         $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
         $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
         $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
