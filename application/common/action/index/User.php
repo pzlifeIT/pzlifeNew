@@ -528,8 +528,9 @@ class User extends CommonIndex {
             ['create_time', '>=', $ct],
             ['from_uid', $en, $uid],
         ];
+        $offset   = ($page - 1) * $pageNum;
         $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
-        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc');
+        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc', $offset . ',' . $pageNum);
         $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar');
         $userList = array_combine(array_column($userList, 'id'), $userList);
 //        print_r($bonus);die;
