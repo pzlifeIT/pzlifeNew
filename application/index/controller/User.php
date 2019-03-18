@@ -607,7 +607,7 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {String} page 跳转页面
      * @apiParam (入参) {String} scene 跳转页面
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败 / 41030:所传page页面不存在，或者小程序没有发布(微信报错)
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserQrcode
      * @return array
@@ -638,5 +638,32 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {get} / 用户订单计数
+     * @apiDescription   getUserOrderCount
+     * @apiGroup         index_user
+     * @apiName          getUserOrderCount
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败
+     * @apiSuccess (返回) {String} obligation 待付款
+     * @apiSuccess (返回) {String} deliver 待发货
+     * @apiSuccess (返回) {String} receive 待收货
+     * @apiSuccess (返回) {String} rating 待评价
+     * @apiSampleRequest /index/user/getUserOrderCount
+     * @return array
+     * @author rzc
+     */
+    public function getUserOrderCount(){
+        $conId = trim($this->request->get('con_id'));
+        
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserOrderCount($conId);
+        return $result;
 
+    }
 }
