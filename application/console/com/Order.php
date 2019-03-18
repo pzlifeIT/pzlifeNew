@@ -689,7 +689,7 @@ class Order extends Pzlife {
             $express_log = json_decode($express_log,true);
             if ($express_log['message'] == 'ok') {
                 if ($express_log['state'] != 3){//快递签收
-                    $this->redis->rPush($redisDeliverExpressList, 'shentong&3701622486414');
+                    $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
                 }
                 $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
                 $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
