@@ -446,7 +446,19 @@ class Order extends MyController {
      * @apiParam (入参) {Number} express_no 订单物流单号
      * @apiParam (入参) {Number} order_no 订单号
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo长度必须为23位 / 3002.con_id长度为32位或者不能为空 /3004:订单不存在 / 3005:uid为空 / 3006:未发货的订单无法查询分包信息 / 3007:无效的分包信息
-     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSuccess (返回) {Array} address 订单收货地址
+     * @apiSuccess (返回) {Array} express_goods 物流打包商品信息
+     * @apiSuccess (返回) {Array} expresslog 物流流转信息
+     * @apiSuccess (address) {String} province_name 省份名称
+     * @apiSuccess (address) {String} city_name 市级名称
+     * @apiSuccess (address) {String} area_name 区域名称
+     * @apiSuccess (address) {String} address 街道地址信息
+     * @apiSuccess (address) {String} message 用户留言信息
+     * @apiSuccess (address) {String} is_sign 用户是否已签收：1,签收；2未签收
+     * @apiSuccess (express_goods[]) {String} goods_name 商品名称
+     * @apiSuccess (express_goods[]) {String} sku_json 规格信息
+     * @apiSuccess (expresslog[]) {String} time 流转时间
+     * @apiSuccess (expresslog[]) {String} context 流转信息
      * @apiSampleRequest /index/order/getExpressLog
      * @author rzc
      */
