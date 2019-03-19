@@ -21,7 +21,7 @@ class Goods {
      * @return array
      * @author zyr
      */
-    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '') {
+    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '',$supplierTitle = '') {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
         $where = [];
@@ -32,6 +32,11 @@ class Goods {
         }
         if (!empty($supplierName)) {
             $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%']]);
+            $supplierId  = array_column($supplierArr, 'id');
+            array_push($where, ['pz_goods.supplier_id', 'in', $supplierId]);
+        }
+        if (!empty($supplierTitle)) {
+            $supplierArr = DbGoods::getSupplier('id', [['title', 'like', '%' . $supplierTitle . '%']]);
             $supplierId  = array_column($supplierArr, 'id');
             array_push($where, ['pz_goods.supplier_id', 'in', $supplierId]);
         }
