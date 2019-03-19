@@ -11,6 +11,7 @@ use app\common\model\OrderGoods;
 use app\common\model\MemberOrder;
 use app\common\model\OrderExpress;
 use app\common\model\LogPay;
+use think\Db;
 
 class DbOrder {
 
@@ -48,6 +49,44 @@ class DbOrder {
             return $obj->findOrEmpty()->toArray();
         }
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
+    }
+
+    /**
+     * 获取订单(订单,子订单,商品订单)列表详情
+     * @param $where
+     * @param $field
+     * @return array
+     * @author zyr
+     */
+    public function getOrderDetail($where, $field) {
+        return Db::table('pz_orders')
+            ->field($field)
+            ->alias('o')
+            ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
+            ->join(['pz_order_goods' => 'og'], 'oc.id=og.order_child_id')
+            ->where($where)->select();
+    }
+
+    /**
+     * 获取销售总额
+     * @param $uid
+     * @param $toMonth
+     * @return float
+     * @author zyr
+     */
+    public function getOrderDetailSum($uid, $toMonth = 0) {
+        return Db::table('pz_orders')
+            ->alias('o')
+            ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
+            ->join(['pz_order_goods' => 'og'], 'oc.id=og.order_child_id')
+            ->where([
+                ['og.boss_uid', '=', $uid],
+                ['o.create_time', '>=', $toMonth],
+                ['order_status', 'in', [5, 6, 7]],
+                ['o.delete_time', '=', 0],
+                ['oc.delete_time', '=', 0],
+                ['og.delete_time', '=', 0],
+            ])->sum('pay_money');
     }
 
     public function addOrderChilds($data) {
@@ -190,9 +229,9 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = MemberOrder::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -205,9 +244,9 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getLogPay($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getLogPay($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogPay::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     public function addLogPay($data) {
@@ -226,9 +265,9 @@ class DbOrder {
         return $logBonus->save($data, $where);
     }
 
-    public function updateLogIntegral($data,$where){
+    public function updateLogIntegral($data, $where) {
         $logIntegral = new LogIntegral();
-        return $logIntegral->save($data,$where);
+        return $logIntegral->save($data, $where);
     }
 
     public function addLogTrading($data) {
@@ -246,7 +285,7 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }

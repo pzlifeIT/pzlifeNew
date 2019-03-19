@@ -32,4 +32,8 @@ class OrderGoods extends Model {
         $goodsType = array_flip($this->goodsType);
         return $goodsType[$value];
     }
+
+    public function orderChild() {
+        return $this->belongsTo('orderChild', 'order_child_id', 'id');
+    }
 }

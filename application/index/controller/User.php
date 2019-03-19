@@ -284,24 +284,30 @@ class User extends MyController {
         return $res;
     }
 
-
     /**
-     * @api              {post} / 获取分利列表信息
-     * @apiDescription   getUserBonus
+     * @api              {post} / boss店铺管理
+     * @apiDescription   getBossShop
      * @apiGroup         index_user
-     * @apiName          getUserBonus
+     * @apiName          getBossShop
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
-     * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
-     * @apiSuccess (返回) {json} order_no 订单号
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
-     * @apiSuccess (返回) {json} create_time 订单完成时间
-     * @apiSampleRequest /index/user/getuserbonus
+     * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:用户不存在 / 3004:用户不是boss
+     * @apiSuccess (返回) {Array} data 店铺首页信息
+     * @apiSuccess (返回) {Decimal} balance_all 实际得到分利
+     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} commission 佣金余额
+     * @apiSuccess (返回) {Decimal} integral 积分余额
+     * @apiSuccess (返回) {Decimal} balance_not_settlement 未结算商票
+     * @apiSuccess (返回) {Decimal} balance_use 已使用商票
+     * @apiSuccess (返回) {Decimal} order_sum 销售总额
+     * @apiSuccess (返回) {Decimal} tobonus 本月返利
+     * @apiSuccess (返回) {Decimal} prebonus 上月返利
+     * @apiSuccess (返回) {Decimal} bonus 经营性总收益
+     * @apiSuccess (返回) {Decimal} merchants 招商加盟收益
+     * @apiSampleRequest /index/user/getbossshop
      * @return array
      * @author zyr
      */
-    public function getUserBonus() {
+    public function getBossShop() {
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -309,7 +315,194 @@ class User extends MyController {
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->getUserBonus($conId);
+        $result = $this->app->user->getBossShop($conId);
+        return $result;
+    }
+
+
+    /**
+     * @api              {post} / 获取分利列表信息
+     * @apiDescription   getUserBonus
+     * @apiGroup         index_user
+     * @apiName          getUserBonus
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} year 年份
+     * @apiParam (入参) {Int} month 月份
+     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
+     * @apiSuccess (返回) {json} order_no 订单号
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSuccess (返回) {String} nick_name 昵称
+     * @apiSuccess (返回) {String} avatar 头像
+     * @apiSuccess (返回) {Int} from_uid 购买人uid
+     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSampleRequest /index/user/getuserbonus
+     * @return array
+     * @author zyr
+     */
+    public function getUserBonus() {
+        $conId    = trim($this->request->post('con_id'));
+        $year     = trim($this->request->post('year'));
+        $month    = trim($this->request->post('month'));
+        $stype    = trim($this->request->post('stype'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2];
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3005'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取店铺商票明细
+     * @apiDescription   getShopBalance
+     * @apiGroup         index_user
+     * @apiName          getShopBalance
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Decimal} money 商票金额
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {String} ctype 类型
+     * @apiSuccess (返回) {json} create_time 明细生成时间
+     * @apiSampleRequest /index/user/getshopbalance
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalance() {
+        $conId    = trim($this->request->post('con_id'));
+        $stype    = trim($this->request->post('stype'));
+        $stypeArr = [1, 2, 3];
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->getShopBalance($conId, $stype);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户社交圈统计
+     * @apiDescription   getUserSocialSum
+     * @apiGroup         index_user
+     * @apiName          getUserSocialSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 分利列表
+     * @apiSuccess (返回) {Int} diamon_count 钻石会员圈人数
+     * @apiSuccess (返回) {Int} user_count 买主圈
+     * @apiSuccess (返回) {Int} all_user 总人数
+     * @apiSampleRequest /index/user/getusersocialsum
+     * @return array
+     * @author zyr
+     */
+    public function getUserSocialSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserSocialSum($conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户社交圈
+     * @apiDescription   getUserSocial
+     * @apiGroup         index_user
+     * @apiName          getUserSocial
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} stype 1.钻石会员圈 2.买主圈
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Int} id 用户id
+     * @apiSuccess (返回) {String} nick_name 昵称
+     * @apiSuccess (返回) {String} avatar 头像
+     * @apiSuccess (返回) {Int} diamond_count 钻石会员人数
+     * @apiSuccess (返回) {Int} social_count 社交圈人数
+     * @apiSampleRequest /index/user/getusersocial
+     * @return array
+     * @author zyr
+     */
+    public function getUserSocial() {
+        $conId    = trim($this->request->post('con_id'));
+        $stype    = trim($this->request->post('stype'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2];
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3005'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getUserSocial($conId, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 招商收益
+     * @apiDescription   getMerchants
+     * @apiGroup         index_user
+     * @apiName          getMerchants
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Decimal} money 获利金额
+     * @apiSuccess (返回) {String} order_no 购买订单号
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSuccess (返回) {Int} uid 购买用户id
+     * @apiSuccess (返回) {String} nick_name 购买用户名
+     * @apiSuccess (返回) {String} avatar 购买用户头像
+     * @apiSampleRequest /index/user/getmerchants
+     * @return array
+     * @author zyr
+     */
+    public function getMerchants() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
         return $result;
     }
 
@@ -503,8 +696,8 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserQrcode(){
-        $page = trim($this->request->get('page'));
+    public function getUserQrcode() {
+        $page  = trim($this->request->get('page'));
         $scene = trim($this->request->get('scene'));
         $conId = trim($this->request->get('con_id'));
         // print_r(Config::get('conf.image_path'));die;
@@ -524,7 +717,7 @@ class User extends MyController {
             return ['code' => '3007'];
         }
 
-        $result = $this->app->user->getQrcode($conId,$page,$scene,1);
+        $result = $this->app->user->getQrcode($conId, $page, $scene, 1);
         return $result;
     }
 

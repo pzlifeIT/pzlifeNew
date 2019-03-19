@@ -20,4 +20,8 @@ class OrderChild extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function orders() {
+        return $this->belongsTo('orders', 'order_id', 'id');
+    }
 }

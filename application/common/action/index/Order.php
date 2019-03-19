@@ -39,24 +39,29 @@ class Order extends CommonIndex {
         $data          = [
             'order_status' => 2,
         ];
-        $userInfo      = DbUser::getUserInfo(['id' => $uid], 'balance', true);
-        $tradingData   = [
-            'uid'          => $uid,
-            'trading_type' => 1,
-            'change_type'  => 2,
-            'money'        => $order['deduction_money'],
-            'befor_money'  => $userInfo['balance'],
-            'after_money'  => bcadd($userInfo['balance'], $order['deduction_money'], 2),
-            'message'      => '',
-            'create_time'  => time(),
-        ];
+        $tradingData   = [];
+        if ($order['deduction_money'] != 0) {
+            $userInfo    = DbUser::getUserInfo(['id' => $uid], 'balance', true);
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 2,
+                'money'        => $order['deduction_money'],
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcadd($userInfo['balance'], $order['deduction_money'], 2),
+                'message'      => '',
+                'create_time'  => time(),
+            ];
+        }
         Db::startTrans();
         try {
             foreach ($orderGoods as $og) {
                 DbGoods::modifyStock($og['sku_id'], $og['goods_num'], 'inc');//退回库存
             }
             DbOrder::updataOrder($data, $order['id']);//改订单状态
-            DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
+            if ($order['deduction_money'] != 0) {
+                DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
+            }
 //            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
 //            DbOrder::updateLogIntegral(['status' => 3], ['order_no' => $orderNo]);//待结算积分取消结算(待付款取消的订单还未结算分利和积分不需要取消)
             if (!empty($tradingData)) {
@@ -76,13 +81,20 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $cityId = 0;
+        $cityId           = 0;
+        $defaultAddressId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
-            if (empty($userAddress)) {
-                return ['code' => '3003'];
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) {//没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
+            if (empty($defaultAddress)) {
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
             }
-            $cityId = $userAddress['city_id'];
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
@@ -90,7 +102,10 @@ class Order extends CommonIndex {
         if ($summary['code'] != '200') {
             return $summary;
         }
-        $shopList     = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image');//购买的所有店铺信息列表
+        $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image');//购买的所有店铺信息列表
+        if (empty($shopList)) {
+            $shopList = DbShops::getShops([['id', '=', '1']], 'id,uid,shop_name,shop_image');//不是boss就查总店
+        }
         $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
         $supplierId   = $summary['goods_list'][0]['supplier_id'];//供应商id
         $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
@@ -137,8 +152,9 @@ class Order extends CommonIndex {
             array_push($supplier, $sl);
         }
         unset($summary['goods_list']);
-        $summary['supplier_list'] = $supplier;
-        $summary['balance']       = $balance;
+        $summary['supplier_list']      = $supplier;
+        $summary['balance']            = $balance;
+        $summary['default_address_id'] = $defaultAddressId;
         return $summary;
     }
 
@@ -158,7 +174,10 @@ class Order extends CommonIndex {
             return $summary;
         }
         $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
-        $goods    = $summary['goods_list'][0];
+        if (empty($shopInfo)) {
+            $buid = 1;
+        }
+        $goods = $summary['goods_list'][0];
 //        print_r($goods);die;
         $orderGoodsData = [];
         foreach ($goods['shopBuySum'] as $kgl => $gl) {
@@ -297,8 +316,12 @@ class Order extends CommonIndex {
         if ($goodsSku['stock'] < $num) {
             return ['code' => '3007'];//库存不足商品
         }
-        $shopInfo                = DbShops::getShopInfo('id', ['uid' => $buid]);
-        $shopId                  = $shopInfo['id'];
+        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        if (empty($shopInfo)) {
+            $shopId = 1;
+        } else {
+            $shopId = $shopInfo['id'];
+        }
         $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
         $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
         $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
@@ -367,13 +390,20 @@ class Order extends CommonIndex {
         if ($this->checkCart($skuIdList, $uid) === false) {
             return ['code' => '3005'];//商品未加入购物车
         }
-        $cityId = 0;
+        $cityId           = 0;
+        $defaultAddressId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
-            if (empty($userAddress)) {
-                return ['code' => '3003'];
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) {//没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
+            if (empty($defaultAddress)) {
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
             }
-            $cityId = $userAddress['city_id'];
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
@@ -438,8 +468,9 @@ class Order extends CommonIndex {
             array_push($supplier, $sl);
         }
         unset($summary['goods_list']);
-        $summary['supplier_list'] = $supplier;
-        $summary['balance']       = $balance;
+        $summary['supplier_list']      = $supplier;
+        $summary['balance']            = $balance;
+        $summary['default_address_id'] = $defaultAddressId;
         return $summary;
     }
 

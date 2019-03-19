@@ -3,6 +3,7 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogTrading;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -23,10 +24,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy, $sc);
+            $obj = $obj->order($orderBy);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -37,6 +38,10 @@ class DbUser {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    public function getUserInfoCount($where) {
+        return Users::where($where)->count();
     }
 
     public function getUserOne($where, $field) {
@@ -204,8 +209,11 @@ class DbUser {
      * @return array
      * @author rzc
      */
-    public function getUserAddress($field, $where, $row = false) {
+    public function getUserAddress($field, $where, $row = false, $orderBy = '') {
         $obj = UserAddress::where($where)->field($field);
+        if (!empty($orderBy)) {
+            $obj = $obj->order($orderBy);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
@@ -247,9 +255,19 @@ class DbUser {
         return $userRecommend->id;
     }
 
-    public function getUserRelation($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getUserRelationCount($where) {
+        return UserRelation::where($where)->count();
+
+    }
+
+    public function getUserChild($pid) {
+        $res = UserRelation::field('uid')->where(['pid' => $pid])->select()->toArray();
+        return array_column($res, 'uid');
+    }
+
+    public function getUserRelation($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = UserRelation::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     public function addUserRelation($data) {
@@ -263,23 +281,35 @@ class DbUser {
         return $userRelation->save($data, ['id' => $id]);
     }
 
-    public function getLogBonus($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getLogBonus($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogBonus::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogTrading::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogBonusSum($where, $field) {
+        return LogBonus::where($where)->sum($field);
+    }
+
+    public function getLogTradingSum($where, $field) {
+        return LogTrading::where($where)->sum($field);
     }
 
     /**
      * @param $obj
      * @param bool $row
      * @param string $orderBy
-     * @param string $sc
      * @param string $limit
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
-        if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy, $sc);
+    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+        if (!empty($orderBy)) {
+            $obj = $obj->order($orderBy);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
