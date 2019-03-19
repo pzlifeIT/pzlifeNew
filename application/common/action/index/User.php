@@ -6,7 +6,6 @@ use app\common\action\notify\Note;
 use app\facade\DbOrder;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
-use app\facade\DbOrder;
 use app\facade\DbImage;
 use Env;
 use Config;
