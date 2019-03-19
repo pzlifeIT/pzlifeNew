@@ -101,4 +101,20 @@ class MyController extends Controller {
         }
         exit(json_encode(['code' => '5000']));
     }
+
+    /**
+     * 验证是否为boss
+     */
+    protected function isBoss(){
+        $conId = trim($this->request->param('con_id'));
+        $res = $this->app->user->getUser($conId);
+        if ($res['code'] == '200') {
+            if ($res['data']['user_identity'] == 4) {
+                return;
+            }else{
+                exit(json_encode(['code' => '6000']));
+            }
+        }
+        exit(json_encode(['code' => '5000']));
+    }
 }
