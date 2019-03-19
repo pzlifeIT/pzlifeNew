@@ -15,7 +15,8 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} [cate_name] 分类名称
      * @apiParam (入参) {Number} [goods_name] 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1实物商品 2虚拟商品
-     * @apiParam (入参) {String} [supplier_name] 供应商id
+     * @apiParam (入参) {String} [supplier_name] 供应商名称
+     * @apiParam (入参) {String} [supplier_title] 供应商标题
      * @apiParam (入参) {Number} [status] 上下架状态 1.上架 2.下架
      * @apiParam (入参) {Number} [goods_id] 商品id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3002:page_num只能为数字 / 3003:goods_id只能为数字 / 3004:上下架状态参数有误 / 3005:商品属性参数有误
@@ -42,6 +43,7 @@ class Goods extends AdminController {
         $goodsName    = trim(input("post.goods_name"));
         $goodsType    = trim(input("post.goods_type"));
         $supplierName = trim(input("post.supplier_name"));
+        $supplierTitle = trim(input("post.supplier_title"));
         $status       = trim(input("post.status"));
         $goodsId      = trim(input("post.goods_id"));
         $page         = empty($page) ? 1 : $page;
@@ -67,7 +69,7 @@ class Goods extends AdminController {
         if (!in_array($goodsType, $goodsTypeAttr)) {
             return ['code' => '3005'];
         }
-        $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName);
+        $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName,$supplierTitle);
         return $res;
     }
 
