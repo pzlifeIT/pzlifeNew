@@ -45,9 +45,6 @@ class Cart extends CommonIndex {
             $track_id = $shop['id'];
         }
         
-        if (!$shop) {
-            return ['code' => 3005, 'msg' => '该店铺不存在'];
-        }
         if (!$goods_sku) {
             return ['code' => 3003, 'msg' => '该商品规格不存在'];
         }

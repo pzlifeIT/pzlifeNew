@@ -25,13 +25,17 @@ class Order{
      * @return array
      * @author rzc
      */
-    public function getOrderList($page,$pagenum){
+    public function getOrderList($page,$pagenum,$order_status = ''){
         $offset = ($page-1)*$pagenum;
         if ($offset<0) {
             return ['code' => 3000];
         }
+        $where = [];
+        if (!empty($order_status)) {
+            array_push($where, ['order_status', '=', $order_status]);
+        }
         $field = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
-        $orderList = DbOrder::getOrder($field, [['1','=','1']], false, $offset.','.$pagenum);
+        $orderList = DbOrder::getOrder($field, $where, false, $offset.','.$pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
             return ['code' => 3000];
@@ -39,7 +43,7 @@ class Order{
         foreach ($orderList as $key => $value) {
             $orderList[$key]['nick_name'] = DbUser::getUserInfo(['id'=>$value['uid']], 'nick_name', true)['nick_name'];
         }
-        $totle = DbOrder::getOrderCount([['1','=','1']]);
+        $totle = DbOrder::getOrderCount($where);
         return ['code' => 200 , 'totle' => $totle, 'order_list' => $orderList];
     }
 
