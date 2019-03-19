@@ -636,7 +636,6 @@ class User extends CommonIndex {
 
     public function getUserSocialSum($conId) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -656,7 +655,6 @@ class User extends CommonIndex {
 
     public function getUserSocial($conId, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -669,7 +667,10 @@ class User extends CommonIndex {
         }
         $offset         = ($page - 1) * $pageNum;
         $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid]], 'uid', false, 'uid desc');//查询直属boss下的所有人
-        $diamonUidList  = array_column($diamonUserList, 'uid');
+        if (empty($diamonUserList)) {
+            return ['code' => '3000', 'data' => []];
+        }
+        $diamonUidList = array_column($diamonUserList, 'uid');
         if ($stype == 1) {//钻石会员圈
             $diamondRing  = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
             $diamondUids  = array_column($diamondRing, 'id');
@@ -745,6 +746,45 @@ class User extends CommonIndex {
 //            }
             return ['code' => '200', 'data' => $data];
         }
+    }
+
+    public function getMerchants($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] != '4') {
+            return ['code' => '3000'];//boss才有权限查看
+        }
+        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
+        $offset     = ($page - 1) * $pageNum;
+        $memberUse  = DbUser::getLogTrading([
+            ['trading_type', '=', '2'],//商票交易
+            ['change_type', '=', 5],//消费和取消订单退还商票
+            ['uid', '=', $uid],
+            ['create_time', '>=', $threeMonth],//近三个月
+        ], 'money,order_no,create_time', false, 'id desc', $offset . ',' . $pageNum);//已用商票总额
+        if (empty($memberUse)) {
+            return ['code' => '3000', 'data' => []];
+        }
+        $buyUidList     = DbOrder::getMemberOrder([['order_no', 'in', array_column($memberUse, 'order_no')]], 'uid,order_no');
+        $orderNoUid     = array_column($buyUidList, 'uid', 'order_no');
+        $buyUidList     = array_column($buyUidList, 'uid');
+        $users          = DbUser::getUserInfo([['id', 'in', $buyUidList]], 'id,nick_name,avatar');
+        $userNameList   = array_column($users, 'nick_name', 'id');
+        $userAvatarList = array_column($users, 'avatar', 'id');
+        $data           = [];
+        foreach ($memberUse as $mu) {
+            $mu['uid']       = enUid($orderNoUid[$mu['order_no']]);
+            $mu['nick_name'] = $userNameList[$orderNoUid[$mu['order_no']]];
+            $mu['avatar']    = $userAvatarList[$orderNoUid[$mu['order_no']]];
+            array_push($data, $mu);
+        }
+        return ['code' => '200', 'data' => $data];
     }
 
     /**

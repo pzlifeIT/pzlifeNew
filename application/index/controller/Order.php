@@ -96,7 +96,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} sku_id 购买的skuid
      * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
      * @apiParam (入参) {Number} [num] 购买数量
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
      * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
@@ -218,7 +218,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
      * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
@@ -227,6 +227,7 @@ class Order extends MyController {
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
      * @apiSuccess (返回) {Float} balance 账户的商票余额
+     * @apiSuccess (返回) {Int} default_address_id 默认地址(0表示没有地址)
      * @apiSuccess (supplier_list) {Int} id 供应商id
      * @apiSuccess (supplier_list) {String} name 供应商name
      * @apiSuccess (supplier_list) {String} image 供应商image
