@@ -139,7 +139,7 @@ class DbGoods {
 //        $obj = Goods::field($field)->withJoin(['supplier'=>['id','name']]);
         $obj = Goods::field($field)->with([
             'supplier'      => function ($query) {
-                $query->field('id,name')->where(['status' => 1]);
+                $query->field('id,name,title')->where(['status' => 1]);
             }, 'goodsClass' => function ($query2) {
                 $query2->field('id,type_name');
             }]);
