@@ -480,8 +480,13 @@ class User extends MyController {
      * @apiParam (入参) {Int} page_num 每页数量
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
      * @apiSuccess (返回) {Array} data 列表
-     * @apiSuccess (返回) {Int} id 用户id
-     * @apiSampleRequest /index/user/getMerchants
+     * @apiSuccess (返回) {Decimal} money 获利金额
+     * @apiSuccess (返回) {String} order_no 购买订单号
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSuccess (返回) {Int} uid 购买用户id
+     * @apiSuccess (返回) {String} nick_name 购买用户名
+     * @apiSuccess (返回) {String} avatar 购买用户头像
+     * @apiSampleRequest /index/user/getmerchants
      * @return array
      * @author zyr
      */
