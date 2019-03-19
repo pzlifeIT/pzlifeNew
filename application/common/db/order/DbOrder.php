@@ -229,9 +229,9 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = MemberOrder::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -244,9 +244,9 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getLogPay($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getLogPay($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogPay::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     public function addLogPay($data) {
@@ -285,7 +285,7 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }

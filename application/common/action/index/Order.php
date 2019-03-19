@@ -81,13 +81,20 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $cityId = 0;
+        $cityId           = 0;
+        $defaultAddressId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
-            if (empty($userAddress)) {
-                return ['code' => '3003'];
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) {//没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
+            if (empty($defaultAddress)) {
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
             }
-            $cityId = $userAddress['city_id'];
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
@@ -145,8 +152,9 @@ class Order extends CommonIndex {
             array_push($supplier, $sl);
         }
         unset($summary['goods_list']);
-        $summary['supplier_list'] = $supplier;
-        $summary['balance']       = $balance;
+        $summary['supplier_list']      = $supplier;
+        $summary['balance']            = $balance;
+        $summary['default_address_id'] = $defaultAddressId;
         return $summary;
     }
 
@@ -385,17 +393,17 @@ class Order extends CommonIndex {
         $cityId           = 0;
         $defaultAddressId = 0;
         if (!empty($userAddressId)) {
-            $userAddress = DbUser::getUserAddress('city_id', ['id' => $userAddressId], true);
-            if (empty($userAddress)) {
-                return ['code' => '3003'];
-            }
-            $cityId = $userAddress['city_id'];
-        } else {//没有地址返回默认地址id
-            $defaultAddress = DbUser::getUserAddress('id', ['uid' => $uid, 'default' => 1], true);
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) {//没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
             if (empty($defaultAddress)) {
-                $defaultAddress = DbUser::getUserAddress('id', ['uid' => $uid, 'default' => 2], true, 'id desc');
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
             }
-            $defaultAddressId = $defaultAddress['id'];
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;

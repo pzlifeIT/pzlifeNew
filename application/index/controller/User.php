@@ -408,12 +408,11 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserSocialSum
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
-     * @apiSuccess (返回) {json} order_no 订单号
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
-     * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSuccess (返回) {Int} diamon_count 钻石会员圈人数
+     * @apiSuccess (返回) {Int} user_count 买主圈
+     * @apiSuccess (返回) {Int} all_user 总人数
      * @apiSampleRequest /index/user/getusersocialsum
      * @return array
      * @author zyr
@@ -468,6 +467,37 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getUserSocial($conId, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 招商收益
+     * @apiDescription   getMerchants
+     * @apiGroup         index_user
+     * @apiName          getMerchants
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Int} id 用户id
+     * @apiSampleRequest /index/user/getMerchants
+     * @return array
+     * @author zyr
+     */
+    public function getMerchants() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
         return $result;
     }
 
