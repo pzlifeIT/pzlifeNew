@@ -403,24 +403,72 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 用户社交圈
-     * @apiDescription   getUserSocial
+     * @api              {post} / 用户社交圈统计
+     * @apiDescription   getUserSocialSum
      * @apiGroup         index_user
-     * @apiName          getUserSocial
+     * @apiName          getUserSocialSum
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} result_price 实际得到分利
      * @apiSuccess (返回) {json} order_no 订单号
      * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
      * @apiSuccess (返回) {json} create_time 订单完成时间
+     * @apiSampleRequest /index/user/getusersocialsum
+     * @return array
+     * @author zyr
+     */
+    public function getUserSocialSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserSocialSum($conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户社交圈
+     * @apiDescription   getUserSocial
+     * @apiGroup         index_user
+     * @apiName          getUserSocial
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} stype 1.钻石会员圈 2.买主圈
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Int} id 用户id
+     * @apiSuccess (返回) {String} nick_name 昵称
+     * @apiSuccess (返回) {String} avatar 头像
+     * @apiSuccess (返回) {Int} diamond_count 钻石会员人数
+     * @apiSuccess (返回) {Int} social_count 社交圈人数
      * @apiSampleRequest /index/user/getusersocial
      * @return array
      * @author zyr
      */
     public function getUserSocial() {
-
+        $conId    = trim($this->request->post('con_id'));
+        $stype    = trim($this->request->post('stype'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2];
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($stype, $stypeArr)) {
+            return ['code' => '3005'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getUserSocial($conId, $stype, $page, $pageNum);
+        return $result;
     }
 
 

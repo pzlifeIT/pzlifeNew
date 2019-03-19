@@ -24,10 +24,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy, $sc);
+            $obj = $obj->order($orderBy);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -38,6 +38,10 @@ class DbUser {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    public function getUserInfoCount($where) {
+        return Users::where($where)->count();
     }
 
     public function getUserOne($where, $field) {
