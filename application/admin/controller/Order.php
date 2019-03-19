@@ -11,9 +11,10 @@ class Order extends AdminController
      * @apiDescription   getOrders
      * @apiGroup         admin_Orders
      * @apiName          getOrders
+     * @apiParam (入参) {Number} order_status 订单状态 1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单列表空 / 3002:页码和查询条数只能是数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单列表空 / 3002:页码和查询条数只能是数字 / 3003:无效的状态查询
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} order_list 结果
      * @apiSuccess (data) {String} id 订单ID
@@ -52,6 +53,7 @@ class Order extends AdminController
     public function getOrders(){
         $page = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pagenum'));
+        $order_status = trim($this->request->post('order_status'));
         
         $page = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10 ;
@@ -59,7 +61,15 @@ class Order extends AdminController
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => 3002];
         }
-        $result = $this->app->order->getOrderList(intval($page),intval($pagenum));
+
+        $order_status_data = [1,2,3,4,5,6,7,8,9,10];
+        if ($order_status) {
+            if (!in_array($order_status,$order_status_data)) {
+                return ['code' => '3003'];
+            }
+        }
+        
+        $result = $this->app->order->getOrderList(intval($page),intval($pagenum),intval($order_status));
         return $result;
     }
 
