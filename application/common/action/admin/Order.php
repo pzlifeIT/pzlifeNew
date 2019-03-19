@@ -7,9 +7,17 @@ use Config;
 use app\facade\DbGoods;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
+use cache\Phpredis;
 use think\Db;
 
 class Order{
+    private $redisDeliverOrderKey = 'cms:order:deliver:express:';
+    private $redisDeliverExpressList = 'cms:order:deliver:list:';
+
+    public function __construct() {
+        $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
+    }
+
     /**
      * 获取订单列表
      * @param $order_status
@@ -115,6 +123,9 @@ class Order{
      * @author rzc
      */
     public function deliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name){
+
+        // print_r($this->redisDeliverOrderKey);die;
+        $this->redis = Phpredis::getConn();
         $order_express_id = DbOrder::getOrderExpress('id', ['order_goods_id' => $order_goods_id] , false, false,true);
         // dump( Db::getLastSql());die;
         if ($order_express_id) {
@@ -153,6 +164,12 @@ class Order{
         $order_express['express_name'] = $express_name;
 
         $add_order_express = DbOrder::addOrderExpress($order_express);
+
+        $key = $express_key.'&'.$express_no;
+        $this->redis->set($this->redisDeliverOrderKey.$key, '');
+        $this->redis->expire($this->redisDeliverOrderKey. $key, 2592000);
+        $this->redis->rPush($this->redisDeliverExpressList,$key);
+        // $this->redis->expire($this->redisDeliverOrderKey.$order_id, 20);
         /* 查出已添加的订单商品物流单分配信息 */
         $has_order_express =  DbOrder::getOrderExpress('order_goods_id', [['order_goods_id' ,'IN', $order_goods_ids]] );
         if ($has_order_express) {
@@ -189,6 +206,7 @@ class Order{
      * @author rzc
      */
     public function updateDeliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name){
+        $this->redis = Phpredis::getConn();
         $order_express = DbOrder::getOrderExpress('id', ['order_goods_id' => $order_goods_id] , false, false,true);
         // dump( Db::getLastSql());die;
         if (!$order_express) {
@@ -200,15 +218,21 @@ class Order{
 
         $order_status = DbOrder::getOrder('order_status', ['id' => $order_id], true)['order_status'] ;
 
-        if ($order_status!=4 || $order_status!=5) {
+        if ($order_status = 4 || $order_status = 5) {
+            $update_order_express = [];
+
+            $update_order_express['express_no'] = $express_no;
+            $update_order_express['express_key'] = $express_key;
+            $update_order_express['express_name'] = $express_name;
+            DbOrder::updateOrderExpress($update_order_express,$order_express['id']);
+            $key = $express_key.'&'.$express_no;
+            $this->redis->set($this->redisDeliverOrderKey.$key, '');
+            $this->redis->expire($this->redisDeliverOrderKey. $key, 2592000);
+            $this->redis->rPush($this->redisDeliverExpressList,$key);
+            return ['code' => 200];
+        }else {
             return ['code' => 3004,'msg' => '非待发货订单无法发货或已发货订单无法变更'];
         }
-        $update_order_express = [];
-
-        $update_order_express['express_no'] = $express_no;
-        $update_order_express['express_key'] = $express_key;
-        $update_order_express['express_name'] = $express_name;
-        DbOrder::updateOrderExpress($update_order_express,$order_express['id']);
-        return ['code' => 200];
+       
     }
 }

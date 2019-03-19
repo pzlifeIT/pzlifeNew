@@ -7,6 +7,7 @@ use Config;
 use Env;
 use think\Db;
 use cache\Phpredis;
+use function Qiniu\json_decode;
 
 class Order extends Pzlife {
     private $redis;
@@ -637,7 +638,6 @@ class Order extends Pzlife {
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
             }
             Db::commit();
-            exit('ok!');
         } catch (\Exception $e) {
             print_r($e);
             Db::rollback();
@@ -669,4 +669,80 @@ class Order extends Pzlife {
         }
         return $userInfo[0];
     }
+
+    public function orderExpressLog(){
+        $this->orderInit();
+        $redisDeliverExpressList = Config::get('redisKey.order.redisDeliverExpressList');
+        $redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
+        // print_r($redisDeliverExpressList);die;
+        // $this->redis->rPush($redisDeliverExpressList, 4);
+        // $this->redis->rPush($redisDeliverExpressList, 'zhongtong&3915414258779');
+        $deliverexpresslist = $this->redis->lPop($redisDeliverExpressList);//购买会员的订单id
+        if (empty($deliverexpresslist)) {
+            exit('deliver_repress_null');
+        }
+        $express = explode('&',$deliverexpresslist);
+        $HundredExpress = new HundredExpress;
+        $express_log = $HundredExpress->getExpressLog($express[0],$express[1]);
+        // print_r($express_log);die;
+        if ($express_log){
+            $express_log = json_decode($express_log,true);
+            if ($express_log['message'] == 'ok') {
+                if ($express_log['state'] != 3){//快递签收
+                    $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
+                }
+                $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
+                $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
+            }
+            $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
+            
+        }else{
+            $this->redis->rPush($redisDeliverExpressList, $deliverexpresslist);
+        }
+        
+    }
+}
+
+    /**
+     * 快递100物流查询类
+     * @return array
+     * @author rzc
+     */
+class HundredExpress
+{
+
+    /**
+     * 修改订单发货信息
+     * @param $ShipperCode
+     * @param $LogisticCode
+     * @return array
+     * @author rzc
+     */
+    public function getExpressLog($ShipperCode, $LogisticCode)
+    {
+        $post_data = array();
+        $post_data["customer"] = '389C6F5CB8C771CC620DCC88932229F3';
+        $key = 'jrsaVPbM2682';
+        $post_data["param"] = '{"com":"' . $ShipperCode . '","num":"' . $LogisticCode . '"}';
+
+        $url = 'http://poll.kuaidi100.com/poll/query.do';
+        $post_data["sign"] = md5($post_data["param"] . $key . $post_data["customer"]);
+        $post_data["sign"] = strtoupper($post_data["sign"]);
+        $o = "";
+        foreach ($post_data as $k => $v) {
+            $o .= "$k=" . urlencode($v) . "&"; //默认UTF-8编码格式
+        }
+        $post_data = substr($o, 0, -1);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        $result = curl_exec($ch);
+        $data = str_replace("\&quot;", '"', $result);
+        // $data = json_decode($data, true);
+        return $data;
+    }
+
 }
