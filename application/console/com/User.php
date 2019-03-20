@@ -361,4 +361,55 @@ class User extends Pzlife {
         $userInfo   = Db::query($getUserSql);
         return $userInfo;
     }
+
+    public function getDiamondvip(){
+        $mysql_connect = Db::connect(Config::get('database.db_config'));
+        $sql = "SELECT id,user_type,user_identity,sex,nick_name,balance,commission FROM pz_users WHERE user_identity = 2 AND delete_time=0 " ;
+        $users = Db::query($sql);
+        foreach ($users as $key => $value) {
+            $get_diamondvip_sql = " SELECT * FROM pre_diamondvip_get WHERE `uid` = ".$value['id']." LIMIT 1";
+            $get_diamondvip = $mysql_connect->query($get_diamondvip_sql);
+            $add_diamondvip = [];
+            if (!empty($get_diamondvip)) {
+                $add_diamondvip['uid'] = $get_diamondvip[0]['uid'];
+                $add_diamondvip['share_uid'] = $get_diamondvip[0]['share_uid'];
+                $add_diamondvip['redmoney'] = $get_diamondvip[0]['coupon_money'];
+                $add_diamondvip['redmoney_status'] = 1;
+                $add_diamondvip['create_time'] = time();
+                
+            }else{
+                $diamondvip_dominos_get_sql = " SELECT * FROM pre_diamondvip_dominos_get WHERE `uid` = ".$value['id']." LIMIT 1";
+                $diamondvip_dominos_get = $mysql_connect->query($diamondvip_dominos_get_sql);
+                if (!empty($diamondvip_dominos_get)) {
+                    if ($diamondvip_dominos_get[0]['redmoney_status'] == 1) {
+                        $add_diamondvip['redmoney'] = $diamondvip_dominos_get[0]['redmoney'];
+                    }
+                    $add_diamondvip['uid'] = $diamondvip_dominos_get[0]['uid'];
+                    $add_diamondvip['share_uid'] = $diamondvip_dominos_get[0]['share_uid'];
+                    $add_diamondvip['redmoney_status'] = 1;
+                    $add_diamondvip['create_time'] = time();
+                }
+            }
+            // print_r($add_diamondvip);die;
+            if ($add_diamondvip) {
+                $new_sql = "SELECT id FROM pz_diamondvip_get WHERE `uid` = ".$value['id'];
+                $new_diamondvip = Db::query($new_sql);
+                if (empty($new_diamondvip)) {
+                    Db::startTrans();
+                    try {
+                        Db::table('pz_diamondvip_get')->insert($add_diamondvip);
+            
+                        // 提交事务
+                        Db::commit();
+                    } catch (\Exception $e) {
+                        // 回滚事务
+                        
+                        Db::rollback();
+                        print_r($e);
+                        die;
+                    }
+                }
+            }
+        }
+    }
 }
