@@ -18,7 +18,7 @@ class Admin extends AdminController {
      * @apiName          login
      * @apiParam (入参) {String} admin_name
      * @apiParam (入参) {String} passwd 密码
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号密码不能为空 / 3002:用户已存在 / 3003:密码错误 / 3004:登录失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号密码不能为空 / 3002:用户不存在 / 3003:密码错误 / 3004:登录失败
      * @apiSampleRequest /admin/admin/login
      * @return array
      * @author zyr

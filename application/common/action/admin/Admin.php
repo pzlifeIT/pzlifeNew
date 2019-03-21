@@ -19,7 +19,7 @@ class Admin extends CommonIndex {
         $getPass   = $this->getPassword($passwd, $this->cmsCipherUserKey);//用户填写的密码
         $adminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName, 'status' => 1], 'id,passwd', true);
         if (empty($adminInfo)) {
-            return ['code' => '3002'];//用户已存在
+            return ['code' => '3002'];//用户不存在
         }
         if ($adminInfo['passwd'] !== $getPass) {
             return ['code' => '3003'];//密码错误
