@@ -408,6 +408,26 @@ class User extends Pzlife {
                         print_r($e);
                         die;
                     }
+                }else{
+                    if ($new_diamondvip['share_uid']>1) {
+                        continue;
+                    }
+                    $updiamondvip = [];
+                    $updiamondvip['uid'] = $diamondvip_dominos_get[0]['uid'];
+                    $updiamondvip['share_uid'] = $diamondvip_dominos_get[0]['share_uid'];
+                    Db::startTrans();
+                    try {
+                        Db::table('pz_diamondvip_get')->where('uid', $value['id'])->update($updiamondvip);
+            
+                        // 提交事务
+                        Db::commit();
+                    } catch (\Exception $e) {
+                        // 回滚事务
+                        
+                        Db::rollback();
+                        print_r($e);
+                        die;
+                    }
                 }
             }
         }
