@@ -34,7 +34,7 @@ class Admin extends AdminController {
     }
 
     /**
-     * @api              {post} / 添加后台管理员
+     * @api              {post} / 获取登录用户信息
      * @apiDescription   getAdminInfo
      * @apiGroup         admin_admin
      * @apiName          getAdminInfo
