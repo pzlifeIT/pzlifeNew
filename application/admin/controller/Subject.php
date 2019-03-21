@@ -5,12 +5,18 @@ namespace app\admin\controller;
 use app\admin\AdminController;
 
 class Subject extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
 
     /**
      * @api              {post} / 添加专题
      * @apiDescription   addSubject
      * @apiGroup         admin_subject
      * @apiName          addSubject
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} pid 父级专题id
      * @apiParam (入参) {String} subject 专题名称
      * @apiParam (入参) {Number} [status] 状态 1启用 / 2停用 (默认1)
@@ -44,6 +50,7 @@ class Subject extends AdminController {
      * @apiDescription   editSubject
      * @apiGroup         admin_subject
      * @apiName          editSubject
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 专题id
      * @apiParam (入参) {String} subject 分类名称
      * @apiParam (入参) {Number} status 状态 1启用 / 2停用
@@ -81,6 +88,7 @@ class Subject extends AdminController {
      * @apiDescription   getAllSubject
      * @apiGroup         admin_subject
      * @apiName          getAllSubject
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) stype 1:所有 2.一二级  默认:1
      * @apiSuccess (返回) {String} code 200:成功 / 3000:没有数据 / 3001:stype参数有误
      * @apiSuccess (data) {String} subject 专题名称
@@ -106,6 +114,7 @@ class Subject extends AdminController {
      * @apiDescription   subjectGoodsAssoc
      * @apiGroup         admin_subject
      * @apiName          subjectGoodsAssoc
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {String} subject_id 专题id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:商品id必须是数字 / 3002:专题id必须是数字 /3003:商品不存在 / 3004.专题不存在 / 3005.已经关联 / 3006:保存失败
@@ -131,6 +140,7 @@ class Subject extends AdminController {
      * @apiDescription   getGoodsSubject
      * @apiGroup         admin_subject
      * @apiName          getGoodsSubject
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} stype 获取类型 1.获取已选专题 2.获取可选专题
      * @apiSuccess (返回) {String} code 200:成功 /3000:数据为空 / 3001:商品id必须数字 / 3002:类型错误 / 3003:商品不存在
@@ -156,6 +166,7 @@ class Subject extends AdminController {
      * @apiDescription   getSubjectDetail
      * @apiGroup         admin_subject
      * @apiName          getSubjectDetail
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} subject_id 专题id
      * @apiSuccess (返回) {String} code 200:成功 /3000:数据为空 / 3001:id必须数字
      * @apiSuccess (data) {String} subject 专题名称
@@ -179,6 +190,7 @@ class Subject extends AdminController {
      * @apiDescription   delGoodsSubject
      * @apiGroup         admin_subject
      * @apiName          delGoodsSubject
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} subject_id 专题id
      * @apiSuccess (返回) {String} code 200:成功 /3000:数据为空 / 3001:商品id必须数字 / 3002:类型错误 / 3003:商品不存在
      * @apiSampleRequest /admin/subject/delgoodssubject
@@ -198,6 +210,7 @@ class Subject extends AdminController {
      * @apiDescription   delGoodsSubjectAssoc
      * @apiGroup         admin_subject
      * @apiName          delGoodsSubjectAssoc
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} subject_id 专题id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:商品id必须数字 / 3002:专题id必须数字 / 3003:商品和专题没有关联 / 3004:取消失败

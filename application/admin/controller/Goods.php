@@ -5,11 +5,18 @@ namespace app\admin\controller;
 use app\admin\AdminController;
 
 class Goods extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 商品列表
      * @apiDescription   getGoodsList
      * @apiGroup         admin_goods
      * @apiName          getGoodsList
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [cate_name] 分类名称
@@ -37,20 +44,20 @@ class Goods extends AdminController {
      * 2018/12/26-18:04
      */
     public function getGoodsList() {
-        $page         = trim(input("post.page"));
-        $pageNum      = trim(input("post.page_num"));
-        $cateName     = trim(input("post.cate_name"));
-        $goodsName    = trim(input("post.goods_name"));
-        $goodsType    = trim(input("post.goods_type"));
-        $supplierName = trim(input("post.supplier_name"));
+        $page          = trim(input("post.page"));
+        $pageNum       = trim(input("post.page_num"));
+        $cateName      = trim(input("post.cate_name"));
+        $goodsName     = trim(input("post.goods_name"));
+        $goodsType     = trim(input("post.goods_type"));
+        $supplierName  = trim(input("post.supplier_name"));
         $supplierTitle = trim(input("post.supplier_title"));
-        $status       = trim(input("post.status"));
-        $goodsId      = trim(input("post.goods_id"));
-        $page         = empty($page) ? 1 : $page;
-        $pageNum      = empty($pageNum) ? 10 : $pageNum;
-        $goodsType    = empty($goodsType) ? 0 : $goodsType;
-        $status       = empty($status) ? 0 : $status;
-        $goodsId      = empty($goodsId) ? 0 : $goodsId;
+        $status        = trim(input("post.status"));
+        $goodsId       = trim(input("post.goods_id"));
+        $page          = empty($page) ? 1 : $page;
+        $pageNum       = empty($pageNum) ? 10 : $pageNum;
+        $goodsType     = empty($goodsType) ? 0 : $goodsType;
+        $status        = empty($status) ? 0 : $status;
+        $goodsId       = empty($goodsId) ? 0 : $goodsId;
 
         $goodsTypeAttr = [0, 1, 2];//0为不查询
         $statusAttr    = [0, 1, 2];//0为不查询
@@ -69,7 +76,7 @@ class Goods extends AdminController {
         if (!in_array($goodsType, $goodsTypeAttr)) {
             return ['code' => '3005'];
         }
-        $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName,$supplierTitle);
+        $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName, $supplierTitle);
         return $res;
     }
 
@@ -79,6 +86,7 @@ class Goods extends AdminController {
      * @apiDescription   saveAddGoods
      * @apiGroup         admin_goods
      * @apiName          saveAddGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} supplier_id 供应商id
@@ -138,6 +146,7 @@ class Goods extends AdminController {
      * @apiDescription   saveUpdateGoods
      * @apiGroup         admin_goods
      * @apiName          saveUpdateGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} goods_id 商品id
@@ -197,6 +206,7 @@ class Goods extends AdminController {
      * @apiDescription   getGoodsSku
      * @apiGroup         admin_goods
      * @apiName          getGoodsSku
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} sku_id 商品id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字
      * @apiSuccess (返回) {Array} data 返回数据
@@ -233,6 +243,7 @@ class Goods extends AdminController {
      * @apiDescription   editGoodsSku
      * @apiGroup         admin_goods
      * @apiName          editGoodsSku
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} sku_id
      * @apiParam (入参) {Int} stock 库存
      * @apiParam (入参) {Int} freight_id 运费模版id
@@ -297,6 +308,7 @@ class Goods extends AdminController {
      * @apiDescription   addGoodsSpec
      * @apiGroup         admin_goods
      * @apiName          addGoodsSpec
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} attr_id 属性id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 / 3006:商品已有该规格属性 / 3007:提交失败 / 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
@@ -322,6 +334,7 @@ class Goods extends AdminController {
      * @apiDescription   delGoodsSpec
      * @apiGroup         admin_goods
      * @apiName          delGoodsSpec
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} attr_id 属性id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 /3006:该商品未绑定这个属性 / 3007:提交失败/ 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
@@ -347,6 +360,7 @@ class Goods extends AdminController {
      * @apiDescription   getOneGoods
      * @apiGroup         admin_goods
      * @apiName          getOneGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 商品id
      * @apiParam (入参) {Number} [get_type] 获取内容类型 1.只获取goods_data 2. 获取spec_attr 3.获取images_detatil和images_carousel  4.获取sku   默认为1,2,3,4
      * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002:id必须是数字 / 3003:get_type错误
@@ -423,6 +437,7 @@ class Goods extends AdminController {
      * @apiDescription   uploadGoodsImages
      * @apiGroup         admin_goods
      * @apiName          uploadGoodsImages
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Array} images 图片集合
@@ -455,6 +470,7 @@ class Goods extends AdminController {
      * @apiDescription   delGoodsImage
      * @apiGroup         admin_goods
      * @apiName          delGoodsImage
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_path 商品id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:上传失败
      * @apiSampleRequest /admin/goods/delgoodsimage
@@ -475,6 +491,7 @@ class Goods extends AdminController {
      * @apiDescription   sortImageDetail
      * @apiGroup         admin_goods
      * @apiName          sortImageDetail
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_path 商品id
      * @apiParam (入参) {Number} order_by 排序
      * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:排序字段只能为数字 / 3004:上传失败
@@ -491,7 +508,7 @@ class Goods extends AdminController {
         if (!is_numeric($orderBy)) {
             return ['code' => '3003'];//排序字段只能为数字
         }
-        $result  = $this->app->goods->sortImageDetail($imagePath, intval($orderBy));
+        $result = $this->app->goods->sortImageDetail($imagePath, intval($orderBy));
         return $result;
     }
 
@@ -500,6 +517,7 @@ class Goods extends AdminController {
      * @apiDescription   upDownGoods
      * @apiGroup         admin_goods
      * @apiName          upDownGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 商品id
      * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
      * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类

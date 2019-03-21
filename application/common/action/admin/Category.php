@@ -8,7 +8,7 @@ use think\Db;
 use third\PHPTree;
 use Config;
 
-class Category {
+class Category extends CommonIndex {
     public function allCateList(int $status) {
         $where = [];
         if ($status != 3) {

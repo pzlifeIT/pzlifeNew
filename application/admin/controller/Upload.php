@@ -5,11 +5,18 @@ namespace app\admin\controller;
 use app\admin\AdminController;
 
 class Upload extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 上传单个图片
      * @apiDescription   uploadFile
      * @apiGroup         admin_upload
      * @apiName          uploadFilee
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {file} image 图片
      * @apiSuccess (返回) {String} code 200:成功  / 3001:上传的不是图片 / 3002:上传图片不能超过2M / 3003:上传失败 / 3004:上传文件不能为空
      * @apiSuccess (data) {Array} data 结果
@@ -37,6 +44,7 @@ class Upload extends AdminController {
      * @apiDescription   uploadMultiFile
      * @apiGroup         admin_upload
      * @apiName          uploadMultiFile
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {file} images 图片集
      * @apiSuccess (返回) {String} code 200:成功 / 3001:上传的不是图片 / 3002:上传图片不能超过2M / 3003:上传失败 / 3004:上传文件不能为空 / 3004:上传文件不能为空
      * @apiSuccess (data) {Array} data 上传后的图片路径
