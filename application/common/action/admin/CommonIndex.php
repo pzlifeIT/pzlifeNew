@@ -28,7 +28,7 @@ class CommonIndex {
      * @return array
      * @author zyr
      */
-    protected function isLogin($cmsConId) {
+    public function isLogin($cmsConId) {
         if (empty($cmsConId)) {
             return ['code' => '5000'];
         }
