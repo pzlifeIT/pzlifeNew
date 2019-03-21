@@ -4,13 +4,20 @@ namespace app\admin\controller;
 
 use think\Controller;
 use app\admin\AdminController;
-class User extends AdminController
-{
+
+class User extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 获取会员列表
      * @apiDescription   getUsers
      * @apiGroup         admin_Users
      * @apiName          getUsers
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3002:页码和查询条数只能是数字
@@ -40,11 +47,11 @@ class User extends AdminController
      * ]
      * @author rzc
      */
-    public function getUsers(){
-        $page = trim($this->request->post('page'));
+    public function getUsers() {
+        $page    = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pagenum'));
-        
-        $result = $this->app->user->getUsers($page,$pagenum);
+
+        $result = $this->app->user->getUsers($page, $pagenum);
         return $result;
     }
 

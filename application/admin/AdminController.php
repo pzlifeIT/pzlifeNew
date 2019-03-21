@@ -85,4 +85,19 @@ class AdminController extends Controller {
         return false;
     }
 
+    /**
+     * 验证con_id登录
+     */
+    protected function isLogin() {
+        $cmsConId = trim($this->request->param('cms_con_id'));
+        if (!empty($cmsConId) && strlen($cmsConId) == 32) {
+            $res = $this->app->admin->isLogin($cmsConId);//判断是否登录
+            if ($res['code'] == '200') {
+                return;
+            }
+            exit(json_encode($res));
+        }
+        exit(json_encode(['code' => '5000']));
+    }
+
 }

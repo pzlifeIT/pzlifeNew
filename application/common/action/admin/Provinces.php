@@ -6,7 +6,7 @@ use app\facade\DbGoods;
 use app\facade\DbProvinces;
 use third\PHPTree;
 
-class Provinces {
+class Provinces extends CommonIndex {
 
     /**
      * 省市列表

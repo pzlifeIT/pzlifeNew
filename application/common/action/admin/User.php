@@ -1,16 +1,17 @@
 <?php
+
 namespace app\common\action\admin;
 
 use app\facade\DbUser;
 use think\Db;
 
-class User{
+class User extends CommonIndex {
     /**
      * 会员列表
      * @return array
      * @author rzc
      */
-    public function getUsers($page,$pagenum){
+    public function getUsers($page, $pagenum) {
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
 
@@ -21,7 +22,7 @@ class User{
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $filed = '*';
+        $filed  = '*';
         $order  = 'id';
         $limit  = $offset . ',' . $pagenum;
         $result = DbUser::getUsers($filed, $order, $limit);
@@ -29,7 +30,7 @@ class User{
             return ['code' => '3000'];
         }
         $totle = DbUser::getUsersCount();
-        return ['code' => '200','totle' => $totle,'result' =>$result];
+        return ['code' => '200', 'totle' => $totle, 'result' => $result];
     }
 
 }

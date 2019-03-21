@@ -80,7 +80,7 @@ class User extends Pzlife {
                 $user_relation['is_boss'] = 1;
                 $shop                     = $mysql_connect->query('SELECT * FROM pre_shop WHERE `uid` = ' . $value['uid']);
                 if ($value['mobile']) {
-                     $new_user['mobile'] = $value['mobile'];
+                    $new_user['mobile'] = $value['mobile'];
                 }
                 if ($shop) {
                     // $new_user['sex'] = $shop[0]['sex'];
@@ -292,13 +292,31 @@ class User extends Pzlife {
         }
     }
 
-    public function userAddress(){
+    /**
+     * 定时清理redis无效的cms_con_id
+     */
+    public function clearCmsConId() {
+        $this->redis       = Phpredis::getConn();
+        $lastTime          = time() - 172800;//2天前
+        $redisCmsConIdTime = Config::get('rediskey.user.redisCmsConIdTime');
+        $redisCmsConIdUid  = Config::get('rediskey.user.redisCmsConIdUid');
+        $res               = $this->redis->zRangeByScore($redisCmsConIdTime, 0, $lastTime);
+        if (empty($res)) {
+            exit('info_is_null');
+        }
+        foreach ($res as $r) {
+            $this->redis->zDelete($redisCmsConIdTime, $r);
+            $this->redis->hDel($redisCmsConIdUid, $r);
+        }
+    }
+
+    public function userAddress() {
         $addressdata = file_get_contents('./addressdata.json');//读取地址文件
-        
-        $addressdata = json_decode($addressdata, true);
-        $mysql_connect = Db::connect(Config::get('database.db_config'));
+
+        $addressdata     = json_decode($addressdata, true);
+        $mysql_connect   = Db::connect(Config::get('database.db_config'));
         $old_address_sql = 'SELECT * FROM pre_member_address';
-        $old_address = $mysql_connect->query($old_address_sql);
+        $old_address     = $mysql_connect->query($old_address_sql);
         // print_r($old_address);die;
         foreach ($old_address as $old => $address) {
             $user = $this->getUserInfo($address['uid']);
@@ -308,17 +326,17 @@ class User extends Pzlife {
                 continue;
             }
             $province = $addressdata['0'][$address['province']];
-            $city = $addressdata['0,' . $address['province']][$address['city']];
+            $city     = $addressdata['0,' . $address['province']][$address['city']];
             if ($city == '市辖区') {
                 $city = $province;
             }
             $district = $addressdata['0,' . $address['province'] . ',' . $address['city']][$address['district']];
-            
-            $province_id = $this->getArea($province,1)['id'];
-            $city_id = $this->getArea($city,2)['id'];
-            $area_id = $this->getArea($district,3)['id'];
-            
-            $user_address = [];
+
+            $province_id = $this->getArea($province, 1)['id'];
+            $city_id     = $this->getArea($city, 2)['id'];
+            $area_id     = $this->getArea($district, 3)['id'];
+
+            $user_address                = [];
             $user_address['uid']         = $address['uid'];
             $user_address['province_id'] = $province_id;
             $user_address['city_id']     = $city_id;
@@ -327,29 +345,28 @@ class User extends Pzlife {
             $user_address['mobile']      = $address['linkphone'];
             $user_address['name']        = $address['linkman'];
             $user_address['default']     = 2;
-            $user_address['create_time']     = time();
+            $user_address['create_time'] = time();
             // print_r($user_address);die;
             Db::startTrans();
             try {
                 Db::table('pz_user_address')->insert($user_address);
-    
+
                 // 提交事务
                 Db::commit();
             } catch (\Exception $e) {
                 // 回滚事务
-                
+
                 Db::rollback();
                 print_r($e);
                 die;
             }
         }
     }
-    
-    
-    
-    function getArea($name,$level){
-        $areaSql = "select * from pz_areas where delete_time=0 and area_name = '". $name."' and level =  ".$level;
-        $areaInfo   = Db::query($areaSql);
+
+
+    function getArea($name, $level) {
+        $areaSql  = "select * from pz_areas where delete_time=0 and area_name = '" . $name . "' and level =  " . $level;
+        $areaInfo = Db::query($areaSql);
         return $areaInfo[0];
     }
 
