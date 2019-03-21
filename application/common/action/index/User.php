@@ -1399,10 +1399,10 @@ class User extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $obligation = DbOrder::getOrderCount(['order_status'=>1]);//待付款
-        $deliver    = DbOrder::getOrderCount(['order_status'=>4]);//待发货
-        $receive    = DbOrder::getOrderCount(['order_status'=>5]);//待收货
-        $rating     = DbOrder::getOrderCount(['order_status'=>7]);//待评价
+        $obligation = DbOrder::getOrderCount(['order_status' => 1,'uid' => $uid]);//待付款
+        $deliver    = DbOrder::getOrderCount(['order_status' => 4,'uid' => $uid]);//待发货
+        $receive    = DbOrder::getOrderCount(['order_status' => 5,'uid' => $uid]);//待收货
+        $rating     = DbOrder::getOrderCount(['order_status' => 7,'uid' => $uid]);//待评价
 
         return ['code' => '200','obligation' => $obligation,'deliver' => $deliver,'receive' => $receive,'rating' => $rating];
     }
