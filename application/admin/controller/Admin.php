@@ -96,7 +96,6 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} passwd 用户密码
      * @apiParam (入参) {String} new_passwd1 新密码
      * @apiParam (入参) {String} new_passwd2 确认密码
-     * @apiParam (入参) {Int} [stype] 添加的管理员类型 1.管理员 2超级管理员  默认为:1
      * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:密码必须为6-16个任意字符 / 3003:老密码不能为空 / 3004:密码确认有误  / 3005:修改密码失败
      * @apiSampleRequest /admin/admin/midifypasswd
      * @return array
@@ -111,7 +110,7 @@ class Admin extends AdminController {
             return ['code' => '3004'];//密码确认有误
         }
         if (checkCmsPassword($newPasswd1) === false) {
-            return ['code' => '3007'];//密码必须为6-16个任意字符
+            return ['code' => '3002'];//密码必须为6-16个任意字符
         }
         if (empty($passwd)) {
             return ['code' => '3003'];//老密码不能为空
