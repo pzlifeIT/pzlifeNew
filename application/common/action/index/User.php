@@ -112,6 +112,9 @@ class User extends CommonIndex {
         $addData    = [];
         $uid        = $this->checkAccount($mobile);//通过手机号获取uid
         if (empty($uid)) {//该手机未注册过
+            if (empty($wxInfo['unionid'])) {
+                return ['code' => '3000'];
+            }
             $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');//手机号获取不到就通过微信获取
             if (!empty($user)) {//注册了微信的老用户
                 if (!empty($user['mobile'])) {//该微信号已绑定
@@ -224,6 +227,9 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         $uid  = 0;
+        if (empty($wxInfo['unionid'])) {
+            return ['code' => '3000'];
+        }
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
             if (!empty($user['mobile'])) {//该微信号已绑定
@@ -1394,16 +1400,16 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserOrderCount($conId){
+    public function getUserOrderCount($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $obligation = DbOrder::getOrderCount(['order_status'=>1]);//待付款
-        $deliver    = DbOrder::getOrderCount(['order_status'=>4]);//待发货
-        $receive    = DbOrder::getOrderCount(['order_status'=>5]);//待收货
-        $rating     = DbOrder::getOrderCount(['order_status'=>7]);//待评价
+        $obligation = DbOrder::getOrderCount(['order_status' => 1]);//待付款
+        $deliver    = DbOrder::getOrderCount(['order_status' => 4]);//待发货
+        $receive    = DbOrder::getOrderCount(['order_status' => 5]);//待收货
+        $rating     = DbOrder::getOrderCount(['order_status' => 7]);//待评价
 
-        return ['code' => '200','obligation' => $obligation,'deliver' => $deliver,'receive' => $receive,'rating' => $rating];
+        return ['code' => '200', 'obligation' => $obligation, 'deliver' => $deliver, 'receive' => $receive, 'rating' => $rating];
     }
 }
