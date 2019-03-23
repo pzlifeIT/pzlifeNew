@@ -25,7 +25,7 @@ class Order{
      * @return array
      * @author rzc
      */
-    public function getOrderList($page,$pagenum,$order_status = ''){
+    public function getOrderList($page,$pagenum,$order_status = '',$supplier_id = ''){
         $offset = ($page-1)*$pagenum;
         if ($offset<0) {
             return ['code' => 3000];
@@ -34,9 +34,30 @@ class Order{
         if (!empty($order_status)) {
             array_push($where, ['order_status', '=', $order_status]);
         }
+        $where2 = [];
+        if (!empty($supplier_id)) {
+            array_push($where2, ['supplier_id', '=', $supplier_id]);
+        }
+        // print_r($where);
+        // print_r($where2);die;
+        
+        $orderChild = DbOrder::getOrderChild('order_id',$where2,false,$offset.','.$pagenum);
+        
+        if (!empty($orderChild)) {
+            $order_id = '';
+            $a = '';
+            foreach ($orderChild as $order => $child) {
+                $order_id  =$order_id. $a .$child['order_id'] ;
+                $a = ',';
+            }
+            array_push($where, ['id', 'IN', $order_id]);
+        }
+        // print_r($where);die;
         $field = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
-        $orderList = DbOrder::getOrder($field, $where, false, $offset.','.$pagenum);
+        // $orderList = DbOrder::getOrder($field, $where, false, $offset.','.$pagenum);
+        $orderList = DbOrder::getOrderList($field,$where);
         // dump( Db::getLastSql());die;
+        // print_r($orderList);die;
         if (empty($orderList)) {
             return ['code' => 3000];
         }
@@ -82,9 +103,12 @@ class Order{
             foreach ($order_goods as $og => $goods) {
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
-                        $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
-                        $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'],true);
+                        $order_goods[$og]['goods_num']      = $goods_num['goods_num'];
+                        $order_goods[$og]['sku_image']      = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                        $order_goods[$og]['sku_json']       = json_decode($order_goods[$og]['sku_json'],true);
+                        $order_goods[$og]['brokerage']      = bcmul($order_goods[$og]['margin_price'],$goods_num['goods_num'],2);
+                        $order_goods[$og]['boss_brokerage'] = bcmul(bcmul($order_goods[$og]['margin_price'],$goods_num['goods_num'],2),0.15,2);
+
                     }
                 }
             }

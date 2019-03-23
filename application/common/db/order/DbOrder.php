@@ -51,6 +51,31 @@ class DbOrder {
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
     }
 
+    public function getOrderList($field,$where1,$pageNum = '',$row = false,$orderBy = '',$sc = ''){
+        $obj = Orders::field($field)->with([
+            'orderChild' => function ($query){
+                $query->field('*');
+            }
+        ]);
+        
+        if (!empty($where1)) {
+            $obj = $obj->where($where1);
+        }
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($pageNum)) {
+            $obj = $obj->limit($pageNum);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+
     /**
      * 获取订单(订单,子订单,商品订单)列表详情
      * @param $where
@@ -105,11 +130,15 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where, $row = false) {
+    public function getOrderChild($field, $where, $row = false,$limit = '') {
         $obj = OrderChild::field($field)->where($where);
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
+        
         return $obj->select()->toArray();
     }
 
@@ -285,7 +314,7 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+    private function getResult($obj, $row = false, $orderBy = '',$sc = '', $limit = '') {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }

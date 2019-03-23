@@ -62,4 +62,8 @@ class Orders extends Model {
         $payType = array_flip($this->payType);
         return $payType[$value];
     }
+
+    public function orderChild(){
+        return $this->hasMany('OrderChild', 'order_id', 'id');
+    }
 }
