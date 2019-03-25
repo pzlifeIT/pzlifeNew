@@ -112,6 +112,9 @@ class User extends CommonIndex {
         $addData    = [];
         $uid        = $this->checkAccount($mobile);//通过手机号获取uid
         if (empty($uid)) {//该手机未注册过
+            if (empty($wxInfo['unionid'])) {
+                return ['code' => '3000'];
+            }
             $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');//手机号获取不到就通过微信获取
             if (!empty($user)) {//注册了微信的老用户
                 if (!empty($user['mobile'])) {//该微信号已绑定
@@ -224,6 +227,9 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         $uid  = 0;
+        if (empty($wxInfo['unionid'])) {
+            return ['code' => '3000'];
+        }
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
             if (!empty($user['mobile'])) {//该微信号已绑定
@@ -1399,7 +1405,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserOrderCount($conId){
+    public function getUserOrderCount($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -1409,6 +1415,59 @@ class User extends CommonIndex {
         $receive    = DbOrder::getOrderCount(['order_status' => 5,'uid' => $uid]);//待收货
         $rating     = DbOrder::getOrderCount(['order_status' => 7,'uid' => $uid]);//待评价
 
-        return ['code' => '200','obligation' => $obligation,'deliver' => $deliver,'receive' => $receive,'rating' => $rating];
+        return ['code' => '200', 'obligation' => $obligation, 'deliver' => $deliver, 'receive' => $receive, 'rating' => $rating];
+    }
+
+    /**
+     * 生成二维码
+     * @param $code
+     * @param $encrypteddata
+     * @param $iv
+     * @return string
+     * @author rzc
+     */
+    public function userRead($code,$encrypteddata = '',$iv = '',$view_uid = ''){
+        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        if ($wxInfo === false) {
+            return ['code' => '3002'];
+        }
+        // print_r($wxInfo);die;
+        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
+        if (empty($wxInfo['openid'])){
+            return ['code' => '3003'];
+        }
+        
+        if (!empty($user)) {//注册了微信的老用户
+            return ['code' => '3004'];
+        }else {//新用户
+            $has_read = DbUser::getUserRead('*',['openid' => $wxInfo['openid']],true);
+            if (empty($has_read)) {
+                $unionid   = $wxInfo['unionid'] ?? '';
+                $nickname  = $wxInfo['nickname'] ?? '';
+                $avatarurl = $wxInfo['avatarurl'] ?? '';
+                $view_user =  DbUser::getUserOne(['id' => $view_uid], 'id,user_identity');
+                $addData = [
+                    'openid'        => $wxInfo['openid'],
+                    'unionid'       => $unionid,
+                    'nick_name'     => $nickname,
+                    'avatar'        => $avatarurl,
+                    'view_uid'      => $view_uid,
+                    'view_identity' => $view_user['user_identity'],
+                ];
+                DbUser::addUserRead($addData);
+                return ['code' => '200'];
+            }else{
+                $red_time  = date('Y-m-d',strtotime($has_read['update_time']));
+                $this_time = date('Y-m-d',time());
+                if ($red_time != $this_time) {
+                    DbUser::updateUserRead(['read_count'=> $has_read['read_count']+1],$has_read['id']);
+                    return ['code' => '200'];
+                }else{
+                    return ['code' => '3005'];
+                }
+                
+            }
+        }
+
     }
 }
