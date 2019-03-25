@@ -51,10 +51,24 @@ function checkVercode($code) {
  * 验证密码强度
  * @param $password
  * @return bool
+ * @author zyr
  */
 function checkPassword($password) {
     // /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\s\S]{8,16}$/  至少8-16个字符，至少1个大写字母，1个小写字母和1个数字，其他可以是任意字符：
     if (!empty($password) && preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[\s\S]{6,16}$/', $password)) {//6-16个字符，至少1个字母和1个数字，其他可以是任意字符
+        return true;
+    }
+    return false;
+}
+
+/**
+ * cms验证密码强度
+ * @param $password
+ * @return bool
+ * @author zyr
+ */
+function checkCmsPassword($password) {
+    if (!empty($password) && preg_match('/^(?=.*)[\s\S]{6,16}$/', $password)) {//6-16个字符,可以是任意字符
         return true;
     }
     return false;
@@ -117,7 +131,7 @@ function enUid($uid) {
  * @author zyr
  */
 function deUid($enUid) {
-    $str = 'AcEgIkMoQs';
+    $str   = 'AcEgIkMoQs';
     $enUid = substr($enUid, 1);
     $id    = '';
     for ($i = 0; $i < strlen($enUid); $i++) {
@@ -133,6 +147,40 @@ function deUid($enUid) {
 //    } else {
 //        return 0;
 //    }
+}
+
+/**
+ * @param $adminId
+ * @return int|string
+ * @author zyr
+ */
+function enAdminId($adminId) {
+    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-128-CBC');
+    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+    if (strlen($adminId) > 15) {
+        return 0;
+    }
+    $adminId = intval($adminId);
+    $encrypt = base64_encode(openssl_encrypt($adminId, $cryptMethod, $cryptKey, 0, $cryptIv));
+    return $encrypt;
+}
+
+/**
+ * @param $enAdminId
+ * @return int|string
+ * @author zyr
+ */
+function deAdminId($enAdminId) {
+    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-128-CBC');
+    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+    $decrypt     = openssl_decrypt(base64_decode($enAdminId), $cryptMethod, $cryptKey, 0, $cryptIv);
+    if ($decrypt) {
+        return $decrypt;
+    } else {
+        return 0;
+    }
 }
 
 function getOneNum($num) {

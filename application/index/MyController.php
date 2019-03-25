@@ -11,6 +11,14 @@ class MyController extends Controller {
 
     public function __construct(App $app = null) {
         parent::__construct($app);
+        $this->headers();
+        $checkRes = $this->checkApi();
+        if ($checkRes['code'] !== 200) {
+            exit(json_encode($checkRes));
+        }
+    }
+
+    private function headers() {
         if (Config::get('deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
             header("Access-Control-Allow-Methods:GET,POST");
@@ -22,10 +30,6 @@ class MyController extends Controller {
             header("Access-Control-Allow-Methods:GET,POST");
             header('Access-Control-Allow-Headers:content-type,token,id');
             header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
-        }
-        $checkRes = $this->checkApi();
-        if ($checkRes['code'] !== 200) {
-            exit(json_encode($checkRes));
         }
     }
 
@@ -91,6 +95,7 @@ class MyController extends Controller {
      * 验证con_id登录
      */
     protected function isLogin() {
+        $this->headers();
         $conId = trim($this->request->param('con_id'));
         if (!empty($conId) && strlen($conId) == 32) {
             $res = $this->app->user->isLogin($conId);//判断是否登录
@@ -105,13 +110,13 @@ class MyController extends Controller {
     /**
      * 验证是否为boss
      */
-    protected function isBoss(){
+    protected function isBoss() {
         $conId = trim($this->request->param('con_id'));
-        $res = $this->app->user->getUser($conId);
+        $res   = $this->app->user->getUser($conId);
         if ($res['code'] == '200') {
             if ($res['data']['user_identity'] == 4) {
                 return;
-            }else{
+            } else {
                 exit(json_encode(['code' => '6000']));
             }
         }
