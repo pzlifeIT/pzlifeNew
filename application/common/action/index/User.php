@@ -461,14 +461,14 @@ class User extends CommonIndex {
                 'to_uid'        => $uid,
                 'user_identity' => 4,//boss身份获得的收益
                 'status'        => 1,//待结算的
-                'bonus_type'    => 2,//经营性收益
+//                'bonus_type'    => 2,//经营性收益
             ], 'result_price');//未到账
 
             $bonus = DbUser::getLogBonusSum([
                 'to_uid'        => $uid,
                 'user_identity' => 4,//boss身份获得的收益
                 'status'        => 2,//已结算的
-                'bonus_type'    => 2,//经营性收益
+//                'bonus_type'    => 2,//经营性收益
             ], 'result_price');//全部返利(已入账)
 
 //            $bonus = DbUser::getLogTradingSum([
