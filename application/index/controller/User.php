@@ -749,4 +749,49 @@ class User extends MyController {
         return $result;
 
     }
+
+    /**
+     * @api              {post} / 用户绑定银行卡
+     * @apiDescription   addUserBankcard
+     * @apiGroup         index_user
+     * @apiName          addUserBankcard
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiSampleRequest /index/user/addUserBankcard
+     * @return array
+     * @author rzc
+     */
+    public function addUserBankcard(){
+
+    }
+
+    /**
+     * @api              {post} / 获取用户信息银行卡
+     * @apiDescription   getUserBankcards
+     * @apiGroup         index_user
+     * @apiName          getUserBankcards
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiSampleRequest /index/user/getUserBankcards
+     * @return array
+     * @author rzc
+     */
+    public function getUserBankcards(){
+
+    }
+
+    /**
+     * @api              {post} / 修改银行卡信息
+     * @apiDescription   editUserBankcards
+     * @apiGroup         index_user
+     * @apiName          editUserBankcards
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiSampleRequest /index/user/editUserBankcards
+     * @return array
+     * @author rzc
+     */
+    public function editUserBankcards(){
+
+    }
 }
