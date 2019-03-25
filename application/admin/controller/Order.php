@@ -4,13 +4,20 @@ namespace app\admin\controller;
 
 use think\Controller;
 use app\admin\AdminController;
-class Order extends AdminController
-{
+
+class Order extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 获取订单列表
      * @apiDescription   getOrders
      * @apiGroup         admin_Orders
      * @apiName          getOrders
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} order_status 订单状态 1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
@@ -50,26 +57,26 @@ class Order extends AdminController
      * ]
      * @author rzc
      */
-    public function getOrders(){
-        $page = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
+    public function getOrders() {
+        $page         = trim($this->request->post('page'));
+        $pagenum      = trim($this->request->post('pagenum'));
         $order_status = trim($this->request->post('order_status'));
-        
-        $page = $page ? $page : 1;
-        $pagenum = $pagenum ? $pagenum : 10 ;
-        
+
+        $page    = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
+
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => 3002];
         }
 
-        $order_status_data = [1,2,3,4,5,6,7,8,9,10];
+        $order_status_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         if ($order_status) {
-            if (!in_array($order_status,$order_status_data)) {
+            if (!in_array($order_status, $order_status_data)) {
                 return ['code' => '3003'];
             }
         }
-        
-        $result = $this->app->order->getOrderList(intval($page),intval($pagenum),intval($order_status));
+
+        $result = $this->app->order->getOrderList(intval($page), intval($pagenum), intval($order_status));
         return $result;
     }
 
@@ -77,6 +84,7 @@ class Order extends AdminController
      * @api              {post} / 获取订单详情
      * @apiGroup         admin_Orders
      * @apiName          getOrderInfo
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 订单ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3002:订单ID只能是数字
      * @apiSuccess (order_info) {object_array} order_info 结果
@@ -115,11 +123,11 @@ class Order extends AdminController
      * @apiSuccess (order_pack[order_goods]) {String} goods_num 商品成交数量
      * @apiSuccess (order_pack[order_goods]) {String} sku_json 商品规格详情列表
      * @apiSuccess (no_deliver_goods) {object_array} no_deliver_goods 未发货商品及属性及订单商品ID
-     * @apiSuccess (no_deliver_goods) {String} id 
+     * @apiSuccess (no_deliver_goods) {String} id
      * @apiSuccess (no_deliver_goods) {String} goods_name 商品名称
      * @apiSuccess (no_deliver_goods) {String} sku_json 商品规格详情列表
      * @apiSuccess (has_deliver_goods) {object_array} has_deliver_goods 已发货商品及属性及订单商品ID
-     * @apiSuccess (has_deliver_goods) {String} id 
+     * @apiSuccess (has_deliver_goods) {String} id
      * @apiSuccess (has_deliver_goods) {String} goods_name 商品名称
      * @apiSuccess (has_deliver_goods) {String} sku_json 商品规格详情列表
      * @apiSampleRequest /admin/Order/getOrderInfo
@@ -156,7 +164,7 @@ class Order extends AdminController
      * ]
      * @author rzc
      */
-    public function getOrderInfo(){
+    public function getOrderInfo() {
         $id = trim($this->request->post('id'));
         if (!is_numeric($id)) {
             return ['code' => 3002];
@@ -169,21 +177,23 @@ class Order extends AdminController
      * @api              {post} / 返回快递公司及其编码
      * @apiGroup         admin_Orders
      * @apiName          getExpressList
-     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} ExpressList 结果
      * @apiSampleRequest /admin/Order/getExpressList
      * @author rzc
      */
-    public function getExpressList(){
+    public function getExpressList() {
         $ExpressList = getExpressList();
-        return ['code' => 200,'ExpressList'=> $ExpressList];
+        return ['code' => 200, 'ExpressList' => $ExpressList];
     }
 
     /**
      * @api              {post} / 订单发货
      * @apiGroup         admin_Orders
      * @apiName          deliverOrderGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} order_goods_id 订单商品关系表id
      * @apiParam (入参) {Number} express_no 快递单号
      * @apiParam (入参) {Number} express_key 快递key
@@ -193,21 +203,21 @@ class Order extends AdminController
      * @apiSampleRequest /admin/Order/deliverOrderGoods
      * @author rzc
      */
-    public function deliverOrderGoods(){
+    public function deliverOrderGoods() {
         $order_goods_id = trim($this->request->post('order_goods_id'));
-        $express_no = trim($this->request->post('express_no'));
-        $express_key = trim($this->request->post('express_key'));
+        $express_no     = trim($this->request->post('express_no'));
+        $express_key    = trim($this->request->post('express_key'));
 
         if (empty($express_key) || empty($express_no)) {
             return ['code' => 3001];
         }
         $ExpressList = getExpressList();
-       
-        if (!array_key_exists($express_key,$ExpressList)) {
+
+        if (!array_key_exists($express_key, $ExpressList)) {
             return ['code' => 3002];
         }
         $express_name = $ExpressList[$express_key];
-        $result = $this->app->order->deliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name);
+        $result       = $this->app->order->deliverOrderGoods($order_goods_id, $express_no, $express_key, $express_name);
         return $result;
     }
 
@@ -215,6 +225,7 @@ class Order extends AdminController
      * @api              {post} / 修改订单发货信息
      * @apiGroup         admin_Orders
      * @apiName          updateDeliverOrderGoods
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} order_goods_id 订单商品关系表id
      * @apiParam (入参) {Number} express_no 快递单号
      * @apiParam (入参) {Number} express_key 快递key
@@ -224,21 +235,21 @@ class Order extends AdminController
      * @apiSampleRequest /admin/Order/updateDeliverOrderGoods
      * @author rzc
      */
-    public function updateDeliverOrderGoods(){
+    public function updateDeliverOrderGoods() {
         $order_goods_id = trim($this->request->post('order_goods_id'));
-        $express_no = trim($this->request->post('express_no'));
-        $express_key = trim($this->request->post('express_key'));
+        $express_no     = trim($this->request->post('express_no'));
+        $express_key    = trim($this->request->post('express_key'));
 
         if (empty($express_key) || empty($express_no)) {
             return ['code' => 3001];
         }
         $ExpressList = getExpressList();
-       
-        if (!array_key_exists($express_key,$ExpressList)) {
+
+        if (!array_key_exists($express_key, $ExpressList)) {
             return ['code' => 3002];
         }
         $express_name = $ExpressList[$express_key];
-        $result = $this->app->order->updateDeliverOrderGoods($order_goods_id,$express_no,$express_key,$express_name);
+        $result       = $this->app->order->updateDeliverOrderGoods($order_goods_id, $express_no, $express_key, $express_name);
         return $result;
     }
 

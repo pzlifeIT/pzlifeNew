@@ -5,11 +5,18 @@ namespace app\admin\controller;
 use app\admin\AdminController;
 
 class Category extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 分类列表
      * @apiDescription   getCateList
      * @apiGroup         admin_category
      * @apiName          getCateList
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} [type] 类型 1,启用的 / 2，停用的 / 3，所有的 (默认:1)
      * @apiParam (入参) {Number} [pid] 父级id (默认:0)
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
@@ -49,6 +56,7 @@ class Category extends AdminController {
      * @apiDescription   addCatePage
      * @apiGroup         admin_category
      * @apiName          addCatePage
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {Number} id 分类id
@@ -72,6 +80,7 @@ class Category extends AdminController {
      * @apiDescription   saveaddcate
      * @apiGroup         admin_category
      * @apiName          saveaddcate
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} pid 父级分类id
      * @apiParam (入参) {String} type_name 分类名称
      * @apiParam (入参) {Number} [status] 状态 1启用 / 2停用 默认2
@@ -104,6 +113,7 @@ class Category extends AdminController {
      * @apiDescription   editcatepage
      * @apiGroup         admin_category
      * @apiName          editcatepage
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 当前分类id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002:参数错误
      * @apiSuccess (返回) {Array} cate_data 当前修改的数据
@@ -134,6 +144,7 @@ class Category extends AdminController {
      * @apiDescription   saveeditcate
      * @apiGroup         admin_category
      * @apiName          saveeditcate
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {String} [type_name] 分类名称
      * @apiParam (入参) {Number} [status] 状态 1启用 2停用
@@ -175,6 +186,7 @@ class Category extends AdminController {
      * @apiDescription   stopStartCate
      * @apiGroup         admin_category
      * @apiName          stopStartCate
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
      * @apiParam (入参) {String} type_name 分类名称
@@ -199,6 +211,7 @@ class Category extends AdminController {
      * @apiDescription   getThreeCate
      * @apiGroup         admin_category
      * @apiName          getThreeCate
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} cate 可选的三级分类
      * @apiSuccess (cate) {Number} id 可选的三级分类id
@@ -219,6 +232,7 @@ class Category extends AdminController {
      * @apiDescription   allCateList
      * @apiGroup         admin_category
      * @apiName          allCateList
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} [status] 类型 1,启用的 / 2，停用的 / 3，所有的 (默认:1)
      * @apiSuccess (返回) {Number} code 200:成功 / 3000:未获取到数据 / 3001.status参数错误
      * @apiSuccess (返回) {Array}  data 分类数据
