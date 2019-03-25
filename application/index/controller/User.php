@@ -9,7 +9,7 @@ use function Qiniu\json_decode;
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx'],//除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'],//除去getFirstCate其他方法都进行second前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -751,5 +751,40 @@ class User extends MyController {
         $result = $this->app->user->getUserOrderCount($conId);
         return $result;
 
+    }
+
+    /**
+     * @api              {post} / 分享浏览人次
+     * @apiDescription   getUserRead
+     * @apiGroup         index_user
+     * @apiName          getUserRead
+     * @apiParam (入参) {String} code 微信code
+     * @apiParam (入参) {String} [encrypteddata] 微信加密信息
+     * @apiParam (入参) {String} [iv]
+     * @apiParam (入参) {String} [view_uid] 被浏览的用户
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有code / 3002:code长度只能是32位 / 3002:缺少参数 / 3003:未获取到openid / 3004:注册了微信的老用户 / 3005:今天已记录过该次数 
+     * @apiSuccess (返回) {String} obligation 待付款
+     * @apiSuccess (返回) {String} deliver 待发货
+     * @apiSuccess (返回) {String} receive 待收货
+     * @apiSuccess (返回) {String} rating 待评价
+     * @apiSampleRequest /index/user/getUserRead
+     * @return array
+     * @author rzc
+     */
+    public function getUserRead(){
+        $code          = trim($this->request->post('code'));
+        $encrypteddata = trim($this->request->post('encrypteddata'));
+        $iv            = trim($this->request->post('iv'));
+        $view_uid      = trim($this->request->post('view_uid'));
+        if (empty($code)) {
+            return ['code' => '3000'];
+        }
+        if (strlen($code) != 32) {
+            return ['code' => '3002'];//code有误
+        }
+        $view_uid = deUid($view_uid);
+        $view_uid = $view_uid ? $view_uid : 1;
+        $result = $this->app->user->userRead($code,$encrypteddata,$iv,$view_uid);
+        return $result;
     }
 }
