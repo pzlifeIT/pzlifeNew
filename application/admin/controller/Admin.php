@@ -157,7 +157,7 @@ class Admin extends AdminController {
         if (!is_numeric($credit)) {
             return ['code' => '3005'];
         }
-        $uid = enUid($uid);
+        // $uid = enUid($uid);
         $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$uid,$credit,$message);
         return $result;
     }
