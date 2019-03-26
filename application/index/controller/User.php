@@ -296,12 +296,9 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} balance 商票余额
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} integral 积分余额
-     * @apiSuccess (返回) {Decimal} balance_not_settlement 未结算商票
      * @apiSuccess (返回) {Decimal} balance_use 已使用商票
-     * @apiSuccess (返回) {Decimal} order_sum 销售总额
-     * @apiSuccess (返回) {Decimal} tobonus 本月返利
-     * @apiSuccess (返回) {Decimal} prebonus 上月返利
-     * @apiSuccess (返回) {Decimal} bonus 经营性总收益
+     * @apiSuccess (返回) {Decimal} no_bonus 未到账
+     * @apiSuccess (返回) {Decimal} bonus 已到账
      * @apiSuccess (返回) {Decimal} merchants 招商加盟收益
      * @apiSampleRequest /index/user/getbossshop
      * @return array
@@ -326,12 +323,13 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBonus
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} year 年份
-     * @apiParam (入参) {Int} month 月份
-     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费
-     * @apiParam (入参) {Int} page 当前页
-     * @apiParam (入参) {Int} page_num 每页数量
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误
+     * @apiParam (入参) {Int} status 1.已入账 2.未入账
+     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费 3.渠道收益
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
+     * @apiParam (入参) {Int} [year] 年份
+     * @apiParam (入参) {Int} [month] 月份
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误 / 3006:status错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} result_price 实际得到分利
      * @apiSuccess (返回) {json} order_no 订单号
@@ -346,13 +344,15 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserBonus() {
-        $conId    = trim($this->request->post('con_id'));
-        $year     = trim($this->request->post('year'));
-        $month    = trim($this->request->post('month'));
-        $stype    = trim($this->request->post('stype'));
-        $page     = trim($this->request->post('page'));
-        $pageNum  = trim($this->request->post('page_num'));
-        $stypeArr = [1, 2];
+        $conId     = trim($this->request->post('con_id'));
+        $status    = trim($this->request->post('status'));
+        $stype     = trim($this->request->post('stype'));
+        $page      = trim($this->request->post('page'));
+        $pageNum   = trim($this->request->post('page_num'));
+        $year      = trim($this->request->post('year'));
+        $month     = trim($this->request->post('month'));
+        $stypeArr  = [1, 2, 3];
+        $statusArr = [1, 2];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -362,9 +362,12 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3005'];
         }
+        if (!in_array($status, $statusArr)) {
+            return ['code' => '3006'];
+        }
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
-        $result  = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
+        $result  = $this->app->user->getUserBonus($conId, $status, $stype, $page, $pageNum, $year, $month);
         return $result;
     }
 

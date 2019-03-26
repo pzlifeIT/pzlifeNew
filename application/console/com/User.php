@@ -26,6 +26,27 @@ class User extends Pzlife {
     }
 
     /**
+     * 临时脚本,查找关系表里不存在的用户
+     */
+    public function clearUser() {
+        $otherUserSql = "select relation from pz_user_relation where uid!=1 and delete_time=0";
+        $userOther    = Db::query($otherUserSql);
+        $data         = [];
+        foreach ($userOther as $uo) {
+            $uids = explode(',', $uo['relation']);
+            foreach ($uids as $uid) {
+                $userSql = "select id from pz_users where id={$uid} and delete_time=0 limit 1";
+                $user    = Db::query($userSql);
+                if (empty($user)) {
+                    array_push($data, $uid);
+                }
+            }
+        }
+        print_r(implode(',', array_unique($data)));
+        die;
+    }
+
+    /**
      * 用户数据脚本转换
      *
      */
@@ -393,7 +414,7 @@ class User extends Pzlife {
                 $add_diamondvip['redmoney'] = $get_diamondvip[0]['coupon_money'];
                 $add_diamondvip['redmoney_status'] = 1;
                 $add_diamondvip['create_time'] = time();
-                
+
             }else{
                 $diamondvip_dominos_get_sql = " SELECT * FROM pre_diamondvip_dominos_get WHERE `uid` = ".$value['id']." LIMIT 1";
                 $diamondvip_dominos_get = $mysql_connect->query($diamondvip_dominos_get_sql);
@@ -415,12 +436,12 @@ class User extends Pzlife {
                     Db::startTrans();
                     try {
                         Db::table('pz_diamondvip_get')->insert($add_diamondvip);
-            
+
                         // 提交事务
                         Db::commit();
                     } catch (\Exception $e) {
                         // 回滚事务
-                        
+
                         Db::rollback();
                         print_r($e);
                         die;
@@ -435,12 +456,12 @@ class User extends Pzlife {
                     Db::startTrans();
                     try {
                         Db::table('pz_diamondvip_get')->where('uid', $value['id'])->update($updiamondvip);
-            
+
                         // 提交事务
                         Db::commit();
                     } catch (\Exception $e) {
                         // 回滚事务
-                        
+
                         Db::rollback();
                         print_r($e);
                         die;
