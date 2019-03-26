@@ -1516,8 +1516,21 @@ class User extends CommonIndex {
 
         if (!empty($user)) {//注册了微信的老用户
             return ['code' => '3004'];
-        } else {//新用户
-            $has_read = DbUser::getUserRead('*', ['openid' => $wxInfo['openid']], true);
+        }else {//新用户
+            if (empty($view_uid)) {
+                $view_uid = deUid($view_uid);
+                if ($view_uid) {
+                    $view_user = DbUser::getUserOne(['id' => $view_uid], 'id');
+                    if ($view_user) {
+                        $view_uid = $view_user['id'];
+                    }else{
+                        $view_uid = 1;
+                    }
+                }else{
+                    $view_uid = 1;
+                }
+            }
+            $has_read = DbUser::getUserRead('*',['openid' => $wxInfo['openid'],'view_uid' => $view_uid],true);
             if (empty($has_read)) {
                 $unionid   = $wxInfo['unionid'] ?? '';
                 $nickname  = $wxInfo['nickname'] ?? '';
