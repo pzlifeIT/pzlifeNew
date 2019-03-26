@@ -12,6 +12,7 @@ use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
 use app\common\model\UserRead;
+use app\common\model\UserIntegral;
 
 class DbUser {
     /**
@@ -250,6 +251,32 @@ class DbUser {
         $user->save();
     }
 
+    /**
+     * 改佣金余额
+     * @param $uid
+     * @param $commission
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyCommission($uid, $commission, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->commission = [$modify, $commission];
+        $user->save();
+    }
+
+    /**
+     * 改积分余额
+     * @param $uid
+     * @param $integral
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyIntegral($uid, $integral, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->integral = [$modify, $integral];
+        $user->save();
+    }
+
     public function addUserRecommend($data) {
         $userRecommend = new UserRecommend();
         $userRecommend->save($data);
@@ -370,4 +397,10 @@ class DbUser {
         $UserRead = new UserRead;
         return $UserRead->save($data,['id' => $id]);
     }
+
+     public function addUserIntegral($data){
+         $UserIntegral = new UserIntegral;
+         $UserIntegral->save($data);
+         return $UserIntegral->id;
+     }
 }
