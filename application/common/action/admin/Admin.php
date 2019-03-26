@@ -320,6 +320,7 @@ class Admin extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','AdminRemittances' => $result];
+        $total = DbAdmin::getCountAdminRemittance($where);
+        return ['code' => '200', 'total' => $total ,'AdminRemittances' => $result];
     }
 }
