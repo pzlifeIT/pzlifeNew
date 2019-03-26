@@ -156,7 +156,7 @@ class Admin extends AdminController {
         if (empty($nick_name)) {
             return ['code' => '3007'];
         }
-        if (checkMobile($mobile)) {
+        if (checkMobile($mobile) == false) {
             return ['code' => '3008'];
         }
         if (!is_numeric($credit)) {
