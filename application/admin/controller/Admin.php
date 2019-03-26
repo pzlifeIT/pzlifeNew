@@ -190,7 +190,7 @@ class Admin extends AdminController {
         if (empty($status)) {
             return ['code' => '3005'];
         }
-        if (!is_array($status,[1,2])) {
+        if (!in_array($status,[1,2])) {
             return ['code' => '3006'];
         }
         if (!is_numeric($id)) {
