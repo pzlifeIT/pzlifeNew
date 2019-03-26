@@ -95,4 +95,14 @@ class DbAdmin {
         ])->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
+
+    /**
+     * 获取充值记录条数
+     * @param $where
+     * @return mixed
+     * @author rzc
+     */
+    public function getCountAdminRemittance($where){
+        return AdminRemittance::where($where)->count();
+    }
 }
