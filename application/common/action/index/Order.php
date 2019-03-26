@@ -9,14 +9,17 @@ use app\facade\DbGoods;
 use app\facade\DbOrder;
 use think\Db;
 use app\facade\DbProvinces;
+use function Qiniu\json_decode;
 
 class Order extends CommonIndex {
     private $redisCartUserKey;
+    private $redisDeliverOrderKey;
     private $prefix = 'skuid:';
 
     public function __construct() {
         parent::__construct();
-        $this->redisCartUserKey = Config::get('rediskey.cart.redisCartUserKey');
+        $this->redisCartUserKey     = Config::get('rediskey.cart.redisCartUserKey');
+        $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
     public function cancelOrder($orderNo, $conId = '', $uid = 0) {
@@ -1125,13 +1128,90 @@ class Order extends CommonIndex {
             ];
             $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
             foreach ($has_express_goodsid as $has_express => $goods) {
-                $express_goods            = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]]);
-                $express['express_goods'] = $express_goods;
+                $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+                // print_r($express_goods);die;
+                $express_goods['sku_json'] = json_decode($express_goods['sku_json'],true);
+                $express['express_goods'][]  = $express_goods;
             }
+            $key = $express['express_no'].'&'.$express['express_key'];
+        // $key = 'shentong&3701622486414';
+            $expresslog = $this->redis->get($this->redisDeliverOrderKey.$key);
+            if (!empty($expresslog)) {
+                $expresslog = json_decode($expresslog,true);
+                $express['express_info'] = $expresslog['data'][0]['context']; 
+            }else{
+                $express['express_info'] = '';
+            }
+            
             $order_subpackage[] = $express;
         }
         $package_num = count($has_order_express);
         return ['code' => 200, 'package_num' => $package_num, 'order_no' => $order_no, 'order_subpackage' => $order_subpackage];
+    }
+
+
+    /**
+     * 查询订单物流流转信息
+     * @param $express_key
+     * @param $express_no
+     * @return array
+     * @author rzc
+     */
+    public function getExpressLog($express_key,$express_no,$order_no,$conId){
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
+        if (empty($uid)) {
+            return ['code' => '3005'];
+        }
+        $order_address = DbOrder::getOrder('order_status,province_id,city_id,area_id,address,message', ['uid' => $uid, 'order_no' => $order_no], true);
+        if (empty($order_address)) {
+            return ['code' => '3004', 'msg' => '订单不存在'];
+        }
+        if ($order_address['order_status'] < 5) {
+            return ['code' => '3006', 'msg' => '未发货的订单无法查询分包信息'];
+        }
+        $where               = [
+            'express_no'   => $express_no,
+            'express_key'  => $express_key
+        ];
+
+        $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
+        // print_r($has_express_goodsid);die;
+        $express_goods = [];
+        if (empty($has_express_goodsid)){
+            return ['code' => '3007','msg' => '无效的分包信息'];
+        }
+
+        foreach ($has_express_goodsid as $has_express => $goods) {
+            $deliver_express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+            // print_r($express_goods);die;
+            $deliver_express_goods['sku_json'] = json_decode($deliver_express_goods['sku_json'],true);
+            $express_goods[]  = $deliver_express_goods;
+        }
+        $express = [];
+        $express['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_address['province_id']])['area_name'];
+        $express['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_address['city_id']])['area_name'];
+        $express['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_address['area_id']])['area_name'];
+        $express['address']       = $order_address['address'];
+        $express['message']       = $order_address['message'];
+        $key = $express_key.'&'.$express_no;
+        // $key = 'shentong&3701622486414';
+        $expresslog = $this->redis->get($this->redisDeliverOrderKey.$key);
+        if (empty($expresslog)) {
+            $expresslog = [];
+            $express['is_sign'] = 2;
+            return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog];
+        }else{
+            $expresslog = json_decode($expresslog,true);
+        }
+        if ($expresslog['state'] == 3) {
+            $express['is_sign'] = 1;
+        }else{
+            $express['is_sign'] = 2;
+        }
+        return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog['data']];
+        // $express = 
+       
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

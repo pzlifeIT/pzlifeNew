@@ -180,7 +180,7 @@ class DbOrder {
     public function updateOrderExpress($data, $id) {
         $OrderExpress = new OrderExpress;
 
-        return $OrderExpress->save($data, $id);
+        return $OrderExpress->save($data, ['id' => $id]);
     }
 
     /**

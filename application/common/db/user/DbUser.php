@@ -11,6 +11,7 @@ use app\common\model\UserRelation;
 use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
+use app\common\model\UserRead;
 
 class DbUser {
     /**
@@ -320,5 +321,53 @@ class DbUser {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    /**
+     * @param $field
+     * @param $where
+     * @param $row
+     * @param $orderBy
+     * @param $sc
+     * @param $limit
+     * @return array
+     * @author rzc
+     */
+    public function getUserRead($field, $where, $row = false, $orderBy = '',$sc = '', $limit = ''){
+        
+        $obj = UserRead::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+           $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+           $obj = $obj->findOrEmpty();
+        } else {
+           $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    /**
+     * @param $data
+     * @return bool
+     * @author rzc
+     */
+    public function addUserRead($data){
+        $UserRead = new UserRead;
+        return $UserRead->save($data);
+    }
+
+    /**
+     * @param $data
+     * @param $id
+     * @return bool
+     * @author rzc
+     */
+    public function updateUserRead($data,$id){
+        $UserRead = new UserRead;
+        return $UserRead->save($data,['id' => $id]);
     }
 }
