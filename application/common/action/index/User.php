@@ -699,7 +699,7 @@ class User extends CommonIndex {
 
         $readCount  = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
         $grantCount = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
-        return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount];
+        return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => 0];
     }
 
     /**

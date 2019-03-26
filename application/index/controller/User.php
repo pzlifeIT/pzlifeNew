@@ -415,9 +415,9 @@ class User extends MyController {
      * @apiName          getUserSocialSum
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
-     * @apiSuccess (返回) {Int} diamon_count 钻石会员圈人数
-     * @apiSuccess (返回) {Int} user_count 买主圈
-     * @apiSuccess (返回) {Int} all_user 总人数
+     * @apiSuccess (返回) {Int} read_count 浏览人次
+     * @apiSuccess (返回) {Int} grant_count 授权未注册
+     * @apiSuccess (返回) {Int} reg_count 已注册
      * @apiSampleRequest /index/user/getusersocialsum
      * @return array
      * @author zyr
