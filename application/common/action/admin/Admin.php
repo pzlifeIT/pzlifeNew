@@ -316,7 +316,8 @@ class Admin extends CommonIndex {
             array_push($where, ['create_time', '<=', $end_time]);
         }
 
-        $result = DbAdmin::getAdminRemittance($where, '*',false,['id'=>'desc'],$offset,','.$pageNum);
+        $result = DbAdmin::getAdminRemittance($where, '*',false,['id'=>'desc'],$offset.','.$pageNum);
+        // print_r(count($result));die;
         if (empty($result)) {
             return ['code' => '3000'];
         }
