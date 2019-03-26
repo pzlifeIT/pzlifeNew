@@ -618,6 +618,7 @@ class Order extends Pzlife {
                     $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                     $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
                     $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['share_uid']);
                     // Db::getLastSql();die;
                     // print_r($fromDiamondvipGet['share_uid']);die;
                     if ($share_from_user['user_identity'] == 4) {
