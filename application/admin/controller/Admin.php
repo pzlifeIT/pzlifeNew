@@ -127,7 +127,8 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} passwd 用户密码
      * @apiParam (入参) {String} stype 添加类型 1.商票 2.佣金 3.积分
-     * @apiParam (入参) {String} uid 前台用户加密ID
+     * @apiParam (入参) {String} nick_name 前台用户昵称
+     * @apiParam (入参) {String} mobile 前台用户昵称
      * @apiParam (入参) {String} credit 收款金额(充值金额)
      * @apiParam (入参) {String} message 详细描述
      * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:请输入转入类型 / 3003:错误的转账类型 / 3004:前台用户加密ID为空  / 3005:credit必须为数字 / 3006:扣款金额不能大于用户余额(商票)
@@ -139,7 +140,8 @@ class Admin extends AdminController {
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $passwd     = trim($this->request->post('passwd'));
         $stype      = trim($this->request->post('stype'));
-        $uid        = trim($this->request->post('uid'));
+        $nick_name  = trim($this->request->post('nick_name'));
+        $mobile     = trim($this->request->post('mobile'));
         $credit     = trim($this->request->post('credit'));
         $message    = trim($this->request->post('message'));
         if (empty($passwd)) {
@@ -158,7 +160,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$uid,$credit,$message);
+        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message);
         return $result;
     }
 
@@ -170,7 +172,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} id
      * @apiParam (入参) {String} status 1通过，2不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3002:错误的审核类型 / 3002:该用户没有权限 / 3003:不存在的记录  / 3004:已审核的状态无法再次审核 / 3005:空的status
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3002:该用户没有权限 / 3003:不存在的记录  / 3004:已审核的状态无法再次审核 / 3005:空的status / 3006:错误的审核类型 / 3001:id必须为数字
      * @apiSampleRequest /admin/admin/auditAdminRemittance
      * @return array
      * @author rzc
@@ -185,7 +187,13 @@ class Admin extends AdminController {
         if (empty($status)) {
             return ['code' => '3005'];
         }
-        $result = $this->app->admin->auditAdminRemittance($cmsConId,intval($status),$id);
+        if (!is_array($status,[1,2])) {
+            return ['code' => '3006'];
+        }
+        if (!is_numeric($id)) {
+            return ['code' => '3007'];
+        }
+        $result = $this->app->admin->auditAdminRemittance($cmsConId,intval($status),intval($id));
         return $result;
     }
 
