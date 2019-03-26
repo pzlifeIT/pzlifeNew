@@ -122,8 +122,15 @@ class Order extends Pzlife {
         if (empty($result)) {
             exit('log_bonus_null');
         }
-        $data = [];
+        $orders    = array_unique(array_column($result, 'order_no'));
+        $orderSql  = sprintf("select order_no from pz_orders where delete_time=0 and order_status=6 and order_no in ('" . implode("','", $orders) . "')");
+        $orderList = Db::query($orderSql);
+        $orderList = array_column($orderList, 'order_no');
+        $data      = [];
         foreach ($result as $rVal) {
+            if (!in_array($rVal['order_no'], $orderList)) {//已收货并且满15天
+                continue;
+            }
             $kkey = $rVal['to_uid'] . $rVal['order_no'];
             if (!key_exists($kkey, $data)) {
                 $data[$kkey]['uid'] = $rVal['to_uid'];
