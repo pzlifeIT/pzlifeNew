@@ -25,10 +25,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '',$sc = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy);
+            $obj = $obj->order($orderBy,$sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
