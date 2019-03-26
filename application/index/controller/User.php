@@ -299,6 +299,7 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} balance_use 已使用商票
      * @apiSuccess (返回) {Decimal} no_bonus 未到账
      * @apiSuccess (返回) {Decimal} bonus 已到账
+     * @apiSuccess (返回) {Decimal} bonus_all 总收益
      * @apiSuccess (返回) {Decimal} merchants 招商加盟收益
      * @apiSampleRequest /index/user/getbossshop
      * @return array
@@ -330,15 +331,17 @@ class User extends MyController {
      * @apiParam (入参) {Int} [year] 年份
      * @apiParam (入参) {Int} [month] 月份
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误 / 3006:status错误
+     * @apiSuccess (返回) {Decimal} combined 合计
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
-     * @apiSuccess (返回) {json} order_no 订单号
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
-     * @apiSuccess (返回) {json} create_time 订单完成时间
-     * @apiSuccess (返回) {String} nick_name 昵称
-     * @apiSuccess (返回) {String} avatar 头像
-     * @apiSuccess (返回) {Int} from_uid 购买人uid
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (data) {Decimal} result_price 实际得到分利
+     * @apiSuccess (data) {json} order_no 订单号
+     * @apiSuccess (data) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (data) {json} create_time 订单完成时间
+     * @apiSuccess (data) {String} nick_name 昵称
+     * @apiSuccess (data) {String} avatar 头像
+     * @apiSuccess (data) {Int} from_uid 购买人uid
+     * @apiSuccess (data) {Int} user_identity 1.普通会员 2.钻石 4.boss
+     * @apiSuccess (data) {int} status 状态 1:待结算 2:已结算
      * @apiSampleRequest /index/user/getuserbonus
      * @return array
      * @author zyr
@@ -412,10 +415,9 @@ class User extends MyController {
      * @apiName          getUserSocialSum
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
-     * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Int} diamon_count 钻石会员圈人数
-     * @apiSuccess (返回) {Int} user_count 买主圈
-     * @apiSuccess (返回) {Int} all_user 总人数
+     * @apiSuccess (返回) {Int} read_count 浏览人次
+     * @apiSuccess (返回) {Int} grant_count 授权未注册
+     * @apiSuccess (返回) {Int} reg_count 已注册
      * @apiSampleRequest /index/user/getusersocialsum
      * @return array
      * @author zyr
@@ -442,12 +444,15 @@ class User extends MyController {
      * @apiParam (入参) {Int} page 当前页
      * @apiParam (入参) {Int} page_num 每页数量
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Int} diamon_user_count 直接钻石会员
+     * @apiSuccess (返回) {Int} social_count_all 好友钻石会员
      * @apiSuccess (返回) {Array} data 列表
-     * @apiSuccess (返回) {Int} id 用户id
-     * @apiSuccess (返回) {String} nick_name 昵称
-     * @apiSuccess (返回) {String} avatar 头像
-     * @apiSuccess (返回) {Int} diamond_count 钻石会员人数
-     * @apiSuccess (返回) {Int} social_count 社交圈人数
+     * @apiSuccess (data) {Int} id 用户id
+     * @apiSuccess (data) {String} nick_name 昵称
+     * @apiSuccess (data) {String} avatar 头像
+     * @apiSuccess (data) {Int} diamond_count 钻石会员人数
+     * @apiSuccess (data) {Int} social_count 社交圈人数
+     * @apiSuccess (data) {Int} user_ring_count 已注册普通会员
      * @apiSampleRequest /index/user/getusersocial
      * @return array
      * @author zyr

@@ -567,7 +567,8 @@ class User extends CommonIndex {
         $offset   = ($page - 1) * $pageNum;
         $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
         $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc', $offset . ',' . $pageNum);
-        $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar');
+        $combined = DbUser::getLogBonusSum($where, 'result_price');//合计
+        $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar,user_identity');
         $userList = array_combine(array_column($userList, 'id'), $userList);
 //        print_r($bonus);die;
 //        $orderNoList = array_unique(array_column($bonus,'order_no'));
@@ -575,9 +576,10 @@ class User extends CommonIndex {
         foreach ($bonus as $b) {
             $keyy = $b['order_no'] . $b['from_uid'];
             if (!key_exists($keyy, $result)) {
-                $b['nick_name'] = $userList[$b['from_uid']]['nick_name'];
-                $b['avatar']    = $userList[$b['from_uid']]['avatar'];
-                $b['from_uid']  = enUid($b['from_uid']);
+                $b['nick_name']     = $userList[$b['from_uid']]['nick_name'];
+                $b['avatar']        = $userList[$b['from_uid']]['avatar'];
+                $b['user_identity'] = $userList[$b['from_uid']]['user_identity'];
+                $b['from_uid']      = enUid($b['from_uid']);
                 unset($b['to_uid']);
                 $b['status']   = $b['status'] == 2 ? '已结算' : '待结算';
                 $result[$keyy] = $b;
@@ -589,7 +591,7 @@ class User extends CommonIndex {
             return ['code' => '3000', 'data' => []];//没有分利
         }
         $result = array_values($result);
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result, 'combined' => $combined];
     }
 
     /**
@@ -672,6 +674,7 @@ class User extends CommonIndex {
 
     public function getUserSocialSum($conId) {
         $uid = $this->getUidByConId($conId);
+        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -682,17 +685,21 @@ class User extends CommonIndex {
         if ($user['user_identity'] != '4') {
             return ['code' => '3000'];//boss才有权限查看
         }
-        $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid');
-        $diamonUidList  = array_column($diamonUserList, 'uid');//第一层会员圈
-        $diamondRing    = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//第一层钻石会员
+//        $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid');
+//        $diamonUidList  = array_column($diamonUserList, 'uid');//第一层会员圈
+//        $diamondRing    = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//第一层钻石会员
+//
+////        $userRing  = bcsub(count($diamonUidList), $diamondRing, 0);//第一层普通会员圈人数
+////        $nextCount = $this->getUsersNext($diamonUidList);
+////        $userCount = bcadd($nextCount, $userRing);
+////        $allCount  = bcadd($userCount, $diamondRing);
+//        $allCount  = DbUser::getUserRelationCount([['relation', 'like', '%,' . $uid . ',%'], ['is_boss', '=', '2']]);
+//        $userCount = bcsub($allCount, $diamondRing, 2);
+//        return ['code' => '200', 'diamon_count' => $diamondRing, 'user_count' => $userCount, 'all_user' => $allCount];
 
-//        $userRing  = bcsub(count($diamonUidList), $diamondRing, 0);//第一层普通会员圈人数
-//        $nextCount = $this->getUsersNext($diamonUidList);
-//        $userCount = bcadd($nextCount, $userRing);
-//        $allCount  = bcadd($userCount, $diamondRing);
-        $allCount  = DbUser::getUserRelationCount([['relation', 'like', $uid . ',%'], ['is_boss', '=', '2']]);
-        $userCount = bcsub($allCount, $diamondRing, 2);
-        return ['code' => '200', 'diamon_count' => $diamondRing, 'user_count' => $userCount, 'all_user' => $allCount];
+        $readCount  = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
+        $grantCount = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
+        return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => 0];
     }
 
     /**
@@ -714,8 +721,17 @@ class User extends CommonIndex {
         return $count;
     }
 
+    /**
+     * 社交圈
+     * @param $conId
+     * @param $stype
+     * @param $page
+     * @param $pageNum
+     * @return array
+     */
     public function getUserSocial($conId, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
+        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -727,23 +743,29 @@ class User extends CommonIndex {
             return ['code' => '3000'];//boss才有权限查看
         }
         $offset         = ($page - 1) * $pageNum;
-        $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid]], 'uid', false, 'uid desc');//查询直属boss下的所有人
+        $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid', false, 'uid desc');//查询直属boss下的所有人
         if (empty($diamonUserList)) {
             return ['code' => '3000', 'data' => []];
         }
-        $diamonUidList = array_column($diamonUserList, 'uid');
+        $diamonUidList = array_column($diamonUserList, 'uid');//boss下的所有人(包括钻石和普通)
         if ($stype == 1) {//钻石会员圈
+            $diamonUserCount = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//直接钻石会员
+            $uAll            = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid');//查询直属boss下的所有人
+            $uDiamon         = DbUser::getUserInfo([['id', 'in', array_column($uAll, 'uid')], ['user_identity', '=', '2']], 'id');
+            $uDiamon         = array_column(DbUser::getUserRelation([['pid', 'in', array_column($uDiamon, 'id')], ['is_boss', '=', '2']], 'uid'), 'uid');
+            $socialCountAll  = DbUser::getUserInfoCount([['id', 'in', $uAll], ['user_identity', '=', '2']]);
+
             $diamondRing  = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
             $diamondUids  = array_column($diamondRing, 'id');
-            $diamondUsers = DbUser::getUserRelation([['pid', 'in', $diamondUids]], 'pid,uid');//boss直属钻石的直属钻石
+            $diamondUsers = DbUser::getUserRelation([['pid', 'in', $diamondUids], ['is_boss', '=', '2']], 'pid,uid');//boss直属钻石的直属钻石
             $diamondK     = array_column($diamondUsers, 'pid', 'uid');
             $diamondInfo  = DbUser::getUserInfo([['id', 'in', array_column($diamondUsers, 'uid')], ['user_identity', '=', 2]], 'id');//直属钻石圈
             $userCount    = [];
             foreach ($diamondUids as $du) {
-                $userList = DbUser::getUserRelation([['relation', 'like', '%' . $du . ',%']], 'relation');
+                $userList = DbUser::getUserRelation([['relation', 'like', '%,' . $du . ',%']], 'relation');
                 $uidList  = [];
                 foreach ($userList as $ul) {
-                    $ul['relation'] = substr($ul['relation'], bcadd(stripos($ul['relation'], $du . ','), strlen($du . ','), 0));
+                    $ul['relation'] = substr($ul['relation'], bcadd(stripos($ul['relation'], ',' . $du . ','), strlen(',' . $du . ','), 0));
                     $uidList        = array_merge($uidList, explode(',', $ul['relation']));
                 }
                 $uidList        = array_values(array_unique($uidList));
@@ -757,19 +779,20 @@ class User extends CommonIndex {
                 }
                 $diamondCount[$pid] += 1;
             }
-
             $data = [];
             foreach ($diamondRing as $dr) {
-                $dr['id']            = enUid($dr['id']);
                 $dr['diamond_count'] = $diamondCount[$dr['id']] ?? 0;//钻石会员圈
                 $dr['social_count']  = $userCount[$dr['id']] ?? 0;//社交圈
+//                $socialCountAll      += $dr['diamond_count'];
+                $dr['id'] = enUid($dr['id']);
                 array_push($data, $dr);
             }
-            return ['code' => '200', 'data' => $data];
+            return ['code' => '200', 'data' => $data, 'diamon_user_count' => $diamonUserCount, 'social_count_all' => $socialCountAll];
         }
         if ($stype == 2) {//买主圈
-            $userRing = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '1']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的普通会员
-            $userUids = array_column($userRing, 'id');
+            $userRingCount = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '1']]);
+            $userRing      = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '1']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的普通会员
+            $userUids      = array_column($userRing, 'id');
 
             $userNextList = DbUser::getUserRelation([['pid', 'in', $userUids]], 'pid,uid');
             $userK        = array_column($userNextList, 'pid', 'uid');
@@ -805,7 +828,7 @@ class User extends CommonIndex {
 //                $dr['id'] = enUid($dr['id']);
 //                array_push($data, $dr);
 //            }
-            return ['code' => '200', 'data' => $data];
+            return ['code' => '200', 'data' => $data, 'user_ring_count' => $userRingCount];
         }
     }
 
@@ -1480,27 +1503,27 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function userRead($code,$encrypteddata = '',$iv = '',$view_uid = ''){
+    public function userRead($code, $encrypteddata = '', $iv = '', $view_uid = '') {
         $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
         if ($wxInfo === false) {
             return ['code' => '3002'];
         }
         // print_r($wxInfo);die;
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
-        if (empty($wxInfo['openid'])){
+        if (empty($wxInfo['openid'])) {
             return ['code' => '3003'];
         }
-        
+
         if (!empty($user)) {//注册了微信的老用户
             return ['code' => '3004'];
-        }else {//新用户
-            $has_read = DbUser::getUserRead('*',['openid' => $wxInfo['openid']],true);
+        } else {//新用户
+            $has_read = DbUser::getUserRead('*', ['openid' => $wxInfo['openid']], true);
             if (empty($has_read)) {
                 $unionid   = $wxInfo['unionid'] ?? '';
                 $nickname  = $wxInfo['nickname'] ?? '';
                 $avatarurl = $wxInfo['avatarurl'] ?? '';
-                $view_user =  DbUser::getUserOne(['id' => $view_uid], 'id,user_identity');
-                $addData = [
+                $view_user = DbUser::getUserOne(['id' => $view_uid], 'id,user_identity');
+                $addData   = [
                     'openid'        => $wxInfo['openid'],
                     'unionid'       => $unionid,
                     'nick_name'     => $nickname,
@@ -1510,16 +1533,16 @@ class User extends CommonIndex {
                 ];
                 DbUser::addUserRead($addData);
                 return ['code' => '200'];
-            }else{
-                $red_time  = date('Y-m-d',strtotime($has_read['update_time']));
-                $this_time = date('Y-m-d',time());
+            } else {
+                $red_time  = date('Y-m-d', strtotime($has_read['update_time']));
+                $this_time = date('Y-m-d', time());
                 if ($red_time != $this_time) {
-                    DbUser::updateUserRead(['read_count'=> $has_read['read_count']+1],$has_read['id']);
+                    DbUser::updateUserRead(['read_count' => $has_read['read_count'] + 1], $has_read['id']);
                     return ['code' => '200'];
-                }else{
+                } else {
                     return ['code' => '3005'];
                 }
-                
+
             }
         }
 

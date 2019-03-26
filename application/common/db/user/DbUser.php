@@ -377,6 +377,10 @@ class DbUser {
         return $obj->toArray();
     }
 
+    public function getUserReadSum($where, $field) {
+        return UserRead::where($where)->sum($field);
+    }
+
     /**
      * @param $data
      * @return bool
