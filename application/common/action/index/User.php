@@ -674,7 +674,6 @@ class User extends CommonIndex {
 
     public function getUserSocialSum($conId) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
@@ -731,7 +730,6 @@ class User extends CommonIndex {
      */
     public function getUserSocial($conId, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
         }
