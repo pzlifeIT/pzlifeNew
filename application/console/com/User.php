@@ -371,18 +371,35 @@ class User extends Pzlife {
             $get_diamondvip = $mysql_connect->query($get_diamondvip_sql);
             $add_diamondvip = [];
             if (!empty($get_diamondvip)) {
+               
+                if ($get_diamondvip[0]['sdid']) {
+                    $get_sql = 'SELECT id FROM pz_diamondvips WHERE `uid`= '.$get_diamondvip[0]['share_uid'];
+                    $new_get_diamondvip = Db::query($get_sql);
+                   
+                    if ($new_get_diamondvip) {
+                        $add_diamondvip['diamondvips_id'] = $new_get_diamondvip[0]['id'];
+                    }
+                }
                 $add_diamondvip['uid'] = $get_diamondvip[0]['uid'];
                 $add_diamondvip['share_uid'] = $get_diamondvip[0]['share_uid'];
                 $add_diamondvip['redmoney'] = $get_diamondvip[0]['coupon_money'];
                 $add_diamondvip['redmoney_status'] = 1;
                 $add_diamondvip['create_time'] = time();
-                
+                // 
             }else{
                 $diamondvip_dominos_get_sql = " SELECT * FROM pre_diamondvip_dominos_get WHERE `uid` = ".$value['id']." LIMIT 1";
                 $diamondvip_dominos_get = $mysql_connect->query($diamondvip_dominos_get_sql);
                 if (!empty($diamondvip_dominos_get)) {
                     if ($diamondvip_dominos_get[0]['redmoney_status'] == 1) {
-                        $add_diamondvip['redmoney'] = $diamondvip_dominos_get[0]['redmoney'];
+                        $diamondvip_dominos_get['redmoney'] = $diamondvip_dominos_get[0]['redmoney'];
+                    }
+                    // print_r($diamondvip_dominos_get);die;
+                    if ($diamondvip_dominos_get[0]['ddid']) {
+                        $get_sql = 'SELECT id FROM pz_diamondvips WHERE `uid`= '.$diamondvip_dominos_get[0]['share_uid'];
+                        $new_get_diamondvip = Db::query($get_sql);
+                        if ($new_get_diamondvip) {
+                            $add_diamondvip['diamondvips_id'] = $new_get_diamondvip[0]['id'];
+                        }
                     }
                     $add_diamondvip['uid'] = $diamondvip_dominos_get[0]['uid'];
                     $add_diamondvip['share_uid'] = $diamondvip_dominos_get[0]['share_uid'];
