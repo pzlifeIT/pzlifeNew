@@ -18,9 +18,10 @@ class User extends AdminController {
      * @apiGroup         admin_Users
      * @apiName          getUsers
      * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [mobile] 手机号
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3002:页码和查询条数只能是数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:手机号格式错误 / 3002:页码和查询条数只能是数字
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} data 结果
      * @apiSuccess (data) {String} id 用户ID
@@ -50,8 +51,13 @@ class User extends AdminController {
     public function getUsers() {
         $page    = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pagenum'));
-
-        $result = $this->app->user->getUsers($page, $pagenum);
+        $mobile = trim($this->request->post('mobile'));
+        if (!empty($mobile)){
+            if (checkMobile($mobile) == false) {
+                return ['code' =>'3001'];
+            }
+        }
+        $result = $this->app->user->getUsers($page, $pagenum , $mobile);
         return $result;
     }
 
