@@ -7,10 +7,15 @@ use app\facade\DbUser;
 use app\facade\DbOrder;
 use Config;
 use think\Db;
+use cache\Phpredis;
 
 class Admin extends CommonIndex {
     private $cmsCipherUserKey = 'adminpass';//用户密码加密key
-
+    private function redisInit() {
+        $this->redis = Phpredis::getConn();
+//        $this->connect = Db::connect(Config::get('database.db_config'));
+    }
+     
     /**
      * @param $adminName
      * @param $passwd
@@ -141,18 +146,21 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId,$passwd,$stype,$uid,$credit,$message){
+    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message){
         $message = $message ?? '';
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
             return ['code' => '3001'];
         }
-        $uid = deUid($uid);
+        /* $uid = deUid($uid);
         if (empty($uid)) {
             return ['code' => '3004'];
+        } */
+        $indexUser = DbUser::getUserInfo(['nick_name'=>$nick_name,'mobile'=>$mobile], 'id,balance,commission,integral', true);
+        if (empty($indexUser)) {
+            return ['code' => '3004'];
         }
-        $indexUser = DbUser::getUserInfo(['id'=>$uid], 'id,balance,commission,integral', true);
         if ($stype == 1) {
             if ($credit + $indexUser['balance'] <0 ) {
                 return ['code' => '3006'];
@@ -161,7 +169,7 @@ class Admin extends CommonIndex {
         $add_remittance                      = [];
         $add_remittance['initiate_admin_id'] = $adminId;
         $add_remittance['stype']             = $stype;
-        $add_remittance['uid']               = $uid;
+        $add_remittance['uid']               = $indexUser['id'];
         $add_remittance['status']            = 1;
         $add_remittance['credit']            = $credit;
         $add_remittance['message']           = $message;
@@ -176,7 +184,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function auditAdminRemittance($cmsConId,$status,$id){
+    public function auditAdminRemittance($cmsConId,$status,int $id){
+        $userRedisKey = Config::get('rediskey.user.redisKey');
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
         if ($adminInfo['stype'] != 2){
@@ -229,6 +238,7 @@ class Admin extends CommonIndex {
                     }elseif($remittance['stype'] == 2){//佣金
                         DbUser::modifyCommission($remittance['uid'], $remittance['credit'],'inc');
                     }
+                    $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
                     Db::commit();
                     return ['code' => '200'];
                 } catch (\Exception $e) {
@@ -246,6 +256,7 @@ class Admin extends CommonIndex {
                     DbAdmin::editRemittance(['audit_admin_id' => $adminId,'status' => 2],$id);
                     DbUser::modifyIntegral($remittance['uid'], $remittance['credit'],'inc');
                     DbUser::addUserIntegral($user_integral);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
                     Db::commit();
                     return ['code' => '200'];
                 } catch (\Exception $e) {
