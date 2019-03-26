@@ -131,7 +131,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} mobile 前台用户昵称
      * @apiParam (入参) {String} credit 收款金额(充值金额)
      * @apiParam (入参) {String} message 详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:请输入转入类型 / 3003:错误的转账类型 / 3004:前台用户加密ID为空  / 3005:credit必须为数字 / 3006:扣款金额不能大于用户余额(商票)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:请输入转入类型 / 3003:错误的转账类型 / 3004:充值用户不存在  / 3005:credit必须为数字 / 3006:扣款金额不能大于用户余额(商票) / 3007:充值用户昵称不能为空 / 3008:手机号格式错误
      * @apiSampleRequest /admin/admin/adminRemittance
      * @return array
      * @author rzc
@@ -153,8 +153,11 @@ class Admin extends AdminController {
         if (!in_array($stype,[1,2,3])) {
             return ['code' => '3003'];
         }
-        if (empty($uid)) {
-            return ['code' => '3004'];
+        if (empty($nick_name)) {
+            return ['code' => '3007'];
+        }
+        if (checkMobile($mobile)) {
+            return ['code' => '3008'];
         }
         if (!is_numeric($credit)) {
             return ['code' => '3005'];

@@ -153,11 +153,14 @@ class Admin extends CommonIndex {
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
             return ['code' => '3001'];
         }
-        $uid = deUid($uid);
+        /* $uid = deUid($uid);
         if (empty($uid)) {
             return ['code' => '3004'];
-        }
+        } */
         $indexUser = DbUser::getUserInfo(['nick_name'=>$nick_name,'mobile'=>$mobile], 'id,balance,commission,integral', true);
+        if (empty($indexUser)) {
+            return ['code' => '3004'];
+        }
         if ($stype == 1) {
             if ($credit + $indexUser['balance'] <0 ) {
                 return ['code' => '3006'];
