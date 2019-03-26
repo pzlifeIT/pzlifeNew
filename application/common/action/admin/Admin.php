@@ -305,7 +305,7 @@ class Admin extends CommonIndex {
             array_push($where, ['uid', '=', $uid]);
         }
         if (!empty($stype)) {
-            array_push($where, ['uid', '=', $uid]);
+            array_push($where, ['stype', '=', $stype]);
         }
         if (!empty($start_time)) {
             $start_time = strtotime($start_time);
@@ -315,7 +315,7 @@ class Admin extends CommonIndex {
             $end_time = strtotime($end_time);
             array_push($where, ['create_time', '<=', $end_time]);
         }
-
+        // print_r($where);die;
         $result = DbAdmin::getAdminRemittance($where, '*',false,['id'=>'desc'],$offset.','.$pageNum);
         // print_r(count($result));die;
         if (empty($result)) {
