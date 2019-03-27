@@ -9,7 +9,7 @@ use function Qiniu\json_decode;
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx'],//除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'],//除去getFirstCate其他方法都进行second前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -296,12 +296,10 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} balance 商票余额
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} integral 积分余额
-     * @apiSuccess (返回) {Decimal} balance_not_settlement 未结算商票
      * @apiSuccess (返回) {Decimal} balance_use 已使用商票
-     * @apiSuccess (返回) {Decimal} order_sum 销售总额
-     * @apiSuccess (返回) {Decimal} tobonus 本月返利
-     * @apiSuccess (返回) {Decimal} prebonus 上月返利
-     * @apiSuccess (返回) {Decimal} bonus 经营性总收益
+     * @apiSuccess (返回) {Decimal} no_bonus 未到账
+     * @apiSuccess (返回) {Decimal} bonus 已到账
+     * @apiSuccess (返回) {Decimal} bonus_all 总收益
      * @apiSuccess (返回) {Decimal} merchants 招商加盟收益
      * @apiSampleRequest /index/user/getbossshop
      * @return array
@@ -326,33 +324,38 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBonus
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} year 年份
-     * @apiParam (入参) {Int} month 月份
-     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费
-     * @apiParam (入参) {Int} page 当前页
-     * @apiParam (入参) {Int} page_num 每页数量
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误
+     * @apiParam (入参) {Int} status 1.已入账 2.未入账
+     * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费 3.渠道收益
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
+     * @apiParam (入参) {Int} [year] 年份
+     * @apiParam (入参) {Int} [month] 月份
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:查询周期有误 / 3005:stype错误 / 3006:status错误
+     * @apiSuccess (返回) {Decimal} combined 合计
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} result_price 实际得到分利
-     * @apiSuccess (返回) {json} order_no 订单号
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
-     * @apiSuccess (返回) {json} create_time 订单完成时间
-     * @apiSuccess (返回) {String} nick_name 昵称
-     * @apiSuccess (返回) {String} avatar 头像
-     * @apiSuccess (返回) {Int} from_uid 购买人uid
-     * @apiSuccess (返回) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (data) {Decimal} result_price 实际得到分利
+     * @apiSuccess (data) {json} order_no 订单号
+     * @apiSuccess (data) {int} status 状态 1:待结算 2:已结算
+     * @apiSuccess (data) {json} create_time 订单完成时间
+     * @apiSuccess (data) {String} nick_name 昵称
+     * @apiSuccess (data) {String} avatar 头像
+     * @apiSuccess (data) {Int} from_uid 购买人uid
+     * @apiSuccess (data) {Int} user_identity 1.普通会员 2.钻石 4.boss
+     * @apiSuccess (data) {int} status 状态 1:待结算 2:已结算
      * @apiSampleRequest /index/user/getuserbonus
      * @return array
      * @author zyr
      */
     public function getUserBonus() {
-        $conId    = trim($this->request->post('con_id'));
-        $year     = trim($this->request->post('year'));
-        $month    = trim($this->request->post('month'));
-        $stype    = trim($this->request->post('stype'));
-        $page     = trim($this->request->post('page'));
-        $pageNum  = trim($this->request->post('page_num'));
-        $stypeArr = [1, 2];
+        $conId     = trim($this->request->post('con_id'));
+        $status    = trim($this->request->post('status'));
+        $stype     = trim($this->request->post('stype'));
+        $page      = trim($this->request->post('page'));
+        $pageNum   = trim($this->request->post('page_num'));
+        $year      = trim($this->request->post('year'));
+        $month     = trim($this->request->post('month'));
+        $stypeArr  = [1, 2, 3];
+        $statusArr = [1, 2];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -362,9 +365,12 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3005'];
         }
+        if (!in_array($status, $statusArr)) {
+            return ['code' => '3006'];
+        }
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
-        $result  = $this->app->user->getUserBonus($conId, $year, $month, $stype, $page, $pageNum);
+        $result  = $this->app->user->getUserBonus($conId, $status, $stype, $page, $pageNum, $year, $month);
         return $result;
     }
 
@@ -409,10 +415,9 @@ class User extends MyController {
      * @apiName          getUserSocialSum
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
-     * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Int} diamon_count 钻石会员圈人数
-     * @apiSuccess (返回) {Int} user_count 买主圈
-     * @apiSuccess (返回) {Int} all_user 总人数
+     * @apiSuccess (返回) {Int} read_count 浏览人次
+     * @apiSuccess (返回) {Int} grant_count 授权未注册
+     * @apiSuccess (返回) {Int} reg_count 已注册
      * @apiSampleRequest /index/user/getusersocialsum
      * @return array
      * @author zyr
@@ -439,12 +444,15 @@ class User extends MyController {
      * @apiParam (入参) {Int} page 当前页
      * @apiParam (入参) {Int} page_num 每页数量
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Int} diamon_user_count 直接钻石会员
+     * @apiSuccess (返回) {Int} social_count_all 好友钻石会员
      * @apiSuccess (返回) {Array} data 列表
-     * @apiSuccess (返回) {Int} id 用户id
-     * @apiSuccess (返回) {String} nick_name 昵称
-     * @apiSuccess (返回) {String} avatar 头像
-     * @apiSuccess (返回) {Int} diamond_count 钻石会员人数
-     * @apiSuccess (返回) {Int} social_count 社交圈人数
+     * @apiSuccess (data) {Int} id 用户id
+     * @apiSuccess (data) {String} nick_name 昵称
+     * @apiSuccess (data) {String} avatar 头像
+     * @apiSuccess (data) {Int} diamond_count 钻石会员人数
+     * @apiSuccess (data) {Int} social_count 社交圈人数
+     * @apiSuccess (data) {Int} user_ring_count 已注册普通会员
      * @apiSampleRequest /index/user/getusersocial
      * @return array
      * @author zyr
@@ -748,5 +756,40 @@ class User extends MyController {
         $result = $this->app->user->getUserOrderCount($conId);
         return $result;
 
+    }
+
+    /**
+     * @api              {post} / 分享浏览人次
+     * @apiDescription   getUserRead
+     * @apiGroup         index_user
+     * @apiName          getUserRead
+     * @apiParam (入参) {String} code 微信code
+     * @apiParam (入参) {String} [encrypteddata] 微信加密信息
+     * @apiParam (入参) {String} [iv]
+     * @apiParam (入参) {String} [view_uid] 被浏览的用户
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有code / 3002:code长度只能是32位 / 3002:缺少参数 / 3003:未获取到openid / 3004:注册了微信的老用户 / 3005:今天已记录过该次数 
+     * @apiSuccess (返回) {String} obligation 待付款
+     * @apiSuccess (返回) {String} deliver 待发货
+     * @apiSuccess (返回) {String} receive 待收货
+     * @apiSuccess (返回) {String} rating 待评价
+     * @apiSampleRequest /index/user/getUserRead
+     * @return array
+     * @author rzc
+     */
+    public function getUserRead(){
+        $code          = trim($this->request->post('code'));
+        $encrypteddata = trim($this->request->post('encrypteddata'));
+        $iv            = trim($this->request->post('iv'));
+        $view_uid      = trim($this->request->post('view_uid'));
+        if (empty($code)) {
+            return ['code' => '3000'];
+        }
+        if (strlen($code) != 32) {
+            return ['code' => '3002'];//code有误
+        }
+        $view_uid = deUid($view_uid);
+        $view_uid = $view_uid ? $view_uid : 1;
+        $result = $this->app->user->userRead($code,$encrypteddata,$iv,$view_uid);
+        return $result;
     }
 }

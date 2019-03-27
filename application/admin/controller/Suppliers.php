@@ -7,11 +7,18 @@ use Env;
 use think\Db;
 
 class Suppliers extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 获取供应商列表
      * @apiDescription   getSuppliers
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplier
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
      * @apiParam (入参) {String} supplierName 供应商名称模糊查询
@@ -59,6 +66,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSuppliersAll
      * @apiGroup         admin_Suppliers
      * @apiName          getSuppliersAll
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:供应商列表空
      * @apiSuccess (返回) {object_array} data 结果
      * @apiSuccess (data) {String} id 供应商ID
@@ -76,6 +84,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierData
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierData
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
      * @apiSuccess (data) {Array} data 结果
@@ -104,6 +113,7 @@ class Suppliers extends AdminController {
      * @apiDescription   addSupplier
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplier
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} tel 联系方式
      * @apiParam (入参) {String} name 名称
      * @apiParam (入参) {file} image 图片
@@ -141,6 +151,7 @@ class Suppliers extends AdminController {
      * @apiDescription   updateSupplier
      * @apiGroup         admin_Suppliers
      * @apiName          updateSupplier
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 供应商ID
      * @apiParam (入参) {String} tel 联系方式
      * @apiParam (入参) {String} name 名称
@@ -220,6 +231,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierFreights
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreights
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商ID只能是数字
      * @apiSuccess (data) {object_array} data 结果
@@ -247,6 +259,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierFreight
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreight
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} supplierFreightId 供应商快递模板ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模板ID只能是数字
      * @apiSuccess (data) {String} id ID
@@ -272,6 +285,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierFreightdetailList
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreightdetailList
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} freight_id 供应商快递模板ID
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 每页条数
@@ -306,6 +320,7 @@ class Suppliers extends AdminController {
      * @apiDescription   addSupplierFreight
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplierFreight
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} supplierId 供应商ID
      * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
      * @apiParam (入参) {String} title 标题
@@ -341,6 +356,7 @@ class Suppliers extends AdminController {
      * @apiDescription   updateSupplierFreight
      * @apiGroup         admin_Suppliers
      * @apiName          updateSupplierFreight
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} supplier_freight_Id 快递模版ID
      * @apiParam (入参) {Number} stype 计价方式1.件数 2.重量 3.体积
      * @apiParam (入参) {String} title 标题
@@ -374,6 +390,7 @@ class Suppliers extends AdminController {
      * @apiDescription   getSupplierFreightdetail
      * @apiGroup         admin_Suppliers
      * @apiName          getSupplierFreightdetail
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} sfd_id 快递模版运费详情ID
      * @apiSuccess (返回) {String} code 200:成功  / 3000:查询结果不存在 / 3002:供应商快递模版ID只能是数字
      * @apiSuccess (返回) {Array} data 结果
@@ -399,6 +416,7 @@ class Suppliers extends AdminController {
      * @apiDescription   addSupplierFreightdetail
      * @apiGroup         admin_Suppliers
      * @apiName          addSupplierFreightdetail
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} freight_id 运费模版模版ID
      * @apiParam (入参) {decimal} [price] 邮费单价 默认0
      * @apiParam (入参) {decimal} [after_price] 续件价格 默认0
@@ -434,6 +452,7 @@ class Suppliers extends AdminController {
      * @apiDescription   editSupplierFreightdetail
      * @apiGroup         admin_Suppliers
      * @apiName          editSupplierFreightdetail
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} freight_detail_id 运费价格详情ID
      * @apiParam (入参) {decimal} [price] 邮费单价 默认0
      * @apiParam (入参) {decimal} [after_price] 续件价格 默认0
@@ -470,6 +489,7 @@ class Suppliers extends AdminController {
      * @apiDescription   updateSupplierFreightArea
      * @apiGroup         admin_Suppliers
      * @apiName          updateSupplierFreightArea
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} city_id_str 市id
      * @apiParam (入参) {String} freight_detail_id 快递模版详情id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:运费模版Id必须为数字 / 3002:快递模版详情id参数有误 / 3003:保存失败 / 3004:提交的city_id不是市级id

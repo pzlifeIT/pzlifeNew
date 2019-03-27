@@ -6,7 +6,7 @@ use Config;
 use upload\Imageupload;
 use app\facade\DbImage;
 
-class Upload {
+class Upload extends CommonIndex {
     private $upload;
 
     public function __construct() {
@@ -63,7 +63,7 @@ class Upload {
             array_walk($filenameArr, function (&$value, $key) {//加上域名前缀
                 $value = Config::get('qiniu.domain') . '/' . $value;
             });
-            return ['code' => '200', 'data'=>$filenameArr];
+            return ['code' => '200', 'data' => $filenameArr];
         } else {
             return ['code' => '3003'];//上传失败
         }

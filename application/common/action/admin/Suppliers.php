@@ -9,7 +9,7 @@ use app\facade\DbImage;
 use think\Db;
 use Config;
 
-class Suppliers {
+class Suppliers extends CommonIndex {
 
     /**
      * 供应商列表

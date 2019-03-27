@@ -9,7 +9,7 @@ use think\Db;
 use Config;
 use third\PHPTree;
 
-class Subject {
+class Subject extends CommonIndex {
     /**
      * 添加商品专题
      * @param $pid
@@ -250,7 +250,7 @@ class Subject {
             }
             $subjectList2 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList3, 'pid'))]], 'id,pid,subject');//二级
             $subjectList1 = DbGoods::getSubject([['id', 'in', array_unique(array_column($subjectList2, 'pid'))]], 'id,pid,subject');//一级
-            $subjectList = [];
+            $subjectList  = [];
             foreach ($subjectList3 as $s3) {
                 foreach ($subjectList2 as $s2) {
                     if ($s3['pid'] == $s2['id']) {

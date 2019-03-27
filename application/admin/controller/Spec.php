@@ -3,13 +3,20 @@
 namespace app\admin\controller;
 
 use app\admin\AdminController;
-class Spec extends AdminController
-{
+
+class Spec extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 属性列表包含三级分类，一级规格，二级属性
      * @apiDescription   getSpecList
      * @apiGroup         admin_spec
      * @apiName          getSpecList
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} page_num 每页条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
@@ -26,18 +33,17 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-10:07
      */
-    public function getSpecList(){
-        $page = trim(input("post.page"));
-        $page = empty($page) ? 1 : intval($page);
+    public function getSpecList() {
+        $page    = trim(input("post.page"));
+        $page    = empty($page) ? 1 : intval($page);
         $pageNum = trim(input("post.page_num"));
         $pageNum = empty($pageNum) ? 10 : intval($pageNum);
-        if (!is_numeric($page) || !is_numeric($pageNum)){
-            return ["msg"=>"参数错误","code"=>3001];
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ["msg" => "参数错误", "code" => 3001];
         }
-        $spec_data = $this->app->spec->getSpecList($page,$pageNum);
+        $spec_data = $this->app->spec->getSpecList($page, $pageNum);
         return $spec_data;
     }
-
 
 
     /**
@@ -45,6 +51,7 @@ class Spec extends AdminController
      * @apiDescription   addAttrPage
      * @apiGroup         admin_spec
      * @apiName          addAttrPage
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} spec 可选的一级属性数据
      * @apiSuccess (spec) {Number} id 可选的一级属性id
@@ -54,7 +61,7 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-10:52
      */
-    public function addAttrPage(){
+    public function addAttrPage() {
         $res = $this->app->spec->addAttrPage();
         return $res;
     }
@@ -64,6 +71,7 @@ class Spec extends AdminController
      * @apiDescription   saveSpecAttr
      * @apiGroup         admin_spec
      * @apiName          saveSpecAttr
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 /3002 参数错误
      * @apiParam (入参) {Number} top_id 上级id（type为1时是三级分类id/type为2时是一级属性id）
      * @apiParam (入参) {String} sa_name 添加的属性名称（一级属性名称/二级属性名称）
@@ -72,17 +80,17 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-11:34
      */
-    public function saveSpecAttr(){
+    public function saveSpecAttr() {
         $top_id = trim(input("post.top_id"));
-        $name = trim(input("post.sa_name"));
-        $type = trim(input("post.type"));
-        if ($top_id == 0){
-            return ["msg"=>"top_id不能为0","code"=>3002];
+        $name   = trim(input("post.sa_name"));
+        $type   = trim(input("post.type"));
+        if ($top_id == 0) {
+            return ["msg" => "top_id不能为0", "code" => 3002];
         }
-        if (empty(is_numeric($top_id)) || empty($name) || empty(is_numeric($type))){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (empty(is_numeric($top_id)) || empty($name) || empty(is_numeric($type))) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->saveSpecAttr($type,$top_id,$name);
+        $res = $this->app->spec->saveSpecAttr($type, $top_id, $name);
         return $res;
     }
 
@@ -91,6 +99,7 @@ class Spec extends AdminController
      * @apiDescription   editSpecPage
      * @apiGroup         admin_spec
      * @apiName          editSpecPage
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 /3002 参数错误
      * @apiSuccess (返回) {Array}  spec(type为2时是attr数据) 当前需要求改的数据 / cate(type为2时是spec数据) 关联数据
      * @apiSuccess (spec(attr)) {Number}  id 规格/属性id
@@ -104,13 +113,13 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-14:32
      */
-    public function getEditData(){
-        $id = trim(input("post.id"));
+    public function getEditData() {
+        $id   = trim(input("post.id"));
         $type = trim(input("post.type"));
-        if (empty(is_numeric($id)) || empty(is_numeric($type))){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (empty(is_numeric($id)) || empty(is_numeric($type))) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->getEditData($id,$type);
+        $res = $this->app->spec->getEditData($id, $type);
         return $res;
     }
 
@@ -119,6 +128,7 @@ class Spec extends AdminController
      * @apiDescription   saveEditSpecAttr
      * @apiGroup         admin_spec
      * @apiName          saveEditSpecAttr
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} id 当前属性id
@@ -128,14 +138,14 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-15:47
      */
-    public function saveEditSpecAttr(){
-        $id = trim(input("post.id"));
+    public function saveEditSpecAttr() {
+        $id      = trim(input("post.id"));
         $sa_name = trim(input("post.sa_name"));
-        $type = trim(input("post.type"));
-        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($sa_name)){
-            return ["msg"=>"参数错误","code"=>3002];
+        $type    = trim(input("post.type"));
+        if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($sa_name)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->saveEditSpecAttr($type,$id,$sa_name);
+        $res = $this->app->spec->saveEditSpecAttr($type, $id, $sa_name);
         return $res;
     }
 
@@ -144,6 +154,7 @@ class Spec extends AdminController
      * @apiDescription   delSpecAttr
      * @apiGroup         admin_spec
      * @apiName          delSpecAttr
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3003：无法删除 /3002 参数错误
      * @apiSuccess (返回) {String}  msg 返回消息
      * @apiParam (入参) {Number} id 需要修改的数据的id
@@ -152,13 +163,13 @@ class Spec extends AdminController
      * @author wujunjie
      * 2018/12/25-16:25
      */
-    public function delSpecAttr(){
-        $id = trim(input("post.id"));
+    public function delSpecAttr() {
+        $id   = trim(input("post.id"));
         $type = trim(input("post.type"));
-        if (empty(is_numeric($id)) || empty(is_numeric($type))){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (empty(is_numeric($id)) || empty(is_numeric($type))) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->delSpecAttr($type,$id);
+        $res = $this->app->spec->delSpecAttr($type, $id);
         return $res;
     }
 
@@ -167,6 +178,7 @@ class Spec extends AdminController
      * @apiDescription   getAttr
      * @apiGroup         admin_spec
      * @apiName          getAttr
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} data 二级属性
@@ -176,10 +188,10 @@ class Spec extends AdminController
      * @author wujunjie
      * 2019/1/7-18:11
      */
-    public function getAttr(){
+    public function getAttr() {
         $id = trim(input("post.spec_id"));
-        if (empty(is_numeric($id))){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (empty(is_numeric($id))) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->getAttr($id);
         return $res;
@@ -190,6 +202,7 @@ class Spec extends AdminController
      * @apiDescription   getSpecAttr
      * @apiGroup         admin_spec
      * @apiName          getSpecAttr
+     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001 保存失败 /3002 参数错误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} data 数据
@@ -198,10 +211,10 @@ class Spec extends AdminController
      * @author wujunjie
      * 2019/1/8-15:25
      */
-    public function getSpecAttr(){
+    public function getSpecAttr() {
         $id = trim(input("post.cate_id"));
-        if (!is_numeric($id)){
-            return ["msg"=>"参数错误","code"=>3002];
+        if (!is_numeric($id)) {
+            return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->getSpecAttr($id);
         return $res;
