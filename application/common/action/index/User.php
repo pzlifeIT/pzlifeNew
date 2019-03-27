@@ -631,7 +631,7 @@ class User extends CommonIndex {
         if ($stype == 3) {//余额明细
             $where = [
                 ['trading_type', '=', '1'],//商票交易
-                ['change_type', 'in', [1, 2, 4, 5, 7]],//1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
+                ['change_type', 'in', [1, 2, 4, 5, 7, 8]],//1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['uid', '=', $uid],
                 ['create_time', '>=', $threeMonth],//近三个月
             ];
