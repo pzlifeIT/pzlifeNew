@@ -896,7 +896,22 @@ class User extends CommonIndex {
 //        if ($user['user_identity'] != '4') {
 //            return ['code' => '3000'];//boss才有权限查看
 //        }
-        $data = DbUser::getLogIntegral(['i.uid' => $uid, 'i.status' => 2], 'i.order_no,i.result_integral,i.create_time,o.pay_money');
+        $data = [];
+        $result = DbUser::getLogIntegral(['uid' => $uid, 'status' => 2], 'stype,result_integral,create_time');
+        foreach ($result as $d) {
+            $trType = $d['stype'] ?? 1;
+            switch ($trType) {
+                case 1:
+                    $ctype = '分利';
+                    break;
+                case 2:
+                    $ctype = '后台充值';
+                    break;
+            }
+            $d['ctype'] = $ctype;
+            unset($d['stype']);
+            array_push($data, $d);
+        }
         return ['code' => '200', 'data' => $data];
     }
 

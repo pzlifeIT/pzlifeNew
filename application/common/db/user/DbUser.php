@@ -307,8 +307,12 @@ class DbUser {
     }
 
     public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
-        $obj = LogIntegral::alias('i')->join(['pz_orders'=>'o'],'o.order_no=i.order_no')->field($field)->where($where);
+        $obj  = LogIntegral::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
+//        $where['i.delete_time'] = 0;
+//        $where['o.delete_time'] = 0;
+//        $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
+//        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
