@@ -326,8 +326,8 @@ class Goods
              $result[$key]['min_retail_price'] =DbGoods:: getOneSkuMost($where, 1, $field);
             //  echo Db::getLastSQl();die;
              list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-             $brokerage = [];
              $retail_price = [];
+             $brokerage = [];
              foreach ($goods_sku as $goods => $sku) {
                  $retail_price[$sku['id']] = $sku['retail_price'];
                  $brokerage[$sku['id']] = $sku['brokerage'];

@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\LogBonus;
 use app\common\model\LogIntegral;
 use app\common\model\LogTrading;
+use app\common\model\LogIntegral;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -13,6 +14,7 @@ use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
 use app\common\model\UserRead;
+use app\common\model\UserIntegral;
 
 class DbUser {
     /**
@@ -26,10 +28,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '',$sc = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy);
+            $obj = $obj->order($orderBy,$sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -251,6 +253,32 @@ class DbUser {
         $user->save();
     }
 
+    /**
+     * 改佣金余额
+     * @param $uid
+     * @param $commission
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyCommission($uid, $commission, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->commission = [$modify, $commission];
+        $user->save();
+    }
+
+    /**
+     * 改积分余额
+     * @param $uid
+     * @param $integral
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyIntegral($uid, $integral, $modify = 'dec') {
+        $user          = Users::get($uid);
+        $user->integral = [$modify, $integral];
+        $user->save();
+    }
+
     public function addUserRecommend($data) {
         $userRecommend = new UserRecommend();
         $userRecommend->save($data);
@@ -389,4 +417,10 @@ class DbUser {
         $UserRead = new UserRead;
         return $UserRead->save($data, ['id' => $id]);
     }
+
+     public function addLogIntegral($data){
+         $LogIntegral = new LogIntegral;
+         $LogIntegral->save($data);
+         return $LogIntegral->id;
+     }
 }

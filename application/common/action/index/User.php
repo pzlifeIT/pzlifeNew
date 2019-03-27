@@ -1442,8 +1442,9 @@ class User extends CommonIndex {
             return ['code' => '200', 'Qrcode' => $Qrcode];
         }
         $result = $this->createQrcode($scene, $page);
-
-        if (imagecreatefromstring($result)) {
+        // print_r(strlen($result));die;
+        // print_r (imagecreatefromstring($result));die;
+        if (strlen($result) > 100) {
             // $img_file = 'd:/test.png';
             $file = fopen(Config::get('conf.image_path') . $conId . '.png', "w"); //打开文件准备写入
             fwrite($file, $result); //写入
@@ -1462,12 +1463,16 @@ class User extends CommonIndex {
                 $upUserInfo['image'] = $upload['image_path'];
                 Db::startTrans();
                 try {
-                    DbImage::saveUserImage($upUserInfo);
+                    $save = DbImage::saveUserImage($upUserInfo);
+                    if (!$save) {
+                        return ['code' => '3011'];
+                    }
                     DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
                     $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
-
+                    Db::commit();
                     return ['code' => '200', 'Qrcode' => $new_Qrcode];
                 } catch (\Exception $e) {
+                    print_r($e);
                     Db::rollback();
                     return ['code' => '3011'];//添加失败
                 }
@@ -1476,7 +1481,7 @@ class User extends CommonIndex {
             }
             // echo $result;die;
         } else {
-            return ['code' => '3006'];
+            return json_decode($result);
         }
     }
 
@@ -1497,10 +1502,10 @@ class User extends CommonIndex {
     }
 
     public function createQrcode($scene, $page) {
-        $appid      = Config::get('conf.weixin_miniprogram_appid');
-        $appid      = 'wx1771b2e93c87e22c';
-        $secret     = Config::get('conf.weixin_miniprogram_appsecret');
-        $secret     = '1566dc764f46b71b33085ba098f58317';
+        $appid = Config::get('conf.weixin_miniprogram_appid');
+        // $appid         = 'wx1771b2e93c87e22c';
+        $secret = Config::get('conf.weixin_miniprogram_appsecret');
+        // $secret        = '1566dc764f46b71b33085ba098f58317';
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
         if (!$requestUrl) {
             return ['code' => '3004'];
@@ -1527,11 +1532,10 @@ class User extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $obligation = DbOrder::getOrderCount(['order_status' => 1]);//待付款
-        $deliver    = DbOrder::getOrderCount(['order_status' => 4]);//待发货
-        $receive    = DbOrder::getOrderCount(['order_status' => 5]);//待收货
-        $rating     = DbOrder::getOrderCount(['order_status' => 7]);//待评价
-
+        $obligation = DbOrder::getOrderCount(['order_status' => 1, 'uid' => $uid]);//待付款
+        $deliver    = DbOrder::getOrderCount(['order_status' => 4, 'uid' => $uid]);//待发货
+        $receive    = DbOrder::getOrderCount(['order_status' => 5, 'uid' => $uid]);//待收货
+        $rating     = DbOrder::getOrderCount(['order_status' => 7, 'uid' => $uid]);//待评价
         return ['code' => '200', 'obligation' => $obligation, 'deliver' => $deliver, 'receive' => $receive, 'rating' => $rating];
     }
 
@@ -1556,8 +1560,21 @@ class User extends CommonIndex {
 
         if (!empty($user)) {//注册了微信的老用户
             return ['code' => '3004'];
-        } else {//新用户
-            $has_read = DbUser::getUserRead('*', ['openid' => $wxInfo['openid']], true);
+        }else {//新用户
+            if (empty($view_uid)) {
+                $view_uid = deUid($view_uid);
+                if ($view_uid) {
+                    $view_user = DbUser::getUserOne(['id' => $view_uid], 'id');
+                    if ($view_user) {
+                        $view_uid = $view_user['id'];
+                    }else{
+                        $view_uid = 1;
+                    }
+                }else{
+                    $view_uid = 1;
+                }
+            }
+            $has_read = DbUser::getUserRead('*',['openid' => $wxInfo['openid'],'view_uid' => $view_uid],true);
             if (empty($has_read)) {
                 $unionid   = $wxInfo['unionid'] ?? '';
                 $nickname  = $wxInfo['nickname'] ?? '';
