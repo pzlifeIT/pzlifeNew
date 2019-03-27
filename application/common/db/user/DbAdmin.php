@@ -3,6 +3,8 @@
 namespace app\common\db\user;
 
 use app\common\model\Admin;
+use app\common\model\AdminRemittance;
+use app\common\model\User;
 
 class DbAdmin {
 
@@ -48,5 +50,59 @@ class DbAdmin {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    /**
+     * 添加充值记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function addAdminRemittance($data){
+        $AdminRemittance = new AdminRemittance;
+        $AdminRemittance->save($data);
+        return $AdminRemittance->id;
+    }
+
+    /**
+     * 修改充值记录
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function editRemittance($data,$id){
+        $AdminRemittance = new AdminRemittance;
+        return $AdminRemittance->save($data,['id' => $id]);
+    }
+
+    /**
+     * 获取充值记录
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function getAdminRemittance($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = AdminRemittance::field($field)->with([
+            'initiateadmin'=>function($query){
+                $query->field('id,admin_name,department,stype,status');
+             },'auditadmin'=>function($query){
+                $query->field('id,admin_name,department,stype,status');
+             },'user'=>function($query){
+                $query->field('id,nick_name,user_identity,mobile');
+             }
+        ])->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 获取充值记录条数
+     * @param $where
+     * @return mixed
+     * @author rzc
+     */
+    public function getCountAdminRemittance($where){
+        return AdminRemittance::where($where)->count();
     }
 }
