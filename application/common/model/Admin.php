@@ -14,6 +14,8 @@ class Admin extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
+    protected $updateTime = false;//关闭update_time
 
     // 模型初始化
     protected static function init() {
