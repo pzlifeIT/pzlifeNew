@@ -260,7 +260,7 @@ class Admin extends CommonIndex {
             $user_integral['result_integral'] = $remittance['credit'];
             $user_integral['message']         = $remittance['message'];
             $user_integral['uid']             = $remittance['uid'];
-            $user_integral['status']          = 1;
+            $user_integral['status']          = 2;
             $user_integral['stype']           = 2;
             
             Db::startTrans();
