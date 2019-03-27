@@ -257,14 +257,17 @@ class Admin extends CommonIndex {
                 }
         }else{
             $user_integral             = [];
-            $user_integral['integral'] = $remittance['credit'];
-            $user_integral['detail']   = $remittance['message'];
+            $user_integral['result_integral'] = $remittance['credit'];
+            $user_integral['message']         = $remittance['message'];
+            $user_integral['uid']             = $remittance['uid'];
+            $user_integral['status']          = 1;
+            $user_integral['stype']           = 2;
             
             Db::startTrans();
                 try {
                     DbAdmin::editRemittance(['audit_admin_id' => $adminId,'status' => 2],$id);
                     DbUser::modifyIntegral($remittance['uid'], $remittance['credit'],'inc');
-                    DbUser::addUserIntegral($user_integral);
+                    DbUser::addLogIntegral($user_integral);
                     $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
                     Db::commit();
                     return ['code' => '200'];

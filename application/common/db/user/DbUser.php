@@ -4,6 +4,7 @@ namespace app\common\db\user;
 
 use app\common\model\LogBonus;
 use app\common\model\LogTrading;
+use app\common\model\LogIntegral;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -354,9 +355,9 @@ class DbUser {
      * @author rzc
      */
 
-     public function addUserIntegral($data){
-         $UserIntegral = new UserIntegral;
-         $UserIntegral->save($data);
-         return $UserIntegral->id;
+     public function addLogIntegral($data){
+         $LogIntegral = new LogIntegral;
+         $LogIntegral->save($data);
+         return $LogIntegral->id;
      }
 }
