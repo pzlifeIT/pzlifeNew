@@ -3,6 +3,7 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogIntegral;
 use app\common\model\LogTrading;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
@@ -305,6 +306,11 @@ class DbUser {
         return LogTrading::where($where)->sum($field);
     }
 
+    public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogIntegral::alias('i')->join(['pz_orders'=>'o'],'o.order_no=i.order_no')->field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
     /**
      * @param $obj
      * @param bool $row
@@ -338,19 +344,19 @@ class DbUser {
      * @return array
      * @author rzc
      */
-    public function getUserRead($field, $where, $row = false, $orderBy = '',$sc = '', $limit = ''){
-        
+    public function getUserRead($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '') {
+
         $obj = UserRead::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-           $obj = $obj->order($orderBy, $sc);
+            $obj = $obj->order($orderBy, $sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
         }
         if ($row === true) {
-           $obj = $obj->findOrEmpty();
+            $obj = $obj->findOrEmpty();
         } else {
-           $obj = $obj->select();
+            $obj = $obj->select();
         }
         return $obj->toArray();
     }
@@ -364,7 +370,7 @@ class DbUser {
      * @return bool
      * @author rzc
      */
-    public function addUserRead($data){
+    public function addUserRead($data) {
         $UserRead = new UserRead;
         return $UserRead->save($data);
     }
@@ -375,8 +381,8 @@ class DbUser {
      * @return bool
      * @author rzc
      */
-    public function updateUserRead($data,$id){
+    public function updateUserRead($data, $id) {
         $UserRead = new UserRead;
-        return $UserRead->save($data,['id' => $id]);
+        return $UserRead->save($data, ['id' => $id]);
     }
 }

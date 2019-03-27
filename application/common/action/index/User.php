@@ -614,9 +614,9 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] == '1') {//普通用户
-            return ['code' => '3000'];//普通用户没有权限查看
-        }
+//        if ($user['user_identity'] == '1') {//普通用户
+//            return ['code' => '3000'];//普通用户没有权限查看
+//        }
         $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
         if ($stype == 1) {//已使用
             $where = [
@@ -870,6 +870,30 @@ class User extends CommonIndex {
             $mu['avatar']    = $userAvatarList[$orderNoUid[$mu['order_no']]];
             array_push($data, $mu);
         }
+        return ['code' => '200', 'data' => $data];
+    }
+
+    /**
+     * 积分明细
+     * @param $conId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getIntegralDetail($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+//        if ($user['user_identity'] != '4') {
+//            return ['code' => '3000'];//boss才有权限查看
+//        }
+        $data = DbUser::getLogIntegral(['i.uid' => $uid, 'i.status' => 2], 'i.order_no,i.result_integral,i.create_time,o.pay_money');
         return ['code' => '200', 'data' => $data];
     }
 

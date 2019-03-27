@@ -202,6 +202,7 @@ class Order extends Pzlife {
         $redisListKey = Config::get('redisKey.order.redisOrderBonus');
         $data         = [];
         $tradingData  = [];
+        $integralData = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -236,7 +237,6 @@ class Order extends Pzlife {
             $userSql      = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
             $user         = Db::query($userSql);
             $user         = $user[0];
-            $integralData = [];
             foreach ($orderGoods as $ogVal) {
                 $o        = [
                     'order_no'     => $orderNo,
@@ -351,7 +351,7 @@ class Order extends Pzlife {
         try {
             foreach ($result as $r) {
                 Db::table('pz_users')->where('id', $r['uid'])->setInc('integral', $r['result_integral']);
-                $logIntegralSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and id=%d", $r['id']);
+                $logIntegralSql = sprintf("update pz_log_integral set status=2 where delete_time=0 and id=%d", $r['id']);
                 Db::execute($logIntegralSql);
             }
             Db::commit();
