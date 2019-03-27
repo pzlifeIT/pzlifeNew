@@ -157,13 +157,14 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function adminRemittance(){
-        $cmsConId   = trim($this->request->post('cms_con_id'));
-        $passwd     = trim($this->request->post('passwd'));
-        $stype      = trim($this->request->post('stype'));
-        $nick_name  = trim($this->request->post('nick_name'));
-        $mobile     = trim($this->request->post('mobile'));
-        $credit     = trim($this->request->post('credit'));
-        $message    = trim($this->request->post('message'));
+        $cmsConId      = trim($this->request->post('cms_con_id'));
+        $passwd        = trim($this->request->post('passwd'));
+        $stype         = trim($this->request->post('stype'));
+        $nick_name     = trim($this->request->post('nick_name'));
+        $mobile        = trim($this->request->post('mobile'));
+        $credit        = trim($this->request->post('credit'));
+        $message       = trim($this->request->post('message'));
+        $admin_message = trim($this->request->post('admin_message'));
         if (empty($passwd)) {
             return ['code' => '3001'];
         }
@@ -183,7 +184,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message);
+        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message,$admin_message);
         return $result;
     }
 

@@ -155,8 +155,9 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message){
+    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message,$admin_message){
         $message = $message ?? '';
+        $admin_message = $admin_message ?? '';
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
@@ -182,6 +183,7 @@ class Admin extends CommonIndex {
         $add_remittance['status']            = 1;
         $add_remittance['credit']            = $credit;
         $add_remittance['message']           = $message;
+        $add_remittance['admin_message']     = $admin_message;
         DbAdmin::addAdminRemittance($add_remittance);
         return ['code' => '200'];
     }
