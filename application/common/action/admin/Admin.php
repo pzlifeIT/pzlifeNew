@@ -52,6 +52,15 @@ class Admin extends CommonIndex {
     }
 
     /**
+     * @return array
+     * @author rzc
+     */
+    public function getAdminUsers(){
+        $adminInfo = DbAdmin::getAdminInfo([], 'admin_name,department,stype,status');
+        return ['code' => '200', 'data' => $adminInfo];
+    }
+
+    /**
      * @param $cmsConId
      * @param $adminName
      * @param $passwd

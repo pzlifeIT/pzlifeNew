@@ -34,6 +34,26 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取后台管理员信息
+     * @apiDescription   getAdminUsers
+     * @apiGroup         admin_admin
+     * @apiName          getAdminUsers
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功  / 5000:请重新登录 2.5001:账号已停用
+     * @apiSuccess (返回) {Array} data 用户信息
+     * @apiSuccess (返回) {String} admin_name 管理员名
+     * @apiSuccess (返回) {data} stype 用户类型 1.后台管理员 2.超级管理员
+     * @apiSampleRequest /admin/admin/getAdminUsers
+     * @return array
+     * @author rzc
+     */
+    public function getAdminUsers(){
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $result   = $this->app->admin->getAdminUsers();
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取登录用户信息
      * @apiDescription   getAdminInfo
      * @apiGroup         admin_admin
