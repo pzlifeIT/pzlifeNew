@@ -45,10 +45,10 @@ class Order extends Pzlife {
         try {
             foreach ($order as $o) {
                 if ($o['deduction_money'] != 0) {
-                    $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
-                    $user           = Db::query($userSql);
-                    $user           = $user[0];
-                    $tradingData    = [
+                    $userSql       = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                    $user          = Db::query($userSql);
+                    $user          = $user[0];
+                    $tradingData   = [
                         'uid'          => $o['uid'],
                         'trading_type' => 1,
                         'change_type'  => 2,
@@ -58,7 +58,7 @@ class Order extends Pzlife {
                         'message'      => '',
                         'create_time'  => time(),
                     ];
-                    $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+                    $userUpdateSql = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
                     Db::execute($userUpdateSql);
                     Db::name('log_trading')->insert($tradingData);
                 }
@@ -123,8 +123,15 @@ class Order extends Pzlife {
         if (empty($result)) {
             exit('log_bonus_null');
         }
-        $data = [];
+        $orders    = array_unique(array_column($result, 'order_no'));
+        $orderSql  = sprintf("select order_no from pz_orders where delete_time=0 and order_status=6 and order_no in ('" . implode("','", $orders) . "')");
+        $orderList = Db::query($orderSql);
+        $orderList = array_column($orderList, 'order_no');
+        $data      = [];
         foreach ($result as $rVal) {
+            if (!in_array($rVal['order_no'], $orderList)) {//已收货并且满15天
+                continue;
+            }
             $kkey = $rVal['to_uid'] . $rVal['order_no'];
             if (!key_exists($kkey, $data)) {
                 $data[$kkey]['uid'] = $rVal['to_uid'];
@@ -256,7 +263,8 @@ class Order extends Pzlife {
                     $o['result_price']  = $firstShopPrice;//实际得到分利
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
-                    $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 2;//经营性收益
                     $o['user_identity'] = 4;
                     array_push($data, $o);
                 } else if ($identity != 1 && $shopBoss != 1) {
@@ -265,30 +273,45 @@ class Order extends Pzlife {
                     $o['result_price']  = $firstShopPrice;//实际得到分利
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
-                    $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 2;
+                    $o['bonus_type']    = 2;
                     $o['user_identity'] = 4;
                     array_push($data, $o);
                 }
-                $o['result_price']  = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
-                $o['to_uid']        = $bossList['first_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                $o['result_price'] = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
+                $o['to_uid']       = $bossList['first_uid'];
+                $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                if ($identity == 2) {
+                    $o['bonus_type'] = 1;
+                } else {
+                    $o['bonus_type'] = 2;
+                }
                 $userIden           = $this->getIdentity($bossList['first_uid']);
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
-                $o['result_price']  = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
-                $o['to_uid']        = $bossList['second_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                $o['result_price'] = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
+                $o['to_uid']       = $bossList['second_uid'];
+                $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                if ($identity == 2) {
+                    $o['bonus_type'] = 2;
+                } else {
+                    $o['bonus_type'] = 3;
+                }
                 $userIden           = $this->getIdentity($bossList['second_uid']);
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
-                $o['result_price']  = $calculate['third_price'];//实际得到分利
-                $o['to_uid']        = $bossList['third_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-                $o['user_identity'] = 4;
-                array_push($data, $o);
+                if ($identity == 2) {
+                    $o['result_price']  = $calculate['third_price'];//实际得到分利
+                    $o['to_uid']        = $bossList['third_uid'];
+                    $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 3;
+                    $o['user_identity'] = 4;
+                    array_push($data, $o);
+                }
                 if (key_exists($orderId, $integralData)) {
                     $integralData[$orderId]['result_integral'] += $ogrVal['integral'];
                 } else {
@@ -536,7 +559,8 @@ class Order extends Pzlife {
             }
             $shopId = Db::name('shops')->insertGetId($shopData);
             Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4, 'bindshop' => $shopId]);
-            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re]);
+            $pid = $myBoss == 1 ? 0 : $myBoss;
+            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re, 'pid' => $pid]);
             Db::commit();
         } catch (\Exception $e) {
 //            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
