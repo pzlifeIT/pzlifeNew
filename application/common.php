@@ -117,11 +117,18 @@ function enUid($uid) {
  * @author zyr
  */
 function deUid($enUid) {
-    $str = 'AcEgIkMoQs';
-    $enUid = substr($enUid, 1);
-    $id    = '';
-    for ($i = 0; $i < strlen($enUid); $i++) {
-        $id .= strpos($str, $enUid[$i]);
+    $str      = 'AcEgIkMoQs';
+    $newEnUid = substr($enUid, 1);
+    $id       = '';
+    for ($i = 0; $i < strlen($newEnUid); $i++) {
+        $f = strpos($str, $newEnUid[$i]);
+        if ($f === false) {
+            return false;
+        }
+        $id .= $f;
+    }
+    if ($str[getOneNum($id)] != substr($enUid, 0, 1)) {
+        return false;
     }
     return strrev($id);
 //    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
