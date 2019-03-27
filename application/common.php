@@ -299,5 +299,5 @@ function getBancardKey($cardNo){
     if (isset($cardmessage['bank'])){
         return false;
     }
-    return ['bank' =>$cardmessage['bank'], 'cardNo'=>$cardNo];
+    return ['bank' => $cardmessage['bank'], 'cardNo' => $cardNo];
 }
