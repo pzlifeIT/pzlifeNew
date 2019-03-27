@@ -1425,9 +1425,12 @@ class User extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $userInfo = DbUser::getUserInfo(['id'=>$uid],'id,user_identity,nick_name,balance,commission',true);
+        $userInfo = DbUser::getUserInfo(['id'=> $uid],'id,user_identity,nick_name,balance,commission',true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
+        }
+        if ($userInfo['commission'] <= 0) {
+            return ['code' => '3005'];
         }
     }
 }
