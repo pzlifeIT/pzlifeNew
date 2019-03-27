@@ -287,6 +287,11 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getLogBonusDistinct($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogBonus::field($field)->distinct(true)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
     public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogTrading::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);

@@ -566,7 +566,9 @@ class User extends CommonIndex {
         ];
         $offset   = ($page - 1) * $pageNum;
         $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
-        $bonus    = DbUser::getLogBonus($where, $field, false, 'status asc,id desc', $offset . ',' . $pageNum);
+        $distinct = DbUser::getLogBonusDistinct($where, 'order_no', false, ['order_no' => 'desc'], $offset . ',' . $pageNum);
+        $distinct = array_column($distinct, 'order_no');
+        $bonus    = DbUser::getLogBonus([['order_no', 'in', $distinct]], $field);
         $combined = DbUser::getLogBonusSum($where, 'result_price');//合计
         $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar,user_identity');
         $userList = array_combine(array_column($userList, 'id'), $userList);
