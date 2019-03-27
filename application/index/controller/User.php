@@ -525,7 +525,7 @@ class User extends MyController {
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
      * @apiSuccess (返回) {Array} data 列表
      * @apiSuccess (返回) {Decimal} result_integral 积分
-     * @apiSuccess (返回) {String} order_no 购买订单号
+     * @apiSuccess (返回) {String} ctype 描述
      * @apiSuccess (返回) {Decimal} create_time 到账时间
      * @apiSampleRequest /index/user/getintegraldetail
      * @return array
