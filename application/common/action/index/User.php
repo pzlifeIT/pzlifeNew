@@ -666,6 +666,9 @@ class User extends CommonIndex {
                 case 7:
                     $ctype = '佣金转入';
                     break;
+                case 8:
+                    $ctype = '后台充值操作';
+                    break;
             }
             $d['ctype'] = $ctype;
             unset($d['change_type']);
