@@ -197,7 +197,7 @@ class Admin extends CommonIndex {
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
-        if ($adminInfo['stype'] != 2){
+        if ($adminInfo['id'] != 1){
             return ['code' => '3002'];
         }
         $remittance = DbAdmin::getAdminRemittance(['id' => $id],'*',true);
