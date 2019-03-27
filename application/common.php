@@ -245,3 +245,59 @@ function getExpressList() {
     ];
     return $ExpressList;
 }
+
+/**
+ * 检测银行卡号是否合法
+ * @return array
+ * @author rzc
+ */
+function checkBankCard($cardNum){
+    $arr_no = str_split($cardNum);
+    $last_n = $arr_no[count($arr_no) - 1];
+    krsort($arr_no);
+    $i = 1;
+    $total = 0;
+    foreach ($arr_no as $n) {
+        if ($i % 2 == 0) {
+            $ix = $n * 2;
+            if ($ix >= 10) {
+                $nx = 1 + ($ix % 10);
+                $total += $nx;
+            } else {
+                $total += $ix;
+            }
+        } else {
+            $total += $n;
+        }
+        $i++;
+    }
+    $total -= $last_n;
+    $x = 10 - ($total % 10);
+
+    if ($x == 10) {
+        $x = 0;
+    }
+
+    if ($x == $last_n) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * 获取银行卡号银行信息
+ * @return array
+ * @author rzc
+ */
+function getBancardKey($cardNo){
+    $url = 'https://ccdcapi.alipay.com/validateAndCacheCardInfo.json?_input_charset=utf-8&cardNo=';
+    $url .= $cardNo;
+    $url .= "&cardBinCheck=true";
+    $cardmessage = $this->sendRequest($url);
+    $cardmessage = json_decode($cardmessage, true);
+    if (isset($cardmessage['bank'])){
+        return false;
+    }
+    return ['bank' =>$cardmessage['bank'], 'cardNo'=>$cardNo];
+}
