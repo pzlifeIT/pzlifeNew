@@ -756,13 +756,23 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          addUserBankcard
      * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {String} user_name 银行开户人(真实姓名)
+     * @apiParam (入参) {String} bank_mobile 银行开户手机号(手机号码)
+     * @apiParam (入参) {String} bank_card 银行卡号
+     * @apiParam (入参) {String} bank_key 开户银行
+     * @apiParam (入参) {String} bank_add 开户支行
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
      * @apiSampleRequest /index/user/addUserBankcard
      * @return array
      * @author rzc
      */
     public function addUserBankcard(){
-
+        $conId       = trim($this->request->post('con_id'));
+        $user_name   = trim($this->request->post('user_name'));
+        $bank_mobile = trim($this->request->post('bank_mobile'));
+        $bank_card   = trim($this->request->post('bank_card'));
+        $bank_key    = trim($this->request->post('bank_key'));
+        $bank_add    = trim($this->request->post('bank_add'));
     }
 
     /**
@@ -793,5 +803,33 @@ class User extends MyController {
      */
     public function editUserBankcards(){
 
+    }
+
+    /**
+     * @api              {post} / 佣金转商票
+     * @apiDescription   commissionTransferBalance
+     * @apiGroup         index_user
+     * @apiName          commissionTransferBalance
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {String} money 用户转出金额
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 /
+     * @apiSampleRequest /index/user/commissionTransferBalance
+     * @return array
+     * @author rzc
+     */
+    public function commissionTransferBalance(){
+        $conId       = trim($this->request->post('con_id'));
+        $money       = trim($this->request->post('money'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->commissionTransferBalance($conId,$money);
+        return $result;
     }
 }

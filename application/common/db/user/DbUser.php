@@ -4,6 +4,7 @@ namespace app\common\db\user;
 
 use app\common\model\LogBonus;
 use app\common\model\LogTrading;
+use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -320,5 +321,43 @@ class DbUser {
             $obj = $obj->select();
         }
         return $obj->toArray();
+    }
+
+    /**
+     * 获取佣金转出记录
+     * @param $where
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return array
+     * @author rzc
+     */
+    public function getLogTransfer($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogTransfer::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 添加佣金转出记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function addLogTransfer($data){
+        $LogTransfer = new LogTransfer;
+        $LogTransfer->save($data);
+        return $LogTransfer->id;
+    }
+
+    /**
+     * 修改佣金转出记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function editLogTransfer($data,$id){
+        $LogTransfer = new LogTransfer;
+        return $LogTransfer->save($data,['id' => $id]);
     }
 }

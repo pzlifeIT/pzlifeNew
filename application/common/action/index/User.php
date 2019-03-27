@@ -1412,4 +1412,22 @@ class User extends CommonIndex {
 
         return ['code' => '200', 'obligation' => $obligation, 'deliver' => $deliver, 'receive' => $receive, 'rating' => $rating];
     }
+
+    /**
+     * 用户转商票
+     * @param $conId
+     * @param $money
+     * @return string
+     * @author rzc
+     */
+    public function commissionTransferBalance($conId,$money){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $userInfo = DbUser::getUserInfo(['id'=>$uid],'id,user_identity,nick_name,balance,commission',true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+    }
 }
