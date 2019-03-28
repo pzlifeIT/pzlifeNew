@@ -7,7 +7,7 @@ use think\Db;
 use app\facade\DbGoods;
 use Config;
 
-class Goods {
+class Goods extends CommonIndex {
     /**
      * 商品列表
      * @param $page
@@ -21,7 +21,7 @@ class Goods {
      * @return array
      * @author zyr
      */
-    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '',$supplierTitle = '') {
+    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '', $supplierTitle = '') {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
         $where = [];
@@ -61,7 +61,7 @@ class Goods {
         foreach ($goods_data as $gk => $gd) {
             $goods_data[$gk]['supplier'] = '';
             if (isset($gd['supplier'])) {
-                $goods_data[$gk]['supplier'] = $gd['supplier']['name'];
+                $goods_data[$gk]['supplier']       = $gd['supplier']['name'];
                 $goods_data[$gk]['supplier_title'] = $gd['supplier']['title'];
             }
             $goods_data[$gk]['cate'] = '';

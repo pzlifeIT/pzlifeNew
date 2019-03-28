@@ -12,6 +12,13 @@ class AdminController extends Controller {
 
     public function __construct(App $app = null) {
         parent::__construct($app);
+        $this->headers();
+        $checkRes = $this->checkApi();
+        if ($checkRes['code'] !== 200) {
+            exit(json_encode($checkRes));
+        }
+    }
+    private function headers(){
         if (Config::get('app.deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
             header("Access-Control-Allow-Methods:GET,POST");
@@ -23,10 +30,6 @@ class AdminController extends Controller {
             header("Access-Control-Allow-Methods:GET,POST");
             header('Access-Control-Allow-Headers:content-type,token,id');
             header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
-        }
-        $checkRes = $this->checkApi();
-        if ($checkRes['code'] !== 200) {
-            exit(json_encode($checkRes));
         }
     }
 
@@ -83,6 +86,22 @@ class AdminController extends Controller {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 验证con_id登录
+     */
+    protected function isLogin() {
+        $this->headers();
+        $cmsConId = trim($this->request->param('cms_con_id'));
+        if (!empty($cmsConId) && strlen($cmsConId) == 32) {
+            $res = $this->app->admin->isLogin($cmsConId);//判断是否登录
+            if ($res['code'] == '200') {
+                return;
+            }
+            exit(json_encode($res));
+        }
+        exit(json_encode(['code' => '5000']));
     }
 
 }

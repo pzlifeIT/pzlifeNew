@@ -4,14 +4,21 @@ namespace app\admin\controller;
 
 use think\Controller;
 use app\admin\AdminController;
-class Recommend extends AdminController
-{
+
+class Recommend extends AdminController {
+    protected $beforeActionList = [
+        'isLogin', //所有方法的前置操作
+//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
+
     /**
      * @api              {post} / 获取推荐信息
      * @apiDescription   getRecommend
      * @apiGroup         admin_Recommend
      * @apiName          getRecommend
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:推荐列表空 
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:推荐列表空
      * @apiSuccess (返回) {object_array} recommends_ids 主模块id
      * @apiSuccess (data) {object_array} recommends 结果
      * @apiSuccess (recommends) {String} id 主键ID
@@ -83,7 +90,7 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function getRecommend(){
+    public function getRecommend() {
         $result = $this->app->recommend->getRecommend();
         return $result;
     }
@@ -93,6 +100,7 @@ class Recommend extends AdminController
      * @apiDescription   addRecommend
      * @apiGroup         admin_Recommend
      * @apiName          addRecommend
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} model_id 模板类型 1:轮播banner 2:图标tips 3:专题模块推荐 4:新品上市 5:每周推荐 6:爆款推荐 7:应季推荐 8:时令推荐 9:买主推荐 10:专题商品推荐
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {String} image_path 图片路径
@@ -113,7 +121,7 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function addRecommend(){
+    public function addRecommend() {
         $model_id        = trim($this->request->post('model_id'));
         $title           = trim($this->request->post('title'));
         $image_path      = trim($this->request->post('image_path'));
@@ -135,95 +143,95 @@ class Recommend extends AdminController
         if (!is_numeric($model_id)) {
             return ['code' => '3001'];
         }
-        $model_arr = [1,2,3,4,5,6,7,8,9,10];
-        if (!in_array($model_id,$model_arr)) {
+        $model_arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        if (!in_array($model_id, $model_arr)) {
             return ['code' => '3002'];
         }
-        
-        if ($model_id == 1 || $model_id == 2 || $model_id == 3 ) {
-            if ($tier == 2  ) {
-                if (!$title  || !$jump_type || !$jump_content){
+
+        if ($model_id == 1 || $model_id == 2 || $model_id == 3) {
+            if ($tier == 2) {
+                if (!$title || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
                 if (!$image_path || !$parent_id) {
                     return ['code' => '3004'];
                 }
-                
+
             }
-        }elseif ($model_id == 5) {
-            
-            if ($tier == 2 ){
-                if (!$title || !$image_path || !$jump_type || !$jump_content){
+        } elseif ($model_id == 5) {
+
+            if ($tier == 2) {
+                if (!$title || !$image_path || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
-                if ( !$show_days || !$parent_id) {
+                if (!$show_days || !$parent_id) {
                     return ['code' => '3005'];
                 }
             }
-        }elseif ($model_id == 6 || $model_id == 4 || $model_id == 7 || $model_id == 8 || $model_id == 9) {
-            if ($tier == 1){
-                if (!$title  || !$jump_type || !$jump_content){
+        } elseif ($model_id == 6 || $model_id == 4 || $model_id == 7 || $model_id == 8 || $model_id == 9) {
+            if ($tier == 1) {
+                if (!$title || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
-                if ($model_id == 7 || $model_id == 8 ) {
-                    if (!$image_path){
+                if ($model_id == 7 || $model_id == 8) {
+                    if (!$image_path) {
                         return ['code' => '3004'];
                     }
                 }
-            }elseif ($tier == 2){
+            } elseif ($tier == 2) {
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if ($show_type == 1){
-                    if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                if ($show_type == 1) {
+                    if (!$title || !$jump_type || !$jump_content || !$image_path) {
                         return ['code' => '3003'];
                     }
-                }elseif($show_type == 2){
-                    if (!is_numeric($show_data)){
+                } elseif ($show_type == 2) {
+                    if (!is_numeric($show_data)) {
                         return ['code' => '3006'];
                     }
-                    if (!$title  || !$jump_type || !$jump_content){
+                    if (!$title || !$jump_type || !$jump_content) {
                         return ['code' => '3003'];
                     }
                 }
             }
-        }elseif ($model_id == 10) {
-            if ($tier == 1){
+        } elseif ($model_id == 10) {
+            if ($tier == 1) {
 
-            }elseif ($tier == 2) {
+            } elseif ($tier == 2) {
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!$title  || !$jump_type || !$jump_content || !$image_path ){
+                if (!$title || !$jump_type || !$jump_content || !$image_path) {
                     return ['code' => '3003'];
                 }
-            }elseif ($tier == 3) {
-                if ($show_type!=2){
+            } elseif ($tier == 3) {
+                if ($show_type != 2) {
                     return ['code' => '3008'];
                 }
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!is_numeric($show_data)){
+                if (!is_numeric($show_data)) {
                     return ['code' => '3006'];
                 }
             }
         }
 
-        $data = [];
-        $data['model_id'] = $model_id;
-        $data['title'] = $title;
-        $data['image_path'] = $image_path;
-        $data['parent_id'] = $parent_id;
-        $data['jump_type'] = $jump_type;
-        $data['jump_content'] = $jump_content;
-        $data['show_type'] = $show_type;
-        $data['show_data'] = $show_data;
-        $data['show_days'] = $show_days;
-        $data['tier'] = $tier;
-        $data['model_order'] = $model_order;
+        $data                    = [];
+        $data['model_id']        = $model_id;
+        $data['title']           = $title;
+        $data['image_path']      = $image_path;
+        $data['parent_id']       = $parent_id;
+        $data['jump_type']       = $jump_type;
+        $data['jump_content']    = $jump_content;
+        $data['show_type']       = $show_type;
+        $data['show_data']       = $show_data;
+        $data['show_days']       = $show_days;
+        $data['tier']            = $tier;
+        $data['model_order']     = $model_order;
         $data['model_son_order'] = $model_son_order;
-        $data['is_show'] = $is_show;
+        $data['is_show']         = $is_show;
         if ($tier != 1) {
             unset($data['is_show']);
         }
@@ -236,9 +244,10 @@ class Recommend extends AdminController
      * @apiDescription   getRecommendId
      * @apiGroup         admin_Recommend
      * @apiName          getRecommendId
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} model_id 模板类型 1:轮播banner 2:图标tips 3:专题模块推荐 4:新品上市 5:每周推荐 6:爆款推荐 7:应季推荐 8:时令推荐 9:买主推荐 10:专题商品推荐
      * @apiParam (入参) {Number} tier 层级
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空 / 3001:model_id和tier只能是数字 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空 / 3001:model_id和tier只能是数字
      * @apiSampleRequest /admin/Recommend/getRecommendId
      * @apiParamExample (data) {Array} 返回
      * [
@@ -246,13 +255,13 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function getRecommendId(){
+    public function getRecommendId() {
         $model_id = trim($this->request->post('model_id'));
-        $tier = trim($this->request->post('tier'));
+        $tier     = trim($this->request->post('tier'));
         if (!is_numeric($tier) || !is_numeric($model_id)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->recommend->getRecommendId($model_id,$tier);
+        $result = $this->app->recommend->getRecommendId($model_id, $tier);
         return $result;
     }
 
@@ -261,9 +270,10 @@ class Recommend extends AdminController
      * @apiDescription   getRecommendInfo
      * @apiGroup         admin_Recommend
      * @apiName          getRecommendInfo
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 推荐ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空 / 3001:id只能是数字 
-     * @apiSuccess (recommends_info) {String} id 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空 / 3001:id只能是数字
+     * @apiSuccess (recommends_info) {String} id
      * @apiSuccess (recommends_info) {String} model_id 模板id 1:轮播banner 2:图标tips 3:专题模块推荐 4:新品上市 5:每周推荐 6:爆款推荐 7:应季推荐 8:时令推荐 9:买主推荐 10:专题商品推荐
      * @apiSuccess (recommends_info) {String} title 标题
      * @apiSuccess (recommends_info) {String} image_path 图片路径
@@ -300,9 +310,9 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function getRecommendInfo(){
+    public function getRecommendInfo() {
         $id = trim($this->request->post('id'));
-        if (!$id || !is_numeric($id))  {
+        if (!$id || !is_numeric($id)) {
             return ['code' => 3001];
         }
         $result = $this->app->recommend->getRecommendInfo($id);
@@ -314,6 +324,7 @@ class Recommend extends AdminController
      * @apiDescription   updateRecommend
      * @apiGroup         admin_Recommend
      * @apiName          updateRecommend
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 修改内容对应ID
      * @apiParam (入参) {Number} model_id 模板类型 1:轮播banner 2:图标tips 3:专题模块推荐 4:新品上市 5:每周推荐 6:爆款推荐 7:应季推荐 8:时令推荐 9:买主推荐 10:专题商品推荐
      * @apiParam (入参) {String} title 标题
@@ -334,7 +345,7 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function updateRecommend(){
+    public function updateRecommend() {
         $id              = trim($this->request->post('id'));
         $model_id        = trim($this->request->post('model_id'));
         $title           = trim($this->request->post('title'));
@@ -357,93 +368,94 @@ class Recommend extends AdminController
         if (!is_numeric($model_id) && !is_numeric($id)) {
             return ['code' => '3001'];
         }
-        $model_arr = [1,2,3,4,5,6,7,8,9,10];
-        if (!in_array($model_id,$model_arr)) {
+        $model_arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        if (!in_array($model_id, $model_arr)) {
             return ['code' => '3002'];
         }
-        
-        
-        if ($model_id == 1 || $model_id == 2 || $model_id == 3 ) {
-            if ($tier == 2  ) {
-                if (!$title  || !$jump_type || !$jump_content){
+
+
+        if ($model_id == 1 || $model_id == 2 || $model_id == 3) {
+            if ($tier == 2) {
+                if (!$title || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
                 if (!$parent_id) {
                     return ['code' => '3004'];
                 }
-                
+
             }
-        }elseif ($model_id == 5) {
-            if (!$title || !$jump_type || !$jump_content){
+
+        } elseif ($model_id == 5) {
+            if (!$title || !$jump_type || !$jump_content) {
                 return ['code' => '3003'];
             }
-            if ($tier == 2 ){
-                if ( !$show_days || !$parent_id) {
+            if ($tier == 2) {
+                if (!$show_days || !$parent_id) {
                     return ['code' => '3005'];
                 }
             }
-        }elseif ($model_id == 6 || $model_id == 4 || $model_id == 7 || $model_id == 8 || $model_id == 9) {
-            if ($tier == 1){
-                if (!$title  || !$jump_type || !$jump_content){
+        } elseif ($model_id == 6 || $model_id == 4 || $model_id == 7 || $model_id == 8 || $model_id == 9) {
+            if ($tier == 1) {
+                if (!$title || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
-                
-            }elseif ($tier == 2){
+
+            } elseif ($tier == 2) {
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if ($show_type == 1){
-                    if (!$title  || !$jump_type || !$jump_content  ){
+                if ($show_type == 1) {
+                    if (!$title || !$jump_type || !$jump_content) {
                         return ['code' => '3003'];
                     }
-                }elseif($show_type == 2){
-                    if (!is_numeric($show_data)){
+                } elseif ($show_type == 2) {
+                    if (!is_numeric($show_data)) {
                         return ['code' => '3006'];
                     }
-                    if (!$title  || !$jump_type || !$jump_content){
+                    if (!$title || !$jump_type || !$jump_content) {
                         return ['code' => '3003'];
                     }
                 }
             }
-        }elseif ($model_id == 10) {
-            if ($tier == 1){
+        } elseif ($model_id == 10) {
+            if ($tier == 1) {
 
-            }elseif ($tier == 2) {
+            } elseif ($tier == 2) {
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!$title  || !$jump_type || !$jump_content ){
+                if (!$title || !$jump_type || !$jump_content) {
                     return ['code' => '3003'];
                 }
-            }elseif ($tier == 3) {
-                if ($show_type!=2){
+            } elseif ($tier == 3) {
+                if ($show_type != 2) {
                     return ['code' => '3008'];
                 }
                 if (!$parent_id) {
                     return ['code' => '3007'];
                 }
-                if (!is_numeric($show_data)){
+                if (!is_numeric($show_data)) {
                     return ['code' => '3006'];
                 }
             }
         }
 
-        $data = [];
-        $data['model_id'] = $model_id;
-        $data['title'] = $title;
-        $data['image_path'] = $image_path;
-        $data['jump_type'] = $jump_type;
-        $data['jump_content'] = $jump_content;
-        $data['show_type'] = $show_type;
-        $data['show_data'] = $show_data;
-        $data['show_days'] = $show_days;
-        $data['model_order'] = $model_order;
+        $data                    = [];
+        $data['model_id']        = $model_id;
+        $data['title']           = $title;
+        $data['image_path']      = $image_path;
+        $data['jump_type']       = $jump_type;
+        $data['jump_content']    = $jump_content;
+        $data['show_type']       = $show_type;
+        $data['show_data']       = $show_data;
+        $data['show_days']       = $show_days;
+        $data['model_order']     = $model_order;
         $data['model_son_order'] = $model_son_order;
-        $data['is_show'] = $is_show ;
+        $data['is_show']         = $is_show;
         if ($tier != 1) {
             unset($data['is_show']);
-         }
-        $result = $this->app->recommend->saveRecommend($data,$id);
+        }
+        $result = $this->app->recommend->saveRecommend($data, $id);
         return $result;
     }
 
@@ -452,6 +464,7 @@ class Recommend extends AdminController
      * @apiDescription   delRecommend
      * @apiGroup         admin_Recommend
      * @apiName          delRecommend
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 删除内容对应ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空，无法更改 / 3002:请先删除下级推荐
      * @apiSampleRequest /admin/Recommend/delRecommend
@@ -461,7 +474,7 @@ class Recommend extends AdminController
      * ]
      * @author rzc
      */
-    public function delRecommend(){
+    public function delRecommend() {
         $id = trim($this->request->post('id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];

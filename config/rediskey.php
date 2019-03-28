@@ -16,6 +16,8 @@ return [
         'redisConIdUid'           => 'index:user:conId:uid',//conId和uid的hSet
         'redisUserNextLevel'      => 'index:user:nextLevel:uid:',//用户关系下的所有关系网uid列表
         'redisUserNextLevelCount' => 'index:user:nextLevelCount:uid:',//boss用户关系下的总人数
+        'redisCmsConIdTime'       => 'cms:user:cmsConId:expiration',//后台cmsConId到期时间的zadd
+        'redisCmsConIdUid'        => 'cms:user:cmsConId:adminid',//后台cmsConId和adminid的hSet
     ],
     'index' => [
         'redisIndexShow' => 'index:index:show',
