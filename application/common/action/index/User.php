@@ -709,7 +709,7 @@ class User extends CommonIndex {
         return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => 0];
     }
 
-    public function getRead($conId) {
+    public function getRead($conId, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
             return ['code' => '3003'];
@@ -721,7 +721,8 @@ class User extends CommonIndex {
         if ($user['user_identity'] != '4') {
             return ['code' => '3000'];//boss才有权限查看
         }
-        $grant = DbUser::getUserRead('nick_name,avatar', [['view_uid', '=', $uid], ['nick_name', '<>', '']]);
+        $offset = ($page - 1) * $pageNum;
+        $grant  = DbUser::getUserRead('nick_name,avatar', [['view_uid', '=', $uid], ['nick_name', '<>', '']], false, 'id', 'desc', $offset . ',' . $pageNum);
         return ['code' => '200', 'data' => $grant];
     }
 
@@ -913,8 +914,9 @@ class User extends CommonIndex {
 //        if ($user['user_identity'] != '4') {
 //            return ['code' => '3000'];//boss才有权限查看
 //        }
+        $offset = ($page - 1) * $pageNum;
         $data   = [];
-        $result = DbUser::getLogIntegral(['uid' => $uid, 'status' => 2], 'stype,result_integral,create_time');
+        $result = DbUser::getLogIntegral(['uid' => $uid, 'status' => 2], 'stype,result_integral,create_time', false, 'id desc', $offset . ',' . $pageNum);
         foreach ($result as $d) {
             $trType = $d['stype'] ?? 1;
             switch ($trType) {
