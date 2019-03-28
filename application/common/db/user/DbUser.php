@@ -3,7 +3,6 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
-use app\common\model\LogIntegral;
 use app\common\model\LogTrading;
 use app\common\model\LogIntegral;
 use app\common\model\LogVercode;

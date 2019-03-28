@@ -324,7 +324,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBonus
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} status 1.已入账 2.未入账
+     * @apiParam (入参) {Int} status 1.未入账 2.已入账
      * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费 3.渠道收益
      * @apiParam (入参) {Int} [page] 当前页 默认1
      * @apiParam (入参) {Int} [page_num] 每页数量 默认10
@@ -431,6 +431,30 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserSocialSum($conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 浏览未注册用户
+     * @apiDescription   getRead
+     * @apiGroup         index_user
+     * @apiName          getRead
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data
+     * @apiSampleRequest /index/user/getread
+     * @return array
+     * @author zyr
+     */
+    public function getRead(){
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getRead($conId);
         return $result;
     }
 

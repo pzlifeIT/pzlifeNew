@@ -618,6 +618,7 @@ class User extends CommonIndex {
 //            return ['code' => '3000'];//普通用户没有权限查看
 //        }
         $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month')));//近三个月
+        $data       = [];
         if ($stype == 1) {//已使用
             $where = [
                 ['trading_type', '=', '1'],//商票交易
@@ -625,7 +626,7 @@ class User extends CommonIndex {
                 ['uid', '=', $uid],
                 ['create_time', '>=', $threeMonth],//近三个月
             ];
-            $field = 'change_type,order_no,money,create_time';
+            $field = 'change_type,order_no,money,create_time,message';
             $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
         }
         if ($stype == 3) {//余额明细
@@ -635,7 +636,7 @@ class User extends CommonIndex {
                 ['uid', '=', $uid],
                 ['create_time', '>=', $threeMonth],//近三个月
             ];
-            $field = 'change_type,order_no,money,create_time';
+            $field = 'change_type,order_no,money,create_time,message';
             $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
         }
         if ($stype == 2) {//未结算商票
@@ -670,7 +671,7 @@ class User extends CommonIndex {
                     $ctype = '后台充值操作';
                     break;
             }
-            $d['ctype'] = $ctype;
+            $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['change_type']);
             array_push($result, $d);
         }
@@ -706,6 +707,22 @@ class User extends CommonIndex {
         $readCount  = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
         $grantCount = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
         return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => 0];
+    }
+
+    public function getRead($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] != '4') {
+            return ['code' => '3000'];//boss才有权限查看
+        }
+        $grant = DbUser::getUserRead('nick_name,avatar', [['view_uid', '=', $uid], ['nick_name', '<>', '']]);
+        return ['code' => '200', 'data' => $grant];
     }
 
     /**
@@ -896,7 +913,7 @@ class User extends CommonIndex {
 //        if ($user['user_identity'] != '4') {
 //            return ['code' => '3000'];//boss才有权限查看
 //        }
-        $data = [];
+        $data   = [];
         $result = DbUser::getLogIntegral(['uid' => $uid, 'status' => 2], 'stype,result_integral,create_time');
         foreach ($result as $d) {
             $trType = $d['stype'] ?? 1;
@@ -1560,21 +1577,21 @@ class User extends CommonIndex {
 
         if (!empty($user)) {//注册了微信的老用户
             return ['code' => '3004'];
-        }else {//新用户
+        } else {//新用户
             if (empty($view_uid)) {
                 $view_uid = deUid($view_uid);
                 if ($view_uid) {
                     $view_user = DbUser::getUserOne(['id' => $view_uid], 'id');
                     if ($view_user) {
                         $view_uid = $view_user['id'];
-                    }else{
+                    } else {
                         $view_uid = 1;
                     }
-                }else{
+                } else {
                     $view_uid = 1;
                 }
             }
-            $has_read = DbUser::getUserRead('*',['openid' => $wxInfo['openid'],'view_uid' => $view_uid],true);
+            $has_read = DbUser::getUserRead('*', ['openid' => $wxInfo['openid'], 'view_uid' => $view_uid], true);
             if (empty($has_read)) {
                 $unionid   = $wxInfo['unionid'] ?? '';
                 $nickname  = $wxInfo['nickname'] ?? '';
