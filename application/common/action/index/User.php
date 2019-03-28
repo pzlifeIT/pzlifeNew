@@ -1512,6 +1512,38 @@ class User extends CommonIndex {
         if ($userInfo['commission'] <= 0) {
             return ['code' => '3005'];
         }
+        $transfer = [];
+        $transfer['uid']        = $uid;
+        $transfer['status']     = 1;
+        $transfer['stype']      = 1;
+        $transfer['wtype']      = 4;
+        $transfer['money']      = $money;
+        $transfer['proportion'] = 0;
+        $transfer['invoice']    = 2;
+        //扣除佣金
+        $tradingData = [
+            'uid'          => $uid,
+            'trading_type' => 2,
+            'change_type'  => 8,
+            'money'        => $money,
+            'befor_money'  => $userInfo['commission'],
+            'after_money'  => bcsub($userInfo['commission'], $money, 2),
+            // 'message'      => $remittance['message'],
+        ];
+
+        Db::startTrans();
+        try {
+        Db::commit();
+            $add =  DbUser::addLogTransfer($transfer);
+
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            print_r($e);
+            Db::rollback();
+            return ['code' => '3011'];//添加失败
+        }
+       
+
     }
      /**
      * 生成二维码
