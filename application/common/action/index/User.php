@@ -775,7 +775,7 @@ class User extends CommonIndex {
             $diamonUserCount = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//直接钻石会员数量
             $uDiamon         = DbUser::getUserInfo([['id', 'in', array_column($diamonUserList, 'uid')], ['user_identity', '=', '2']], 'id');//直接钻石会员
             $uDiamonDiff         = array_column(DbUser::getUserRelation([['pid', 'in', array_column($uDiamon, 'id')], ['is_boss', '=', '2']], 'uid'), 'uid');//第二级钻石会员
-            $socialCountAll  = DbUser::getUserInfoCount([['id', 'in', array_column($uDiamonDiff, 'uid')], ['user_identity', '=', '2']]);
+            $socialCountAll  = DbUser::getUserInfoCount([['id', 'in', $uDiamonDiff], ['user_identity', '=', '2']]);
             $diamondRing  = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
             $diamondUids  = array_column($diamondRing, 'id');
             $diamondUsers = DbUser::getUserRelation([['pid', 'in', $diamondUids], ['is_boss', '=', '2']], 'pid,uid');//boss直属钻石的直属钻石
