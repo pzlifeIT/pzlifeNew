@@ -774,14 +774,14 @@ class User extends CommonIndex {
         if ($stype == 1) {//钻石会员圈
             $diamonUserCount = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//直接钻石会员数量
             $uDiamon         = DbUser::getUserInfo([['id', 'in', array_column($diamonUserList, 'uid')], ['user_identity', '=', '2']], 'id');//直接钻石会员
-            $uDiamonDiff         = array_column(DbUser::getUserRelation([['pid', 'in', array_column($uDiamon, 'id')], ['is_boss', '=', '2']], 'uid'), 'uid');//第二级钻石会员
+            $uDiamonDiff     = array_column(DbUser::getUserRelation([['pid', 'in', array_column($uDiamon, 'id')], ['is_boss', '=', '2']], 'uid'), 'uid');//第二级钻石会员
             $socialCountAll  = DbUser::getUserInfoCount([['id', 'in', $uDiamonDiff], ['user_identity', '=', '2']]);
-            $diamondRing  = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
-            $diamondUids  = array_column($diamondRing, 'id');
-            $diamondUsers = DbUser::getUserRelation([['pid', 'in', $diamondUids], ['is_boss', '=', '2']], 'pid,uid');//boss直属钻石的直属钻石
-            $diamondK     = array_column($diamondUsers, 'pid', 'uid');
-            $diamondInfo  = DbUser::getUserInfo([['id', 'in', array_column($diamondUsers, 'uid')], ['user_identity', '=', 2]], 'id');//直属钻石圈
-            $userCount    = [];
+            $diamondRing     = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
+            $diamondUids     = array_column($diamondRing, 'id');
+            $diamondUsers    = DbUser::getUserRelation([['pid', 'in', $diamondUids], ['is_boss', '=', '2']], 'pid,uid');//boss直属钻石的直属钻石
+            $diamondK        = array_column($diamondUsers, 'pid', 'uid');
+            $diamondInfo     = DbUser::getUserInfo([['id', 'in', array_column($diamondUsers, 'uid')], ['user_identity', '=', 2]], 'id');//直属钻石圈
+            $userCount       = [];
             foreach ($diamondUids as $du) {
                 $userList = DbUser::getUserRelation([['relation', 'like', '%,' . $du . ',%']], 'relation');
                 $uidList  = [];
@@ -1570,14 +1570,10 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         // print_r($wxInfo);die;
-        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
         if (empty($wxInfo['openid'])) {
             return ['code' => '3003'];
         }
-
-        if (!empty($user)) {//注册了微信的老用户
-            return ['code' => '3004'];
-        } else {//新用户
+        if (empty($wxInfo['unionid'])) {
             if (empty($view_uid)) {
                 $view_uid = deUid($view_uid);
                 if ($view_uid) {
@@ -1619,6 +1615,50 @@ class User extends CommonIndex {
 
             }
         }
+        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id');
+        if (!empty($user)) {//注册了微信的老用户
+            return ['code' => '3004'];
+        } else {
+            if (empty($view_uid)) {
+                $view_uid = deUid($view_uid);
+                if ($view_uid) {
+                    $view_user = DbUser::getUserOne(['id' => $view_uid], 'id');
+                    if ($view_user) {
+                        $view_uid = $view_user['id'];
+                    } else {
+                        $view_uid = 1;
+                    }
+                } else {
+                    $view_uid = 1;
+                }
+            }
+            $has_read = DbUser::getUserRead('*', ['openid' => $wxInfo['openid'], 'view_uid' => $view_uid], true);
+            if (empty($has_read)) {
+                $unionid   = $wxInfo['unionid'] ?? '';
+                $nickname  = $wxInfo['nickname'] ?? '';
+                $avatarurl = $wxInfo['avatarurl'] ?? '';
+                $view_user = DbUser::getUserOne(['id' => $view_uid], 'id,user_identity');
+                $addData   = [
+                    'openid'        => $wxInfo['openid'],
+                    'unionid'       => $unionid,
+                    'nick_name'     => $nickname,
+                    'avatar'        => $avatarurl,
+                    'view_uid'      => $view_uid,
+                    'view_identity' => $view_user['user_identity'],
+                ];
+                DbUser::addUserRead($addData);
+                return ['code' => '200'];
+            } else {
+                $red_time  = date('Y-m-d', strtotime($has_read['update_time']));
+                $this_time = date('Y-m-d', time());
+                if ($red_time != $this_time) {
+                    DbUser::updateUserRead(['read_count' => $has_read['read_count'] + 1], $has_read['id']);
+                    return ['code' => '200'];
+                } else {
+                    return ['code' => '3005'];
+                }
 
+            }
+        }
     }
 }

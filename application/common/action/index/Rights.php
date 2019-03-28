@@ -60,6 +60,9 @@ class Rights extends CommonIndex {
      */
     public function IsGetDominos($parent_id){
         $userInfo = DbUser::getUserInfo(['id'=>$parent_id],'user_identity',true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
         if ($userInfo['user_identity']<4) {
             return ['code' => '3004','msg' => '非BOSS无法开启分享钻石接龙资格（200名额）'];
         }

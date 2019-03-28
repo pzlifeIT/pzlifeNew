@@ -1000,7 +1000,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false) {
+    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false,$old_parent_id = '') {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -1009,12 +1009,17 @@ class Order extends CommonIndex {
             $parent_id = 1;
         } else {
             $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
-            if ($parent_info['user_identity'] < 2) {
+            if (empty($parent_info)) {
                 $parent_id = 1;
+            }else{
+                if ($parent_info['user_identity'] < 2) {
+                    $parent_id = 1;
+                }
+                if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                    $parent_id = 1;
+                }
             }
-            if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                $parent_id = 1;
-            }
+            
         }
 
         /* 计算支付金额 */
@@ -1042,9 +1047,20 @@ class Order extends CommonIndex {
             if ($pay_money != $has_member_order['pay_money']) {
                 $has_member_order['pay_money'] = $pay_money;
                 /* 更新支付金额 */
-                DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
+                DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['id' => $has_member_order['id']]);
+                
             }
-            unset($has_member_order['from_uid']);
+            // unset($has_member_order['from_uid']);
+            Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder','data' => json_encode([
+                'member_order_id'=>$has_member_order['id'],
+                'uid'=>$uid,
+                'user_type'=>$user_type,
+                'parent_id' => $parent_id,
+                'old_parent_id' => $old_parent_id,
+                'pay_money'=> $pay_money,
+                ])]
+            );
+            $has_member_order['from_uid'] = enUid($has_member_order['from_uid']);
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {
             $order              = [];
@@ -1056,8 +1072,17 @@ class Order extends CommonIndex {
             if ($parent_id) {
                 $order['from_uid'] = $parent_id;
             }
-            DbOrder::addMemberOrder($order);
+            $add =  DbOrder::addMemberOrder($order);
             $order['from_uid'] = enUid($parent_id);
+            Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder','data' => json_encode([
+                'member_order_id'=>$add,
+                'uid'=>$uid,
+                'user_type'=>$user_type,
+                'pay_money'=> $pay_money,
+                'parent_id' => $parent_id,
+                'old_parent_id' => $old_parent_id
+                ])]
+            );
             return ['code' => '200', 'order_data' => $order];
         }
 

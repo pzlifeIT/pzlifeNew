@@ -404,8 +404,9 @@ class Order extends MyController {
         if (!is_numeric($user_type) || !is_numeric($pay_type)) {
             return ['code' => 3003];
         }
+        $old_parent_id = $parent_id;
         $parent_id = deUid($parent_id);
-        $result    = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id);
+        $result    = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id,$old_parent_id);
         return $result;
     }
 
