@@ -324,7 +324,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBonus
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} status 1.已入账 2.未入账
+     * @apiParam (入参) {Int} status 1.未入账 2.已入账
      * @apiParam (入参) {Int} stype 1.个人消费 2.会员圈消费 3.渠道收益
      * @apiParam (入参) {Int} [page] 当前页 默认1
      * @apiParam (入参) {Int} [page_num] 每页数量 默认10
@@ -435,6 +435,36 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 浏览未注册用户
+     * @apiDescription   getRead
+     * @apiGroup         index_user
+     * @apiName          getRead
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data
+     * @apiSampleRequest /index/user/getread
+     * @return array
+     * @author zyr
+     */
+    public function getRead() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getRead($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 用户社交圈
      * @apiDescription   getUserSocial
      * @apiGroup         index_user
@@ -511,6 +541,39 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 积分明细
+     * @apiDescription   getIntegralDetail
+     * @apiGroup         index_user
+     * @apiName          getIntegralDetail
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Decimal} result_integral 积分
+     * @apiSuccess (返回) {String} ctype 描述
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSampleRequest /index/user/getintegraldetail
+     * @return array
+     * @author zyr
+     */
+    public function getIntegralDetail() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getIntegralDetail($conId, $page, $pageNum);
         return $result;
     }
 
@@ -744,9 +807,9 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserOrderCount(){
+    public function getUserOrderCount() {
         $conId = trim($this->request->get('con_id'));
-        
+
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -767,7 +830,7 @@ class User extends MyController {
      * @apiParam (入参) {String} [encrypteddata] 微信加密信息
      * @apiParam (入参) {String} [iv]
      * @apiParam (入参) {String} [view_uid] 被浏览的用户
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有code / 3002:code长度只能是32位 / 3002:缺少参数 / 3003:未获取到openid / 3004:注册了微信的老用户 / 3005:今天已记录过该次数 
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有code / 3002:code长度只能是32位 / 3002:缺少参数 / 3003:未获取到openid / 3004:注册了微信的老用户 / 3005:今天已记录过该次数
      * @apiSuccess (返回) {String} obligation 待付款
      * @apiSuccess (返回) {String} deliver 待发货
      * @apiSuccess (返回) {String} receive 待收货
@@ -776,7 +839,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserRead(){
+    public function getUserRead() {
         $code          = trim($this->request->post('code'));
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
@@ -789,7 +852,7 @@ class User extends MyController {
         }
         $view_uid = deUid($view_uid);
         $view_uid = $view_uid ? $view_uid : 1;
-        $result = $this->app->user->userRead($code,$encrypteddata,$iv,$view_uid);
+        $result   = $this->app->user->userRead($code, $encrypteddata, $iv, $view_uid);
         return $result;
     }
 }
