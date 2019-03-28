@@ -405,11 +405,15 @@ class User extends Pzlife {
         $sql = "SELECT id,user_type,user_identity,sex,nick_name,balance,commission FROM pz_users WHERE user_identity = 2 AND delete_time=0 " ;
         $users = Db::query($sql);
         foreach ($users as $key => $value) {
+            $diamondvip_dominos_get = [];
+            $get_diamondvip = [];
             $get_diamondvip_sql = " SELECT * FROM pre_diamondvip_get WHERE `uid` = ".$value['id']." LIMIT 1";
             $get_diamondvip = $mysql_connect->query($get_diamondvip_sql);
             $add_diamondvip = [];
+           
             if (!empty($get_diamondvip)) {
-               
+                // print_r($diamondvip_dominos_get);
+                
                 if ($get_diamondvip[0]['sdid']) {
                     $get_sql = 'SELECT id FROM pz_diamondvips WHERE `uid`= '.$get_diamondvip[0]['share_uid'];
                     $new_get_diamondvip = Db::query($get_sql);
@@ -444,10 +448,11 @@ class User extends Pzlife {
                     $add_diamondvip['create_time'] = time();
                 }
             }
-            // print_r($add_diamondvip);die;
+           
             if ($add_diamondvip) {
-                $new_sql = "SELECT id FROM pz_diamondvip_get WHERE `uid` = ".$value['id'];
+                $new_sql = "SELECT id,share_uid FROM pz_diamondvip_get WHERE `uid` = ".$value['id'];
                 $new_diamondvip = Db::query($new_sql);
+                // print_r($new_diamondvip);
                 if (empty($new_diamondvip)) {
                     Db::startTrans();
                     try {
@@ -462,16 +467,24 @@ class User extends Pzlife {
                         print_r($e);
                         die;
                     }
-                }else{
-                    if ($new_diamondvip['share_uid']>1) {
+                }else{ 
+                    if ($new_diamondvip[0]['share_uid']>1) {
                         continue;
                     }
                     $updiamondvip = [];
-                    $updiamondvip['uid'] = $diamondvip_dominos_get[0]['uid'];
-                    $updiamondvip['share_uid'] = $diamondvip_dominos_get[0]['share_uid'];
+                    
+                    // $updiamondvip['uid'] = $diamondvip_dominos_get[0]['uid'];
+                    
                     Db::startTrans();
                     try {
-                        Db::table('pz_diamondvip_get')->where('uid', $value['id'])->update($updiamondvip);
+                        if (!empty($diamondvip_dominos_get)) {
+                            $updiamondvip['share_uid'] = $diamondvip_dominos_get[0]['share_uid'];
+                            Db::table('pz_diamondvip_get')->where('uid', $value['id'])->update($updiamondvip);
+                        }elseif (!empty($get_diamondvip)) {
+                            $updiamondvip['share_uid'] = $get_diamondvip[0]['share_uid'];
+                            Db::table('pz_diamondvip_get')->where('uid', $value['id'])->update($updiamondvip);
+                        }
+                       
 
                         // 提交事务
                         Db::commit();
