@@ -27,10 +27,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '',$sc = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '', $sc = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy,$sc);
+            $obj = $obj->order($orderBy, $sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -260,7 +260,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyCommission($uid, $commission, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user             = Users::get($uid);
         $user->commission = [$modify, $commission];
         $user->save();
     }
@@ -273,7 +273,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyIntegral($uid, $integral, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user           = Users::get($uid);
         $user->integral = [$modify, $integral];
         $user->save();
     }
@@ -320,6 +320,11 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getLogBonusGroup($where, $limit) {
+        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
+        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
+    }
+
     public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogTrading::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -334,7 +339,7 @@ class DbUser {
     }
 
     public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
-        $obj  = LogIntegral::field($field)->where($where);
+        $obj = LogIntegral::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
 //        $where['i.delete_time'] = 0;
 //        $where['o.delete_time'] = 0;
@@ -417,9 +422,9 @@ class DbUser {
         return $UserRead->save($data, ['id' => $id]);
     }
 
-     public function addLogIntegral($data){
-         $LogIntegral = new LogIntegral;
-         $LogIntegral->save($data);
-         return $LogIntegral->id;
-     }
+    public function addLogIntegral($data) {
+        $LogIntegral = new LogIntegral;
+        $LogIntegral->save($data);
+        return $LogIntegral->id;
+    }
 }

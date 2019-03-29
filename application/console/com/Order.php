@@ -263,16 +263,18 @@ class Order extends Pzlife {
                     $f                  = 1;
                     $firstShopPrice     = bcmul($calculate['first_price'], $constShop, 2);//购买店铺的分利
                     $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['level_uid']     = $uid;
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
                     $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
                     $o['bonus_type']    = 2;//经营性收益
                     $o['user_identity'] = 4;
                     array_push($data, $o);
-                } else if ($identity != 1 && $shopBoss != 1) {
+                } else if ($identity != 1 && $shopBoss != 1 && $shopBoss != $uid) {
                     $f                  = 2;
                     $firstShopPrice     = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
                     $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['level_uid']     = $uid;
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
                     $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
@@ -282,6 +284,7 @@ class Order extends Pzlife {
                     array_push($data, $o);
                 }
                 $o['result_price'] = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
+                $o['level_uid']    = $uid;
                 $o['to_uid']       = $bossList['first_uid'];
                 $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']        = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
@@ -294,6 +297,7 @@ class Order extends Pzlife {
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
                 $o['result_price'] = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
+                $o['level_uid']  = $bossList['first_uid'];
                 $o['to_uid']       = $bossList['second_uid'];
                 $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
@@ -308,6 +312,7 @@ class Order extends Pzlife {
                 if ($identity == 2) {
                     $o['result_price']  = $calculate['third_price'];//实际得到分利
                     $o['to_uid']        = $bossList['third_uid'];
+                    $o['level_uid']     = $bossList['second_uid'];
                     $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                     $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
                     $o['bonus_type']    = 3;
