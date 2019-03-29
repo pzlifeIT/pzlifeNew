@@ -820,7 +820,7 @@ class User extends MyController {
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {String} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:转商票失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
      * @author rzc
@@ -841,6 +841,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferBalance($conId,$money);
+        return $result;
     }
      /**
      ** @api              {post} / 分享浏览人次

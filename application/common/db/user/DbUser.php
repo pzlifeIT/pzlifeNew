@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\LogBonus;
 use app\common\model\LogTrading;
 use app\common\model\LogIntegral;
+use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
@@ -326,6 +327,17 @@ class DbUser {
 
     public function getLogTradingSum($where, $field) {
         return LogTrading::where($where)->sum($field);
+    }
+
+    public function saveLogTrading($data){
+        $LogTrading = new LogTrading();
+        $LogTrading->save($data);
+        return $LogTrading->id;
+    }
+
+    public function editLogTrading($data,$id){
+        $LogTrading = new LogTrading;
+        return $LogTrading->save($data,['id' => $id]);
     }
 
     /**

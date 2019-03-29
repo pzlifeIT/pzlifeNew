@@ -1512,6 +1512,9 @@ class User extends CommonIndex {
         if ($userInfo['commission'] <= 0) {
             return ['code' => '3005'];
         }
+        if ($userInfo['commission'] - $money < 0) {
+            return ['code' => '3005'];
+        }
         $transfer = [];
         $transfer['uid']        = $uid;
         $transfer['status']     = 1;
@@ -1524,23 +1527,36 @@ class User extends CommonIndex {
         $tradingData = [
             'uid'          => $uid,
             'trading_type' => 2,
-            'change_type'  => 8,
+            'change_type'  => 6,
             'money'        => $money,
             'befor_money'  => $userInfo['commission'],
             'after_money'  => bcsub($userInfo['commission'], $money, 2),
             // 'message'      => $remittance['message'],
         ];
-
+        //增加商票日志
+        $addtrading = [
+            'uid'          => $uid,
+            'trading_type' => 1,
+            'change_type'  => 7,
+            'money'        => $money,
+            'befor_money'  => $userInfo['balance'],
+            'after_money'  => bcadd($userInfo['balance'], $money, 2),
+            // 'message'      => $remittance['message'],
+        ];
+        // print_r($addtrading);die;
         Db::startTrans();
         try {
-        Db::commit();
-            $add =  DbUser::addLogTransfer($transfer);
-
+            DbUser::addLogTransfer($transfer);
+            DbUser::modifyCommission($uid, $money);
+            DbUser::saveLogTrading($tradingData);
+            DbUser::saveLogTrading($addtrading);
+            DbUser::modifyBalance($uid, $money,'inc');
+            Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
             print_r($e);
             Db::rollback();
-            return ['code' => '3011'];//添加失败
+            return ['code' => '3006'];//添加失败
         }
        
 
