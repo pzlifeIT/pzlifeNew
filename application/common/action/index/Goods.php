@@ -285,7 +285,12 @@ class Goods
                     $integral_active[$sku['id']] = $sku['integral_active'];
                 }
                 $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price),$retail_price)];
-                $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+                if (empty($retail_price)) {
+                    $result[$key]['min_integral_active'] = 0;
+                }else{
+                    $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price),$retail_price)];
+                }
+                
                 
             }else{
                 $result[$key]['min_brokerage'] = 0;

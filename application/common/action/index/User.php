@@ -1489,7 +1489,7 @@ class User extends CommonIndex {
         $obligation = DbOrder::getOrderCount(['order_status' => 1, 'uid' => $uid]);//待付款
         $deliver    = DbOrder::getOrderCount(['order_status' => 4, 'uid' => $uid]);//待发货
         $receive    = DbOrder::getOrderCount(['order_status' => 5, 'uid' => $uid]);//待收货
-        $rating     = DbOrder::getOrderCount(['order_status' => 7, 'uid' => $uid]);//待评价
+        $rating     = DbOrder::getOrderCount(['order_status' => 6, 'uid' => $uid]);//已收货
         return ['code' => '200', 'obligation' => $obligation, 'deliver' => $deliver, 'receive' => $receive, 'rating' => $rating];
     }
 
