@@ -128,10 +128,12 @@ class Order extends Pzlife {
         $orderList = Db::query($orderSql);
         $orderList = array_column($orderList, 'order_no');
         $data      = [];
+        $idListArr = [];
         foreach ($result as $rVal) {
             if (!in_array($rVal['order_no'], $orderList)) {//已收货并且满15天
                 continue;
             }
+            array_push($idListArr, $rVal['id']);
             $kkey = $rVal['to_uid'] . $rVal['order_no'];
             if (!key_exists($kkey, $data)) {
                 $data[$kkey]['uid'] = $rVal['to_uid'];
@@ -145,7 +147,7 @@ class Order extends Pzlife {
             }
         }
         $data            = array_values($data);
-        $idList          = implode(',', array_column($result, 'id'));
+        $idList          = implode(',', $idListArr);
         $updateSql       = sprintf("update pz_log_bonus set status=2 where delete_time=0 and id in (%s)", $idList);//更新分利发放日志状态为已结算
         $userSql         = sprintf("select id,balance,commission from pz_users where delete_time=0 and id in (%s)", implode(',', array_unique(array_column($result, 'to_uid'))));
         $userInfo        = Db::query($userSql);
@@ -202,6 +204,7 @@ class Order extends Pzlife {
         $redisListKey = Config::get('redisKey.order.redisOrderBonus');
         $data         = [];
         $tradingData  = [];
+        $integralData = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -233,10 +236,9 @@ class Order extends Pzlife {
 //                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
                 array_push($orderGoods, $ogrVal);
             }
-            $userSql      = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
-            $user         = Db::query($userSql);
-            $user         = $user[0];
-            $integralData = [];
+            $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
+            $user    = Db::query($userSql);
+            $user    = $user[0];
             foreach ($orderGoods as $ogVal) {
                 $o        = [
                     'order_no'     => $orderNo,
@@ -351,7 +353,7 @@ class Order extends Pzlife {
         try {
             foreach ($result as $r) {
                 Db::table('pz_users')->where('id', $r['uid'])->setInc('integral', $r['result_integral']);
-                $logIntegralSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and id=%d", $r['id']);
+                $logIntegralSql = sprintf("update pz_log_integral set status=2 where delete_time=0 and id=%d", $r['id']);
                 Db::execute($logIntegralSql);
             }
             Db::commit();
@@ -712,36 +714,36 @@ class Order extends Pzlife {
         return $userInfo[0];
     }
 
-    public function orderExpressLog(){
+    public function orderExpressLog() {
         $this->orderInit();
         $redisDeliverExpressList = Config::get('redisKey.order.redisDeliverExpressList');
-        $redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
+        $redisDeliverOrderKey    = Config::get('rediskey.order.redisDeliverOrderExpress');
         // print_r($redisDeliverExpressList);die;
         // $this->redis->rPush($redisDeliverExpressList, 4);
         // $this->redis->rPush($redisDeliverExpressList, 'zhongtong&3915414258779');
         $new_redisDeliverExpressList = [];
-        while(true){
+        while (true) {
             $deliverexpresslist = $this->redis->lPop($redisDeliverExpressList);//购买会员的订单id
             if (empty($deliverexpresslist)) {
                 break;
             }
-            $express = explode('&',$deliverexpresslist);
+            $express        = explode('&', $deliverexpresslist);
             $HundredExpress = new HundredExpress;
-            $express_log = $HundredExpress->getExpressLog($express[0],$express[1]);
+            $express_log    = $HundredExpress->getExpressLog($express[0], $express[1]);
             // print_r($express_log);die;
-            if ($express_log){
-                $express_log = json_decode($express_log,true);
+            if ($express_log) {
+                $express_log = json_decode($express_log, true);
                 if ($express_log['message'] == 'ok') {
-                    if ($express_log['state'] != 3){//快递签收
+                    if ($express_log['state'] != 3) {//快递签收
                         $new_redisDeliverExpressList[] = $deliverexpresslist;
                     }
-                    $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
-                    $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
-                }else{
+                    $this->redis->set($redisDeliverOrderKey . $deliverexpresslist, json_encode($express_log, true));
+                    $this->redis->expire($redisDeliverOrderKey . $deliverexpresslist, 2592000);
+                } else {
                     $new_redisDeliverExpressList[] = $deliverexpresslist;
                 }
-                
-            }else{
+
+            } else {
                 $new_redisDeliverExpressList[] = $deliverexpresslist;
             }
         }
@@ -753,13 +755,12 @@ class Order extends Pzlife {
     }
 }
 
-    /**
-     * 快递100物流查询类
-     * @return array
-     * @author rzc
-     */
-class HundredExpress
-{
+/**
+ * 快递100物流查询类
+ * @return array
+ * @author rzc
+ */
+class HundredExpress {
 
     /**
      * 修改订单发货信息
@@ -768,29 +769,28 @@ class HundredExpress
      * @return array
      * @author rzc
      */
-    public function getExpressLog($ShipperCode, $LogisticCode)
-    {
-        $post_data = array();
+    public function getExpressLog($ShipperCode, $LogisticCode) {
+        $post_data             = array();
         $post_data["customer"] = '389C6F5CB8C771CC620DCC88932229F3';
-        $key = 'jrsaVPbM2682';
-        $post_data["param"] = '{"com":"' . $ShipperCode . '","num":"' . $LogisticCode . '"}';
+        $key                   = 'jrsaVPbM2682';
+        $post_data["param"]    = '{"com":"' . $ShipperCode . '","num":"' . $LogisticCode . '"}';
 
-        $url = 'http://poll.kuaidi100.com/poll/query.do';
+        $url               = 'http://poll.kuaidi100.com/poll/query.do';
         $post_data["sign"] = md5($post_data["param"] . $key . $post_data["customer"]);
         $post_data["sign"] = strtoupper($post_data["sign"]);
-        $o = "";
+        $o                 = "";
         foreach ($post_data as $k => $v) {
             $o .= "$k=" . urlencode($v) . "&"; //默认UTF-8编码格式
         }
         $post_data = substr($o, 0, -1);
-        $ch = curl_init();
+        $ch        = curl_init();
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
         $result = curl_exec($ch);
-        $data = str_replace("\&quot;", '"', $result);
+        $data   = str_replace("\&quot;", '"', $result);
         // $data = json_decode($data, true);
         return $data;
     }

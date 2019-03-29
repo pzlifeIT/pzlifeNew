@@ -315,6 +315,11 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getLogBonusDistinct($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogBonus::field($field)->distinct(true)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
     public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogTrading::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -326,6 +331,15 @@ class DbUser {
 
     public function getLogTradingSum($where, $field) {
         return LogTrading::where($where)->sum($field);
+    }
+
+    public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj  = LogIntegral::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+//        $where['i.delete_time'] = 0;
+//        $where['o.delete_time'] = 0;
+//        $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
+//        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -361,19 +375,19 @@ class DbUser {
      * @return array
      * @author rzc
      */
-    public function getUserRead($field, $where, $row = false, $orderBy = '',$sc = '', $limit = ''){
-        
+    public function getUserRead($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '') {
+
         $obj = UserRead::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-           $obj = $obj->order($orderBy, $sc);
+            $obj = $obj->order($orderBy, $sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
         }
         if ($row === true) {
-           $obj = $obj->findOrEmpty();
+            $obj = $obj->findOrEmpty();
         } else {
-           $obj = $obj->select();
+            $obj = $obj->select();
         }
         return $obj->toArray();
     }
@@ -387,7 +401,7 @@ class DbUser {
      * @return bool
      * @author rzc
      */
-    public function addUserRead($data){
+    public function addUserRead($data) {
         $UserRead = new UserRead;
         return $UserRead->save($data);
     }
@@ -398,9 +412,9 @@ class DbUser {
      * @return bool
      * @author rzc
      */
-    public function updateUserRead($data,$id){
+    public function updateUserRead($data, $id) {
         $UserRead = new UserRead;
-        return $UserRead->save($data,['id' => $id]);
+        return $UserRead->save($data, ['id' => $id]);
     }
 
      public function addLogIntegral($data){
