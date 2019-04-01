@@ -24,4 +24,7 @@ class UserBank extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+    public function adminBank() {
+        return $this->belongsTo('admin_bank', 'admin_bank_id', 'id');
+    }
 }

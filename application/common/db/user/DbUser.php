@@ -10,6 +10,7 @@ use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
 use app\common\model\UserRelation;
+use app\common\model\UserBank;
 use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
@@ -399,5 +400,48 @@ class DbUser {
     public function editLogTransfer($data,$id){
         $LogTransfer = new LogTransfer;
         return $LogTransfer->save($data,['id' => $id]);
+    }
+
+    /**
+     * 获取用户银行卡信息
+     * @param $where
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return array
+     * @author rzc
+     */
+
+    public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = UserBank::field($field)->with(['adminBank' => function ($query){
+            
+        }])->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 添加银行卡信息
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+
+     public function saveUserBank($data){
+        $UserBank = new UserBank;
+        $UserBank->save($data);
+        return $UserBank->id;
+     }
+
+     /**
+     * 修改用户银行卡信息
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function editUserBank($data,$id){
+        $UserBank = new UserBank;
+        return $UserBank->save($data,['id' => $id]);
     }
 }

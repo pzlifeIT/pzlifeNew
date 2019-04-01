@@ -814,12 +814,50 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 佣金提现
+     * @apiDescription   commissionTransferCash
+     * @apiGroup         index_user
+     * @apiName          commissionTransferCash
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} con_id 用户登录bankcard_id
+     * @apiParam (入参) {Number} money 用户转出金额
+     * @apiParam (入参) {Number} invoice 是否提供发票 1:提供 2:不提供
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000
+     * @apiSampleRequest /index/user/commissionTransferCash
+     * @return array
+     * @author rzc
+     */
+    public function commissionTransferCash(){
+        $conId       = trim($this->request->post('con_id'));
+        $bankcard_id = trim($this->request->post('bankcard_id'));
+        $money       = trim($this->request->post('money'));
+        $invoice     = trim($this->request->post('invoice'));
+        if ($invoice != 1) {
+            $invoice = 2;
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];
+        }
+        if ($money <= 0) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->request->commissionTransferCash($conId,intval($bankcard_id),$money,$invoice);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 佣金转商票
      * @apiDescription   commissionTransferBalance
      * @apiGroup         index_user
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiParam (入参) {String} money 用户转出金额
+     * @apiParam (入参) {Number} money 用户转出金额
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:转商票失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
@@ -840,7 +878,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId,$money);
+        $result = $this->app->user->commissionTransferBalance($conId,intval($money));
         return $result;
     }
      /**

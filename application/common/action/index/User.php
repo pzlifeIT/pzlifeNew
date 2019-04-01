@@ -1517,7 +1517,7 @@ class User extends CommonIndex {
         }
         $transfer = [];
         $transfer['uid']        = $uid;
-        $transfer['status']     = 1;
+        $transfer['status']     = 2;
         $transfer['stype']      = 1;
         $transfer['wtype']      = 4;
         $transfer['money']      = $money;
@@ -1561,6 +1561,81 @@ class User extends CommonIndex {
        
 
     }
+
+    /**
+     * 用户提现
+     * @param $conId
+     * @param $bankcard_id
+     * @param $money
+     * @return string
+     * @author rzc
+     */
+    public function commissionTransferCash($conId,int $bankcard_id,$money,int $invoice){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+
+        $user_bank_card = DbUser::getUserBank(['uid' => $uid,'id' => $bankcard_id],'*',true);
+        if (empty($user_bank_card)) {
+            return ['code' => '3006'];
+        }
+        if ($money < 2000 || $money > 200000) {
+            return ['code' => '3007'];
+        }
+        $userInfo = DbUser::getUserInfo(['id'=> $uid],'id,user_identity,nick_name,commission',true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['commission'] <= 0) {
+            return ['code' => '3005'];
+        }
+        if ($userInfo['commission'] - $money < 0) {
+            return ['code' => '3005'];
+        }
+        if ($invoice == 1) {
+            $proportion = Config::get('conf.has_invoice');
+        }elseif ($invoice == 2) {
+            $proportion = Config::get('conf.no_invoice');
+        }
+        $transfer = [];
+        $transfer['uid']         = $uid;
+        $transfer['abbrev']      = $user_bank_card['admin_bank_id']['abbrev'];
+        $transfer['bank_name']   = $user_bank_card['admin_bank_id']['bank_name'];
+        $transfer['bank_card']   = $user_bank_card['bank_card'];
+        $transfer['bank_add']    = $user_bank_card['bank_add'];
+        $transfer['bank_mobile'] = $user_bank_card['bank_mobile'];
+        $transfer['user_name']   = $user_bank_card['user_name'];
+        $transfer['status']      = 1;
+        $transfer['stype']       = 2;
+        $transfer['wtype']       = 1;
+        $transfer['money']       = $money;
+        $transfer['proportion']  = $proportion;
+        $transfer['invoice']     = $invoice;
+        //扣除佣金
+        $tradingData = [
+            'uid'          => $uid,
+            'trading_type' => 2,
+            'change_type'  => 6,
+            'money'        => $money,
+            'befor_money'  => $userInfo['commission'],
+            'after_money'  => bcsub($userInfo['commission'], $money, 2),
+            // 'message'      => $remittance['message'],
+        ];
+        Db::startTrans();
+        try {
+            DbUser::addLogTransfer($transfer);
+            DbUser::modifyCommission($uid, $money);
+            DbUser::saveLogTrading($tradingData);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            exception($e);
+            Db::rollback();
+            return ['code' => '3006'];//添加失败
+        }
+    }
+
      /**
      * 生成二维码
      * @param $code
