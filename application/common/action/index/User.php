@@ -567,7 +567,7 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         if ($stype == 3) {
             $bonusGroup = DbUser::getLogBonusGroup($where, $uid, $offset . ',' . $pageNum);
-            $result = [];
+            $result     = [];
             foreach ($bonusGroup as $ku => $u) {
                 $arr = [
                     'from_uid'      => enUid($u['uid']),
@@ -875,6 +875,14 @@ class User extends CommonIndex {
         }
     }
 
+    /**
+     * 招商代理收益
+     * @param $conId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
     public function getMerchants($conId, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
@@ -912,6 +920,60 @@ class User extends CommonIndex {
             array_push($data, $mu);
         }
         return ['code' => '200', 'data' => $data];
+    }
+
+
+    /**
+     * 其他收益
+     * @param $conId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getOtherEarn($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        $uid = 26110;
+        if (empty($uid)) {//用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        if ($user['user_identity'] != '4') {
+            return ['code' => '3000'];//boss才有权限查看
+        }
+        $where  = [
+            ['trading_type', '=', '1'],//佣金交易
+            ['change_type', 'in', [3, 6, 7, 8]],//1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+            ['uid', '=', $uid],
+        ];
+        $field  = 'change_type,money,create_time,message';
+        $offset = ($page - 1) * $pageNum;
+        $data   = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
+        $result = [];
+        foreach ($data as $d) {
+            $trType = $d['change_type'];
+            switch ($trType) {
+                case 3:
+                    $ctype = '充值';
+                    break;
+                case 6:
+                    $ctype = '提现';
+                    break;
+                case 7:
+                    $ctype = '转商票';
+                    break;
+                case 8:
+                    $ctype = '后台充值操作';
+                    break;
+            }
+            $d['message'] = empty($d['message']) ? $ctype : $d['message'];
+            unset($d['change_type']);
+            array_push($result, $d);
+        }
+        return ['code' => '200', 'data' => $result];
     }
 
     /**

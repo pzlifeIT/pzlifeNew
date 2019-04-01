@@ -545,6 +545,39 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 其他收益
+     * @apiDescription   getOtherEarn
+     * @apiGroup         index_user
+     * @apiName          getOtherEarn
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Decimal} money 获利金额
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSuccess (返回) {String} message 描述
+     * @apiSampleRequest /index/user/getotherearn
+     * @return array
+     * @author zyr
+     */
+    public function getOtherEarn() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getOtherEarn($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 积分明细
      * @apiDescription   getIntegralDetail
      * @apiGroup         index_user
