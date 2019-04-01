@@ -28,4 +28,8 @@ class LogBonus extends Model {
     public function getskuJsonAttr($value) {
         return json_decode($value, true);
     }
+
+    public function users() {
+        return $this->belongsTo('users', 'level_uid', 'id');
+    }
 }

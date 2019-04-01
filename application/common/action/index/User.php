@@ -566,30 +566,23 @@ class User extends CommonIndex {
         ];
         $offset = ($page - 1) * $pageNum;
         if ($stype == 3) {
-            $bonusGroup   = DbUser::getLogBonusGroup($where, $offset . ',' . $pageNum);
-            $bonusGroup   = array_column($bonusGroup, 'price', 'level_uid');
-            $userRelation = DbUser::getUserRelation(['pid' => $uid, 'is_boss' => 1], 'uid');
-            $userList     = DbUser::getUserInfo([['id', 'in', array_unique(array_column($userRelation, 'uid'))]], 'id,nick_name,avatar,user_identity');
-            $userList     = array_combine(array_column($userList, 'id'), $userList);
-            $result       = [];
-            foreach ($userRelation as $ku => $u) {
+            $bonusGroup = DbUser::getLogBonusGroup($where, $uid, $offset . ',' . $pageNum);
+            $result = [];
+            foreach ($bonusGroup as $ku => $u) {
                 $arr = [
                     'from_uid'      => enUid($u['uid']),
-                    'result_price'  => 0,
+                    'result_price'  => $u['price'] ?: 0,
                     'status'        => $status == 2 ? '已结算' : '待结算',
                     'order_no'      => '',
                     'create_time'   => 0,
-                    'user_identity' => $userList[$u['uid']]['user_identity'],
-                    'nick_name'     => $userList[$u['uid']]['nick_name'],
-                    'avatar'        => $userList[$u['uid']]['avatar'],
+                    'user_identity' => $u['user_identity'],
+                    'nick_name'     => $u['nick_name'],
+                    'avatar'        => $u['avatar'],
                 ];
-                if (key_exists($u['uid'], $bonusGroup)) {
-                    $arr['result_price'] = $bonusGroup[$u['uid']];
-                }
                 array_push($result, $arr);
             }
-            $last = array_column($result, 'result_price');
-            array_multisort($last, SORT_DESC, $result);
+//            $last = array_column($result, 'result_price');
+//            array_multisort($last, SORT_DESC, $result);
             $combined = DbUser::getLogBonusSum($where, 'result_price');//合计
             return ['code' => '200', 'data' => $result, 'combined' => $combined];
         }
