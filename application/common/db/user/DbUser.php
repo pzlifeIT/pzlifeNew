@@ -322,6 +322,7 @@ class DbUser {
     }
 
     public function getLogBonusGroup($where,$uid,$limit) {
+        array_push($where,['delete_time','=','0']);
 //        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
 //        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
 
@@ -335,15 +336,15 @@ class DbUser {
         $parSql = Db::table('pz_user_relation')
             ->alias('ur')
             ->field('uid,w.price,w.level_uid')
-            ->where([['is_boss','=','1'],['pid','=',$uid]])
+            ->where([['is_boss','=','1'],['pid','=',$uid],['delete_time','=','0']])
             ->leftJoin([$subSql=> 'w'], 'ur.uid = w.level_uid')
             ->buildSql();
         return Db::table('pz_users')
             ->alias('u')
             ->field('uid,p.price,u.nick_name,u.avatar,u.user_identity')
-//            ->where([['is_boss','=','1'],['pid','=',$uid]])
+            ->where([['delete_time','=','0']])
             ->join([$parSql=> 'p'], 'u.id = p.uid')
-            ->order('p.price desc')
+            ->order('p.price desc,id desc')
             ->limit($limit)
             ->select();
     }
