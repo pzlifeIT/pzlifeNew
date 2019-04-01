@@ -556,7 +556,7 @@ class User extends CommonIndex {
                 $bn = '3';
                 break;
         }
-        $where    = [
+        $where  = [
             ['to_uid', '=', $uid],
             ['status', '=', $status],
             ['user_identity', '=', 4],//只查boss身份时的分利
@@ -564,7 +564,29 @@ class User extends CommonIndex {
             ['from_uid', $en, $uid],
             ['bonus_type', '=', $bn],
         ];
-        $offset   = ($page - 1) * $pageNum;
+        $offset = ($page - 1) * $pageNum;
+        if ($stype == 3) {
+            $bonusGroup = DbUser::getLogBonusGroup($where, $uid, $offset . ',' . $pageNum);
+            $result = [];
+            foreach ($bonusGroup as $ku => $u) {
+                $arr = [
+                    'from_uid'      => enUid($u['uid']),
+                    'result_price'  => $u['price'] ?: 0,
+                    'status'        => $status == 2 ? '已结算' : '待结算',
+                    'order_no'      => '',
+                    'create_time'   => 0,
+                    'user_identity' => $u['user_identity'],
+                    'nick_name'     => $u['nick_name'],
+                    'avatar'        => $u['avatar'],
+                ];
+                array_push($result, $arr);
+            }
+//            $last = array_column($result, 'result_price');
+//            array_multisort($last, SORT_DESC, $result);
+            $combined = DbUser::getLogBonusSum($where, 'result_price');//合计
+            return ['code' => '200', 'data' => $result, 'combined' => $combined];
+        }
+
         $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
         $distinct = DbUser::getLogBonusDistinct($where, 'order_no', false, ['order_no' => 'desc'], $offset . ',' . $pageNum);
         $distinct = array_column($distinct, 'order_no');
