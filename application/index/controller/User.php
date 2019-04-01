@@ -4,6 +4,7 @@ namespace app\index\controller;
 
 use app\index\MyController;
 use Config;
+use think\Db;
 use function Qiniu\json_decode;
 
 class User extends MyController {
@@ -105,6 +106,8 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+        $dd       = [$result, ['mobile' => $mobile, 'vercode' => $vercode, 'buid' => $buid]];
+        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
         return $result;
     }
 
