@@ -320,9 +320,9 @@ class Order extends Pzlife {
                     array_push($data, $o);
                 }
                 if (key_exists($orderId, $integralData)) {
-                    $integralData[$orderId]['result_integral'] += $ogrVal['integral'];
+                    $integralData[$orderId]['result_integral'] += $ogVal['integral'];
                 } else {
-                    $integralData[$orderId] = ['order_no' => $orderNo, 'result_integral' => $ogrVal['integral'], 'uid' => $uid, 'create_time' => time()];
+                    $integralData[$orderId] = ['order_no' => $orderNo, 'result_integral' => $ogVal['integral'], 'uid' => $uid, 'create_time' => time()];
                 }
             }
         }
