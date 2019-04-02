@@ -1188,16 +1188,33 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $order_address = DbOrder::getOrder('order_status,province_id,city_id,area_id,address,message', ['uid' => $uid, 'order_no' => $order_no], true);
+        $order_address = DbOrder::getOrder('id,order_status,province_id,city_id,area_id,address,message', ['uid' => $uid, 'order_no' => $order_no], true);
         if (empty($order_address)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
         if ($order_address['order_status'] < 5) {
             return ['code' => '3006', 'msg' => '未发货的订单无法查询分包信息'];
         }
-        $where               = [
-            'express_no'   => $express_no,
-            'express_key'  => $express_key
+        $order_child  = DbOrder::getOrderChild('id', ['order_id' => $order_address['id']]);
+        $order_childs = [];
+
+        foreach ($order_child as $key => $value) {
+            $order_childs[] = $value['id'];
+        }
+        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
+
+        $order_goods_ids = [];
+        foreach ($order_goods_id as $goods => $goods_id) {
+            $order_goods_ids[] = $goods_id['id'];
+        }
+        // $where               = [
+        //     'express_no'   => $express_no,
+        //     'express_key'  => $express_key
+        // ];
+        $where = [
+            ['express_no','=',$express_no],
+            ['express_key','=',$express_key],
+            ['order_goods_id','in',$order_goods_ids]
         ];
 
         $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
