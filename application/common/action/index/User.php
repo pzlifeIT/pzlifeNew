@@ -567,7 +567,7 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         if ($stype == 3) {
             $bonusGroup = DbUser::getLogBonusGroup($where, $uid, $offset . ',' . $pageNum);
-            $result = [];
+            $result     = [];
             foreach ($bonusGroup as $ku => $u) {
                 $arr = [
                     'from_uid'      => enUid($u['uid']),
@@ -702,6 +702,12 @@ class User extends CommonIndex {
         //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
     }
 
+    /**
+     * 用户社交圈统计
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
     public function getUserSocialSum($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {//用户不存在
@@ -726,9 +732,17 @@ class User extends CommonIndex {
 //        $userCount = bcsub($allCount, $diamondRing, 2);
 //        return ['code' => '200', 'diamon_count' => $diamondRing, 'user_count' => $userCount, 'all_user' => $allCount];
 
-        $readCount  = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
-        $grantCount = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
-        return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => 0];
+        $readCount    = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
+        $grantCount   = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
+        $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
+        $reg          = [];
+        foreach ($userRelation as $ur) {
+            $rel    = substr($ur['relation'], strlen($uid . ','));
+            $uidArr = explode(',', $rel);
+            $reg    = array_merge($reg, $uidArr);
+        }
+        $regCount = count(array_unique($reg));
+        return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => $regCount];
     }
 
     public function getRead($conId, $page, $pageNum) {
@@ -795,7 +809,7 @@ class User extends CommonIndex {
         $diamonUidList = array_column($diamonUserList, 'uid');//boss下的所有人(包括钻石和普通)
         if ($stype == 1) {//钻石会员圈
             $diamonUserCount = DbUser::getUserInfoCount([['id', 'in', $diamonUidList], ['user_identity', '=', '2']]);//直接钻石会员数量
-            $uDiamon         = DbUser::getUserInfo([['id', 'in', array_column($diamonUserList, 'uid')], ['user_identity', '=', '2']], 'id');//直接钻石会员
+            $uDiamon         = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id');//直接钻石会员
             $uDiamonDiff     = array_column(DbUser::getUserRelation([['pid', 'in', array_column($uDiamon, 'id')], ['is_boss', '=', '2']], 'uid'), 'uid');//第二级钻石会员
             $socialCountAll  = DbUser::getUserInfoCount([['id', 'in', $uDiamonDiff], ['user_identity', '=', '2']]);
             $diamondRing     = DbUser::getUserInfo([['id', 'in', $diamonUidList], ['user_identity', '=', '2']], 'id,nick_name,avatar', false, 'id desc', $offset . ',' . $pageNum);//查直属的钻石会员
