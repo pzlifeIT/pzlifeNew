@@ -16,6 +16,7 @@ use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
 use app\common\model\UserRead;
 use app\common\model\UserIntegral;
+use think\Db;
 
 class DbUser {
     /**
@@ -29,10 +30,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '',$sc = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '', $sc = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy,$sc);
+            $obj = $obj->order($orderBy, $sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -262,7 +263,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyCommission($uid, $commission, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user             = Users::get($uid);
         $user->commission = [$modify, $commission];
         $user->save();
     }
@@ -275,7 +276,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyIntegral($uid, $integral, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user           = Users::get($uid);
         $user->integral = [$modify, $integral];
         $user->save();
     }
@@ -317,6 +318,39 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getLogBonusDistinct($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogBonus::field($field)->distinct(true)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogBonusGroup($where,$uid,$limit) {
+        array_push($where,['delete_time','=','0']);
+//        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
+//        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
+
+        $subSql = Db::table('pz_log_bonus')
+            ->field('level_uid,sum(result_price) as price')
+            ->where($where)
+            ->group('level_uid')
+            ->order('price desc')
+            ->buildSql();
+
+        $parSql = Db::table('pz_user_relation')
+            ->alias('ur')
+            ->field('uid,w.price,w.level_uid')
+            ->where([['is_boss','=','1'],['pid','=',$uid],['delete_time','=','0']])
+            ->leftJoin([$subSql=> 'w'], 'ur.uid = w.level_uid')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,p.price,u.nick_name,u.avatar,u.user_identity')
+            ->where([['delete_time','=','0']])
+            ->join([$parSql=> 'p'], 'u.id = p.uid')
+            ->order('p.price desc,id desc')
+            ->limit($limit)
+            ->select();
+    }
+
     public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogTrading::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -339,6 +373,14 @@ class DbUser {
     public function editLogTrading($data,$id){
         $LogTrading = new LogTrading;
         return $LogTrading->save($data,['id' => $id]);
+    }
+    public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogIntegral::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+//        $where['i.delete_time'] = 0;
+//        $where['o.delete_time'] = 0;
+//        $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
+//        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -378,6 +420,22 @@ class DbUser {
         $obj = LogTransfer::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
+    public function getUserRead($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '') {
+
+        $obj = UserRead::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
 
     /**
      * 添加佣金转出记录
@@ -400,6 +458,10 @@ class DbUser {
     public function editLogTransfer($data,$id){
         $LogTransfer = new LogTransfer;
         return $LogTransfer->save($data,['id' => $id]);
+    }
+    public function addUserRead($data) {
+        $UserRead = new UserRead;
+        return $UserRead->save($data);
     }
 
     /**
@@ -443,5 +505,15 @@ class DbUser {
     public function editUserBank($data,$id){
         $UserBank = new UserBank;
         return $UserBank->save($data,['id' => $id]);
+    }
+    public function updateUserRead($data, $id) {
+        $UserRead = new UserRead;
+        return $UserRead->save($data, ['id' => $id]);
+    }
+
+    public function addLogIntegral($data) {
+        $LogIntegral = new LogIntegral;
+        $LogIntegral->save($data);
+        return $LogIntegral->id;
     }
 }

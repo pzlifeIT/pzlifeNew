@@ -5,6 +5,7 @@ namespace app\common\action\admin;
 use app\facade\DbAdmin;
 use app\facade\DbUser;
 use app\facade\DbOrder;
+use app\facade\DbImage;
 use Config;
 use think\Db;
 use cache\Phpredis;
@@ -280,7 +281,7 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 获取列表
+     * 获取充值列表
      * @param $page 
      * @param $pageNum
      * @param $initiate_admin_id
@@ -335,5 +336,170 @@ class Admin extends CommonIndex {
         }
         $total = DbAdmin::getCountAdminRemittance($where);
         return ['code' => '200', 'total' => $total ,'AdminRemittances' => $result];
+    }
+
+    /**
+     * 添加支持银行信息
+     * @param $abbrev 
+     * @param $bank_name
+     * @param $icon_img
+     * @param $bg_img
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function addAdminBank($abbrev,$bank_name,$icon_img = '',$bg_img = '',$status){
+        $is_bank_abbrev = DbAdmin::getAdminBank(['abbrev' => $abbrev],'id',true);
+        $is_bank_name = DbAdmin::getAdminBank(['bank_name' => $bank_name],'id',true);
+        if ($is_bank_abbrev || $is_bank_name) {
+            return ['code' => '3004'];
+        }
+        $icon_img   = $icon_img ?? '';
+        $bg_img     = $bg_img ?? '';
+        $admin_bank              = [];
+        $admin_bank['abbrev']    = $abbrev;
+        $admin_bank['bank_name'] = $bank_name;
+        $admin_bank['icon_img']  = $icon_img;
+        $admin_bank['bg_img']    = $bg_img;
+        $admin_bank['status']    = $status;
+        Db::startTrans();
+        try {
+            if (!empty($admin_bank['icon_img'])) {
+                $image    = filtraImage(Config::get('qiniu.domain'), $admin_bank['icon_img']);
+                $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($admin_bank['bg_img'])) {
+                $image    = filtraImage(Config::get('qiniu.domain'), $admin_bank['bg_img']);
+                $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            $add = DbAdmin::saveAdminBank($admin_bank);
+            Db::commit();
+            return ['code' => '200', 'add_id' => $add];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011'];//添加失败
+        }
+    }
+
+    /**
+     * 修改支持银行信息
+     * @param $abbrev 
+     * @param $bank_name
+     * @param $icon_img
+     * @param $bg_img
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function editAdminBank(int $id,$abbrev = '',$bank_name = '',$icon_img = '',$bg_img = '',$status = ''){
+        if (empty($abbrev) && empty($bank_name) && empty($icon_img) && empty($bg_img) && empty($status)) {
+            return ['code' => '3004'];
+        }
+        $admin_bank = DbAdmin::getAdminBank(['id' => $id],'id',true);
+        if (empty($admin_bank)) {
+            return ['code' => '3000'];
+        }
+        if (!empty($abbrev)) {
+            $has_abbrev = DbAdmin::getAdminBank([['abbrev' ,'=', $abbrev],['id','<>',$id]],'id',true);
+            // print_r($has_abbrev);die;
+            if ($has_abbrev) {
+                return ['code' => '3005'];
+            }
+        }
+        
+        if (!empty($bank_name)) {
+            
+        // print_r($admin_bank);die;
+            $has_bank_name = DbAdmin::getAdminBank([['bank_name','=', $bank_name],['id','<>',$id]],'id',true);
+            if ($has_bank_name) {
+                return ['code' => '3005'];
+            }
+        }
+        if (!empty($icon_img)) {
+            $icon_img = filtraImage(Config::get('qiniu.domain'), $icon_img);
+        }
+        if (!empty($bg_img)) {
+            $bg_img = filtraImage(Config::get('qiniu.domain'), $bg_img);
+        }
+        $admin_bank              = [];
+        $admin_bank['abbrev']    = $abbrev;
+        $admin_bank['bank_name'] = $bank_name;
+        $admin_bank['icon_img']  = $icon_img;
+        $admin_bank['bg_img']    = $bg_img;
+        $admin_bank['status']    = $status;
+        $admin_bank = $this->delDataEmptyKey($admin_bank);
+        Db::startTrans();
+        try {
+            if (!empty($admin_bank['icon_img'])) {
+                // $image    = $admin_bank['icon_img'];
+                $logImage = DbImage::getLogImage($admin_bank['icon_img'], 2);//判断时候有未完成的图片
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($admin_bank['bg_img'])) {
+                // $image    =  $admin_bank['bg_img'];
+                $logImage = DbImage::getLogImage($admin_bank['bg_img'], 2);//判断时候有未完成的图片
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            $add = DbAdmin::editAdminBank($admin_bank,$id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011'];//添加失败
+        }
+    }
+    /**
+     * 获取支持银行信息
+     * @param $page 
+     * @param $pageNum
+     * @param $abbrev
+     * @param $bank_name
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function getAdminBank(int $page,int $pageNum,$abbrev = '',$bank_name = '',$status = ''){
+        $where = [];
+        if (!empty($abbrev)) {
+            array_push($where, ['abbrev', '=', $abbrev]);
+        }
+        if (!empty($bank_name)) {
+            array_push($where, ['bank_name', 'LIKE', '%'.$bank_name.'%']);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        } else {
+            array_push($where, ['status', 'IN', '1,2']);
+        }
+        $offset = $pageNum * ($page - 1);
+        $result = DbAdmin::getAdminBank($where, '*', false,['id'=>'desc'],$offset.','.$pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbAdmin::getAdminBankCount($where);
+        return ['code' => '200','total' => $total,'admin_bank' => $result];
+    }
+
+    function delDataEmptyKey($data) {
+        foreach ($data as $key => $value) {
+            if (!$value) {
+                unset($data[$key]);
+            }
+        }
+        return $data;
     }
 }

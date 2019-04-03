@@ -296,4 +296,132 @@ class Admin extends AdminController {
         return $result;
         
     }
+
+    /**
+     * @api              {post} / cms 获取支持银行列表
+     * @apiDescription   getAdminBank
+     * @apiGroup         admin_admin
+     * @apiName          getAdminBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} [abbrev] 银行英文缩写名
+     * @apiParam (入参) {String} [bank_name] 银行全称
+     * @apiParam (入参) {String} [status] 状态 1.启用 2.停用
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型 / 3002:该用户没有权限 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/getAdminBank
+     * @return array
+     * @author rzc
+     */
+    public function getAdminBank(){
+        $page              = trim(input("post.page"));
+        $pageNum           = trim(input("post.page_num"));
+        $abbrev            = trim(input("post.abbrev"));
+        $bank_name         = trim(input("post.bank_name"));
+        $status            = trim(input("post.status"));
+        $page              = empty($page) ? 1 : $page;
+        $pageNum           = empty($pageNum) ? 10 : $pageNum;
+        if (!is_numeric($page)) {
+            return ["code" => '3001'];
+        }
+        if (!is_numeric($pageNum)) {
+            return ["code" => '3001'];
+        }
+        if (!empty($status)) {
+            if (!is_numeric($status)) {
+                return ['code' => '3001'];
+            }
+            if (!in_array($status,[1,2])) {
+                return ['code' => '3002'];
+            }
+        }
+        $result = $this->app->admin->getAdminBank($page,$pageNum,$abbrev,$bank_name,$status);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / cms 添加支持银行
+     * @apiDescription   addAdminBank
+     * @apiGroup         admin_admin
+     * @apiName          addAdminBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} abbrev 银行英文缩写名
+     * @apiParam (入参) {String} bank_name 银行全称
+     * @apiParam (入参) {String} icon_img 图标
+     * @apiParam (入参) {String} bg_img 背景图
+     * @apiParam (入参) {String} status 状态 1.启用 2.停用(默认停用)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者status必须为数字 / 3002:错误的status  / 3003:abbrev和bank_name都不能为空 / 3004:abbrev和bank_name都不能为空重复
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/addAdminBank
+     * @return array
+     * @author rzc
+     */
+    public function addAdminBank(){
+        $cmsConId   = trim($this->request->post('cms_con_id'));
+        $abbrev    = trim($this->request->post('abbrev'));
+        $bank_name = trim($this->request->post('bank_name'));
+        $icon_img  = trim($this->request->post('icon_img'));
+        $bg_img    = trim($this->request->post('bg_img'));
+        $status    = trim($this->request->post('status'));
+        
+        $status     = $status ? 1 : 2 ;
+        if (!is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($status,[1,2])) {
+            return ['code' => '3002'];
+        }
+        if (empty($abbrev) || empty($bank_name)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->admin->addAdminBank($abbrev,$bank_name,$icon_img,$bg_img,$status);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / cms 修改支持银行
+     * @apiDescription   editAdminBank
+     * @apiGroup         admin_admin
+     * @apiName          editAdminBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 
+     * @apiParam (入参) {String} abbrev 银行英文缩写名
+     * @apiParam (入参) {String} bank_name 银行全称
+     * @apiParam (入参) {String} icon_img 图标
+     * @apiParam (入参) {String} bg_img 背景图
+     * @apiParam (入参) {String} status 状态 1.启用 2.停用(默认停用)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:没有更改的资料 / 3005:abbrev和bank_name都不能重复
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/editAdminBank
+     * @return array
+     * @author rzc
+     */
+
+    public function editAdminBank(){
+        $id        = trim($this->request->post('id'));
+        $abbrev    = trim($this->request->post('abbrev'));
+        $bank_name = trim($this->request->post('bank_name'));
+        $icon_img  = trim($this->request->post('icon_img'));
+        $bg_img    = trim($this->request->post('bg_img'));
+        $status    = trim($this->request->post('status'));
+        if (empty($id)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($id)) {
+            return ['code' => '3001'];
+        }
+        if (!empty($status)) {
+            if (!is_numeric($status)) {
+                return ['code' => '3001'];
+            }
+            if (!in_array($status,[1,2])) {
+                return ['code' => '3002'];
+            }
+        }
+        
+        $result = $this->app->admin->editAdminBank(intval($id),$abbrev,$bank_name,$icon_img,$bg_img,$status);
+        return $result;
+    }
+
 }

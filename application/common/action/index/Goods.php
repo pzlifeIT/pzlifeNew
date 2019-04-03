@@ -123,8 +123,13 @@ class Goods
         $min_integral_active = [0];
         $min_brokerage = [0];
         $goods_data['max_integral_active'] = max($integral_active);
-        $goods_data['min_integral_active'] = min(array_diff($integral_active,$min_integral_active));
-        // $goods_sku = $goods_sku;
+        if (empty(array_diff($integral_active,$min_integral_active))) {
+            $goods_data['min_integral_active'] = 0;
+        }else{
+            $goods_data['min_integral_active'] = min(array_diff($integral_active,$min_integral_active));
+            // $goods_sku = $goods_sku;
+        }
+        
         $goods_data['max_brokerage'] = max($brokerage);
         $goods_data['min_brokerage'] = min(array_diff($brokerage,$min_brokerage));
         return [
