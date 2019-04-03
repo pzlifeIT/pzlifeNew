@@ -7,6 +7,7 @@ use app\facade\DbOrder;
 use app\facade\DbUser;
 use app\facade\DbProvinces;
 use app\facade\DbImage;
+use app\facade\DbAdmin;
 use Env;
 use Config;
 use think\Db;
@@ -1658,6 +1659,48 @@ class User extends CommonIndex {
             return ['code' => '3006'];//添加失败
         }
        
+
+    }
+
+    /**
+     * 用户绑卡
+     * @param $conId
+     * @param $user_name
+     * @param $bank_mobile
+     * @param $bank_card
+     * @param $bank_key_id
+     * @param $bank_add
+     * @param $vercode
+     * @return string
+     * @author rzc
+     */
+    public function addUserBankcard($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $stype = 4;
+        if ($this->checkVercode($stype, $bank_mobile, $vercode) === false) {
+            return ['code' => '3003'];//验证码错误
+        }
+        $admin_bank = DbAdmin::getAdminBank(['id' => $bank_key_id,'status' => 1],'abbrev',true);
+        if (empty($admin_bank)) {
+            return ['code' => '3009'];
+        }
+        $this_card = $this->getBancardKey($bank_card);
+        if ($this_card['bank'] != $admin_bank['abbrev']) {
+            return ['code' => '3010'];
+        }
+        $userBank                  = [];
+        $userBank['uid']           = $uid;
+        $userBank['user_name']     = $user_name;
+        $userBank['admin_bank_id'] = $bank_key_id;
+        $userBank['bank_card']     = $bank_card;
+        $userBank['bank_add']      = $bank_add;
+        $userBank['bank_mobile']   = $bank_mobile;
+        $userBank['status']        = 1;
+        $addid =  DbUser::saveUserBank($userBank);
+        return ['code' => '200','id' => $addid];
 
     }
 

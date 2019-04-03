@@ -195,7 +195,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          sendVercode
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录
+     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:发送类型有误 / 3003:一分钟内不能重复发送 / 3004:短信发送失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/sendvercode
@@ -203,7 +203,7 @@ class User extends MyController {
      * @author zyr
      */
     public function sendVercode() {
-        $stypeArr = [1, 2, 3];
+        $stypeArr = [1, 2, 3,4];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
         if (!checkMobile($mobile)) {
@@ -830,12 +830,13 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          addUserBankcard
      * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {String} vercode 验证码
      * @apiParam (入参) {String} user_name 银行开户人(真实姓名)
      * @apiParam (入参) {String} bank_mobile 银行开户手机号(手机号码)
      * @apiParam (入参) {String} bank_card 银行卡号
-     * @apiParam (入参) {String} bank_key 开户银行
+     * @apiParam (入参) {String} bank_key_id 开户银行
      * @apiParam (入参) {String} bank_add 开户支行
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数con_id / 3003:验证码错误 / 3004:银行卡号错误 / 3005:缺少参数bank_key_id,或者bank_key_id必须为数字 / 3006:缺少参数user_name / 3007:手机格式错误 / 3008:未提供支行信息 / 3009:该银行不存在或者已停用 / 3010:银行卡号不属于所选银行
      * @apiSampleRequest /index/user/addUserBankcard
      * @return array
      * @author rzc
@@ -845,8 +846,38 @@ class User extends MyController {
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
         $bank_card   = trim($this->request->post('bank_card'));
-        $bank_key    = trim($this->request->post('bank_key'));
+        $bank_key_id = trim($this->request->post('bank_key_id'));
         $bank_add    = trim($this->request->post('bank_add'));
+        $vercode     = trim($this->request->post('vercode'));
+        if (checkVercode($vercode) === false) {
+            return ['code' => '3003'];
+        }
+        if (checkBankCard($bank_card) === false) {
+            return ['code' => '3004'];
+        }
+        if (checkMobile($bank_mobile) === false) {
+            return ['code' => '3007'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (empty($bank_key_id)) {
+            return ['code' => '3005'];
+        }
+        if (!is_numeric($bank_key_id)) {
+            return ['code' => '3005'];
+        }
+        if (empty($user_name)) {
+            return ['code' => '3006'];
+        }
+        if (empty($bank_add)) {
+            return ['code' => '3008'];
+        }
+        $result = $this->app->user->addUserBankcard($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode);
+        return $result;
     }
 
     /**
@@ -870,13 +901,55 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          editUserBankcards
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiParam (入参) {String} vercode 验证码
+     * @apiParam (入参) {String} user_name 银行开户人(真实姓名)
+     * @apiParam (入参) {String} bank_mobile 银行开户手机号(手机号码)
+     * @apiParam (入参) {String} bank_card 银行卡号
+     * @apiParam (入参) {String} bank_key_id 开户银行
+     * @apiParam (入参) {String} bank_add 开户支行
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数con_id / 3003:验证码错误 / 3004:银行卡号错误 / 3005:缺少参数bank_key_id,或者bank_key_id必须为数字 / 3006:缺少参数user_name / 3007:手机格式错误 / 3008:未提供支行信息 / 3009:该银行不存在或者已停用 / 3010:银行卡号不属于所选银行
      * @apiSampleRequest /index/user/editUserBankcards
      * @return array
      * @author rzc
      */
     public function editUserBankcards(){
-
+        $id          = trim($this->request->post('id'));
+        $conId       = trim($this->request->post('con_id'));
+        $user_name   = trim($this->request->post('user_name'));
+        $bank_mobile = trim($this->request->post('bank_mobile'));
+        $bank_card   = trim($this->request->post('bank_card'));
+        $bank_key_id = trim($this->request->post('bank_key_id'));
+        $bank_add    = trim($this->request->post('bank_add'));
+        $vercode     = trim($this->request->post('vercode'));
+        if (checkVercode($vercode) === false) {
+            return ['code' => '3003'];
+        }
+        if (checkBankCard($bank_card) === false) {
+            return ['code' => '3004'];
+        }
+        if (checkMobile($bank_mobile) === false) {
+            return ['code' => '3007'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (empty($bank_key_id)) {
+            return ['code' => '3005'];
+        }
+        if (!is_numeric($bank_key_id)) {
+            return ['code' => '3005'];
+        }
+        if (empty($user_name)) {
+            return ['code' => '3006'];
+        }
+        if (empty($bank_add)) {
+            return ['code' => '3008'];
+        }
+        $result = $this->app->user->editUserBankcards($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode);
+        return $result;
     }
 
     /**
