@@ -297,7 +297,7 @@ class Order extends Pzlife {
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
                 $o['result_price'] = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
-                $o['level_uid']  = $bossList['first_uid'];
+                $o['level_uid']    = $bossList['first_uid'];
                 $o['to_uid']       = $bossList['second_uid'];
                 $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
                 $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
@@ -518,13 +518,13 @@ class Order extends Pzlife {
         } else {
             $re = $myBoss . ',' . $uid;
         }
-        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%" . $uid . ',' . "%'";
+        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%," . $uid . ",%'";
         $userOther        = Db::query($otherUserSql);
         $userRelationData = [];
         if (!empty($userOther)) {
             foreach ($userOther as $uo) {
 //                $uo['relation'] = $uid . ',' . $uo['uid'];
-                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], $uid . ','));
+                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], ',' . $uid . ',') + 1);
                 unset($uo['uid']);
                 array_push($userRelationData, $uo);
             }
@@ -688,8 +688,8 @@ class Order extends Pzlife {
             // echo $error;
             // $error = exception($e);
             Db::rollback();
-            Db::name('log_error')->insert(['title' => 'console/com/order/diamondvipSettlement','data' => $e]);
-            
+            Db::name('log_error')->insert(['title' => 'console/com/order/diamondvipSettlement', 'data' => $e]);
+
             exit('rollback');
         }
     }

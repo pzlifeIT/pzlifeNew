@@ -47,7 +47,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminUsers(){
+    public function getAdminUsers() {
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminUsers();
         return $result;
@@ -140,6 +140,43 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / 开通boss
+     * @apiDescription   openBoss
+     * @apiGroup         admin_admin
+     * @apiName          openBoss
+     * @apiParam (入参) {String} cms_con_id 操作管理员
+     * @apiParam (入参) {String} mobile 开通账号手机号
+     * @apiParam (入参) {String} nick_name 开通账号昵称
+     * @apiParam (入参) {Decimal} money 开通后扣除金额
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3005:没有操作权限 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败
+     * @apiSampleRequest /admin/admin/openboss
+     * @return array
+     * @author zyr
+     */
+    public function openBoss() {
+        $cmsConId = trim($this->request->post('cms_con_id'));//操作管理员
+        $mobile   = trim($this->request->post('mobile'));//开通账号手机号
+        $nickName = trim($this->request->post('nick_name'));//开通账号昵称
+        $money    = trim($this->request->post('money'));//开通后扣除金额
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];//金额必须为数字
+        }
+        $money = doubleval($money);
+        if ($money < 0) {
+            return ['code' => '3004'];//扣除金额不能是负数
+        }
+        if (!checkMobile($mobile)) {
+            return ['code' => '3001'];//手机格式有误
+        }
+        if (empty($nickName)) {
+            return ['code' => '3002'];//账号昵称不能未空
+        }
+        $result = $this->app->admin->openBoss($cmsConId, $mobile, $nickName, $money);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $mobile, $nickName, $money], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / cms 商票,佣金,积分手动充值
      * @apiDescription   adminRemittance
      * @apiGroup         admin_admin
@@ -156,21 +193,21 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function adminRemittance(){
-        $cmsConId   = trim($this->request->post('cms_con_id'));
-        $passwd     = trim($this->request->post('passwd'));
-        $stype      = trim($this->request->post('stype'));
-        $nick_name  = trim($this->request->post('nick_name'));
-        $mobile     = trim($this->request->post('mobile'));
-        $credit     = trim($this->request->post('credit'));
-        $message    = trim($this->request->post('message'));
+    public function adminRemittance() {
+        $cmsConId  = trim($this->request->post('cms_con_id'));
+        $passwd    = trim($this->request->post('passwd'));
+        $stype     = trim($this->request->post('stype'));
+        $nick_name = trim($this->request->post('nick_name'));
+        $mobile    = trim($this->request->post('mobile'));
+        $credit    = trim($this->request->post('credit'));
+        $message   = trim($this->request->post('message'));
         if (empty($passwd)) {
             return ['code' => '3001'];
         }
         if (empty($stype)) {
             return ['code' => '3002'];
         }
-        if (!in_array($stype,[1,2,3])) {
+        if (!in_array($stype, [1, 2, 3])) {
             return ['code' => '3003'];
         }
         if (empty($nick_name)) {
@@ -183,7 +220,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message);
+        $result = $this->app->admin->adminRemittance($cmsConId, $passwd, intval($stype), $nick_name, $mobile, $credit, $message);
         return $result;
     }
 
@@ -200,7 +237,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function auditAdminRemittance(){
+    public function auditAdminRemittance() {
         $cmsConId = trim($this->request->post('cms_con_id'));
         $status   = trim($this->request->post('status'));
         $id       = trim($this->request->post('id'));
@@ -210,13 +247,13 @@ class Admin extends AdminController {
         if (empty($status)) {
             return ['code' => '3005'];
         }
-        if (!in_array($status,[1,2])) {
+        if (!in_array($status, [1, 2])) {
             return ['code' => '3006'];
         }
         if (!is_numeric($id)) {
             return ['code' => '3007'];
         }
-        $result = $this->app->admin->auditAdminRemittance($cmsConId,intval($status),intval($id));
+        $result = $this->app->admin->auditAdminRemittance($cmsConId, intval($status), intval($id));
         return $result;
     }
 
@@ -243,7 +280,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminRemittance(){
+    public function getAdminRemittance() {
         $page              = trim(input("post.page"));
         $pageNum           = trim(input("post.page_num"));
         $initiate_admin_id = trim(input("post.initiate_admin_id"));
@@ -264,21 +301,21 @@ class Admin extends AdminController {
             return ["code" => '3002'];
         }
         if (!empty($start_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)){
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
                 // print_r($parts);die;
-                if (checkdate($parts[2],$parts[3],$parts[1]) == false) {
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                     return ['code' => '3003'];
                 }
-            }else{
+            } else {
                 return ['code' => '3003'];
             }
         }
         if (!empty($end_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)){
-                if (checkdate($parts1[2],$parts1[3],$parts1[1]) == false) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3004'];
                 }
-            }else{
+            } else {
                 return ['code' => '3004'];
             }
         }
@@ -292,8 +329,8 @@ class Admin extends AdminController {
                 return ['code' => '3005'];
             }
         }
-        $result = $this->app->admin->getAdminRemittance(intval($page), intval($pageNum),$initiate_admin_id,$audit_admin_id,$status,$min_credit,$max_credit,$uid,$stype,$start_time,$end_time);
+        $result = $this->app->admin->getAdminRemittance(intval($page), intval($pageNum), $initiate_admin_id, $audit_admin_id, $status, $min_credit, $max_credit, $uid, $stype, $start_time, $end_time);
         return $result;
-        
+
     }
 }

@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\facade\DbShops;
 use app\facade\DbAdmin;
 use app\facade\DbUser;
 use app\facade\DbOrder;
@@ -11,11 +12,12 @@ use cache\Phpredis;
 
 class Admin extends CommonIndex {
     private $cmsCipherUserKey = 'adminpass';//用户密码加密key
+
     private function redisInit() {
         $this->redis = Phpredis::getConn();
 //        $this->connect = Db::connect(Config::get('database.db_config'));
     }
-     
+
     /**
      * @param $adminName
      * @param $passwd
@@ -55,7 +57,7 @@ class Admin extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getAdminUsers(){
+    public function getAdminUsers() {
         $adminInfo = DbAdmin::getAdminInfo([], 'admin_name,department,stype,status');
         return ['code' => '200', 'data' => $adminInfo];
     }
@@ -121,6 +123,113 @@ class Admin extends CommonIndex {
     }
 
     /**
+     * 开通boss
+     * @param $cmsConId
+     * @param $mobile
+     * @param $nickName
+     * @param $money
+     * @return array
+     * @author zyr
+     */
+    public function openBoss($cmsConId, $mobile, $nickName, $money) {
+        $adminId   = $this->getUidByConId($cmsConId);
+        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
+        if ($adminInfo['stype'] != '2') {
+            return ['code' => '3005'];//没有操作权限
+        }
+        $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
+        if (empty($user)) {
+            return ['code' => '3006'];//用户不存在
+        }
+        if ($user['user_identity'] == 4) {
+            return ['code' => '3007'];//该用户已经是boss
+        }
+        $bossId = $this->getBoss($user['id']);
+        if ($bossId == 1) {
+            $re = $user['id'];
+        } else {
+            $re = $bossId . ',' . $user['id'];
+        }
+        $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $user['id'] . ',%']], 'id,relation');
+        $userRelationData = [];
+        if (!empty($userRelationList)) {
+            foreach ($userRelationList as $url) {
+                $url['relation'] = substr($url['relation'], stripos($url['relation'], ',' . $user['id'] . ',') + 1);
+                array_push($userRelationData, $url);
+            }
+        }
+        $shopData    = [
+            'uid'         => $user['id'],
+            'shop_right'  => 'all',
+            'status'      => 1,
+            'create_time' => time(),
+        ];
+        $tradingDate = [
+            'uid'          => $user['id'],
+            'trading_type' => 2,
+            'change_type'  => 9,
+            'money'        => -$money,
+            'befor_money'  => $user['commission'],
+            'after_money'  => bcsub($user['commission'], $money, 2),
+            'message'      => '',
+            'create_time'  => time(),
+        ];
+        $pid         = $bossId == 1 ? 0 : $bossId;
+        $relationId  = $this->getRelation($user['id'])['id'];
+        Db::startTrans();
+        try {
+            if (!empty($userRelationData)) {
+                DbUser::updateUserRelation($userRelationData);
+            }
+            DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
+            DbUser::modifyCommission($user['id'], $money, 'dec');//扣佣金
+            DbOrder::addLogTrading($tradingDate);//写佣金明细
+            DbShops::addShop($shopData);//添加店铺
+            DbUser::updateUser(['user_identity' => 4], $user['id']);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3008'];//开通失败
+        }
+    }
+
+    private function getBoss($uid) {
+        if ($uid == 1) {
+            return 1;
+        }
+        $relation = $this->getRelation($uid);
+        $bossUid  = explode(',', $relation['relation'])[0];
+        if ($uid == $bossUid) {
+            return 1;
+        }
+        $pBossUidCheck = $this->getIdentity($bossUid);
+        if ($pBossUidCheck != 4) {//relation第一个关系人不是boss说明是总店下的用户
+            return 1;
+        }
+        return $bossUid;
+    }
+
+    private function getRelation($uid) {
+        $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,pid,is_boss,relation', true);
+        return $userRelation;
+    }
+
+    /**
+     * 获取用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    private function getIdentity($uid) {
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if (empty($user)) {
+            return false;
+        }
+        return $user['user_identity'];
+    }
+
+    /**
      * 创建唯一conId
      * @author zyr
      */
@@ -155,8 +264,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message){
-        $message = $message ?? '';
+    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message) {
+        $message   = $message ?? '';
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
@@ -166,12 +275,12 @@ class Admin extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3004'];
         } */
-        $indexUser = DbUser::getUserInfo(['nick_name'=>$nick_name,'mobile'=>$mobile], 'id,balance,commission,integral', true);
+        $indexUser = DbUser::getUserInfo(['nick_name' => $nick_name, 'mobile' => $mobile], 'id,balance,commission,integral', true);
         if (empty($indexUser)) {
             return ['code' => '3004'];
         }
         if ($stype == 1) {
-            if ($credit + $indexUser['balance'] <0 ) {
+            if ($credit + $indexUser['balance'] < 0) {
                 return ['code' => '3006'];
             }
         }
@@ -193,14 +302,14 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function auditAdminRemittance($cmsConId,$status,int $id){
+    public function auditAdminRemittance($cmsConId, $status, int $id) {
         $userRedisKey = Config::get('rediskey.user.redisKey');
-        $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
-        if ($adminInfo['id'] != 1){
+        $adminId      = $this->getUidByConId($cmsConId);
+        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
+        if ($adminInfo['id'] != 1) {
             return ['code' => '3002'];
         }
-        $remittance = DbAdmin::getAdminRemittance(['id' => $id],'*',true);
+        $remittance = DbAdmin::getAdminRemittance(['id' => $id], '*', true);
         if (empty($remittance)) {
             return ['code' => '3003'];
         }
@@ -208,12 +317,12 @@ class Admin extends CommonIndex {
             return ['code' => '3004'];
         }
         $indexUser = DbUser::getUserInfo(['id' => $remittance['uid']], 'id,balance,commission,integral', true);
-        if ($status == 2){//审核不通过
-            DbAdmin::editRemittance(['audit_admin_id' => $adminId,'status' => 3],$id);
+        if ($status == 2) {//审核不通过
+            DbAdmin::editRemittance(['audit_admin_id' => $adminId, 'status' => 3], $id);
             return ['code' => '200', 'msg' => '审核失败'];
         }
         if ($remittance['stype'] != 3) {
-            
+
             if ($remittance['stype'] == 1) {//商票
                 $tradingData = [
                     'uid'          => $remittance['uid'],
@@ -234,54 +343,55 @@ class Admin extends CommonIndex {
                     'after_money'  => bcadd($indexUser['commission'], $remittance['credit'], 2),
                     'message'      => $remittance['message'],
                 ];
-            } 
-                Db::startTrans();
-                try {
-                    DbAdmin::editRemittance(['audit_admin_id' => $adminId,'status' => 2],$id);
-                    if (!empty($tradingData)) {
-                        DbOrder::addLogTrading($tradingData);
-                    }
-                    
-                    if ($remittance['stype'] == 1) {//商票
-                        DbUser::modifyBalance($remittance['uid'], $remittance['credit'],'inc');
-                    }elseif($remittance['stype'] == 2){//佣金
-                        DbUser::modifyCommission($remittance['uid'], $remittance['credit'],'inc');
-                    }
-                    $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    // print_r($e);die;
-                    Db::rollback();
-                    return ['code' => '3009'];
+            }
+            Db::startTrans();
+            try {
+                DbAdmin::editRemittance(['audit_admin_id' => $adminId, 'status' => 2], $id);
+                if (!empty($tradingData)) {
+                    DbOrder::addLogTrading($tradingData);
                 }
-        }else{
-            $user_integral             = [];
+
+                if ($remittance['stype'] == 1) {//商票
+                    DbUser::modifyBalance($remittance['uid'], $remittance['credit'], 'inc');
+                } elseif ($remittance['stype'] == 2) {//佣金
+                    DbUser::modifyCommission($remittance['uid'], $remittance['credit'], 'inc');
+                }
+                $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                // print_r($e);die;
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+        } else {
+            $user_integral                    = [];
             $user_integral['result_integral'] = $remittance['credit'];
             $user_integral['message']         = $remittance['message'];
             $user_integral['uid']             = $remittance['uid'];
             $user_integral['status']          = 2;
             $user_integral['stype']           = 2;
-            
+
             Db::startTrans();
-                try {
-                    DbAdmin::editRemittance(['audit_admin_id' => $adminId,'status' => 2],$id);
-                    DbUser::modifyIntegral($remittance['uid'], $remittance['credit'],'inc');
-                    DbUser::addLogIntegral($user_integral);
-                    $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    Db::rollback();
-                    print_r($e);die;
-                    return ['code' => '3009'];
-                }
+            try {
+                DbAdmin::editRemittance(['audit_admin_id' => $adminId, 'status' => 2], $id);
+                DbUser::modifyIntegral($remittance['uid'], $remittance['credit'], 'inc');
+                DbUser::addLogIntegral($user_integral);
+                $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                Db::rollback();
+                print_r($e);
+                die;
+                return ['code' => '3009'];
+            }
         }
     }
 
     /**
      * 获取列表
-     * @param $page 
+     * @param $page
      * @param $pageNum
      * @param $initiate_admin_id
      * @param $audit_admin_id
@@ -295,9 +405,9 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getAdminRemittance(int $page,int $pageNum,$initiate_admin_id = 0,$audit_admin_id = 0,$status = 0,$min_credit = 0,$max_credit = 0,$uid = 0,$stype = 0,$start_time = '',$end_time = ''){
+    public function getAdminRemittance(int $page, int $pageNum, $initiate_admin_id = 0, $audit_admin_id = 0, $status = 0, $min_credit = 0, $max_credit = 0, $uid = 0, $stype = 0, $start_time = '', $end_time = '') {
         $offset = $pageNum * ($page - 1);
-        $where = [];
+        $where  = [];
         if (!empty($initiate_admin_id)) {
             array_push($where, ['initiate_admin_id', '=', $initiate_admin_id]);
         }
@@ -328,12 +438,12 @@ class Admin extends CommonIndex {
             array_push($where, ['create_time', '<=', $end_time]);
         }
         // print_r($where);die;
-        $result = DbAdmin::getAdminRemittance($where, '*',false,['id'=>'desc'],$offset.','.$pageNum);
+        $result = DbAdmin::getAdminRemittance($where, '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
         // print_r(count($result));die;
         if (empty($result)) {
             return ['code' => '3000'];
         }
         $total = DbAdmin::getCountAdminRemittance($where);
-        return ['code' => '200', 'total' => $total ,'AdminRemittances' => $result];
+        return ['code' => '200', 'total' => $total, 'AdminRemittances' => $result];
     }
 }
