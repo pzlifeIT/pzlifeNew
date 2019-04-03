@@ -303,6 +303,7 @@ class Admin extends AdminController {
      * @apiGroup         admin_admin
      * @apiName          getAdminBank
      * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [id] 银行ID
      * @apiParam (入参) {String} [abbrev] 银行英文缩写名
      * @apiParam (入参) {String} [bank_name] 银行全称
      * @apiParam (入参) {String} [status] 状态 1.启用 2.停用
@@ -315,6 +316,7 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getAdminBank(){
+        $id                = trim(input("post.id"));
         $page              = trim(input("post.page"));
         $pageNum           = trim(input("post.page_num"));
         $abbrev            = trim(input("post.abbrev"));
@@ -336,7 +338,7 @@ class Admin extends AdminController {
                 return ['code' => '3002'];
             }
         }
-        $result = $this->app->admin->getAdminBank($page,$pageNum,$abbrev,$bank_name,$status);
+        $result = $this->app->admin->getAdminBank($page,$pageNum,$abbrev,$bank_name,$status,$id);
         return $result;
     }
 

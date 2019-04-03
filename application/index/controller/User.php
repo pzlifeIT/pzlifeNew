@@ -886,12 +886,28 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBankcards
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 
+     * @apiParam (入参) {Number} [id] 用户绑定银行卡ID 
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数con_id /  3003:id必须为数字
      * @apiSampleRequest /index/user/getUserBankcards
      * @return array
      * @author rzc
      */
     public function getUserBankcards(){
+        $conId       = trim($this->request->post('con_id'));
+        $id          = trim($this->request->post('id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!empty($id)) {
+            if (!is_numeric($id)) {
+                return ['code' => '3003'];
+            }
+        }
+        $result = $this->app->user->getUserBankcards($conId,$id);
+        return $result;
 
     }
 
@@ -921,6 +937,9 @@ class User extends MyController {
         $bank_key_id = trim($this->request->post('bank_key_id'));
         $bank_add    = trim($this->request->post('bank_add'));
         $vercode     = trim($this->request->post('vercode'));
+        if (empty($id)) {
+            return ['code' => '3010'];
+        }
         if (checkVercode($vercode) === false) {
             return ['code' => '3003'];
         }

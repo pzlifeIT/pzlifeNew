@@ -472,8 +472,15 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getAdminBank(int $page,int $pageNum,$abbrev = '',$bank_name = '',$status = ''){
+    public function getAdminBank(int $page,int $pageNum,$abbrev = '',$bank_name = '',$status = '',$id = ''){
         $where = [];
+        if (!empty($id)) {
+            $result = DbAdmin::getAdminBank(['id' => $id], '*', true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200','admin_bank' => $result];
+        }
         if (!empty($abbrev)) {
             array_push($where, ['abbrev', '=', $abbrev]);
         }

@@ -1705,6 +1705,32 @@ class User extends CommonIndex {
     }
 
     /**
+     * 获取用户绑卡记录或者详情
+     * @param $conId
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function getUserBankcards($conId,$id = ''){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        if (!empty($id)) {
+            $user_bank = DbUser::getUserBank(['id' => $uid,'id' => $id],'*',true);
+            if (empty($user_bank)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200','user_bank' => $user_bank];
+        }
+        $user_bank = DbUser::getUserBank(['id' => $uid],'*');
+        if (empty($user_bank)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','user_bank' => $user_bank];
+    }
+
+    /**
      * 用户提现
      * @param $conId
      * @param $bankcard_id
