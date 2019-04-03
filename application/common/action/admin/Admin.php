@@ -128,10 +128,11 @@ class Admin extends CommonIndex {
      * @param $mobile
      * @param $nickName
      * @param $money
+     * @param $message
      * @return array
      * @author zyr
      */
-    public function openBoss($cmsConId, $mobile, $nickName, $money) {
+    public function openBoss($cmsConId, $mobile, $nickName, $money, $message) {
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
         if ($adminInfo['stype'] != '2') {
@@ -158,13 +159,13 @@ class Admin extends CommonIndex {
                 array_push($userRelationData, $url);
             }
         }
-        $shopData    = [
+        $shopData        = [
             'uid'         => $user['id'],
             'shop_right'  => 'all',
             'status'      => 1,
             'create_time' => time(),
         ];
-        $tradingDate = [
+        $tradingDate     = [
             'uid'          => $user['id'],
             'trading_type' => 2,
             'change_type'  => 9,
@@ -174,8 +175,15 @@ class Admin extends CommonIndex {
             'message'      => '',
             'create_time'  => time(),
         ];
-        $pid         = $bossId == 1 ? 0 : $bossId;
-        $relationId  = $this->getRelation($user['id'])['id'];
+        $logOpenbossData = [
+            'money'    => $money,
+            'uid'      => $user['id'],
+            'admin_id' => $adminId,
+            'status'   => 1,
+            'message'  => $message,
+        ];
+        $pid             = $bossId == 1 ? 0 : $bossId;
+        $relationId      = $this->getRelation($user['id'])['id'];
         Db::startTrans();
         try {
             if (!empty($userRelationData)) {
@@ -186,12 +194,32 @@ class Admin extends CommonIndex {
             DbOrder::addLogTrading($tradingDate);//写佣金明细
             DbShops::addShop($shopData);//添加店铺
             DbUser::updateUser(['user_identity' => 4], $user['id']);
+            DbUser::addLogOpenboss($logOpenbossData);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3008'];//开通失败
         }
+    }
+
+    /**
+     * 开通boss列表
+     * @param $cmsConId
+     * @param $mobile
+     * @param $nickName
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum) {
+        $adminId  = $this->getUidByConId($cmsConId);
+        $allCount = DbUser::getLogOpenbossCount($mobile, $nickName);//总记录数
+        $allPage  = ceil(bcdiv($allCount, $pageNum, 5));//总页数
+        $offset   = ($page - 1) * $pageNum;
+        $data     = DbUser::getLogOpenboss($offset . ',' . $pageNum, $mobile, $nickName);
+        return ['code' => '200', 'data' => $data, 'all_count' => $allCount, 'all_page' => $allPage];
     }
 
     private function getBoss($uid) {
