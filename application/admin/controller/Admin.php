@@ -104,6 +104,7 @@ class Admin extends AdminController {
             return ['code' => '3002'];//密码必须为6-16个任意字符
         }
         $result = $this->app->admin->addAdmin($cmsConId, $adminName, $passwd, $stype);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $adminName, $passwd, $stype], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -136,6 +137,7 @@ class Admin extends AdminController {
             return ['code' => '3003'];//老密码不能为空
         }
         $result = $this->app->admin->midifyPasswd($cmsConId, $passwd, $newPasswd1);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $passwd, $newPasswd1], $result['code'], $cmsConId);
         return $result;
     }
 
