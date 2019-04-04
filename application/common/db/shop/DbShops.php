@@ -110,6 +110,18 @@ class DbShops {
     }
 
     /**
+     * 添加店铺
+     * @param $data
+     * @return array
+     * @author zyr
+     */
+    public function addShop($data){
+        $shops = new Shops;
+        $shops->save($data);
+        return $shops->id;
+    }
+
+    /**
      * 修改店铺商品
      * @param $data 
      * @param $id 

@@ -104,4 +104,9 @@ class AdminController extends Controller {
         exit(json_encode(['code' => '5000']));
     }
 
+    protected function apiLog($apiName, $param, $code, $cmsConId){
+        $result = $this->app->adminLog->apiRequestLog($apiName, $param, $code, $cmsConId);
+        return $result;
+    }
+
 }

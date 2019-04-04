@@ -518,13 +518,13 @@ class Order extends Pzlife {
         } else {
             $re = $myBoss . ',' . $uid;
         }
-        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%" . $uid . ',' . "%'";
+        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%," . $uid . ",%'";
         $userOther        = Db::query($otherUserSql);
         $userRelationData = [];
         if (!empty($userOther)) {
             foreach ($userOther as $uo) {
 //                $uo['relation'] = $uid . ',' . $uo['uid'];
-                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], $uid . ','));
+                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], ',' . $uid . ',') + 1);
                 unset($uo['uid']);
                 array_push($userRelationData, $uo);
             }

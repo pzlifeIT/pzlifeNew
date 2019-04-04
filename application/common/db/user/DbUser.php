@@ -3,6 +3,7 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogOpenboss;
 use app\common\model\LogTrading;
 use app\common\model\LogIntegral;
 use app\common\model\LogVercode;
@@ -306,8 +307,11 @@ class DbUser {
         return $userRelation->id;
     }
 
-    public function updateUserRelation($data, $id) {
+    public function updateUserRelation($data, $id = 0) {
         $userRelation = new UserRelation();
+        if ($id == 0) {
+            return $userRelation->saveAll($data);
+        }
         return $userRelation->save($data, ['id' => $id]);
     }
 
@@ -321,8 +325,8 @@ class DbUser {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
-    public function getLogBonusGroup($where,$uid,$limit) {
-        array_push($where,['delete_time','=','0']);
+    public function getLogBonusGroup($where, $uid, $limit) {
+        array_push($where, ['delete_time', '=', '0']);
 //        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
 //        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
 
@@ -336,14 +340,14 @@ class DbUser {
         $parSql = Db::table('pz_user_relation')
             ->alias('ur')
             ->field('uid,w.price,w.level_uid')
-            ->where([['is_boss','=','1'],['pid','=',$uid],['delete_time','=','0']])
-            ->leftJoin([$subSql=> 'w'], 'ur.uid = w.level_uid')
+            ->where([['is_boss', '=', '1'], ['pid', '=', $uid], ['delete_time', '=', '0']])
+            ->leftJoin([$subSql => 'w'], 'ur.uid = w.level_uid')
             ->buildSql();
         return Db::table('pz_users')
             ->alias('u')
             ->field('uid,p.price,u.nick_name,u.avatar,u.user_identity')
-            ->where([['delete_time','=','0']])
-            ->join([$parSql=> 'p'], 'u.id = p.uid')
+            ->where([['delete_time', '=', '0']])
+            ->join([$parSql => 'p'], 'u.id = p.uid')
             ->order('p.price desc,id desc')
             ->limit($limit)
             ->select();
@@ -450,5 +454,63 @@ class DbUser {
         $LogIntegral = new LogIntegral;
         $LogIntegral->save($data);
         return $LogIntegral->id;
+    }
+
+    public function addLogOpenboss($data) {
+        $logOpenboss = new LogOpenboss();
+        $logOpenboss->save($data);
+        return $logOpenboss->id;
+    }
+
+    public function getLogOpenboss($limit, $mobile, $nickName) {
+        $where = $this->getLogOpenbossWhere($mobile, $nickName);
+        return Db::table('pz_log_openboss')
+            ->alias('lo')
+            ->field('lo.money,u.nick_name,u.mobile,a.admin_name,lo.create_time,lo.message')
+            ->join(['pz_users' => 'u'], 'lo.uid=u.id')
+            ->join(['pz_admin' => 'a'], 'lo.admin_id=a.id')
+            ->whereOr($where)
+            ->limit($limit)
+            ->select();
+    }
+
+    public function getLogOpenbossCount($mobile, $nickName) {
+        $where = $this->getLogOpenbossWhere($mobile, $nickName);
+        return Db::table('pz_log_openboss')
+            ->alias('lo')
+            ->join(['pz_users' => 'u'], 'lo.uid=u.id')
+            ->join(['pz_admin' => 'a'], 'lo.admin_id=a.id')
+            ->whereOr($where)
+            ->count();
+    }
+
+    private function getLogOpenbossWhere($mobile, $nickName) {
+        $where = [];
+        $map1  = [];
+        $map2  = [];
+        if (!empty($mobile)) {
+            $map1 = [
+                ['lo.status', '=', '1'],
+                ['u.mobile', '=', $mobile],
+            ];
+        }
+        if (!empty($nickName)) {
+            $map2 = [
+                ['lo.status', '=', '1'],
+                ['u.nick_name', 'like', '%' . $nickName . '%'],
+            ];
+        }
+        if (!empty($map1)) {
+            array_push($where, $map1);
+        }
+        if (!empty($map2)) {
+            array_push($where, $map2);
+        }
+        if (empty($where)) {
+            $where = [
+                ['lo.status', '=', '1'],
+            ];
+        }
+        return $where;
     }
 }
