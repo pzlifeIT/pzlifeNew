@@ -167,6 +167,7 @@ class Order extends CommonIndex {
         $order_express['express_no']     = $express_no;
         $order_express['express_key']    = $express_key;
         $order_express['express_name']   = $express_name;
+        $order_express['send_time']      = time();
 
         $add_order_express = DbOrder::addOrderExpress($order_express);
 
@@ -184,7 +185,7 @@ class Order extends CommonIndex {
             }
             $no_order_goods_id = array_diff($order_goods_ids, $has_order_goods_id);
             if (!$no_order_goods_id) {
-                DbOrder::updataOrder(['order_status' => 5], $order_id);
+                DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
                 $no_deliver_goods = [];
             } else {
                 $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json', [['id', 'IN', $no_order_goods_id]]);
