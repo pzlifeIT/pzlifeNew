@@ -125,7 +125,6 @@ class Order extends Pzlife {
         }
         $orders    = array_unique(array_column($result, 'order_no'));
         $orderSql  = sprintf("select order_no from pz_orders where delete_time=0 and order_status=6 and send_time<=%s and order_no in ('" . implode("','", $orders) . "')", $diffTimes);
-        echo $orderSql;die;
         $orderList = Db::query($orderSql);
         $orderList = array_column($orderList, 'order_no');
         $data      = [];
