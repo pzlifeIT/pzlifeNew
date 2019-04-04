@@ -355,9 +355,10 @@ function getBancardKey($cardNo){
     $url = 'https://ccdcapi.alipay.com/validateAndCacheCardInfo.json?_input_charset=utf-8&cardNo=';
     $url .= $cardNo;
     $url .= "&cardBinCheck=true";
-    $cardmessage = $this->sendRequest($url);
+    $cardmessage = sendRequest($url);
     $cardmessage = json_decode($cardmessage, true);
-    if (isset($cardmessage['bank'])){
+    // print_r($cardmessage);die;
+    if (!isset($cardmessage['bank'])){
         return false;
     }
     return ['bank' => $cardmessage['bank'], 'cardNo' => $cardNo];

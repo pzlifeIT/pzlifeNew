@@ -1674,7 +1674,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function addUserBankcard($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode){
+    public function addUserBankcard($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode,$bankcard_message){
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -1687,8 +1687,8 @@ class User extends CommonIndex {
         if (empty($admin_bank)) {
             return ['code' => '3009'];
         }
-        $this_card = $this->getBancardKey($bank_card);
-        if ($this_card['bank'] != $admin_bank['abbrev']) {
+        // $this_card = $this->getBancardKey($bank_card);
+        if ($bankcard_message['bank'] != $admin_bank['abbrev']) {
             return ['code' => '3010'];
         }
         $userBank                  = [];
@@ -1699,8 +1699,16 @@ class User extends CommonIndex {
         $userBank['bank_add']      = $bank_add;
         $userBank['bank_mobile']   = $bank_mobile;
         $userBank['status']        = 1;
-        $addid =  DbUser::saveUserBank($userBank);
-        return ['code' => '200','id' => $addid];
+        Db::startTrans();
+        try {
+            $addid =  DbUser::saveUserBank($userBank);
+            Db::commit();
+            return ['code' => '200','id' => $addid];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3006'];//添加失败
+        }
+       
 
     }
 
@@ -1723,11 +1731,71 @@ class User extends CommonIndex {
             }
             return ['code' => '200','user_bank' => $user_bank];
         }
-        $user_bank = DbUser::getUserBank(['id' => $uid],'*');
+        $user_bank = DbUser::getUserBank(['uid' => $uid],'*');
         if (empty($user_bank)) {
             return ['code' => '3000'];
         }
         return ['code' => '200','user_bank' => $user_bank];
+    }
+
+    /**
+     * 用户绑卡
+     * @param $id
+     * @param $conId
+     * @param $user_name
+     * @param $bank_mobile
+     * @param $bank_card
+     * @param $bank_key_id
+     * @param $bank_add
+     * @param $vercode
+     * @param $bankcard_message
+     * @return string
+     * @author rzc
+     */
+    public function editUserBankcards($id,$conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode,$bankcard_message){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $stype = 4;
+        if ($this->checkVercode($stype, $bank_mobile, $vercode) === false) {
+            return ['code' => '3003'];//验证码错误
+        }
+        $admin_bank = DbAdmin::getAdminBank(['id' => $bank_key_id,'status' => 1],'abbrev',true);
+        if (empty($admin_bank)) {
+            return ['code' => '3009'];
+        }
+        $user_bank = DbUser::getUserBank(['id' => $uid,'id' => $id],'*',true);
+        if (empty($user_bank)) {
+            return ['code' => '3000'];
+        }
+        // print_r($user_bank);die;
+        if ($user_bank['status'] == 2 || $user_bank['status'] == 3) {
+            return ['code' => '3012'];
+        }
+        // $this_card = $this->getBancardKey($bank_card);
+        if ($bankcard_message['bank'] != $admin_bank['abbrev']) {
+            return ['code' => '3010'];
+        }
+        $userBank                  = [];
+        $userBank['uid']           = $uid;
+        $userBank['user_name']     = $user_name;
+        $userBank['admin_bank_id'] = $bank_key_id;
+        $userBank['bank_card']     = $bank_card;
+        $userBank['bank_add']      = $bank_add;
+        $userBank['bank_mobile']   = $bank_mobile;
+        $userBank['status']        = 1;
+        Db::startTrans();
+        try {
+            DbUser::editUserBank($userBank,$id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            // print_r($e);die;
+            Db::rollback();
+            return ['code' => '3006'];//添加失败
+        }
+       
     }
 
     /**
