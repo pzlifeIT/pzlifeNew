@@ -288,9 +288,8 @@ class Goods extends CommonIndex {
                     $brokerage[$sku['id']]       = $sku['brokerage'];
                     $integral_active[$sku['id']] = $sku['integral_active'];
                 }
-                // print_r($brokerage);die;
-                $result[$key]['min_brokerage']       = min($brokerage);
-                $result[$key]['min_integral_active'] = min($integral_active);
+                $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
+                $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
 
             } else {
                 $result[$key]['min_brokerage']       = 0;
