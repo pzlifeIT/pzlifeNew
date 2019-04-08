@@ -493,6 +493,12 @@ class Goods extends CommonIndex {
             $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
             $sku   = DbGoods::getSku($where, $field);
         }
+        $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
+        $source_type         = [1, 2, 3, 4];
+        foreach ($source_type as $st) {
+            $key = $redisGoodsDetailKey . ':' . $st;
+            $this->redis->del($key);
+        }
         return ["code" => 200, "goods_data" => $goods_data, 'spec_attr' => $specAttr, 'images_detatil' => $imagesDetatil, "images_carousel" => $imagesCarousel, "sku" => $sku];
     }
 
@@ -665,6 +671,13 @@ class Goods extends CommonIndex {
             }
             if (!in_array(2, $goodsImageType)) {//没有轮播图
                 return ['code' => '3007'];
+            }
+        } else {
+            $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
+            $source_type         = [1, 2, 3, 4];
+            foreach ($source_type as $st) {
+                $key = $redisGoodsDetailKey . ':' . $st;
+                $this->redis->del($key);
             }
         }
         $data = [//修改状态

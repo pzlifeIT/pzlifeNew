@@ -90,7 +90,7 @@ class Order extends Pzlife {
         $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
         $times     = bcmul($days, 86400, 0);
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
-        $sql       = sprintf("select id from pz_orders where delete_time=0 and order_status=5 and ((create_time<=%s and send_time=0) or send_time<=%s)", $diffTimes, $diffTimes);
+        $sql       = sprintf("select id from pz_orders where delete_time=0 and order_status=5 and ((create_time<=%s and send_time=0) or (send_time<=%s and send_time<>0))", $diffTimes, $diffTimes);
         $result    = Db::query($sql);
         if (empty($result)) {
             exit('order_is_null');
