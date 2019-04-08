@@ -94,9 +94,9 @@ class Goods extends CommonIndex {
         $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
         $redisGoodsDetailKey         = $this->redisGoodsDetail . $goods_id . ':' . $source;
         if ($this->redis->exists($redisGoodsDetailKey)) {
-            $goodsInfo               = json_decode($this->redis->get($redisGoodsDetailKey), true);
-            $goodsInfo['goods_data'] = $goods_data;
-            $result                  = array_merge(['code' => '200'], $goodsInfo);
+            $goodsInfo                                = json_decode($this->redis->get($redisGoodsDetailKey), true);
+            $goodsInfo['goods_data']['supplier_desc'] = $goods_data['supplier_desc'];
+            $result                                   = array_merge(['code' => '200'], $goodsInfo);
             return $result;
         }
         $where                          = ['goods_id' => $goods_id, 'status' => 1];
@@ -138,14 +138,14 @@ class Goods extends CommonIndex {
         $goods_data['max_brokerage'] = max($brokerage);
         $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
         $goodsInfo                   = [
+            'goods_data'    => $goods_data,
             'goods_banner'  => $goods_banner,
             'goods_details' => $goods_details,
             'goods_spec'    => $goods_spec,
             'goods_sku'     => $goods_sku,
         ];
         $this->redis->setEx($redisGoodsDetailKey, 86400, json_encode($goodsInfo));
-        $goodsInfo['goods_data'] = $goods_data;
-        $result                  = array_merge(['code' => '200'], $goodsInfo);
+        $result = array_merge(['code' => '200'], $goodsInfo);
         return $result;
     }
 
