@@ -426,4 +426,123 @@ class Admin extends AdminController {
         return $result;
     }
 
+     /**
+     * @api              {post} / cms 获取提现记录
+     * @apiDescription   getLogTransfer
+     * @apiGroup         admin_admin
+     * @apiName          getLogTransfer
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [id] 提供ID默认查详情
+     * @apiParam (入参) {String} [abbrev] 银行英文缩写名
+     * @apiParam (入参) {String} [bank_name] 银行全称
+     * @apiParam (入参) {Number} [bank_card] 银行卡号
+     * @apiParam (入参) {String} [bank_mobile] 银行开户手机号
+     * @apiParam (入参) {String} [user_name] 银行开户人
+     * @apiParam (入参) {String} [stype] 类型 1.佣金转商票 2.佣金提现
+     * @apiParam (入参) {String} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiParam (入参) {Number} [status] 状态 1.启用 2.停用(默认停用)
+     * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
+     * @apiParam (入参) {Number} [min_money] 用户转出最小金额
+     * @apiParam (入参) {Number} [max_money] 用户转出最大金额
+     * @apiParam (入参) {String} [start_time] 开始时间
+     * @apiParam (入参) {String} [end_time] 结束时间
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:con_id长度只能是28位 / 3002:con_id不能为空 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:转出金额必须为数字 / 3006:银行卡输入错误 / 3007:查询ID必须为数字 / 3008:page和pageNum必须为数字 / 3009:invoice参数错误 / 3010:wtype参数错误 / 3011:stype参数错误 / 3012:status参数错误
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/getLogTransfer
+     * @return array
+     * @author rzc
+     */
+    public function getLogTransfer(){
+        $id                = trim(input("post.id"));
+        $page              = trim(input("post.page"));
+        $pageNum           = trim(input("post.page_num"));
+        $abbrev            = trim(input("post.abbrev"));
+        $bank_name         = trim(input("post.bank_name"));
+        $bank_card         = trim(input("post.bank_card"));
+        $bank_mobile       = trim(input("post.bank_mobile"));
+        $user_name         = trim(input("post.user_name"));
+        $stype             = trim(input("post.stype"));
+        $wtype             = trim(input("post.wtype"));
+        $invoice           = trim(input("post.invoice"));
+        $status            = trim(input("post.status"));
+        $min_money         = trim(input("post.min_money"));
+        $max_money         = trim(input("post.max_money"));
+        $start_time        = trim(input("post.start_time"));
+        $end_time          = trim(input("post.end_time"));
+        $page              = empty($page) ? 1 : $page;
+        $pageNum           = empty($pageNum) ? 10 : $pageNum;
+        if (!is_numeric($page)) {
+            return ["code" => '3001'];
+        }
+        if (!is_numeric($pageNum)) {
+            return ["code" => '3002'];
+        }
+        if (!empty($bank_card)) {
+            if (checkBankCard($bank_card) === false) {
+                return ['code' => '3006'];
+            }
+        }
+        if (!empty($start_time)) {
+            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)){
+                // print_r($parts);die;
+                if (checkdate($parts[2],$parts[3],$parts[1]) == false) {
+                    return ['code' => '3003'];
+                }
+            }else{
+                return ['code' => '3003'];
+            }
+        }
+        if (!empty($end_time)) {
+            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)){
+                if (checkdate($parts1[2],$parts1[3],$parts1[1]) == false) {
+                    return ['code' => '3004'];
+                }
+            }else{
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($min_money)) {
+            if (!is_numeric($min_money)) {
+                return ['code' => '3005'];
+            }
+        }
+        if (!empty($max_money)) {
+            if (!is_numeric($max_money)) {
+                return ['code' => '3005'];
+            }
+        }
+        if (!empty($id)) {
+            if (!is_numeric($id)) {
+                return ['code' => '3007'];
+            }
+        }
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ['code' => '3008'];
+        }
+        if (!empty($invoice)){
+            if (!in_array($invoice,[1,2])){
+                return ['code' => '3009'];
+            }
+        }
+        if (!empty($wtype)){
+            if (!in_array($wtype,[1,2,3,4])){
+                return ['code' => '3010'];
+            }
+        }
+        if (!empty($stype)){
+            if (!in_array($stype,[1,2])){
+                return ['code' => '3011'];
+            }
+        }
+        if (!empty($status)){
+            if (!in_array($status,[1,2,3])){
+                return ['code' => '3012'];
+            }
+        }
+        $result = $this->app->admin->getLogTransfer($bank_card,$abbrev,$bank_mobile,$user_name,$bank_name,$min_money,$max_money,$invoice,$status,$stype,$wtype,$start_time,$end_time,intval($page),intval($pageNum),intval($id));
+        return $result;
+    
+    }
 }

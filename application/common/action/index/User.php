@@ -1684,6 +1684,10 @@ class User extends CommonIndex {
             return ['code' => '3003'];//验证码错误
         }
         $admin_bank = DbAdmin::getAdminBank(['id' => $bank_key_id,'status' => 1],'abbrev',true);
+        $user_bank_num = DbUser::countUserBank(['uid' => $uid]);
+        if ($user_bank_num+1>10) {
+            return ['code' => '3011','msg'=>'超出添加范围(最多10张)'];
+        }
         if (empty($admin_bank)) {
             return ['code' => '3009'];
         }
@@ -1719,19 +1723,24 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserBankcards($conId,$id = ''){
+    public function getUserBankcards($conId,$id = '',$is_transfer = ''){
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
         if (!empty($id)) {
-            $user_bank = DbUser::getUserBank(['id' => $uid,'id' => $id],'*',true);
+            $user_bank = DbUser::getUserBank(['uid' => $uid,'id' => $id],'*',true);
             if (empty($user_bank)) {
                 return ['code' => '3000'];
             }
             return ['code' => '200','user_bank' => $user_bank];
         }
-        $user_bank = DbUser::getUserBank(['uid' => $uid],'*');
+        $where = [];
+        array_push($where,['uid','=',$uid]);
+        if ($is_transfer) {
+            array_push($where,['status','in','1,2']);
+        }
+        $user_bank = DbUser::getUserBank($where,'*');
         if (empty($user_bank)) {
             return ['code' => '3000'];
         }
@@ -1813,8 +1822,12 @@ class User extends CommonIndex {
         }
 
         $user_bank_card = DbUser::getUserBank(['uid' => $uid,'id' => $bankcard_id],'*',true);
+        // print_r($user_bank_card);die;
         if (empty($user_bank_card)) {
             return ['code' => '3006'];
+        }
+        if (!in_array($user_bank_card['status'],[1,2]) ) {
+            return ['code' => '3008','msg' => '该银行卡暂不可用'];
         }
         if ($money < 2000 || $money > 200000) {
             return ['code' => '3007'];
@@ -1836,8 +1849,8 @@ class User extends CommonIndex {
         }
         $transfer = [];
         $transfer['uid']         = $uid;
-        $transfer['abbrev']      = $user_bank_card['admin_bank_id']['abbrev'];
-        $transfer['bank_name']   = $user_bank_card['admin_bank_id']['bank_name'];
+        $transfer['abbrev']      = $user_bank_card['admin_bank']['abbrev'];
+        $transfer['bank_name']   = $user_bank_card['admin_bank']['bank_name'];
         $transfer['bank_card']   = $user_bank_card['bank_card'];
         $transfer['bank_add']    = $user_bank_card['bank_add'];
         $transfer['bank_mobile'] = $user_bank_card['bank_mobile'];
@@ -1858,6 +1871,7 @@ class User extends CommonIndex {
             'after_money'  => bcsub($userInfo['commission'], $money, 2),
             // 'message'      => $remittance['message'],
         ];
+        // print_r($transfer);die;
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
@@ -1870,6 +1884,83 @@ class User extends CommonIndex {
             Db::rollback();
             return ['code' => '3006'];//添加失败
         }
+    }
+
+    /**
+     * 用户提现记录
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_name
+     * @param $min_money
+     * @param $max_money
+     * @param $invoice
+     * @param $status
+     * @param $wtype
+     * @param $stype
+     * @param $start_time
+     * @param $end_time
+     * @param $page
+     * @param $pageNum
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function getLogTransfer($conId,$bank_card = '',$bank_name = '',$min_money = '',$max_money = '',$invoice = '',$status = '',$wtype = '',$stype = '',$start_time = '',$end_time = '',int $page,int $pageNum,$id = ''){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $offset = ($page -1)*$pageNum;
+        if ($offset <0) {
+            return ['code' => '3000'];
+        } 
+        $where = [];
+        array_push($where,['uid','=',$uid]);
+        if (!empty($id)){
+            array_push($where,['id','=',$id]);
+            $result = DbUser::getLogTransfer($where,'*',true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200','log_transfer' => $result];
+        }
+        if (!empty($bank_card)) {
+            array_push($where, ['bank_card', '=', $bank_card]);
+        }
+        if (!empty($bank_name)) {
+            array_push($where, ['bank_name', 'LIKE', '%'.$bank_name.'%']);
+        }
+        if (!empty($min_money)) {
+            array_push($where, ['money', '>=', $min_money]);
+        }
+        if (!empty($max_money)) {
+            array_push($where, ['money', '<=', $max_money]);
+        }
+        if (!empty($invoice)) {
+            array_push($where, ['invoice', '=', $invoice]);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        if (!empty($wtype)) {
+            array_push($where, ['wtype', '=', $wtype]);
+        }
+        if (!empty($stype)) {
+            array_push($where, ['stype', '=', $stype]);
+        }
+        if (!empty($start_time)) {
+            $start_time = strtotime($start_time);
+            array_push($where, ['create_time', '>=', $start_time]);
+        }
+        if (!empty($end_time)) {
+            $end_time = strtotime($end_time);
+            array_push($where, ['create_time', '<=', $end_time]);
+        }
+        $result =  DbUser::getLogTransfer($where,'*',false,['id'=>'desc'],$offset.','.$pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','log_transfer' => $result];
     }
 
      /**

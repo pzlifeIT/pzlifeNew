@@ -477,7 +477,7 @@ class DbUser {
 
     public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = UserBank::field($field)->with(['adminBank' => function ($query){
-            
+            // $query->field('abbrev,bank_name')->where([]);
         }])->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
@@ -506,6 +506,18 @@ class DbUser {
         $UserBank = new UserBank;
         return $UserBank->save($data,['id' => $id]);
     }
+    
+    /**
+     * 银行卡表计数
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countUserBank($where){
+        return UserBank::where($where)->count();
+    }
+
     public function updateUserRead($data, $id) {
         $UserRead = new UserRead;
         return $UserRead->save($data, ['id' => $id]);

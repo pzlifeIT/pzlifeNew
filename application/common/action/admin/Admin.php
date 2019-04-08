@@ -501,6 +501,87 @@ class Admin extends CommonIndex {
         return ['code' => '200','total' => $total,'admin_bank' => $result];
     }
 
+    /**
+     * 用户提现记录
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_name
+     * @param $min_money
+     * @param $max_money
+     * @param $invoice
+     * @param $status
+     * @param $wtype
+     * @param $stype
+     * @param $start_time
+     * @param $end_time
+     * @param $page
+     * @param $pageNum
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function getLogTransfer($bank_card = '',$abbrev = '',$bank_mobile = '',$user_name = '',$bank_name = '',$min_money = '',$max_money = '',$invoice = '',$status = '',$stype = '',$wtype = '',$start_time = '',$end_time = '',$page = '',$pageNum = '',$id = ''){
+        $offset = ($page - 1) * $pageNum;
+        if ($offset < 0) {
+            return ['code' => '3000'];
+        }
+        $where = [];
+        if (!empty($id)){
+            array_push($where,['id','=',$id]);
+            $result = DbUser::getLogTransfer($where,'*',true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200','log_transfer' => $result];
+        }
+        if (!empty($bank_card)) {
+            array_push($where, ['bank_card', '=', $bank_card]);
+        }
+        if (!empty($abbrev)) {
+            array_push($where, ['abbrev', '=', $abbrev]);
+        }
+        if (!empty($bank_mobile)) {
+            array_push($where, ['bank_mobile', '=', $bank_mobile]);
+        }
+        if (!empty($user_name)) {
+            array_push($where, ['user_name', 'LIKE', '%'.$user_name.'%']);
+        }
+        if (!empty($bank_name)) {
+            array_push($where, ['bank_name', 'LIKE', '%'.$bank_name.'%']);
+        }
+        if (!empty($min_money)) {
+            array_push($where, ['money', '>=', $min_money]);
+        }
+        if (!empty($max_money)) {
+            array_push($where, ['money', '<=', $max_money]);
+        }
+        if (!empty($invoice)) {
+            array_push($where, ['invoice', '=', $invoice]);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        if (!empty($wtype)) {
+            array_push($where, ['wtype', '=', $wtype]);
+        }
+        if (!empty($stype)) {
+            array_push($where, ['stype', '=', $stype]);
+        }
+        if (!empty($start_time)) {
+            $start_time = strtotime($start_time);
+            array_push($where, ['create_time', '>=', $start_time]);
+        }
+        if (!empty($end_time)) {
+            $end_time = strtotime($end_time);
+            array_push($where, ['create_time', '<=', $end_time]);
+        }
+        $result =  DbUser::getLogTransfer($where,'*',false,['id'=>'desc'],$offset.','.$pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','log_transfer' => $result];
+    }
+
     function delDataEmptyKey($data) {
         foreach ($data as $key => $value) {
             if (!$value) {
