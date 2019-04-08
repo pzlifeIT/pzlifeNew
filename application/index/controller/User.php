@@ -1154,6 +1154,35 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 获取支持银行
+     * @apiDescription   getAdminBank
+     * @apiGroup         index_user
+     * @apiName          getAdminBank
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有数据 
+     * @apiSuccess (返回) {array} adminBank 200:成功 
+     * @apiSuccess (adminBank) {String} abbrev 银行英文缩写名
+     * @apiSuccess (adminBank) {String} bank_name 银行全称
+     * @apiSuccess (adminBank) {String} icon_img 图标
+     * @apiSuccess (adminBank) {String} bg_img 背景图
+     * @apiSuccess (adminBank) {String} status 状态 1.启用 2.停用
+     * @apiSampleRequest /index/user/getAdminBank
+     * @return array
+     * @author rzc
+     */
+    public function getAdminBank(){
+        $conId      = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getAdminBank();
+        return $result;
+    }
+
+    /**
      * @api              {post} / 佣金转商票
      * @apiDescription   commissionTransferBalance
      * @apiGroup         index_user

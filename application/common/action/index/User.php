@@ -1742,7 +1742,7 @@ class User extends CommonIndex {
         }
         $user_bank = DbUser::getUserBank($where,'*');
         if (empty($user_bank)) {
-            return ['code' => '3000'];
+            return ['code' => '200','user_bank' => []];
         }
         return ['code' => '200','user_bank' => $user_bank];
     }
@@ -1958,7 +1958,7 @@ class User extends CommonIndex {
         }
         $result =  DbUser::getLogTransfer($where,'*',false,['id'=>'desc'],$offset.','.$pageNum);
         if (empty($result)) {
-            return ['code' => '3000'];
+            return ['code' => '200','log_transfer' =>[]];
         }
         return ['code' => '200','log_transfer' => $result];
     }
@@ -2067,5 +2067,18 @@ class User extends CommonIndex {
 
             }
         }
+    }
+
+    /**
+     * 获取支持银行
+     * @return string
+     * @author rzc
+     */
+    public function getAdminBank(){
+        $result = DbAdmin::getAdminBank(['status'=>1], '*', false);
+        if (empty($result)) {
+            return ['code' => '200','adminBank' =>[]];
+        }
+        return ['code' => '200','adminBank' => $result];
     }
 }
