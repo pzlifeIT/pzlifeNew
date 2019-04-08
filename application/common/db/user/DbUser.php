@@ -476,9 +476,14 @@ class DbUser {
      */
 
     public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
-        $obj = UserBank::field($field)->with(['adminBank' => function ($query){
+        $obj = UserBank::field($field)->with(
+            ['adminBank' => function ($query){
             // $query->field('abbrev,bank_name')->where([]);
-        }])->where($where);
+            },
+            'users' => function($query2){
+                $query2->field('id,user_identity,nick_name,avatar,mobile');
+            }]
+        )->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 

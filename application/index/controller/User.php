@@ -893,21 +893,26 @@ class User extends MyController {
      * @apiParam (入参) {Number} [id] 用户绑定银行卡ID 
      * @apiParam (入参) {Number} [is_transfer] 1 提现用银行卡列表
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数con_id /  3003:id必须为数字 / 3004:is_transfer参数错误
-     * @apiSuccess (返回) {Array} data 列表
-     * @apiSuccess (data) {string} id 
-     * @apiSuccess (data) {string} uid 
-     * @apiSuccess (data) {string} admin_bank_id 支持银行ID
-     * @apiSuccess (data) {string} bank_card 银行卡号
-     * @apiSuccess (data) {string} bank_add 银行支行
-     * @apiSuccess (data) {string} bank_mobile 银行开户手机号
-     * @apiSuccess (data) {string} user_name 银行开户人
-     * @apiSuccess (data) {string} status 状态 1.待审核 2.启用 3.停用
-     * @apiSuccess (data[admin_bank]) {string} id 
-     * @apiSuccess (data[admin_bank]) {string} abbrev  银行英文缩写名
-     * @apiSuccess (data[admin_bank]) {string} bank_name 银行全称
-     * @apiSuccess (data[admin_bank]) {string} icon_img 图标
-     * @apiSuccess (data[admin_bank]) {string} bg_img 背景图
-     * @apiSuccess (data[admin_bank]) {string} status 状态 1.启用 2.停用
+     * @apiSuccess (返回) {Array} user_bank 列表
+     * @apiSuccess (user_bank) {string} id 
+     * @apiSuccess (user_bank) {string} uid 
+     * @apiSuccess (user_bank) {string} admin_bank_id 支持银行ID
+     * @apiSuccess (user_bank) {string} bank_card 银行卡号
+     * @apiSuccess (user_bank) {string} bank_add 银行支行
+     * @apiSuccess (user_bank) {string} bank_mobile 银行开户手机号
+     * @apiSuccess (user_bank) {string} user_name 银行开户人
+     * @apiSuccess (user_bank) {string} status 状态 1.待审核 2.启用 3.停用 4.审核不通过
+     * @apiSuccess (user_bank[admin_bank]) {string} id 
+     * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
+     * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称
+     * @apiSuccess (user_bank[admin_bank]) {string} icon_img 图标
+     * @apiSuccess (user_bank[admin_bank]) {string} bg_img 背景图
+     * @apiSuccess (user_bank[admin_bank]) {string} status 状态 1.启用 2.停用
+     * @apiSuccess (user_bank[users]) {string} id 用户id
+     * @apiSuccess (user_bank[users]) {string} user_identity 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSuccess (user_bank[users]) {string} nick_name 用户昵称
+     * @apiSuccess (user_bank[users]) {string} avatar 用户头像
+     * @apiSuccess (user_bank[users]) {string} mobile 用户注册手机号
      * @apiSampleRequest /index/user/getUserBankcards
      * @return array
      * @author rzc
@@ -1161,6 +1166,7 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有数据 
      * @apiSuccess (返回) {array} adminBank 200:成功 
+     * @apiSuccess (adminBank) {String} id id
      * @apiSuccess (adminBank) {String} abbrev 银行英文缩写名
      * @apiSuccess (adminBank) {String} bank_name 银行全称
      * @apiSuccess (adminBank) {String} icon_img 图标

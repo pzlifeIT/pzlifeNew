@@ -7,8 +7,8 @@ use app\admin\AdminController;
 class Admin extends AdminController {
     protected $beforeActionList = [
 //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        'isLogin' => ['except' => 'login'], //除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -47,7 +47,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminUsers(){
+    public function getAdminUsers() {
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminUsers();
         return $result;
@@ -101,7 +101,7 @@ class Admin extends AdminController {
         }
         $passwd = $passwd ?: '123456';
         if (checkCmsPassword($passwd) === false) {
-            return ['code' => '3002'];//密码必须为6-16个任意字符
+            return ['code' => '3002']; //密码必须为6-16个任意字符
         }
         $result = $this->app->admin->addAdmin($cmsConId, $adminName, $passwd, $stype);
         return $result;
@@ -127,13 +127,13 @@ class Admin extends AdminController {
         $newPasswd1 = trim($this->request->post('new_passwd1'));
         $newPasswd2 = trim($this->request->post('new_passwd2'));
         if ($newPasswd1 !== $newPasswd2) {
-            return ['code' => '3004'];//密码确认有误
+            return ['code' => '3004']; //密码确认有误
         }
         if (checkCmsPassword($newPasswd1) === false) {
-            return ['code' => '3002'];//密码必须为6-16个任意字符
+            return ['code' => '3002']; //密码必须为6-16个任意字符
         }
         if (empty($passwd)) {
-            return ['code' => '3003'];//老密码不能为空
+            return ['code' => '3003']; //老密码不能为空
         }
         $result = $this->app->admin->midifyPasswd($cmsConId, $passwd, $newPasswd1);
         return $result;
@@ -156,21 +156,21 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function adminRemittance(){
-        $cmsConId   = trim($this->request->post('cms_con_id'));
-        $passwd     = trim($this->request->post('passwd'));
-        $stype      = trim($this->request->post('stype'));
-        $nick_name  = trim($this->request->post('nick_name'));
-        $mobile     = trim($this->request->post('mobile'));
-        $credit     = trim($this->request->post('credit'));
-        $message    = trim($this->request->post('message'));
+    public function adminRemittance() {
+        $cmsConId  = trim($this->request->post('cms_con_id'));
+        $passwd    = trim($this->request->post('passwd'));
+        $stype     = trim($this->request->post('stype'));
+        $nick_name = trim($this->request->post('nick_name'));
+        $mobile    = trim($this->request->post('mobile'));
+        $credit    = trim($this->request->post('credit'));
+        $message   = trim($this->request->post('message'));
         if (empty($passwd)) {
             return ['code' => '3001'];
         }
         if (empty($stype)) {
             return ['code' => '3002'];
         }
-        if (!in_array($stype,[1,2,3])) {
+        if (!in_array($stype, [1, 2, 3])) {
             return ['code' => '3003'];
         }
         if (empty($nick_name)) {
@@ -183,7 +183,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message);
+        $result = $this->app->admin->adminRemittance($cmsConId, $passwd, intval($stype), $nick_name, $mobile, $credit, $message);
         return $result;
     }
 
@@ -200,7 +200,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function auditAdminRemittance(){
+    public function auditAdminRemittance() {
         $cmsConId = trim($this->request->post('cms_con_id'));
         $status   = trim($this->request->post('status'));
         $id       = trim($this->request->post('id'));
@@ -210,13 +210,13 @@ class Admin extends AdminController {
         if (empty($status)) {
             return ['code' => '3005'];
         }
-        if (!in_array($status,[1,2])) {
+        if (!in_array($status, [1, 2])) {
             return ['code' => '3006'];
         }
         if (!is_numeric($id)) {
             return ['code' => '3007'];
         }
-        $result = $this->app->admin->auditAdminRemittance($cmsConId,intval($status),intval($id));
+        $result = $this->app->admin->auditAdminRemittance($cmsConId, intval($status), intval($id));
         return $result;
     }
 
@@ -243,7 +243,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminRemittance(){
+    public function getAdminRemittance() {
         $page              = trim(input("post.page"));
         $pageNum           = trim(input("post.page_num"));
         $initiate_admin_id = trim(input("post.initiate_admin_id"));
@@ -264,21 +264,21 @@ class Admin extends AdminController {
             return ["code" => '3002'];
         }
         if (!empty($start_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)){
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
                 // print_r($parts);die;
-                if (checkdate($parts[2],$parts[3],$parts[1]) == false) {
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                     return ['code' => '3003'];
                 }
-            }else{
+            } else {
                 return ['code' => '3003'];
             }
         }
         if (!empty($end_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)){
-                if (checkdate($parts1[2],$parts1[3],$parts1[1]) == false) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3004'];
                 }
-            }else{
+            } else {
                 return ['code' => '3004'];
             }
         }
@@ -292,9 +292,9 @@ class Admin extends AdminController {
                 return ['code' => '3005'];
             }
         }
-        $result = $this->app->admin->getAdminRemittance(intval($page), intval($pageNum),$initiate_admin_id,$audit_admin_id,$status,$min_credit,$max_credit,$uid,$stype,$start_time,$end_time);
+        $result = $this->app->admin->getAdminRemittance(intval($page), intval($pageNum), $initiate_admin_id, $audit_admin_id, $status, $min_credit, $max_credit, $uid, $stype, $start_time, $end_time);
         return $result;
-        
+
     }
 
     /**
@@ -309,21 +309,21 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [status] 状态 1.启用 2.停用
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型 / 3002:该用户没有权限 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
      * apiSuccess (返回) {String} total 记录条数
      * @apiSampleRequest /admin/admin/getAdminBank
      * @return array
      * @author rzc
      */
-    public function getAdminBank(){
-        $id                = trim(input("post.id"));
-        $page              = trim(input("post.page"));
-        $pageNum           = trim(input("post.page_num"));
-        $abbrev            = trim(input("post.abbrev"));
-        $bank_name         = trim(input("post.bank_name"));
-        $status            = trim(input("post.status"));
-        $page              = empty($page) ? 1 : $page;
-        $pageNum           = empty($pageNum) ? 10 : $pageNum;
+    public function getAdminBank() {
+        $id        = trim(input("post.id"));
+        $page      = trim(input("post.page"));
+        $pageNum   = trim(input("post.page_num"));
+        $abbrev    = trim(input("post.abbrev"));
+        $bank_name = trim(input("post.bank_name"));
+        $status    = trim(input("post.status"));
+        $page      = empty($page) ? 1 : $page;
+        $pageNum   = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
@@ -334,11 +334,11 @@ class Admin extends AdminController {
             if (!is_numeric($status)) {
                 return ['code' => '3001'];
             }
-            if (!in_array($status,[1,2])) {
+            if (!in_array($status, [1, 2])) {
                 return ['code' => '3002'];
             }
         }
-        $result = $this->app->admin->getAdminBank($page,$pageNum,$abbrev,$bank_name,$status,$id);
+        $result = $this->app->admin->getAdminBank($page, $pageNum, $abbrev, $bank_name, $status, $id);
         return $result;
     }
 
@@ -359,25 +359,25 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function addAdminBank(){
-        $cmsConId   = trim($this->request->post('cms_con_id'));
+    public function addAdminBank() {
+        $cmsConId  = trim($this->request->post('cms_con_id'));
         $abbrev    = trim($this->request->post('abbrev'));
         $bank_name = trim($this->request->post('bank_name'));
         $icon_img  = trim($this->request->post('icon_img'));
         $bg_img    = trim($this->request->post('bg_img'));
         $status    = trim($this->request->post('status'));
-        
-        $status     = $status ? 1 : 2 ;
+
+        $status = $status ? 1 : 2;
         if (!is_numeric($status)) {
             return ['code' => '3001'];
         }
-        if (!in_array($status,[1,2])) {
+        if (!in_array($status, [1, 2])) {
             return ['code' => '3002'];
         }
         if (empty($abbrev) || empty($bank_name)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->admin->addAdminBank($abbrev,$bank_name,$icon_img,$bg_img,$status);
+        $result = $this->app->admin->addAdminBank($abbrev, $bank_name, $icon_img, $bg_img, $status);
         return $result;
     }
 
@@ -387,7 +387,7 @@ class Admin extends AdminController {
      * @apiGroup         admin_admin
      * @apiName          editAdminBank
      * @apiParam (入参) {String} cms_con_id
-     * @apiParam (入参) {Number} id 
+     * @apiParam (入参) {Number} id
      * @apiParam (入参) {String} abbrev 银行英文缩写名
      * @apiParam (入参) {String} bank_name 银行全称
      * @apiParam (入参) {String} icon_img 图标
@@ -400,7 +400,7 @@ class Admin extends AdminController {
      * @author rzc
      */
 
-    public function editAdminBank(){
+    public function editAdminBank() {
         $id        = trim($this->request->post('id'));
         $abbrev    = trim($this->request->post('abbrev'));
         $bank_name = trim($this->request->post('bank_name'));
@@ -417,16 +417,16 @@ class Admin extends AdminController {
             if (!is_numeric($status)) {
                 return ['code' => '3001'];
             }
-            if (!in_array($status,[1,2])) {
+            if (!in_array($status, [1, 2])) {
                 return ['code' => '3002'];
             }
         }
-        
-        $result = $this->app->admin->editAdminBank(intval($id),$abbrev,$bank_name,$icon_img,$bg_img,$status);
+
+        $result = $this->app->admin->editAdminBank(intval($id), $abbrev, $bank_name, $icon_img, $bg_img, $status);
         return $result;
     }
 
-     /**
+    /**
      * @api              {post} / cms 获取提现记录
      * @apiDescription   getLogTransfer
      * @apiGroup         admin_admin
@@ -454,25 +454,25 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getLogTransfer(){
-        $id                = trim(input("post.id"));
-        $page              = trim(input("post.page"));
-        $pageNum           = trim(input("post.page_num"));
-        $abbrev            = trim(input("post.abbrev"));
-        $bank_name         = trim(input("post.bank_name"));
-        $bank_card         = trim(input("post.bank_card"));
-        $bank_mobile       = trim(input("post.bank_mobile"));
-        $user_name         = trim(input("post.user_name"));
-        $stype             = trim(input("post.stype"));
-        $wtype             = trim(input("post.wtype"));
-        $invoice           = trim(input("post.invoice"));
-        $status            = trim(input("post.status"));
-        $min_money         = trim(input("post.min_money"));
-        $max_money         = trim(input("post.max_money"));
-        $start_time        = trim(input("post.start_time"));
-        $end_time          = trim(input("post.end_time"));
-        $page              = empty($page) ? 1 : $page;
-        $pageNum           = empty($pageNum) ? 10 : $pageNum;
+    public function getLogTransfer() {
+        $id          = trim(input("post.id"));
+        $page        = trim(input("post.page"));
+        $pageNum     = trim(input("post.page_num"));
+        $abbrev      = trim(input("post.abbrev"));
+        $bank_name   = trim(input("post.bank_name"));
+        $bank_card   = trim(input("post.bank_card"));
+        $bank_mobile = trim(input("post.bank_mobile"));
+        $user_name   = trim(input("post.user_name"));
+        $stype       = trim(input("post.stype"));
+        $wtype       = trim(input("post.wtype"));
+        $invoice     = trim(input("post.invoice"));
+        $status      = trim(input("post.status"));
+        $min_money   = trim(input("post.min_money"));
+        $max_money   = trim(input("post.max_money"));
+        $start_time  = trim(input("post.start_time"));
+        $end_time    = trim(input("post.end_time"));
+        $page        = empty($page) ? 1 : $page;
+        $pageNum     = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
@@ -485,21 +485,21 @@ class Admin extends AdminController {
             }
         }
         if (!empty($start_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)){
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
                 // print_r($parts);die;
-                if (checkdate($parts[2],$parts[3],$parts[1]) == false) {
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                     return ['code' => '3003'];
                 }
-            }else{
+            } else {
                 return ['code' => '3003'];
             }
         }
         if (!empty($end_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)){
-                if (checkdate($parts1[2],$parts1[3],$parts1[1]) == false) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3004'];
                 }
-            }else{
+            } else {
                 return ['code' => '3004'];
             }
         }
@@ -521,28 +521,105 @@ class Admin extends AdminController {
         if (!is_numeric($page) || !is_numeric($pageNum)) {
             return ['code' => '3008'];
         }
-        if (!empty($invoice)){
-            if (!in_array($invoice,[1,2])){
+        if (!empty($invoice)) {
+            if (!in_array($invoice, [1, 2])) {
                 return ['code' => '3009'];
             }
         }
-        if (!empty($wtype)){
-            if (!in_array($wtype,[1,2,3,4])){
+        if (!empty($wtype)) {
+            if (!in_array($wtype, [1, 2, 3, 4])) {
                 return ['code' => '3010'];
             }
         }
-        if (!empty($stype)){
-            if (!in_array($stype,[1,2])){
+        if (!empty($stype)) {
+            if (!in_array($stype, [1, 2])) {
                 return ['code' => '3011'];
             }
         }
-        if (!empty($status)){
-            if (!in_array($status,[1,2,3])){
+        if (!empty($status)) {
+            if (!in_array($status, [1, 2, 3])) {
                 return ['code' => '3012'];
             }
         }
-        $result = $this->app->admin->getLogTransfer($bank_card,$abbrev,$bank_mobile,$user_name,$bank_name,$min_money,$max_money,$invoice,$status,$stype,$wtype,$start_time,$end_time,intval($page),intval($pageNum),intval($id));
+        $result = $this->app->admin->getLogTransfer($bank_card, $abbrev, $bank_mobile, $user_name, $bank_name, $min_money, $max_money, $invoice, $status, $stype, $wtype, $start_time, $end_time, intval($page), intval($pageNum), intval($id));
         return $result;
-    
+
+    }
+
+    /**
+     * @api              {post} / cms 获取用户提交银行卡信息
+     * @apiDescription   getUserBank
+     * @apiGroup         admin_admin
+     * @apiName          getUserBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [id] 传银行卡ID默认查看详情
+     * @apiParam (入参) {String} [bank_card] 银行卡号
+     * @apiParam (入参) {String} [bank_mobile] 银行开户手机号
+     * @apiParam (入参) {String} [user_name] 银行开户人
+     * @apiParam (入参) {String} [status] 银行开户人 状态 1.待审核 2.启用 3.停用 4.审核失败
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  /3003:银行卡号输入错误 
+     * apiSuccess (返回) {String} total 记录条数
+     * apiSuccess (返回) {array} userbank 
+     * apiSuccess (userbank) {String} id 
+     * apiSuccess (userbank) {String} uid 关联uid
+     * apiSuccess (userbank) {String} admin_bank_id 后台银行管理id
+     * apiSuccess (userbank) {String} bank_card 银行卡号
+     * apiSuccess (userbank) {String} bank_add 银行支行
+     * apiSuccess (userbank) {String} bank_mobile  银行开户手机号
+     * apiSuccess (userbank) {String} user_name  银行开户人
+     * apiSuccess (userbank) {String} status  状态 1.待审核 2.启用 3.停用
+     * @apiSuccess (user_bank[admin_bank]) {string} id 
+     * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
+     * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称
+     * @apiSuccess (user_bank[admin_bank]) {string} icon_img 图标
+     * @apiSuccess (user_bank[admin_bank]) {string} bg_img 背景图
+     * @apiSuccess (user_bank[admin_bank]) {string} status 状态 1.启用 2.停用
+     * @apiSuccess (user_bank[users]) {string} id 用户id
+     * @apiSuccess (user_bank[users]) {string} user_identity 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSuccess (user_bank[users]) {string} nick_name 用户昵称
+     * @apiSuccess (user_bank[users]) {string} avatar 用户头像
+     * @apiSuccess (user_bank[users]) {string} mobile 用户注册手机号
+     * @apiSampleRequest /admin/admin/getUserBank
+     * @return array
+     * @author rzc
+     */
+    public function getUserBank() {
+        $id          = trim($this->request->post('id'));
+        $bank_card   = trim($this->request->post('bank_card'));
+        $bank_mobile = trim($this->request->post('bank_mobile'));
+        $user_name   = trim($this->request->post('user_name'));
+        $status      = trim($this->request->post('status'));
+        $page        = trim($this->request->post('page'));
+        $page_num    = trim($this->request->post('page_num'));
+        $page        = empty($page) ? 1 : $page;
+        $pageNum     = empty($pageNum) ? 10 : $pageNum;
+        if (!is_numeric($page)) {
+            return ["code" => '3001'];
+        }
+        if (!is_numeric($pageNum)) {
+            return ["code" => '3001'];
+        }
+        if (!empty($status)) {
+            if (!is_numeric($status)) {
+                return ['code' => '3001'];
+            }
+            if (!in_array($status, [1, 2, 3 ,4])) {
+                return ['code' => '3002'];
+            }
+        }
+        if (!empty($bank_card)) {
+            if (checkBankCard($bank_card) === false) {
+                return ['code' => '3003'];
+            }
+        }
+        if (!empty($id)) {
+            if (!is_numeric($id)){
+                return ['code' => '3004'];
+            }
+        }
+        $result = $this->app->admin->getUserBank(intval($id),$bank_card,$bank_mobile,$user_name,$status,intval($page),intval($page_num));
+        return $result;
     }
 }

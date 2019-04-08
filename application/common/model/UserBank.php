@@ -36,5 +36,9 @@ class UserBank extends Model {
         return $this->belongsTo('admin_bank', 'admin_bank_id', 'id');
     }
 
+    public function users() {
+        return $this->belongsTo('users', 'uid', 'id');
+    }
+
     
 }
