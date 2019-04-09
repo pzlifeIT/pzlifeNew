@@ -547,6 +547,23 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / cms 审核用户提现
+     * @apiDescription   checkUserBank
+     * @apiGroup         admin_admin
+     * @apiName          checkUserBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id
+     * @apiParam (入参) {String} message 后台管理员处理回馈留言
+     * @apiParam (入参) {String} status 状态 2.已完成 3.取消
+     * @apiParam (入参) {String} error_fields 错误字段,用,隔开（例如bank_card,bank_add）  各个字段'bank_card','bank_add','bank_mobile','user_name'
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:message不能为空（status传值为5） / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/checkUserBank
+     * @return array
+     * @author rzc
+     */
+
+    /**
      * @api              {post} / cms 获取用户提交银行卡信息
      * @apiDescription   getUserBank
      * @apiGroup         admin_admin
