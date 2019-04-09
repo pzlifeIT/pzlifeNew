@@ -580,10 +580,10 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function checkUserTransfer(){
-        $id           = trim($this->request->post('id'));
-        $status       = trim($this->request->post('status'));
-        $message      = trim($this->request->post('message'));
+    public function checkUserTransfer() {
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
         if (empty($id)) {
             return ['code' => '3003'];
         }
@@ -593,7 +593,7 @@ class Admin extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->admin->checkUserTransfer(intval($id),intval($status),$message);
+        $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message);
         return $result;
 
     }
@@ -713,15 +713,15 @@ class Admin extends AdminController {
         if ($error_fields) {
             $error_fields = preg_replace("/，/", ",", $error_fields);
             $error_fields = strtolower($error_fields);
-            $error_fields = explode(',',$error_fields);
+            $error_fields = explode(',', $error_fields);
             foreach ($error_fields as $error => $fields) {
-                if (!in_array($fields,['bank_card','bank_add','bank_mobile','user_name'])) {
+                if (!in_array($fields, ['bank_card', 'bank_add', 'bank_mobile', 'user_name'])) {
                     return ['code' => '3005'];
                 }
             }
-            $error_fields = join(',',$error_fields);
+            $error_fields = join(',', $error_fields);
         }
-        $result = $this->app->admin->checkUserBank($id, $status, $message,$error_fields);
+        $result = $this->app->admin->checkUserBank($id, $status, $message, $error_fields);
         return $result;
     }
 }
