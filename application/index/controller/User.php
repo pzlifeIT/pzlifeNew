@@ -3,14 +3,12 @@
 namespace app\index\controller;
 
 use app\index\MyController;
-use Config;
-use function Qiniu\json_decode;
 
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'],//除去getFirstCate其他方法都进行second前置操作
-//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'], //除去getFirstCate其他方法都进行second前置操作
+        //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -57,7 +55,7 @@ class User extends MyController {
         $buid     = trim($this->request->post('buid'));
         $buid     = empty(deUid($buid)) ? 1 : deUid($buid);
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkPassword($password) === false) {
             return ['code' => '3005'];
@@ -95,16 +93,18 @@ class User extends MyController {
         $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+//        $dd       = [$result, ['mobile' => $mobile, 'vercode' => $vercode, 'buid' => $buid]];
+        //        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
         return $result;
     }
 
@@ -139,10 +139,10 @@ class User extends MyController {
         $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
@@ -174,7 +174,7 @@ class User extends MyController {
         $vercode  = trim($this->request->post('vercode'));
         $password = trim($this->request->post('password'));
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
@@ -192,7 +192,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          sendVercode
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录
+     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:发送类型有误 / 3003:一分钟内不能重复发送 / 3004:短信发送失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/sendvercode
@@ -200,14 +200,14 @@ class User extends MyController {
      * @author zyr
      */
     public function sendVercode() {
-        $stypeArr = [1, 2, 3];
+        $stypeArr = [1, 2, 3, 4];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
         if (!checkMobile($mobile)) {
-            return ['code' => '3001'];//手机格式有误
+            return ['code' => '3001']; //手机格式有误
         }
         if (!in_array($stype, $stypeArr)) {
-            return ['code' => '3002'];//手机格式有误
+            return ['code' => '3002']; //手机格式有误
         }
         $result = $this->app->user->sendVercode($mobile, $stype);
         return $result;
@@ -254,7 +254,6 @@ class User extends MyController {
         $res = $this->app->user->getUser($conId);
         return $res;
     }
-
 
     /**
      * @api              {post} / 通过微信code登录
@@ -316,7 +315,6 @@ class User extends MyController {
         $result = $this->app->user->getBossShop($conId);
         return $result;
     }
-
 
     /**
      * @api              {post} / 获取分利列表信息
@@ -610,7 +608,6 @@ class User extends MyController {
         return $result;
     }
 
-
     /**
      * @api              {post} / 获取所有下级关系网
      * @apiDescription   getUserNextLevel
@@ -709,7 +706,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         if (!checkMobile($mobile)) {
-            return ['code' => '3003'];//手机格式有误
+            return ['code' => '3003']; //手机格式有误
         }
         $result = $this->app->user->addUserAddress($conId, $province_name, $city_name, $area_name, $address, $mobile, $name);
         return $result;
@@ -744,7 +741,7 @@ class User extends MyController {
         $name          = trim($this->request->post('name'));
         $address_id    = trim($this->request->post('address_id'));
         if (!checkMobile($mobile)) {
-            return ['code' => '3003'];//手机格式有误
+            return ['code' => '3003']; //手机格式有误
         }
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -881,7 +878,7 @@ class User extends MyController {
             return ['code' => '3000'];
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         $view_uid = deUid($view_uid);
         $view_uid = $view_uid ? $view_uid : 1;
