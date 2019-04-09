@@ -2174,4 +2174,19 @@ class User extends CommonIndex {
         }
         return ['code' => '200', 'adminBank' => $result];
     }
+
+     /**
+     * 获取提现比率
+     * @return string
+     * @author rzc
+     */
+    public function getInvoice() {
+        // echo ;die;
+        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        if ($invoice == false) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','invoice' => json_decode($invoice,true)];
+
+    }
 }
