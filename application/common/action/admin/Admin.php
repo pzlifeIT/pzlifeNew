@@ -718,9 +718,10 @@ class Admin extends CommonIndex {
             return ['code' => '3000'];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
-            $result[$key]['deduct_money'] = bcmul(bcdiv ($value['proportion'], 100, 2), $value['money'], 2);
+            $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
+        $total = DbUser::countLogTransfer($where);
         return ['code' => '200', 'log_transfer' => $result];
     }
 
@@ -737,8 +738,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function checkUserTransfer(int $id,int $status,$message = ''){
-        $transfer = DbUser::getLogTransfer(['id' => $id], '*', true);
+    public function checkUserTransfer(int $id, int $status, $message = '') {
+        $transfer     = DbUser::getLogTransfer(['id' => $id], '*', true);
         $userRedisKey = Config::get('rediskey.user.redisKey');
         if (empty($transfer)) {
             return ['code' => '3000'];
@@ -746,10 +747,10 @@ class Admin extends CommonIndex {
         if ($transfer['status'] != 1) {
             return ['code' => '3004'];
         }
-        if ($transfer['stype'] == 2) {//佣金提现
-            if ($transfer['wtype'] == 1) {//提现方式 1 银行
-                if ($status == 3) {//审核不通过
-                    $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
+        if ($transfer['stype'] == 2) { //佣金提现
+            if ($transfer['wtype'] == 1) { //提现方式 1 银行
+                if ($status == 3) { //审核不通过
+                    $indexUser   = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
                     $tradingData = [
                         'uid'          => $transfer['uid'],
                         'trading_type' => 2,
@@ -763,7 +764,7 @@ class Admin extends CommonIndex {
                     Db::startTrans();
                     try {
                         DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
-                        DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
+                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
                         DbOrder::addLogTrading($tradingData);
                         Db::commit();
                         $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
@@ -773,10 +774,10 @@ class Admin extends CommonIndex {
                         exception($e);
                         return ['code' => '3007']; //审核失败
                     }
-                }elseif ($status == 2){//审核通过
+                } elseif ($status == 2) { //审核通过
                     Db::startTrans();
                     try {
-                        DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
+                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
                         Db::commit();
                         return ['code' => '200'];
                     } catch (\Exception $e) {
@@ -831,7 +832,8 @@ class Admin extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        return ['code' => '200', 'userbank' => $result];
+        $total = DbUser::countUserBank($where);
+        return ['code' => '200', 'total' => $total, 'userbank' => $result];
     }
 
     function delDataEmptyKey($data) {
@@ -881,5 +883,14 @@ class Admin extends CommonIndex {
             Db::rollback();
             return ['code' => '3011']; //添加失败
         }
+    }
+
+    /**
+     * 审核用户提交银行卡
+     * @return string
+     * @author rzc
+     */
+    public function getInvoice() {
+        $invoice = fopen("testfile.json", "r");
     }
 }

@@ -442,6 +442,17 @@ class DbUser {
     }
 
     /**
+     * 佣金转出记录计数
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countLogTransfer($where){
+        return LogTransfer::where($where)->count();
+    }
+
+    /**
      * 添加佣金转出记录
      * @param $data
      * @return mixed
