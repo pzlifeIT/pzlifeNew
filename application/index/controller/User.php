@@ -901,7 +901,7 @@ class User extends MyController {
      * @apiSuccess (user_bank) {string} bank_add 银行支行
      * @apiSuccess (user_bank) {string} bank_mobile 银行开户手机号
      * @apiSuccess (user_bank) {string} user_name 银行开户人
-     * @apiSuccess (user_bank) {string} status 状态 1.待审核 2.启用 3.停用 4.审核不通过
+     * @apiSuccess (user_bank) {string} status 状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
      * @apiSuccess (user_bank[admin_bank]) {string} id 
      * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
      * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称

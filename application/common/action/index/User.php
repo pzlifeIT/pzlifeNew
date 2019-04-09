@@ -1684,6 +1684,10 @@ class User extends CommonIndex {
             return ['code' => '3003'];//验证码错误
         }
         $admin_bank = DbAdmin::getAdminBank(['id' => $bank_key_id,'status' => 1],'abbrev',true);
+        $is_bank_card = DbUser::getUserBank(['uid' => $uid,'bank_card' => $bank_card],'*',true);
+        if ($is_bank_card) {
+            return ['code' => '3012','msg' => '该银行卡号已添加'];
+        }
         $user_bank_num = DbUser::countUserBank(['uid' => $uid]);
         if ($user_bank_num+1>10) {
             return ['code' => '3011','msg'=>'超出添加范围(最多10张)'];
@@ -1738,7 +1742,7 @@ class User extends CommonIndex {
         $where = [];
         array_push($where,['uid','=',$uid]);
         if ($is_transfer) {
-            array_push($where,['status','in','1,2']);
+            array_push($where,['status','in','2,4']);
         }
         $user_bank = DbUser::getUserBank($where,'*');
         if (empty($user_bank)) {
@@ -1778,8 +1782,12 @@ class User extends CommonIndex {
         if (empty($user_bank)) {
             return ['code' => '3000'];
         }
+        $is_bank_card = DbUser::getUserBank([['uid','=', $uid],['bank_card','=', $bank_card],['id','<>',$id]],'*',true);
+        if ($is_bank_card) {
+            return ['code' => '3013','msg' => '该银行卡号已添加'];
+        }
         // print_r($user_bank);die;
-        if ($user_bank['status'] == 2 || $user_bank['status'] == 3) {
+        if ($user_bank['status'] == 2 || $user_bank['status'] == 3 || $user_bank['status'] == 4) {
             return ['code' => '3012'];
         }
         // $this_card = $this->getBancardKey($bank_card);

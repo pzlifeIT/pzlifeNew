@@ -393,7 +393,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} icon_img 图标
      * @apiParam (入参) {String} bg_img 背景图
      * @apiParam (入参) {String} status 状态 1.启用 2.停用(默认停用)
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:没有更改的资料 / 3005:abbrev和bank_name都不能重复
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:没有更改的资料 / 3005:abbrev和bank_name都不能重复
      * apiSuccess (返回) {String} total 记录条数
      * @apiSampleRequest /admin/admin/editAdminBank
      * @return array
@@ -559,18 +559,18 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [status] 银行开户人 状态 1.待审核 2.启用 3.停用 4.审核失败
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  /3003:银行卡号输入错误 
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  /3003:银行卡号输入错误
      * apiSuccess (返回) {String} total 记录条数
-     * apiSuccess (返回) {array} userbank 
-     * apiSuccess (userbank) {String} id 
+     * apiSuccess (返回) {array} userbank
+     * apiSuccess (userbank) {String} id
      * apiSuccess (userbank) {String} uid 关联uid
      * apiSuccess (userbank) {String} admin_bank_id 后台银行管理id
      * apiSuccess (userbank) {String} bank_card 银行卡号
      * apiSuccess (userbank) {String} bank_add 银行支行
      * apiSuccess (userbank) {String} bank_mobile  银行开户手机号
      * apiSuccess (userbank) {String} user_name  银行开户人
-     * apiSuccess (userbank) {String} status  状态 1.待审核 2.启用 3.停用
-     * @apiSuccess (user_bank[admin_bank]) {string} id 
+     * apiSuccess (userbank) {String} status  状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
+     * @apiSuccess (user_bank[admin_bank]) {string} id
      * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
      * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称
      * @apiSuccess (user_bank[admin_bank]) {string} icon_img 图标
@@ -605,7 +605,7 @@ class Admin extends AdminController {
             if (!is_numeric($status)) {
                 return ['code' => '3001'];
             }
-            if (!in_array($status, [1, 2, 3 ,4])) {
+            if (!in_array($status, [1, 2, 3, 4, 5])) {
                 return ['code' => '3002'];
             }
         }
@@ -615,11 +615,61 @@ class Admin extends AdminController {
             }
         }
         if (!empty($id)) {
-            if (!is_numeric($id)){
+            if (!is_numeric($id)) {
                 return ['code' => '3004'];
             }
         }
-        $result = $this->app->admin->getUserBank(intval($id),$bank_card,$bank_mobile,$user_name,$status,intval($page),intval($page_num));
+        $result = $this->app->admin->getUserBank(intval($id), $bank_card, $bank_mobile, $user_name, $status, intval($page), intval($page_num));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / cms 管理员处理银行卡
+     * @apiDescription   checkUserBank
+     * @apiGroup         admin_admin
+     * @apiName          checkUserBank
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id
+     * @apiParam (入参) {String} message 后台管理员处理回馈留言
+     * @apiParam (入参) {String} status 状态 2.启用(审核通过)4.已处理 5.审核不通过
+     * @apiParam (入参) {String} error_fields 错误字段,用,隔开（例如bank_card,bank_add）  各个字段'bank_card','bank_add','bank_mobile','user_name'
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:message不能为空（status传值为5） / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/checkUserBank
+     * @return array
+     * @author rzc
+     */
+    public function checkUserBank() {
+        $id           = trim($this->request->post('id'));
+        $status       = trim($this->request->post('status'));
+        $message      = trim($this->request->post('message'));
+        $error_fields = trim($this->request->post('error_fields'));
+        if (empty($id)) {
+            return ['code' => '3003'];
+        }
+        if (empty($status)) {
+            return ['code' => '3002'];
+        }
+        if (!in_array($status, [2, 4, 5])) {
+            return ['code' => '3002'];
+        }
+        if ($status == 5) {
+            if (empty($message) || empty($error_fields)) {
+                return ['code' => '3004'];
+            }
+        }
+        if ($error_fields) {
+            $error_fields = preg_replace("/，/", ",", $error_fields);
+            $error_fields = strtolower($error_fields);
+            $error_fields = explode(',',$error_fields);
+            foreach ($error_fields as $error => $fields) {
+                if (!in_array($fields,['bank_card','bank_add','bank_mobile','user_name'])) {
+                    return ['code' => '3005'];
+                }
+            }
+            $error_fields = join(',',$error_fields);
+        }
+        $result = $this->app->admin->checkUserBank($id, $status, $message,$error_fields);
         return $result;
     }
 }

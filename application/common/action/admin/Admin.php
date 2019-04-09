@@ -636,4 +636,44 @@ class Admin extends CommonIndex {
         }
         return $data;
     }
+
+    /**
+     * 审核用户提交银行卡
+     * @param $id
+     * @param $status
+     * @param $message
+     * @param $error_fields
+     * @return string
+     * @author rzc
+     */
+    public function checkUserBank($id, $status, $message = '', $error_fields = '') {
+        $userbank = DbUser::getUserBank(['id' => $id], '*', true);
+        if (empty($userbank)) {
+            return ['code' => '3000'];
+        }
+        if ($userbank['status'] == 2 || $userbank['status'] == 3) {
+            return ['code' => '3006'];
+        }
+        if ($status == 4) {
+            if ($userbank['status'] != 1) {
+                return ['code' => '3002'];
+            }
+        }
+        if ($status == $userbank['status']) {
+            return ['code' => '3002'];
+        }
+        $check                 = [];
+        $check['status']       = $status;
+        $check['message']      = $message;
+        $check['error_fields'] = $error_fields;
+        Db::startTrans();
+        try {
+            DbUser::editUserBank($check, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011']; //添加失败
+        }
+    }
 }
