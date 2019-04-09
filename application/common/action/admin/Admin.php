@@ -753,22 +753,24 @@ class Admin extends CommonIndex {
                     $tradingData = [
                         'uid'          => $transfer['uid'],
                         'trading_type' => 2,
-                        'change_type'  => 8,
+                        'change_type'  => 10,
                         'money'        => $transfer['money'],
                         'befor_money'  => $indexUser['commission'],
                         'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
                         'message'      => $message,
                     ];
+                    // print_r($indexUser);die;
                     Db::startTrans();
                     try {
-                        DbUser::modifyCommission($indexUser['commission'], $transfer['money'], 'inc');
+                        DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
                         DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
+                        DbOrder::addLogTrading($tradingData);
                         Db::commit();
                         $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
                         return ['code' => '200'];
                     } catch (\Exception $e) {
                         Db::rollback();
-                        // exception($e);
+                        exception($e);
                         return ['code' => '3007']; //审核失败
                     }
                 }elseif ($status == 2){//审核通过
