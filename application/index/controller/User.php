@@ -1005,14 +1005,14 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 修改银行卡状态（启用、停用、撤回）【未完成】
+     * @api              {post} / 修改银行卡状态（启用、停用、撤回）
      * @apiDescription   changeUserBankcardStatus
      * @apiGroup         index_user
      * @apiName          changeUserBankcardStatus
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} id 变更ID
-     * @apiParam (入参) {Number} status 变更状态
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:con_id长度只能是28位 / 3002:conId为空 /
+     * @apiParam (入参) {Number} status 变更状态 1启用 2停用 3撤销
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:id和status必须为数字 / 3004:此银行卡状态无法变更 / 3006:未查询到该银行卡 / 3007:处理失败
      * @apiSampleRequest /index/user/changeUserBankcardStatus
      * @return array
      * @author rzc
@@ -1030,6 +1030,8 @@ class User extends MyController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3003'];
         }
+        $result = $this->app->user->changeUserBankcardStatus($conId,intval($id),intval($status));
+        return $result;
     }
 
     /**

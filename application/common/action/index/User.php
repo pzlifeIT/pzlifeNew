@@ -1755,7 +1755,7 @@ class User extends CommonIndex {
     }
 
     /**
-     * 用户绑卡
+     * 用户修改银行卡信息
      * @param $id
      * @param $conId
      * @param $user_name
@@ -1816,6 +1816,72 @@ class User extends CommonIndex {
             return ['code' => '3006']; //添加失败
         }
 
+    }
+
+    /**
+     * 修改银行卡状态（启用、停用、撤回）
+     * @param $conId
+     * @param $id
+     * @param $status 变更状态 1启用 2停用 3撤销
+     * @return string
+     * @author rzc
+     */
+    public function changeUserBankcardStatus($conId,int $id,int $status){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $bank_card = DbUser::getUserBank(['uid' => $uid, 'id' => $id], '*', true);
+        // print_r($user_bank_card);die;
+        if (empty($bank_card)) {
+            return ['code' => '3006'];
+        }
+        if (!in_array($bank_card['status'],[1,2,3])) {
+            return ['code' => '3004'];
+        }
+        if ($status == 3) { //撤销
+            if ($bank_card['status'] != 1) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+                try {
+                    DbUser::delUserBank($id);
+                    Db::commit();
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    exception($e);
+                    Db::rollback();
+                    return ['code' => '3007']; //添加失败
+              }
+        }elseif ($status == 1) { //启用
+            if ($bank_card['status'] != 3) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+                try {
+                    DbUser::editUserBank(['status' => 2],$id);
+                    Db::commit();
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    exception($e);
+                    Db::rollback();
+                    return ['code' => '3007']; //添加失败
+              }
+        }elseif ($status == 2) {//启用
+            if ($bank_card['status'] != 2) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+            try {
+                DbUser::editUserBank(['status' => 3],$id);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3007']; //添加失败
+          }
+        }
     }
 
     /**

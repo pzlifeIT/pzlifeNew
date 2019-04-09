@@ -515,6 +515,16 @@ class DbUser {
         $UserBank = new UserBank;
         return $UserBank->save($data,['id' => $id]);
     }
+
+    /**
+     * 删除用户银行卡信息
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function delUserBank($id){
+        return UserBank::destroy($id);
+    }
     
     /**
      * 银行卡表计数
