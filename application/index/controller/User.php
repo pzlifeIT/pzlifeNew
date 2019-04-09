@@ -1041,9 +1041,9 @@ class User extends MyController {
      * @apiName          getInvoice
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
-     * apiSuccess (返回) {array} invoice 记录条数
-     * apiSuccess (invoice) {String} has_invoice 有发票比率
-     * apiSuccess (invoice) {String} no_invoice 无发票比率
+     * @apiSuccess (返回) {array} invoice 记录条数
+     * @apiSuccess (invoice) {String} has_invoice 有发票比率
+     * @apiSuccess (invoice) {String} no_invoice 无发票比率
      * @apiSampleRequest /index/user/getInvoice
      * @return array
      * @author rzc
