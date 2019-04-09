@@ -440,7 +440,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [user_name] 银行开户人
      * @apiParam (入参) {String} [stype] 类型 1.佣金转商票 2.佣金提现
      * @apiParam (入参) {String} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
-     * @apiParam (入参) {Number} [status] 状态 1.启用 2.停用(默认停用)
+     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
      * @apiParam (入参) {Number} [min_money] 用户转出最小金额
      * @apiParam (入参) {Number} [max_money] 用户转出最大金额
