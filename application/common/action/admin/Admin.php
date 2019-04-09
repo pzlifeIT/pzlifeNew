@@ -761,14 +761,14 @@ class Admin extends CommonIndex {
                     ];
                     Db::startTrans();
                     try {
-                        DbUser::modifyCommission($transfer['money'], $transfer['money'], 'inc');
+                        DbUser::modifyCommission($indexUser['commission'], $transfer['money'], 'inc');
                         DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
                         Db::commit();
                         $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
                         return ['code' => '200'];
                     } catch (\Exception $e) {
                         Db::rollback();
-                        exception($e);
+                        // exception($e);
                         return ['code' => '3007']; //审核失败
                     }
                 }elseif ($status == 2){//审核通过
