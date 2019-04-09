@@ -608,7 +608,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [bank_card] 银行卡号
      * @apiParam (入参) {String} [bank_mobile] 银行开户手机号
      * @apiParam (入参) {String} [user_name] 银行开户人
-     * @apiParam (入参) {String} [status] 银行开户人 状态 1.待审核 2.启用 3.停用 4.审核失败
+     * @apiParam (入参) {String} [status]  状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  /3003:银行卡号输入错误
