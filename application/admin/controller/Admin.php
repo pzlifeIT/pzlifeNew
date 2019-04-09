@@ -450,6 +450,25 @@ class Admin extends AdminController {
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 / 3001:con_id长度只能是28位 / 3002:con_id不能为空 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:转出金额必须为数字 / 3006:银行卡输入错误 / 3007:查询ID必须为数字 / 3008:page和pageNum必须为数字 / 3009:invoice参数错误 / 3010:wtype参数错误 / 3011:stype参数错误 / 3012:status参数错误
      * apiSuccess (返回) {String} total 记录条数
+     * @apiSuccess (返回) {array} log_transfer
+     * @apiSuccess (log_transfer) {String} id id
+     * @apiSuccess (log_transfer) {String} uid id
+     * @apiSuccess (log_transfer) {String} abbrev 银行英文缩写名
+     * @apiSuccess (log_transfer) {String} bank_name 银行全称
+     * @apiSuccess (log_transfer) {String} bank_card 银行卡号
+     * @apiSuccess (log_transfer) {String} bank_add 银行支行
+     * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
+     * @apiSuccess (log_transfer) {String} user_name 银行开户人
+     * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现
+     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiSuccess (log_transfer) {String} money 转出处理金额
+     * @apiSuccess (log_transfer) {String} proportion 税率比例
+     * @apiSuccess (log_transfer) {String} invoice 是否提供发票 1:提供 2:不提供
+     * @apiSuccess (log_transfer) {String} link_mobile 联系人
+     * @apiSuccess (log_transfer) {String} message 处理描述
+     * @apiSuccess (log_transfer) {String} real_money 实际到账金额
+     * @apiSuccess (log_transfer) {String} deduct_money 扣除金额
      * @apiSampleRequest /admin/admin/getLogTransfer
      * @return array
      * @author rzc

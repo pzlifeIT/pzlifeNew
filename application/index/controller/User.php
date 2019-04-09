@@ -4,14 +4,14 @@ namespace app\index\controller;
 
 use app\index\MyController;
 use Config;
-use think\Db;
 use function Qiniu\json_decode;
+use think\Db;
 
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'],//除去getFirstCate其他方法都进行second前置操作
-//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'], //除去getFirstCate其他方法都进行second前置操作
+        //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -58,7 +58,7 @@ class User extends MyController {
         $buid     = trim($this->request->post('buid'));
         $buid     = empty(deUid($buid)) ? 1 : deUid($buid);
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkPassword($password) === false) {
             return ['code' => '3005'];
@@ -96,18 +96,18 @@ class User extends MyController {
         $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
 //        $dd       = [$result, ['mobile' => $mobile, 'vercode' => $vercode, 'buid' => $buid]];
-//        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
+        //        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
         return $result;
     }
 
@@ -142,10 +142,10 @@ class User extends MyController {
         $buid          = empty(deUid($buid)) ? 1 : deUid($buid);
         $platformArr   = [1, 2];
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
@@ -177,7 +177,7 @@ class User extends MyController {
         $vercode  = trim($this->request->post('vercode'));
         $password = trim($this->request->post('password'));
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (checkVercode($vercode) === false) {
             return ['code' => '3004'];
@@ -203,14 +203,14 @@ class User extends MyController {
      * @author zyr
      */
     public function sendVercode() {
-        $stypeArr = [1, 2, 3,4];
+        $stypeArr = [1, 2, 3, 4];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
         if (!checkMobile($mobile)) {
-            return ['code' => '3001'];//手机格式有误
+            return ['code' => '3001']; //手机格式有误
         }
         if (!in_array($stype, $stypeArr)) {
-            return ['code' => '3002'];//手机格式有误
+            return ['code' => '3002']; //手机格式有误
         }
         $result = $this->app->user->sendVercode($mobile, $stype);
         return $result;
@@ -257,7 +257,6 @@ class User extends MyController {
         $res = $this->app->user->getUser($conId);
         return $res;
     }
-
 
     /**
      * @api              {post} / 通过微信code登录
@@ -319,7 +318,6 @@ class User extends MyController {
         $result = $this->app->user->getBossShop($conId);
         return $result;
     }
-
 
     /**
      * @api              {post} / 获取分利列表信息
@@ -580,7 +578,6 @@ class User extends MyController {
         return $result;
     }
 
-
     /**
      * @api              {post} / 获取所有下级关系网
      * @apiDescription   getUserNextLevel
@@ -679,7 +676,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         if (!checkMobile($mobile)) {
-            return ['code' => '3003'];//手机格式有误
+            return ['code' => '3003']; //手机格式有误
         }
         $result = $this->app->user->addUserAddress($conId, $province_name, $city_name, $area_name, $address, $mobile, $name);
         return $result;
@@ -714,7 +711,7 @@ class User extends MyController {
         $name          = trim($this->request->post('name'));
         $address_id    = trim($this->request->post('address_id'));
         if (!checkMobile($mobile)) {
-            return ['code' => '3003'];//手机格式有误
+            return ['code' => '3003']; //手机格式有误
         }
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -841,7 +838,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function addUserBankcard(){
+    public function addUserBankcard() {
         $conId       = trim($this->request->post('con_id'));
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
@@ -880,7 +877,7 @@ class User extends MyController {
         if ($bankcard_message == false) {
             return ['code' => '3011'];
         }
-        $result = $this->app->user->addUserBankcard($conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode,$bankcard_message);
+        $result = $this->app->user->addUserBankcard($conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
         return $result;
     }
 
@@ -890,19 +887,19 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getUserBankcards
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiParam (入参) {Number} [id] 用户绑定银行卡ID 
+     * @apiParam (入参) {Number} [id] 用户绑定银行卡ID
      * @apiParam (入参) {Number} [is_transfer] 1 提现用银行卡列表
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数con_id /  3003:id必须为数字 / 3004:is_transfer参数错误
      * @apiSuccess (返回) {Array} user_bank 列表
-     * @apiSuccess (user_bank) {string} id 
-     * @apiSuccess (user_bank) {string} uid 
+     * @apiSuccess (user_bank) {string} id
+     * @apiSuccess (user_bank) {string} uid
      * @apiSuccess (user_bank) {string} admin_bank_id 支持银行ID
      * @apiSuccess (user_bank) {string} bank_card 银行卡号
      * @apiSuccess (user_bank) {string} bank_add 银行支行
      * @apiSuccess (user_bank) {string} bank_mobile 银行开户手机号
      * @apiSuccess (user_bank) {string} user_name 银行开户人
      * @apiSuccess (user_bank) {string} status 状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
-     * @apiSuccess (user_bank[admin_bank]) {string} id 
+     * @apiSuccess (user_bank[admin_bank]) {string} id
      * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
      * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称
      * @apiSuccess (user_bank[admin_bank]) {string} icon_img 图标
@@ -917,7 +914,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserBankcards(){
+    public function getUserBankcards() {
         $conId       = trim($this->request->post('con_id'));
         $id          = trim($this->request->post('id'));
         $is_transfer = trim($this->request->post('is_transfer'));
@@ -937,7 +934,7 @@ class User extends MyController {
                 return ['code' => '3004'];
             }
         }
-        $result = $this->app->user->getUserBankcards($conId,$id,$is_transfer);
+        $result = $this->app->user->getUserBankcards($conId, $id, $is_transfer);
         return $result;
 
     }
@@ -960,7 +957,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function editUserBankcards(){
+    public function editUserBankcards() {
         $id          = trim($this->request->post('id'));
         $conId       = trim($this->request->post('con_id'));
         $user_name   = trim($this->request->post('user_name'));
@@ -1003,7 +1000,7 @@ class User extends MyController {
         if ($bankcard_message == false) {
             return ['code' => '3011'];
         }
-        $result = $this->app->user->editUserBankcards($id,$conId,$user_name,$bank_mobile,$bank_card,$bank_key_id,$bank_add,$vercode,$bankcard_message);
+        $result = $this->app->user->editUserBankcards($id, $conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
         return $result;
     }
 
@@ -1021,7 +1018,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function commissionTransferCash(){
+    public function commissionTransferCash() {
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1041,7 +1038,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferCash($conId,intval($bankcard_id),$money,$invoice);
+        $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, $invoice);
         return $result;
     }
 
@@ -1082,12 +1079,14 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} invoice 是否提供发票 1:提供 2:不提供
      * @apiSuccess (log_transfer) {String} link_mobile 联系人
      * @apiSuccess (log_transfer) {String} message 处理描述
+     * @apiSuccess (log_transfer) {String} create_time 申请时间
      * @apiSuccess (log_transfer) {String} real_money 实际到账金额
+     * @apiSuccess (log_transfer) {String} deduct_money 扣除金额
      * @apiSampleRequest /index/user/getLogTransfer
      * @return array
      * @author rzc
      */
-    public function getLogTransfer(){
+    public function getLogTransfer() {
         $conId      = trim($this->request->post('con_id'));
         $bank_card  = trim($this->request->post('bank_card'));
         $bank_name  = trim($this->request->post('bank_name'));
@@ -1116,21 +1115,21 @@ class User extends MyController {
             }
         }
         if (!empty($start_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)){
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
                 // print_r($parts);die;
-                if (checkdate($parts[2],$parts[3],$parts[1]) == false) {
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                     return ['code' => '3003'];
                 }
-            }else{
+            } else {
                 return ['code' => '3003'];
             }
         }
         if (!empty($end_time)) {
-            if (preg_match ("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)){
-                if (checkdate($parts1[2],$parts1[3],$parts1[1]) == false) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3004'];
                 }
-            }else{
+            } else {
                 return ['code' => '3004'];
             }
         }
@@ -1152,27 +1151,27 @@ class User extends MyController {
         if (!is_numeric($page) || !is_numeric($pageNum)) {
             return ['code' => '3008'];
         }
-        if (!empty($invoice)){
-            if (!in_array($invoice,[1,2])){
+        if (!empty($invoice)) {
+            if (!in_array($invoice, [1, 2])) {
                 return ['code' => '3009'];
             }
         }
-        if (!empty($wtype)){
-            if (!in_array($wtype,[1,2,3,4])){
+        if (!empty($wtype)) {
+            if (!in_array($wtype, [1, 2, 3, 4])) {
                 return ['code' => '3010'];
             }
         }
-        if (!empty($stype)){
-            if (!in_array($stype,[1,2])){
+        if (!empty($stype)) {
+            if (!in_array($stype, [1, 2])) {
                 return ['code' => '3011'];
             }
         }
-        if (!empty($status)){
-            if (!in_array($status,[1,2,3])){
+        if (!empty($status)) {
+            if (!in_array($status, [1, 2, 3])) {
                 return ['code' => '3012'];
             }
         }
-        $result = $this->app->user->getLogTransfer($conId,$bank_card,$bank_name,$min_money,$max_money,$invoice,$status,$wtype,$stype,$start_time,$end_time,intval($page),intval($pageNum),intval($id));
+        $result = $this->app->user->getLogTransfer($conId, $bank_card, $bank_name, $min_money, $max_money, $invoice, $status, $wtype, $stype, $start_time, $end_time, intval($page), intval($pageNum), intval($id));
         return $result;
     }
 
@@ -1182,7 +1181,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getAdminBank
      * @apiParam (入参) {String} con_id 用户登录con_id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有数据 
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有数据
      * @apiSuccess (返回) {array} adminBank
      * @apiSuccess (adminBank) {String} id id
      * @apiSuccess (adminBank) {String} abbrev 银行英文缩写名
@@ -1194,8 +1193,8 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function getAdminBank(){
-        $conId      = trim($this->request->post('con_id'));
+    public function getAdminBank() {
+        $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1218,9 +1217,9 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function commissionTransferBalance(){
-        $conId       = trim($this->request->post('con_id'));
-        $money       = trim($this->request->post('money'));
+    public function commissionTransferBalance() {
+        $conId = trim($this->request->post('con_id'));
+        $money = trim($this->request->post('money'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1233,10 +1232,10 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId,intval($money));
+        $result = $this->app->user->commissionTransferBalance($conId, intval($money));
         return $result;
     }
-     /**
+    /**
      ** @api              {post} / 分享浏览人次
      * @apiDescription   getUserRead
      * @apiGroup         index_user
@@ -1263,7 +1262,7 @@ class User extends MyController {
             return ['code' => '3000'];
         }
         if (strlen($code) != 32) {
-            return ['code' => '3002'];//code有误
+            return ['code' => '3002']; //code有误
         }
         $view_uid = deUid($view_uid);
         $view_uid = $view_uid ? $view_uid : 1;
