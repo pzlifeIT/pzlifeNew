@@ -1920,10 +1920,19 @@ class User extends CommonIndex {
         if ($userInfo['commission'] - $money < 0) {
             return ['code' => '3005'];
         }
+        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
+        $invoice_data = $this->redis->get($redisManageInvoice);
+        if (empty($invoice_data)) {
+            $invoice_data = @file_get_contents(Env::get('root_path')."invoice.json");
+            if ($invoice_data == false) {
+                return ['code' => '3009'];
+            }
+        }
+        $invoice_data = json_decode($invoice_data,true);
         if ($invoice == 1) {
-            $proportion = Config::get('conf.has_invoice');
+            $proportion = $invoice_data['has_invoice'];
         } elseif ($invoice == 2) {
-            $proportion = Config::get('conf.no_invoice');
+            $proportion = $invoice_data['no_invoice'];;
         }
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $transfer                = [];

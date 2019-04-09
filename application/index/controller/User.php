@@ -1043,7 +1043,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
      * @apiParam (入参) {Number} money 用户转出金额
      * @apiParam (入参) {Number} invoice 是否提供发票 1:提供 2:不提供
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
      * @apiSampleRequest /index/user/commissionTransferCash
      * @return array
      * @author rzc

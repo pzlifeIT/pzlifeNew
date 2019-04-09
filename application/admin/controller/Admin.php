@@ -309,11 +309,38 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getInvoice(){
+    public function getInvoice() {
         $result = $this->app->admin->getInvoice();
         return $result;
     }
 
+    /**
+     * @api              {post} / cms 编辑提现比率
+     * @apiDescription   editInvoice
+     * @apiGroup         admin_admin
+     * @apiName          editInvoice
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} has_invoice 提供发票
+     * @apiParam (入参) {String} no_invoice 不提供发票
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:no_invoice或者has_invoice或者status必须为数字 / 3002:比率不能超过100  / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/editInvoice
+     * @return array
+     * @author rzc
+     */
+    public function editInvoice() {
+        $cmsConId    = trim($this->request->post('cms_con_id'));
+        $has_invoice = trim($this->request->post('has_invoice'));
+        $no_invoice  = trim($this->request->post('no_invoice'));
+        if (!is_numeric($has_invoice) || !is_numeric($no_invoice)) {
+            return ['code' => '3001'];
+        }
+        if ($has_invoice > 100 || $no_invoice > 100) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->admin->editInvoice($cmsConId,$has_invoice,$no_invoice);
+        return $result;
+    }
 
     /**
      * @api              {post} / cms 获取支持银行列表
@@ -333,7 +360,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    
+
     public function getAdminBank() {
         $id        = trim(input("post.id"));
         $page      = trim(input("post.page"));
