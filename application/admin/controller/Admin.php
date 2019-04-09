@@ -574,7 +574,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {Number} id
      * @apiParam (入参) {String} message 后台管理员处理回馈留言
      * @apiParam (入参) {String} status 状态 2.已完成 3.取消
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:message不能为空（status传值为5） / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:已审核的提现记录无法再次审核 / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核 / 3007:审核失败
      * apiSuccess (返回) {String} total 记录条数
      * @apiSampleRequest /admin/admin/checkUserTransfer
      * @return array

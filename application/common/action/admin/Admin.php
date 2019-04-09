@@ -725,6 +725,67 @@ class Admin extends CommonIndex {
     }
 
     /**
+     * 审核用户提现
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_mobile
+     * @param $user_name
+     * @param $status
+     * @param $page
+     * @param $page_num
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function checkUserTransfer(int $id,int $status,$message = ''){
+        $transfer = DbUser::getLogTransfer(['id' => $id], '*', true);
+        $userRedisKey = Config::get('rediskey.user.redisKey');
+        if (empty($transfer)) {
+            return ['code' => '3000'];
+        }
+        if ($transfer['status'] != 1) {
+            return ['code' => '3004'];
+        }
+        if ($transfer['stype'] == 2) {//佣金提现
+            if ($transfer['wtype'] == 1) {//提现方式 1 银行
+                if ($status == 3) {//审核不通过
+                    $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
+                    $tradingData = [
+                        'uid'          => $transfer['uid'],
+                        'trading_type' => 2,
+                        'change_type'  => 8,
+                        'money'        => $transfer['money'],
+                        'befor_money'  => $indexUser['commission'],
+                        'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
+                        'message'      => $message,
+                    ];
+                    Db::startTrans();
+                    try {
+                        DbUser::modifyCommission($transfer['money'], $transfer['money'], 'inc');
+                        DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
+                        Db::commit();
+                        $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
+                        return ['code' => '200'];
+                    } catch (\Exception $e) {
+                        Db::rollback();
+                        return ['code' => '3007']; //审核失败
+                    }
+                }elseif ($status == 2){//审核通过
+                    Db::startTrans();
+                    try {
+                        DbUser::editLogTransfer(['status' => $status,'message' => $message],$id);
+                        Db::commit();
+                        return ['code' => '200'];
+                    } catch (\Exception $e) {
+                        Db::rollback();
+                        return ['code' => '3007']; //审核失败
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * 获取用户提交银行卡
      * @param $conId
      * @param $bank_card

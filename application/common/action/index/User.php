@@ -15,6 +15,7 @@ use think\Db;
 
 class User extends CommonIndex {
     private $cipherUserKey = 'userpass'; //用户密码加密key
+    // private $userRedisKey = 'index:user:'; //用户密码加密key
     private $note;
 
     public function __construct() {
@@ -1600,6 +1601,7 @@ class User extends CommonIndex {
      * @author rzc
      */
     public function commissionTransferBalance($conId, $money) {
+        $userRedisKey = Config::get('rediskey.user.redisKey');
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -1651,6 +1653,7 @@ class User extends CommonIndex {
             DbUser::saveLogTrading($addtrading);
             DbUser::modifyBalance($uid, $money, 'inc');
             Db::commit();
+            $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
         } catch (\Exception $e) {
             print_r($e);
@@ -1733,6 +1736,9 @@ class User extends CommonIndex {
             $user_bank = DbUser::getUserBank(['uid' => $uid, 'id' => $id], '*', true);
             if (empty($user_bank)) {
                 return ['code' => '3000'];
+            }
+            if ($user_bank['error_fields']) {
+                $user_bank['error_fields'] = join(',',$$user_bank['error_fields']);
             }
             return ['code' => '200', 'user_bank' => $user_bank];
         }
@@ -1852,6 +1858,7 @@ class User extends CommonIndex {
         } elseif ($invoice == 2) {
             $proportion = Config::get('conf.no_invoice');
         }
+        $userRedisKey = Config::get('rediskey.user.redisKey');
         $transfer                = [];
         $transfer['uid']         = $uid;
         $transfer['abbrev']      = $user_bank_card['admin_bank']['abbrev'];
@@ -1883,6 +1890,7 @@ class User extends CommonIndex {
             DbUser::modifyCommission($uid, $money);
             DbUser::saveLogTrading($tradingData);
             Db::commit();
+            $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
         } catch (\Exception $e) {
             exception($e);
