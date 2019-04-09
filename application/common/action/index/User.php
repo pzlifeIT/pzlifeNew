@@ -1968,6 +1968,9 @@ class User extends CommonIndex {
         if (empty($result)) {
             return ['code' => '200','log_transfer' =>[]];
         }
+        foreach ($result as $key => $value) {
+            $result[$key]['real_money'] =bcmul(bcdiv(bcsub(100,$value['proportion'],2),100,2),$value['money'],2)  ;
+        }
         return ['code' => '200','log_transfer' => $result];
     }
 
