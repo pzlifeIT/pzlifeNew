@@ -392,7 +392,7 @@ class DbUser {
     }
 
     public function getLogInvestSum($where, $field) {
-        return LogTrading::where($where)->sum($field);
+        return LogInvest::where($where)->sum($field);
     }
 
     /**
