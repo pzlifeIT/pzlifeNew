@@ -468,7 +468,7 @@ class Admin extends AdminController {
      * @apiSuccess (log_transfer) {String} link_mobile 联系人
      * @apiSuccess (log_transfer) {String} message 处理描述
      * @apiSuccess (log_transfer) {String} real_money 实际到账金额
-     * @apiSuccess (log_transfer) {String} deduct_money 扣除金额
+     * @apiSuccess (log_transfer) {String} deduct_money 扣除金额+
      * @apiSampleRequest /admin/admin/getLogTransfer
      * @return array
      * @author rzc

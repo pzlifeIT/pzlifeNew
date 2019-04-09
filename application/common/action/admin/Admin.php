@@ -768,6 +768,7 @@ class Admin extends CommonIndex {
                         return ['code' => '200'];
                     } catch (\Exception $e) {
                         Db::rollback();
+                        exception($e);
                         return ['code' => '3007']; //审核失败
                     }
                 }elseif ($status == 2){//审核通过

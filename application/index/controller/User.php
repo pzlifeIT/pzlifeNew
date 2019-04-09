@@ -1005,6 +1005,34 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 修改银行卡状态（启用、停用、撤回）【未完成】
+     * @apiDescription   changeUserBankcardStatus
+     * @apiGroup         index_user
+     * @apiName          changeUserBankcardStatus
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} id 变更ID
+     * @apiParam (入参) {Number} status 变更状态
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:con_id长度只能是28位 / 3002:conId为空 /
+     * @apiSampleRequest /index/user/changeUserBankcardStatus
+     * @return array
+     * @author rzc
+     */
+    public function changeUserBankcardStatus(){
+        $id          = trim($this->request->post('id'));
+        $conId       = trim($this->request->post('con_id'));
+        $status      = trim($this->request->post('status'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3003'];
+        }
+    }
+
+    /**
      * @api              {post} / 佣金提现
      * @apiDescription   commissionTransferCash
      * @apiGroup         index_user
@@ -1013,7 +1041,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
      * @apiParam (入参) {Number} money 用户转出金额
      * @apiParam (入参) {Number} invoice 是否提供发票 1:提供 2:不提供
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000
      * @apiSampleRequest /index/user/commissionTransferCash
      * @return array
      * @author rzc
