@@ -1281,7 +1281,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, intval($money));
+        $result = $this->app->user->commissionTransferBalance($conId, $money);
         return $result;
     }
     /**
