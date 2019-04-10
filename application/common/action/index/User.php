@@ -1738,9 +1738,9 @@ class User extends CommonIndex {
                 return ['code' => '3000'];
             }
             // print_r($user_bank);die;
-            if ($user_bank['error_fields']) {
-                $user_bank['error_fields'] = explode(',',$user_bank['error_fields']);
-            }
+            // if ($user_bank['error_fields']) {
+            //     $user_bank['error_fields'] = explode(',',$user_bank['error_fields']);
+            // }
             return ['code' => '200', 'user_bank' => $user_bank];
         }
         $where = [];
