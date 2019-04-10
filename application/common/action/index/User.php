@@ -594,10 +594,12 @@ class User extends CommonIndex {
      * 获取店铺商票明细
      * @param $conId
      * @param $stype
+     * @param $page
+     * @param $pageNum
      * @return array
      * @author zyr
      */
-    public function getShopBalance($conId, $stype) {
+    public function getShopBalance($conId, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
             return ['code' => '3003'];
@@ -609,35 +611,47 @@ class User extends CommonIndex {
         // if ($user['user_identity'] == '1') { //普通用户
         //     return ['code' => '3000']; //普通用户没有权限查看
         // }
-        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
-        $data       = [];
+        $offset = ($page - 1) * $pageNum;
+        // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
+        $data = [];
         if ($stype == 1) { //已使用
             $where = [
                 ['trading_type', '=', '1'], //商票交易
                 ['change_type', 'in', [1, 2]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
                 ['uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
+                // ['create_time', '>=', $threeMonth], //近三个月
             ];
             $field = 'change_type,order_no,money,create_time,message';
-            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         if ($stype == 3) { //余额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2, 4, 5, 7, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
+                // ['create_time', '>=', $threeMonth], //近三个月
             ];
             $field = 'change_type,order_no,money,create_time,message';
-            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         if ($stype == 2) { //未结算商票
             $data = DbUser::getLogBonus([
                 ['user_identity', '=', 2], //只查商票
                 ['status', '=', '1'], //待结算(未到账的)
                 ['to_uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
-            ], 'order_no,result_price as money,create_time'); //未结算商票
+                // ['create_time', '>=', $threeMonth], //近三个月
+            ], 'order_no,result_price as money,create_time', false, 'id desc', $offset . ',' . $pageNum); //未结算商票
+        }
+        if ($stype == 4) { //总额明细
+            $where = [
+                ['trading_type', '=', '1'], //商票交易
+                ['change_type', 'in', [3, 4, 5, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['money', '>', 0],
+                ['uid', '=', $uid],
+                // ['create_time', '>=', $threeMonth], //近三个月
+            ];
+            $field = 'change_type,order_no,money,create_time,message';
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         $result = [];
         // print_r($data);die;
@@ -670,6 +684,39 @@ class User extends CommonIndex {
         // print_r($data);die;
         return ['code' => '200', 'data' => $result];
         //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
+    }
+
+    public function getShopBalanceSum($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,balance,balance_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $balance = $user['balance']; //商票余额
+        if ($user['balance_freeze'] == 1) { //商票冻结
+            $balance = 0;
+        }
+        $balanceUse = abs(DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'], //商票交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['uid', '=', $uid],
+        ], 'money')); //已用商票
+        $noBbonus = DbUser::getLogBonusSum([
+            'to_uid'     => $uid,
+            'bonus_type' => 1, //返利
+            'status'     => 1, //待结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //待到账商票
+        $balanceAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'],
+            ['change_type', 'in', [3, 4, 5, 7, 8]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
+        return ['code' => '200', 'balance' => $balance, 'balanceUse' => $balanceUse, 'balanceAll' => $balanceAll, 'noBbonus' => $noBbonus];
     }
 
     /**
@@ -991,7 +1038,7 @@ class User extends CommonIndex {
             $trType = $d['stype'] ?? 1;
             switch ($trType) {
             case 1:
-                $ctype = '分利';
+                $ctype = '购物积分';
                 break;
             case 2:
                 $ctype = '后台充值';

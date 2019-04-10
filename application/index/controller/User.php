@@ -378,7 +378,9 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          getShopBalance
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细 4.总额明细
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} money 商票金额
@@ -392,7 +394,9 @@ class User extends MyController {
     public function getShopBalance() {
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
-        $stypeArr = [1, 2, 3];
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2, 3, 4];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -402,7 +406,36 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->getShopBalance($conId, $stype);
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getShopBalance($conId, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 个人中心我的商票
+     * @apiDescription   getShopBalanceSum
+     * @apiGroup         index_user
+     * @apiName          getShopBalanceSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} balanceUse 已用商票
+     * @apiSuccess (返回) {Decimal} balanceAll 商票总额
+     * @apiSuccess (返回) {Decimal} noBbonus 待到账商票
+     * @apiSampleRequest /index/user/getshopbalancesum
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalanceSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getShopBalanceSum($conId);
         return $result;
     }
 

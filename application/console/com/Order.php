@@ -116,7 +116,7 @@ class Order extends Pzlife {
         $days      = Config::get('conf.bonus_days'); //付款后15天分利正式给到账户
         $times     = bcmul($days, 86400, 0);
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
-        $sql       = sprintf("select id,to_uid,result_price,user_identity,order_no from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
+        $sql       = sprintf("select id,to_uid,result_price,user_identity,order_no,bonus_type from pz_log_bonus where delete_time=0 and status=1 and create_time<=%s", $diffTimes);
         $result    = Db::query($sql);
         if (empty($result)) {
             exit('log_bonus_null');
@@ -138,7 +138,7 @@ class Order extends Pzlife {
                 // $data[$rVal['to_uid']]['user_identity'] = $rVal['user_identity'];
             }
             $data[$kkey]['order_no'] = $rVal['order_no'];
-            if ($rVal['user_identity'] == 4) {
+            if ($rVal['bonus_type'] == 2 || $rVal['bonus_type'] == 3) {
                 $data[$kkey]['commission'] = isset($data[$kkey]['commission']) ? bcadd($data[$kkey]['commission'], $rVal['result_price'], 2) : $rVal['result_price'];
             } else {
                 $data[$kkey]['balance'] = isset($data[$kkey]['balance']) ? bcadd($data[$kkey]['balance'], $rVal['result_price'], 2) : $rVal['result_price'];
