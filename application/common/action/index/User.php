@@ -1663,7 +1663,7 @@ class User extends CommonIndex {
         $tradingData = [
             'uid'          => $uid,
             'trading_type' => 2,
-            'change_type'  => 6,
+            'change_type'  => 7,
             'money'        => $money,
             'befor_money'  => $userInfo['commission'],
             'after_money'  => bcsub($userInfo['commission'], $money, 2),
