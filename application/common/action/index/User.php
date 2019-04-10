@@ -1838,6 +1838,7 @@ class User extends CommonIndex {
         if ($bankcard_message['bank'] != $admin_bank['abbrev']) {
             return ['code' => '3010'];
         }
+        
         $userBank                  = [];
         $userBank['uid']           = $uid;
         $userBank['user_name']     = $user_name;
@@ -1846,6 +1847,8 @@ class User extends CommonIndex {
         $userBank['bank_add']      = $bank_add;
         $userBank['bank_mobile']   = $bank_mobile;
         $userBank['status']        = 1;
+        $userBank['error_fields']  = '';
+        $userBank['message']       = '';
         Db::startTrans();
         try {
             DbUser::editUserBank($userBank, $id);
