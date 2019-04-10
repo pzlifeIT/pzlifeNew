@@ -591,6 +591,99 @@ class User extends CommonIndex {
     }
 
     /**
+     * 个人中心佣金明细
+     * @param $conId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommission($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $where  = [
+            ['trading_type', '=', '2'], //佣金交易
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+            ['uid', '=', $uid],
+        ];
+        $field  = 'change_type,money,create_time,message';
+        $data   = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
+        $result = [];
+        foreach ($data as $d) {
+            $trType = $d['change_type'];
+            switch ($trType) {
+            case 3:
+                $ctype = '充值';
+                break;
+            case 4:
+                $ctype = '订单收益';
+                break;
+            case 5:
+                $ctype = '招商代理收益';
+                break;
+            case 7:
+                $ctype = '转商票';
+                break;
+            case 8:
+                $ctype = '后台充值操作';
+                break;
+            case 9:
+                $ctype = '开通boss预扣款';
+                break;
+            }
+            $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
+            unset($d['message']);
+            array_push($result, $d);
+        }
+        return ['code' => '200', 'data' => $result];
+    }
+
+    /**
+     * 个人中心佣金统计
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommissionSum($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,commission,commission_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $commission = $user['commission']; //佣金余额
+        if ($user['commission_freeze'] == 1) { //佣金冻结
+            $commission = 0;
+        }
+        $commissionAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金总额
+        $commissionExtract = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', '=', 6],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金提现
+        $commissionToBalance = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', '=', 7],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金转商票
+        return ['code' => '200', 'commission' => $commission, 'commission_all' => $commissionAll, 'commission_extract' => $commissionExtract, 'commission_to_balance' => $commissionToBalance];
+    }
+
+    /**
      * 获取店铺商票明细
      * @param $conId
      * @param $stype
@@ -662,7 +755,7 @@ class User extends CommonIndex {
                 $ctype = '已使用商票';
                 break;
             case 2:
-                $ctype = '商票退款';
+                $ctype = '订单取消商票退回';
                 break;
             case 4:
                 $ctype = '钻石返利';
@@ -686,6 +779,12 @@ class User extends CommonIndex {
         //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
     }
 
+    /**
+     * 个人中心我的商票
+     * @param {type}
+     * @return array
+     * @author zyr
+     */
     public function getShopBalanceSum($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
