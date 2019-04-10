@@ -22,6 +22,37 @@ class Order extends MyController {
      * @apiParam (入参) {Number} pagenum 每页展示条数
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_status、page和pagenum必须是数字 / 3004:订单状态码有误
      * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {array} order_list 订单信息
+     * @apiSuccess (order_list) {String} order_no 订单号
+     * @apiSuccess (order_list) {String} third_order_id 三方订单号
+     * @apiSuccess (order_list) {String} order_status 订单状态
+     * @apiSuccess (order_list) {String} order_money 订单金额(优惠金额+实际支付的金额)
+     * @apiSuccess (order_list) {String} deduction_money 商票抵扣金额
+     * @apiSuccess (order_list) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_list) {String} goods_money 商品金额
+     * @apiSuccess (order_list) {String} discount_money 优惠金额
+     * @apiSuccess (order_list) {String} third_money 第三方支付金额
+     * @apiSuccess (order_list) {String} express_money 邮费
+     * @apiSuccess (order_list) {String} integral 积分
+     * @apiSuccess (order_list) {String} commission 佣金
+     * @apiSuccess (order_list) {array} order_child 子订单
+     * @apiSuccess (order_list[order_child]) {String} id 子订单id
+     * @apiSuccess (order_list[order_child]) {String} express_money 子订单邮费
+     * @apiSuccess (order_list[order_child]) {String} supplier_id 子订单供应商id
+     * @apiSuccess (order_list[order_child]) {String} supplier_name 子订单供应商名称
+     * @apiSuccess (order_list[order_child]) {array} order_goods 子订单订单商品
+     * @apiSuccess (order_list[order_child][order_goods]) {String} goods_id 子订单订单商品id
+     * @apiSuccess (order_list[order_child][order_goods]) {String} goods_name 子订单订单商品名称
+     * @apiSuccess (order_list[order_child][order_goods]) {String} order_child_id 子订单id
+     * @apiSuccess (order_list[order_child][order_goods]) {String} sku_id 子订单订单商品skuid
+     * @apiSuccess (order_list[order_child][order_goods]) {String} sup_id 子订单订单商品供应商id
+     * @apiSuccess (order_list[order_child][order_goods]) {String} goods_type 子订单订单商品商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (order_list[order_child][order_goods]) {String} goods_price 子订单订单商品商品成交价
+     * @apiSuccess (order_list[order_child][order_goods]) {String} margin_price 子订单订单商品实际成交毛利
+     * @apiSuccess (order_list[order_child][order_goods]) {String} integral 子订单订单商品赠送积分
+     * @apiSuccess (order_list[order_child][order_goods]) {String} goods_num 子订单订单商品商品成交数量
+     * @apiSuccess (order_list[order_child][order_goods]) {String} sku_image 子订单订单商品规格图
+     * @apiSuccess (order_list[order_child][order_goods]) {String} sku_json 子订单订单商品商品规格详情列表
      * @apiSampleRequest /index/order/getUserOrderList
      * @return array
      * @author rzc
@@ -68,6 +99,46 @@ class Order extends MyController {
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:openid长度只能是28位 / 3002:缺少参数 / 3003:order_no长度只能是23位 / 3004:订单不存在
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/order/getUserOrderInfo
+     * @apiSuccess (data) {String} address 用户添加的收货地址
+     * @apiSuccess (data) {array} order_info 订单信息
+     * @apiSuccess (order_info) {String} order_no 订单号
+     * @apiSuccess (order_info) {String} third_order_id 三方订单号
+     * @apiSuccess (order_info) {String} order_status 订单状态
+     * @apiSuccess (order_info) {String} order_money 订单金额(优惠金额+实际支付的金额)
+     * @apiSuccess (order_info) {String} deduction_money 商票抵扣金额
+     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_info) {String} goods_money 商品金额
+     * @apiSuccess (order_info) {String} discount_money 优惠金额
+     * @apiSuccess (order_info) {String} third_money 第三方支付金额
+     * @apiSuccess (order_info) {String} third_pay_type 第三方支付类型1.支付宝 2.微信 3.银联
+     * @apiSuccess (order_info) {String} linkman 订单联系人
+     * @apiSuccess (order_info) {String} linkphone 联系人电话
+     * @apiSuccess (order_info) {String} province_name 省份名称
+     * @apiSuccess (order_info) {String} city_name 城市名称
+     * @apiSuccess (order_info) {String} area_name 地区名称
+     * @apiSuccess (order_info) {String} address 收货地址
+     * @apiSuccess (order_info) {String} message 买家留言信息
+     * @apiSuccess (order_info) {String} express_money 邮费
+     * @apiSuccess (order_info) {String} integral 积分
+     * @apiSuccess (order_info) {String} commission 佣金
+     * @apiSuccess (order_info) {array} order_child 子订单
+     * @apiSuccess (order_info[order_child]) {String} id 子订单id
+     * @apiSuccess (order_info[order_child]) {String} express_money 子订单邮费
+     * @apiSuccess (order_info[order_child]) {String} supplier_id 子订单供应商id
+     * @apiSuccess (order_info[order_child]) {String} supplier_name 子订单供应商名称
+     * @apiSuccess (order_info[order_child]) {array} order_goods 子订单订单商品
+     * @apiSuccess (order_info[order_child][order_goods]) {String} goods_id 子订单订单商品id
+     * @apiSuccess (order_info[order_child][order_goods]) {String} goods_name 子订单订单商品名称
+     * @apiSuccess (order_info[order_child][order_goods]) {String} order_child_id 子订单id
+     * @apiSuccess (order_info[order_child][order_goods]) {String} sku_id 子订单订单商品skuid
+     * @apiSuccess (order_info[order_child][order_goods]) {String} sup_id 子订单订单商品供应商id
+     * @apiSuccess (order_info[order_child][order_goods]) {String} goods_type 子订单订单商品商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (order_info[order_child][order_goods]) {String} goods_price 子订单订单商品商品成交价
+     * @apiSuccess (order_info[order_child][order_goods]) {String} margin_price 子订单订单商品实际成交毛利
+     * @apiSuccess (order_info[order_child][order_goods]) {String} integral 子订单订单商品赠送积分
+     * @apiSuccess (order_info[order_child][order_goods]) {String} goods_num 子订单订单商品商品成交数量
+     * @apiSuccess (order_info[order_child][order_goods]) {String} sku_image 子订单订单商品规格图
+     * @apiSuccess (order_info[order_child][order_goods]) {String} sku_json 子订单订单商品商品规格详情列表
      * @return array
      * @author rzc
      */
@@ -83,7 +154,6 @@ class Order extends MyController {
         }
         $result = $this->app->order->getUserOrderInfo($con_id, $order_no);
         return $result;
-
     }
 
     /**

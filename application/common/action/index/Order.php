@@ -896,7 +896,7 @@ class Order extends CommonIndex {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
+        $field = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
         $where = ['uid' => $uid];
         if ($order_status) {
             $where = ['uid' => $uid, 'order_status' => $order_status];
@@ -910,8 +910,9 @@ class Order extends CommonIndex {
         }
 
         foreach ($result as $key => $value) {
-            $order_child   = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
+            $order_child   = DbOrder::getOrderChild('id,express_money,supplier_id,supplier_name', ['order_id' => $value['id']]);
             $integral      = 0;
+            $commission    = 0;
             $express_money = 0;
             foreach ($order_child as $order => $child) {
                 $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
@@ -924,6 +925,7 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
+                            $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
                         }
                     }
                 }
@@ -935,6 +937,7 @@ class Order extends CommonIndex {
             }
             $result[$key]['express_money'] = $express_money;
             $result[$key]['integral']      = $integral;
+            $result[$key]['commission']    = $commission;
             $result[$key]['order_child']   = $order_child;
             unset($result[$key]['id']);
         }
@@ -954,7 +957,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $field  = '*';
+        $field  = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message';
         $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
@@ -963,17 +966,21 @@ class Order extends CommonIndex {
         $order_child   = DbOrder::getOrderChild('*', ['order_id' => $result['id']]);
         $integral      = 0;
         $express_money = 0;
+        $commission    = 0;
         foreach ($order_child as $order => $child) {
-            $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
+            $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json,sku_image', ['order_child_id' => $child['id']], false, true);
             $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
             foreach ($order_goods as $og => $goods) {
 
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                        if (empty($goods['sku_image'])){
+                            $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                        }
                         $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                      += $goods['integral'] * $goods_num['goods_num'];
+                        $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
                     }
                 }
             }
@@ -986,6 +993,7 @@ class Order extends CommonIndex {
         }
         $result['express_money'] = $express_money;
         $result['integral']      = $integral;
+        $result['commission']    = $commission;
         $result['order_child']   = $order_child;
         $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
         $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
@@ -1153,8 +1161,11 @@ class Order extends CommonIndex {
             ];
             $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
             foreach ($has_express_goodsid as $has_express => $goods) {
-                $express_goods = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]], false, false, true);
+                $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_image,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
                 // print_r($express_goods);die;
+                if (empty($express_goods['sku_image'])) {
+                    $express_goods['sku_image'] =  DbGoods::getOneGoodsSku(['id' => $express_goods['sku_id']], 'sku_image', true)['sku_image'];
+                }
                 $express_goods['sku_json']  = json_decode($express_goods['sku_json'], true);
                 $express['express_goods'][] = $express_goods;
             }
@@ -1226,7 +1237,7 @@ class Order extends CommonIndex {
         }
 
         foreach ($has_express_goodsid as $has_express => $goods) {
-            $deliver_express_goods = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]], false, false, true);
+            $deliver_express_goods = DbOrder::getOrderGoods('sku_id,goods_name,sku_json', [['id', '=', $goods['order_goods_id']]], false, false, true);
             // print_r($express_goods);die;
             $deliver_express_goods['sku_json'] = json_decode($deliver_express_goods['sku_json'], true);
             $express_goods[]                   = $deliver_express_goods;
