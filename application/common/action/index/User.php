@@ -1774,8 +1774,12 @@ class User extends CommonIndex {
             }
             // print_r($user_bank);die;
             if ($user_bank['error_fields']) {
-                $user_bank['error_fields'] = explode(',',$user_bank['error_fields']);
-                $user_bank['error_fields'] = json_encode($user_bank['error_fields']);
+                $error_fields = explode(',',$user_bank['error_fields']);
+                $new_fields = [];
+                foreach ($error_fields as $error => $fields) {
+                    $new_fields[$fields]=1;
+                }
+                $user_bank['error_fields'] = $new_fields;
             }
             return ['code' => '200', 'user_bank' => $user_bank];
         }
