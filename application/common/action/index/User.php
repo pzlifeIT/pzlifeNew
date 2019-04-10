@@ -628,6 +628,9 @@ class User extends CommonIndex {
             case 5:
                 $ctype = '招商代理收益';
                 break;
+            case 6:
+                $ctype = '提现';
+                break;
             case 7:
                 $ctype = '转商票';
                 break;
