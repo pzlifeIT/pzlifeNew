@@ -76,6 +76,7 @@ class Order extends CommonIndex {
             $order_child[$order]['order_goods'] = $order_goods;
             $express_money                      += $child['express_money'];
         }
+        $order_info['express_money'] = $express_money;
         $order_pack = [];
         foreach ($order_child as $order => $child) {
             $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
@@ -115,6 +116,7 @@ class Order extends CommonIndex {
         }
         $no_deliver_goods_num = count($no_deliver_goods);
         // print_r($has_deliver_goods);die;
+        // print_r($express_money);die;
         return ['code' => 200, 'order_info' => $order_info, 'order_pack' => $order_pack, 'order_child' => $order_child, 'no_deliver_goods' => $no_deliver_goods, 'has_deliver_goods' => $has_deliver_goods, 'no_deliver_goods_num' => $no_deliver_goods_num];
     }
 
