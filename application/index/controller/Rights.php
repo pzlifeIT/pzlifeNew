@@ -189,7 +189,7 @@ class Rights extends MyController {
      * @apiParam (入参) {String} target_idcard 被邀请人身份证号
      * @apiParam (入参) {Number} refe_type 被邀请成为店主类型1.创业店主2.boss合伙人
      * @apiParam (入参) {String} parent_id 邀请人id
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数con_id / 3003:缺少参数parent_id / 3004:target_sex必须为数字 / 3005:target_nickname为空 / 3006:手机号校验失败 / 3007:身份证号码校验失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:用户为空 / 3001:con_id长度只能是32位 / 3002:缺少参数con_id / 3003:缺少参数parent_id / 3004:target_sex必须为数字 / 3005:target_nickname为空 / 3006:手机号校验失败 / 3007:身份证号码校验失败 / 3008:refe_type必须为数字 / 3009:已有在审核进度中或者审核通过的申请记录，无法再次申请 / 3010:已成为BOSS 无法再次申请 / 3011:此记录已存在 / 3012:邀请上级不是BOSS
      * @apiSuccess (data) {String} uid 用户id
      * @apiSuccess (data) {String} nick_name 用户昵称
      * @apiSuccess (data) {String} avatar 用户头像

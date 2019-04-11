@@ -5,6 +5,7 @@ namespace app\common\db\rights;
 use app\common\model\DiamondvipBinding;
 use app\common\model\DiamondvipGet;
 use app\common\model\Diamondvips;
+use app\common\model\ShopApply;
 
 class DbRights {
     /**
@@ -158,5 +159,62 @@ class DbRights {
             return DiamondvipGet::where($where)->count();
         }
         return DiamondvipGet::count();
+    }
+
+    /**
+     * 查询分享开店BOSS记录
+     * @param $field
+     * @param $where
+     * @param $row
+     * @param $orderBy
+     * @param $sc
+     * @param $limit
+     * @return array
+     */
+    public function getShopApply($where, $field, $row = false, $orderBy = '', $sc = '', $limit = ''){
+        $obj = ShopApply::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    /**
+     * 添加开店邀请记录
+     * @param $data
+     * @return number
+     */
+    public function addShopApply($data){
+        $ShopApply = new ShopApply;
+        $ShopApply->save($data);
+        return $ShopApply->id;
+    }
+
+    /**
+     * 修改开店邀请记录
+     * @param $data
+     * @param $id
+     * @return number
+     */
+    public function editShopApply($data,$id){
+        $ShopApply = new ShopApply;
+        return $ShopApply->save($data,['id'=>$id]);
+    }
+
+    /**
+     * 获取记录数目
+     * @param $where
+     * @return number
+     */
+    public function countShopApply($where){
+        return ShopApply::where($where)->count();
     }
 }
