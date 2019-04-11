@@ -192,7 +192,7 @@ class DbRights {
      * @param $data
      * @return number
      */
-    public function addShopApply($data){
+    public function saveShopApply($data){
         $ShopApply = new ShopApply;
         $ShopApply->save($data);
         return $ShopApply->id;

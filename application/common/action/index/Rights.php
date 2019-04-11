@@ -197,7 +197,7 @@ class Rights extends CommonIndex {
         }
         $parent_info = DbUser::getUserInfo(['id' => $parent_id, 'user_identity' => 4], 'user_identity,nick_name', true);
         if (!empty($parent_info)) {
-            $parent_shop = DbShops::getShopInfo('id', ['uid' => $uid]);
+            $parent_shop = DbShops::getShopInfo('id', ['uid' => $parent_id]);
         } else {
             return ['code' => '3012'];
         }
@@ -231,10 +231,12 @@ class Rights extends CommonIndex {
         $log_invest['cost']       = 5000;
         Db::startTrans();
         try {
-            DbRights::addShopApply($apply_data);
+            DbRights::saveShopApply($apply_data);
+            DbUser::saveLogInvest($log_invest);
             Db::commit();
             return ['code' => '200']; //领取成功
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3005']; //领取失败
         }

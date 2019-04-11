@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\LogBonus;
 use app\common\model\LogOpenboss;
 use app\common\model\LogTrading;
+use app\common\model\LogInvest;
 use app\common\model\LogIntegral;
 use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
@@ -372,6 +373,17 @@ class DbUser {
         $LogTrading = new LogTrading();
         $LogTrading->save($data);
         return $LogTrading->id;
+    }
+
+    public function saveLogInvest($data){
+        $LogInvest = new LogInvest;
+        $LogInvest->save($data);
+        return $LogInvest->id;
+    }
+
+    public function editLogInvest($data,$id){
+        $LogInvest = new LogInvest;
+        return $LogInvest->save($data,['id'=>$id]);
     }
 
     public function editLogTrading($data,$id){
