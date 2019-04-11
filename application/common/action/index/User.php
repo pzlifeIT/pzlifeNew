@@ -419,65 +419,65 @@ class User extends CommonIndex {
         if ($user['user_identity'] != '4') {
             return ['code' => '3004']; //不是boss
         }
-        $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
-        if ($this->redis->exists($redisKey)) {
-            $data = json_decode($this->redis->get($redisKey), true);
-        } else {
-            // $toMonth    = strtotime(date('Y-m-01')); //当月的开始时间
-            // $preMonth   = strtotime(date('Y-m-01', strtotime('-1 month'))); //上月的开始时间
-            // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
-            $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商票余额
-            $commission = $user['commission_freeze'] == '1' ? 0 : $user['commission']; //佣金余额
-            $integral   = $user['integral']; //积分余额
-            $balanceUse = abs(DbUser::getLogTradingSum([
-                ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
-                ['uid', '=', $uid],
-                // ['create_time', '>=', $threeMonth], //近三个月
-            ], 'money')); //已用商票总额
-            $noBbonus = DbUser::getLogBonusSum([
-                'to_uid'        => $uid,
-                'user_identity' => 4, //boss身份获得的收益
-                'status'        => 1, //待结算的
-                // 'bonus_type'    => 2, //经营性收益
-            ], 'result_price'); //未到账
+        // $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
+        // if ($this->redis->exists($redisKey)) {
+        //     $data = json_decode($this->redis->get($redisKey), true);
+        // } else {
+        // $toMonth    = strtotime(date('Y-m-01')); //当月的开始时间
+        // $preMonth   = strtotime(date('Y-m-01', strtotime('-1 month'))); //上月的开始时间
+        // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
+        $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商票余额
+        $commission = $user['commission_freeze'] == '1' ? 0 : $user['commission']; //佣金余额
+        $integral   = $user['integral']; //积分余额
+        $balanceUse = abs(DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'], //商票交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['uid', '=', $uid],
+            // ['create_time', '>=', $threeMonth], //近三个月
+        ], 'money')); //已用商票总额
+        $noBbonus = DbUser::getLogBonusSum([
+            'to_uid'        => $uid,
+            'user_identity' => 4, //boss身份获得的收益
+            'status'        => 1, //待结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //未到账
 
-            $bonus = DbUser::getLogBonusSum([
-                'to_uid'        => $uid,
-                'user_identity' => 4, //boss身份获得的收益
-                'status'        => 2, //已结算的
-                // 'bonus_type'    => 2, //经营性收益
-            ], 'result_price'); //全部返利(已入账)
-            // $merchants = DbUser::getLogTradingSum([
-            //     ['trading_type', '=', '2'],
-            //     ['change_type', '=', 5],
-            //     ['uid', '=', $uid],
-            //     // ['create_time', '>=', $threeMonth], //近三个月
-            // ], 'money'); //招商加盟收益
-            $merchants = DbUser::getLogInvestSum([
-                ['uid', '=', $uid],
-                ['status', '=', 3],
-            ], 'cost'); //招商加盟收益
-            $commissionAll = DbUser::getLogTradingSum([
-                ['trading_type', '=', '2'],
-                ['change_type', 'in', [3, 4, 5, 8]],
-                ['money', '>', 0],
-                ['uid', '=', $uid],
-            ], 'money'); //商票总额
-            $data = [
-                'balance_all'    => bcadd($balance, $balanceUse, 2), //商票总额
-                'balance'        => $balance, //商票余额
-                'commission'     => $commission, //佣金余额
-                'commission_all' => $commissionAll, //佣金总额
-                'integral'       => $integral, //积分余额
-                'balance_use'    => $balanceUse, //已使用商票
-                'no_bonus'       => $noBbonus, //未到账
-                'bonus'          => $bonus, //已到账返利
-                'bonus_all'      => bcadd($noBbonus, $bonus, 2),
-                'merchants'      => $merchants, //招商加盟收益
-            ];
-            $this->redis->setEx($redisKey, 120, json_encode($data));
-        }
+        $bonus = DbUser::getLogBonusSum([
+            'to_uid'        => $uid,
+            'user_identity' => 4, //boss身份获得的收益
+            'status'        => 2, //已结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //全部返利(已入账)
+        // $merchants = DbUser::getLogTradingSum([
+        //     ['trading_type', '=', '2'],
+        //     ['change_type', '=', 5],
+        //     ['uid', '=', $uid],
+        //     // ['create_time', '>=', $threeMonth], //近三个月
+        // ], 'money'); //招商加盟收益
+        $merchants = DbUser::getLogInvestSum([
+            ['uid', '=', $uid],
+            ['status', '=', 3],
+        ], 'cost'); //招商加盟收益
+        $commissionAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', 'in', [3, 4, 5, 8]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
+        $data = [
+            'balance_all'    => bcadd($balance, $balanceUse, 2), //商票总额
+            'balance'        => $balance, //商票余额
+            'commission'     => $commission, //佣金余额
+            'commission_all' => $commissionAll, //佣金总额
+            'integral'       => $integral, //积分余额
+            'balance_use'    => $balanceUse, //已使用商票
+            'no_bonus'       => $noBbonus, //未到账
+            'bonus'          => $bonus, //已到账返利
+            'bonus_all'      => bcadd($noBbonus, $bonus, 2),
+            'merchants'      => $merchants, //招商加盟收益
+        ];
+        //     $this->redis->setEx($redisKey, 120, json_encode($data));
+        // }
         return ['code' => '200', 'data' => $data];
     }
 
