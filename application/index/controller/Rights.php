@@ -7,8 +7,8 @@ use app\index\MyController;
 class Rights extends MyController {
     protected $beforeActionList = [
         // 'isLogin',//所有方法的前置操作
-       'isLogin' => ['except' => 'IsGetDominos'],//除去getFirstCate其他方法都进行second前置操作
-//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        'isLogin' => ['except' => 'IsGetDominos'], //除去getFirstCate其他方法都进行second前置操作
+        //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -25,7 +25,7 @@ class Rights extends MyController {
      * @author rzc
      */
     public function receiveDiamondvip() {
-        $con_id = $this->request->post('con_id');
+        $con_id    = $this->request->post('con_id');
         $parent_id = $this->request->post('parent_id');
         $parent_id = deUid($parent_id);
         if (empty($con_id)) {
@@ -34,11 +34,11 @@ class Rights extends MyController {
         if (strlen($con_id) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->receiveDiamondvip($con_id,$parent_id);
+        $result = $this->app->rights->receiveDiamondvip($con_id, $parent_id);
         return $result;
     }
 
-   /**
+    /**
      * @api              {post} / 判断会员是否有分享钻石接龙的的资格
      * @apiDescription   IsGetDominos
      * @apiGroup         index_rights
@@ -50,7 +50,7 @@ class Rights extends MyController {
      * @return array
      * @author rzc
      */
-    public function IsGetDominos(){
+    public function IsGetDominos() {
         $parent_id = $this->request->post('parent_id');
         if (strlen($parent_id) < 1) {
             return ['code' => '3001'];
@@ -61,7 +61,7 @@ class Rights extends MyController {
         }
         $result = $this->app->rights->IsGetDominos($parent_id);
         return $result;
-        
+
     }
 
     /**
@@ -71,12 +71,12 @@ class Rights extends MyController {
      * @apiName          IsBossDominos
      * @apiParam (入参) {String} con_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是32位 / 3002:缺少参数 / 3003:用户为空 / 3004:非BOSS无法开启分享钻石接龙资格（200名额） / 3005:分享用户没有分享机会
-     * @apiSuccess (data) {String} code 
+     * @apiSuccess (data) {String} code
      * @apiSampleRequest /index/rights/IsBossDominos
      * @return array
      * @author rzc
      */
-    public function IsBossDominos(){
+    public function IsBossDominos() {
         $con_id = $this->request->post('con_id');
         if (empty($con_id)) {
             return ['code' => '3002'];
@@ -100,7 +100,7 @@ class Rights extends MyController {
      * @return array
      * @author rzc
      */
-    public function getDominosBalanceHint(){
+    public function getDominosBalanceHint() {
         $con_id = $this->request->post('con_id');
         if (empty($con_id)) {
             return ['code' => '3002'];
@@ -131,7 +131,7 @@ class Rights extends MyController {
      * @return array
      * @author rzc
      */
-    public function getDominosChance(){
+    public function getDominosChance() {
         $con_id = $this->request->post('con_id');
         if (empty($con_id)) {
             return ['code' => '3002'];
@@ -158,8 +158,8 @@ class Rights extends MyController {
      * @return array
      * @author rzc
      */
-    public function getDominosReceive(){
-        $con_id = trim($this->request->post('con_id'));
+    public function getDominosReceive() {
+        $con_id         = trim($this->request->post('con_id'));
         $diamondvips_id = trim($this->request->post('diamondvips_id'));
         if (empty($con_id)) {
             return ['code' => '3002'];
@@ -172,8 +172,67 @@ class Rights extends MyController {
                 return ['code' => '3003'];
             }
         }
-       
-        $result = $this->app->rights->getDominosReceive($con_id,$diamondvips_id);
+
+        $result = $this->app->rights->getDominosReceive($con_id, $diamondvips_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / Boss邀请会员成为Boss
+     * @apiDescription   shopApplyBoss
+     * @apiGroup         index_rights
+     * @apiName          shopApplyBoss
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {String} target_nickname 被邀请人姓名
+     * @apiParam (入参) {Number} target_sex 被邀请人性别 1.男2.女
+     * @apiParam (入参) {String} target_mobile 被邀请人手机号
+     * @apiParam (入参) {String} target_idcard 被邀请人身份证号
+     * @apiParam (入参) {Number} refe_type 被邀请成为店主类型1.创业店主2.boss合伙人
+     * @apiParam (入参) {String} parent_id 邀请人id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有到账红包 / 3001:con_id长度只能是32位 / 3002:缺少参数con_id / 3003:缺少参数parent_id / 3004:target_sex必须为数字 / 3005:target_nickname为空 / 3006:手机号校验失败 / 3007:身份证号码校验失败
+     * @apiSuccess (data) {String} uid 用户id
+     * @apiSuccess (data) {String} nick_name 用户昵称
+     * @apiSuccess (data) {String} avatar 用户头像
+     * @apiSampleRequest /index/rights/shopApplyBoss
+     * @return array
+     * @author rzc
+     */
+    public function shopApplyBoss() {
+        $con_id          = $this->request->post('con_id');
+        $target_nickname = $this->request->post('target_nickname');
+        $target_sex      = $this->request->post('target_sex');
+        $target_mobile   = $this->request->post('target_mobile');
+        $target_idcard   = $this->request->post('target_idcard');
+        $refe_type       = $this->request->post('refe_type');
+        $parent_id       = $this->request->post('parent_id');
+        $parent_id       = deUid($parent_id);
+        $target_sex      = $target_sex ? 1 : 2;
+        $refe_type       = $refe_type ? 1 : 2;
+        if (empty($con_id)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($con_id) != 32) {
+            return ['code' => '3001'];
+        }
+        if (empty($parent_id)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($target_sex)) {
+            return ['code' => '3004'];
+        }
+        if (empty($target_nickname)) {
+            return ['code' => '3005'];
+        }
+        if (checkMobile($target_mobile) == false) {
+            return ['code' => '3006'];
+        }
+        if (checkIdcard($target_idcard) == false) {
+            return ['code' => '3007'];
+        }
+        if (!is_numeric($refe_type)) {
+            return ['code' => '3008'];
+        }
+        $result = $this->app->rights->shopApplyBoss($con_id,$target_nickname,$target_sex,$target_mobile,$target_idcard,$refe_type,$parent_id);
         return $result;
     }
 }
