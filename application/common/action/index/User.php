@@ -3,7 +3,6 @@
 namespace app\common\action\index;
 
 use app\common\action\notify\Note;
-use app\facade\DbAdmin;
 use app\facade\DbImage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
@@ -683,7 +682,7 @@ class User extends CommonIndex {
             ['change_type', '=', 7],
             ['uid', '=', $uid],
         ], 'money'); //佣金转商票
-        return ['code' => '200', 'commission' => $commission, 'commission_all' => $commissionAll, 'commission_extract' => $commissionExtract, 'commission_to_balance' => $commissionToBalance];
+        return ['code' => '200', 'commission' => $commission, 'commission_all' => $commissionAll, 'commission_extract' => abs($commissionExtract), 'commission_to_balance' => abs($commissionToBalance)];
     }
 
     /**
