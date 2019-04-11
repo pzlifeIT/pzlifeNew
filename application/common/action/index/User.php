@@ -674,7 +674,7 @@ class User extends CommonIndex {
         ], 'money'); //佣金总额
         $commissionExtract = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', '=', 6],
+            ['change_type', 'in', [6, 10]],
             ['uid', '=', $uid],
         ], 'money'); //佣金提现
         $commissionToBalance = DbUser::getLogTradingSum([
