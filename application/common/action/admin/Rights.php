@@ -118,4 +118,67 @@ class Rights extends CommonIndex {
             return ['code' => '3004', 'msg' => '插入数据出错'];
         }
     }
+
+    /**
+     * 邀请开通boss列表
+     * @param $page
+     * @param $pageNum
+     * @param $status
+     * @param $target_uid
+     * @param $target_uname
+     * @param $target_nickname
+     * @param $target_sex
+     * @param $target_mobile
+     * @param $target_idcard
+     * @param $refe_uid
+     * @param $refe_uname
+     * @param $shop_id
+     * @param $refe_type
+     * @return array
+     * @author rzc
+     */
+    public function getShopApplyList($page,$pageNum,$status,$target_uid,$target_uname,$target_nickname,$target_sex,$target_mobile,$target_idcard,$refe_uid,$refe_uname,$shop_id,$refe_type){
+        $offset = $pageNum * ($page - 1);
+        //查找所有数据
+        $where = [];
+        if (!empty($status)) {
+            array_push($where,['status', '=' ,$status]);
+        }
+        if (!empty($target_uid)) {
+            array_push($where,['target_uid', '=' ,$target_uid]);
+        }
+        if (!empty($target_uname)) {
+            array_push($where,['target_uname', 'LIKE' ,'%'.$target_uname.'%']);
+        }
+        if (!empty($target_nickname)) {
+            array_push($where,['target_nickname', 'LIKE' ,'%'.$target_nickname.'%']);
+        }
+        if (!empty($target_sex)) {
+            array_push($where,['target_sex', '=' ,$target_sex]);
+        }
+        if (!empty($target_mobile)) {
+            array_push($where,['target_mobile', '=' ,$target_mobile]);
+        }
+        if (!empty($target_idcard)) {
+            array_push($where,['target_idcard', '=' ,$target_idcard]);
+        }
+        if (!empty($refe_uid)) {
+            array_push($where,['refe_uid', '=' ,$refe_uid]);
+        }
+        if (!empty($refe_uname)) {
+            array_push($where,['refe_uname', 'LIKE' ,'%'.$refe_uname.'%']);
+        }
+        if (!empty($shop_id)) {
+            array_push($where,['shop_id', '=' ,$shop_id]);
+        }
+        if (!empty($refe_type)) {
+            array_push($where,['refe_type', '=' ,$refe_type]);
+        }
+        $result = DbRights::getShopApply($where,'*',false,'create_time','DESC',$offset.','.$pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbRights::countShopApply($where);
+        return ['code' => '200','total' => $total,'data' => $result];
+    }
 }
