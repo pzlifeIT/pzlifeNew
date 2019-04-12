@@ -1017,10 +1017,10 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function changeUserBankcardStatus(){
-        $id          = trim($this->request->post('id'));
-        $conId       = trim($this->request->post('con_id'));
-        $status      = trim($this->request->post('status'));
+    public function changeUserBankcardStatus() {
+        $id     = trim($this->request->post('id'));
+        $conId  = trim($this->request->post('con_id'));
+        $status = trim($this->request->post('status'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1030,7 +1030,26 @@ class User extends MyController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->user->changeUserBankcardStatus($conId,intval($id),intval($status));
+        $result = $this->app->user->changeUserBankcardStatus($conId, intval($id), intval($status));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取提现比率
+     * @apiDescription   getInvoice
+     * @apiGroup         index_user
+     * @apiName          getInvoice
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
+     * @apiSuccess (返回) {array} invoice 记录条数
+     * @apiSuccess (invoice) {String} has_invoice 有发票比率
+     * @apiSuccess (invoice) {String} no_invoice 无发票比率
+     * @apiSampleRequest /index/user/getInvoice
+     * @return array
+     * @author rzc
+     */
+    public function getInvoice() {
+        $result = $this->app->user->getInvoice();
         return $result;
     }
 
@@ -1043,7 +1062,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
      * @apiParam (入参) {Number} money 用户转出金额
      * @apiParam (入参) {Number} invoice 是否提供发票 1:提供 2:不提供
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
      * @apiSampleRequest /index/user/commissionTransferCash
      * @return array
      * @author rzc
@@ -1262,7 +1281,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, intval($money));
+        $result = $this->app->user->commissionTransferBalance($conId, $money);
         return $result;
     }
     /**

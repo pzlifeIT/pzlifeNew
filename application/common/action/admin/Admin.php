@@ -9,6 +9,7 @@ use app\facade\DbShops;
 use app\facade\DbUser;
 use cache\Phpredis;
 use Config;
+use Env;
 use think\Db;
 
 class Admin extends CommonIndex {
@@ -722,7 +723,7 @@ class Admin extends CommonIndex {
             $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         $total = DbUser::countLogTransfer($where);
-        return ['code' => '200', 'log_transfer' => $result];
+        return ['code' => '200','total' => $total, 'log_transfer' => $result];
     }
 
     /**
@@ -886,11 +887,29 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 审核用户提交银行卡
+     * 获取提现比率
      * @return string
      * @author rzc
      */
     public function getInvoice() {
-        $invoice = fopen("testfile.json", "r");
+        // echo ;die;
+        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        if ($invoice == false) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','invoice' => json_decode($invoice,true)];
+
+    }
+
+    public function editInvoice($cmsConId,$has_invoice,$no_invoice){
+        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
+        $invoice = [];
+        $invoice['has_invoice'] = $has_invoice;
+        $invoice['no_invoice'] = $no_invoice;
+        $invoice = json_encode($invoice,true);
+        file_put_contents(Env::get('root_path')."invoice.json",$invoice);
+        $this->redis->set($redisManageInvoice,$invoice);
+        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        // print_r($invoice);die;
     }
 }

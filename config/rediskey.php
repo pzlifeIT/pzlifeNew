@@ -23,4 +23,7 @@ return [
         'redisIndexShow'   => 'index:index:show',
         'redisGoodsDetail' => 'index:goods:goodsDetail:',//商品详情
     ],
+    'manage' => [
+        'redisManageInvoice' => 'cms:manage:invoice', //后台CMS提现比率key
+    ],
 ];
