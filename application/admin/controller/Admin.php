@@ -230,7 +230,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} nick_name 开通账号昵称
      * @apiParam (入参) {Decimal} money 开通后扣除金额
      * @apiParam (入参) {String} [message] 开通理由
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3005:没有操作权限 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3005:没有操作权限 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败 / 3009:boss正在申请中
      * @apiSampleRequest /admin/admin/openboss
      * @return array
      * @author zyr

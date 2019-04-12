@@ -144,6 +144,10 @@ class Admin extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
         }
+        $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
+        if ($this->redis->setNx($redisKey . $user['id']) === false) {
+            return ['code' => '3009'];
+        }
         if ($user['user_identity'] == 4) {
             return ['code' => '3007']; //该用户已经是boss
         }
@@ -198,6 +202,7 @@ class Admin extends CommonIndex {
             DbUser::updateUser(['user_identity' => 4], $user['id']);
             DbUser::addLogOpenboss($logOpenbossData);
             Db::commit();
+            $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();

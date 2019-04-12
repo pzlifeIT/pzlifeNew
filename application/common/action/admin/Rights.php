@@ -288,6 +288,8 @@ class Rights extends CommonIndex {
             DbUser::editLogInvest($edit_invest, $invest['id']);
             DbRights::editShopApply($edit_shopapply, $id);
             Db::commit();
+            $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
+            $this->redis->del($redisKey . $shopapply['target_uid']);
             return ['code' => '200', 'msg' => '审核通过'];
         } catch (\Exception $e) {
             // 回滚事务

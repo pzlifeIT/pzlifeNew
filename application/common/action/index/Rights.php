@@ -186,10 +186,14 @@ class Rights extends CommonIndex {
      * @author rzc
      */
     public function shopApplyBoss($con_id, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id) {
+        $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
         $refe_type = 2; //暂时只支持购买合伙人
         $uid       = $this->getUidByConId($con_id);
         if (empty($uid)) {
             return ['code' => '3003'];
+        }
+        if($this->redis->setNx($redisKey . $uid)===false){
+            return ['code'=>'3013'];
         }
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name', true);
         if ($userInfo['user_identity'] == 4) {
