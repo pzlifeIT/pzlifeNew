@@ -2,11 +2,11 @@
 
 namespace app\common\action\admin;
 
+use app\common\action\admin\Admin;
 use app\facade\DbRights;
 use app\facade\DbShops;
 use app\facade\DbUser;
 use think\Db;
-use app\common\action\admin\Admin;
 
 class Rights extends CommonIndex {
     /**
@@ -191,7 +191,7 @@ class Rights extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function auditShopApply($id, int $status, $message = '',$cmsConId) {
+    public function auditShopApply($id, int $status, $message = '', $cmsConId) {
         $shopapply = DbRights::getShopApply(['id' => $id], '*', true);
         if (empty($shopapply)) {
             return ['code' => '3000'];
@@ -221,22 +221,33 @@ class Rights extends CommonIndex {
 
         $edit_invest['status']  = $status;
         $edit_invest['message'] = $message;
-        $invest = DbUser::getLogInvest(['uid' =>$shopapply['refe_uid'] ,'target_uid' =>$shopapply['target_uid']], 'id', true);
+        $invest                 = DbUser::getLogInvest(['uid' => $shopapply['refe_uid'], 'target_uid' => $shopapply['target_uid']], 'id,cost', true);
         Db::startTrans();
         // print_r($status);die;
         try {
             if ($status == 3) {
-                $admin = new Admin;
+                $admin       = new Admin;
                 $target_user = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'mobile');
-                $openshop = $admin->openBoss($cmsConId, $target_user['target_mobile'], $shopapply['target_uname'], 0, $message);
+                $openshop    = $admin->openBoss($cmsConId, $target_user['target_mobile'], $shopapply['target_uname'], 0, $message);
                 if ($openshop['code'] != 200) {
                     return ['code' => '3007'];
                 }
+                $refe_user   = DbUser::getUserOne(['id' => $shopapply['refe_uid']], 'commission');
+                $tradingData = [
+                    'uid'          => $shopapply['refe_uid'],
+                    'trading_type' => 2,
+                    'change_type'  => 5,
+                    'money'        => $invest['cost'],
+                    'befor_money'  => $refe_user['commission'],
+                    'after_money'  => bcadd($refe_user['commission'], $invest['cost'], 2),
+                    'message'      => '',
+                ];
+                DbOrder::addLogTrading($tradingData);
                 // print_r($openshop);die;
             }
             // 提交事务
-            DbUser::editLogInvest($edit_invest,$invest['id']);
-            DbRights::editShopApply($edit_shopapply,$id);
+            DbUser::editLogInvest($edit_invest, $invest['id']);
+            DbRights::editShopApply($edit_shopapply, $id);
             Db::commit();
             return ['code' => '200', 'msg' => '审核通过'];
         } catch (\Exception $e) {
