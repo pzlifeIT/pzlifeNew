@@ -9,6 +9,7 @@ use app\facade\DbOrder;
 use app\facade\DbUser;
 use app\facade\DbAdmin;
 use think\Db;
+use Config;
 
 class Rights extends CommonIndex {
     /**
