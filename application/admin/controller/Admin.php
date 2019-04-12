@@ -156,7 +156,6 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-<<<<<<< HEAD
     public function adminRemittance(){
         $cmsConId      = trim($this->request->post('cms_con_id'));
         $passwd        = trim($this->request->post('passwd'));
@@ -166,16 +165,6 @@ class Admin extends AdminController {
         $credit        = trim($this->request->post('credit'));
         $message       = trim($this->request->post('message'));
         $admin_message = trim($this->request->post('admin_message'));
-=======
-    public function adminRemittance() {
-        $cmsConId  = trim($this->request->post('cms_con_id'));
-        $passwd    = trim($this->request->post('passwd'));
-        $stype     = trim($this->request->post('stype'));
-        $nick_name = trim($this->request->post('nick_name'));
-        $mobile    = trim($this->request->post('mobile'));
-        $credit    = trim($this->request->post('credit'));
-        $message   = trim($this->request->post('message'));
->>>>>>> 62222cc82217a8c2ec2ca4409262739879f416ff
         if (empty($passwd)) {
             return ['code' => '3001'];
         }
@@ -195,11 +184,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-<<<<<<< HEAD
         $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message,$admin_message);
-=======
-        $result = $this->app->admin->adminRemittance($cmsConId, $passwd, intval($stype), $nick_name, $mobile, $credit, $message);
->>>>>>> 62222cc82217a8c2ec2ca4409262739879f416ff
         return $result;
     }
 
@@ -754,16 +739,16 @@ class Admin extends AdminController {
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 / 3001:page或者pageNum或者status必须为数字 / 3002:错误的审核类型  /3003:银行卡号输入错误
-     * apiSuccess (返回) {String} total 记录条数
-     * apiSuccess (返回) {array} userbank
-     * apiSuccess (userbank) {String} id
-     * apiSuccess (userbank) {String} uid 关联uid
-     * apiSuccess (userbank) {String} admin_bank_id 后台银行管理id
-     * apiSuccess (userbank) {String} bank_card 银行卡号
-     * apiSuccess (userbank) {String} bank_add 银行支行
-     * apiSuccess (userbank) {String} bank_mobile  银行开户手机号
-     * apiSuccess (userbank) {String} user_name  银行开户人
-     * apiSuccess (userbank) {String} status  状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
+     * @apiSuccess (返回) {String} total 记录条数
+     * @apiSuccess (返回) {array} userbank
+     * @apiSuccess (userbank) {String} id
+     * @apiSuccess (userbank) {String} uid 关联uid
+     * @apiSuccess (userbank) {String} admin_bank_id 后台银行管理id
+     * @apiSuccess (userbank) {String} bank_card 银行卡号
+     * @apiSuccess (userbank) {String} bank_add 银行支行
+     * @apiSuccess (userbank) {String} bank_mobile  银行开户手机号
+     * @apiSuccess (userbank) {String} user_name  银行开户人
+     * @apiSuccess (userbank) {String} status  状态 1.待处理 2.启用(审核通过) 3.停用 4.已处理 5.审核不通过
      * @apiSuccess (user_bank[admin_bank]) {string} id
      * @apiSuccess (user_bank[admin_bank]) {string} abbrev  银行英文缩写名
      * @apiSuccess (user_bank[admin_bank]) {string} bank_name 银行全称
