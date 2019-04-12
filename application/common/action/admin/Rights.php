@@ -195,6 +195,7 @@ class Rights extends CommonIndex {
      * @author rzc
      */
     public function auditShopApply($id, int $status, $message = '', $cmsConId) {
+        $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
         $shopapply = DbRights::getShopApply(['id' => $id], '*', true);
         if (empty($shopapply)) {
             return ['code' => '3000'];
@@ -283,7 +284,9 @@ class Rights extends CommonIndex {
                 DbShops::addShop($shopData); //添加店铺
                 DbOrder::addLogTrading($tradingData);//写佣金明细
                 DbUser::modifyCommission($shopapply['refe_uid'], $invest['cost'],'inc');
-                $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
+                
+                $this->redis->del($redisKey . $shopapply['target_uid']);
+            }elseif ($status == 4) {
                 $this->redis->del($redisKey . $shopapply['target_uid']);
             }
             // 提交事务
