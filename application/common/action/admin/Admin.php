@@ -145,7 +145,7 @@ class Admin extends CommonIndex {
             return ['code' => '3006']; //用户不存在
         }
         $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
-        if ($this->redis->setNx($redisKey . $user['id']) === false) {
+        if ($this->redis->setNx($redisKey . $user['id'], 1) === false) {
             return ['code' => '3009'];
         }
         if ($user['user_identity'] == 4) {

@@ -192,7 +192,7 @@ class Rights extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        if($this->redis->setNx($redisKey . $uid)===false){
+        if($this->redis->setNx($redisKey . $uid, 1)===false){
             return ['code'=>'3013'];
         }
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name', true);
