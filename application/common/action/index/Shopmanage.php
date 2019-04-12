@@ -94,6 +94,7 @@ class Shopmanage extends CommonIndex {
             $value['goods_sku'] = $goods_sku;
             $value['min_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 1, 'retail_price');
             $value['max_retail_price'] = DbGoods:: getOneSkuMost(['goods_id'=>$value['goods_id']], 2, 'retail_price');
+            $value['image']            = Config::get('qiniu.domain') . '/' . $value['image'];
             $new_goods[] = $value;
             
       /*       if ($type == 3){
