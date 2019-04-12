@@ -7,6 +7,7 @@ use app\facade\DbRights;
 use app\facade\DbShops;
 use app\facade\DbOrder;
 use app\facade\DbUser;
+use app\facade\DbAdmin;
 use think\Db;
 
 class Rights extends CommonIndex {
