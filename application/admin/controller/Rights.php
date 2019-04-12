@@ -183,7 +183,7 @@ class Rights extends AdminController {
 
         $page       = empty($page) ? 1 : $page;
         $pageNum    = empty($pageNum) ? 10 : $pageNum;
-        $status     = empty($status) ? 1 : $status;
+        // $status     = empty($status) ? 1 : $status;
         $target_uid = deUid($target_uid);
         $refe_uid   = deUid($refe_uid);
         if (!empty($target_mobile)) {
@@ -199,9 +199,9 @@ class Rights extends AdminController {
                 return ['code' => '3003'];
             }
         }
-        if (!is_numeric($status)) {
-            return ['code' => '3004'];
-        }
+        // if (!is_numeric($status)) {
+        //     return ['code' => '3004'];
+        // }
         $result = $this->app->rights->getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type);
         return $result;
     }
