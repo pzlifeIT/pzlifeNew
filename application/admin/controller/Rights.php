@@ -213,8 +213,8 @@ class Rights extends AdminController {
      * @apiName          auditShopApply
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 分享钻石会员机会ID
-     * @apiParam (入参) {Number} status 申请进度 1.提交申请  2:财务审核通过 3:经理审核通过 4 审核不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:status为空
+     * @apiParam (入参) {Number} status 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果
      * @apiSuccess (data) {object_array} data 结果
      * @apiSuccess (data) {String} id 用户ID
      * @apiSampleRequest /admin/Rights/auditShopApply
@@ -242,6 +242,9 @@ class Rights extends AdminController {
         }
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
+        }
+        if (!in_array($status,[2,3,4])) {
+            return ['code' => '3004'];
         }
         $result = $this->app->rights->auditShopApply($id,$status,$message);
         return $result;

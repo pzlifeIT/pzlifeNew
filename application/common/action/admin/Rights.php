@@ -181,4 +181,40 @@ class Rights extends CommonIndex {
         $total = DbRights::countShopApply($where);
         return ['code' => '200','total' => $total,'data' => $result];
     }
+
+    /**
+     * 邀请开通boss列表
+     * @param $id
+     * @param $status
+     * @param $message
+     * @return array
+     * @author rzc
+     */
+    public function auditShopApply($id,int $status,$message = ''){
+        $shopapply = DbRights::getShopApply(['id' => $id],'*',true);
+        if (empty($shopapply)) {
+            return ['code' => '3000'];
+        }
+        if ($status == $shopapply['status']) {
+            return ['code' => '3005'];
+        }
+        $edit_shopapply = [];
+        $edit_invest = [];
+        if ($status == 2) {//财务审核通过
+            if ($shopapply['status'] != 1) {
+                return ['code' => '3003'];
+            }
+
+        }elseif ($status == 3) {//经理审核通过
+            if ($shopapply['status'] != 2) {
+                return ['code' => '3003'];
+            }
+        }elseif ($status == 4) {//审核不通过
+            if ($shopapply['status'] == 3) {
+                return ['code' => '3003'];
+            }
+        }
+        $edit_shopapply['status'] = $status;
+        $edit_shopapply['message'] = $message;
+    }
 }
