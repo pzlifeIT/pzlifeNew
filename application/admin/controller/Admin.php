@@ -221,6 +221,84 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / 开通boss
+     * @apiDescription   openBoss
+     * @apiGroup         admin_admin
+     * @apiName          openBoss
+     * @apiParam (入参) {String} cms_con_id 操作管理员
+     * @apiParam (入参) {String} mobile 开通账号手机号
+     * @apiParam (入参) {String} nick_name 开通账号昵称
+     * @apiParam (入参) {Decimal} money 开通后扣除金额
+     * @apiParam (入参) {String} [message] 开通理由
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3005:没有操作权限 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败
+     * @apiSampleRequest /admin/admin/openboss
+     * @return array
+     * @author zyr
+     */
+    public function openBoss() {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $mobile   = trim($this->request->post('mobile')); //开通账号手机号
+        $nickName = trim($this->request->post('nick_name')); //开通账号昵称
+        $money    = trim($this->request->post('money')); //开通后扣除金额
+        $message  = trim($this->request->post('message')); //开通描述
+        if (!is_numeric($money)) {
+            return ['code' => '3003']; //金额必须为数字
+        }
+        $money = doubleval($money);
+        if ($money < 0) {
+            return ['code' => '3004']; //扣除金额不能是负数
+        }
+        if (!checkMobile($mobile)) {
+            return ['code' => '3001']; //手机格式有误
+        }
+        if (empty($nickName)) {
+            return ['code' => '3002']; //账号昵称不能未空
+        }
+        $result = $this->app->admin->openBoss($cmsConId, $mobile, $nickName, $money, $message);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $mobile, $nickName, $money, $message], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 开通boss列表
+     * @apiDescription   getOpenBossList
+     * @apiGroup         admin_admin
+     * @apiName          getOpenBossList
+     * @apiParam (入参) {String} cms_con_id 操作管理员
+     * @apiParam (入参) {String} [mobile] 开通账号手机号
+     * @apiParam (入参) {String} [nick_name] 开通账号昵称
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误
+     * @apiSuccess (返回) {Int} all_count 总记录数
+     * @apiSuccess (返回) {Int} all_page 总页数
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Decimal} money 预扣款金额
+     * @apiSuccess (data) {String} nick_name 开通人昵称
+     * @apiSuccess (data) {String} mobile 开通人手机号
+     * @apiSuccess (data) {String} admin_name 开通管理员
+     * @apiSuccess (data) {String} message 描述
+     * @apiSampleRequest /admin/admin/getopenbosslist
+     * @return array
+     * @author zyr
+     */
+    public function getOpenBossList() {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $mobile   = trim($this->request->post('mobile')); //开通账号手机号
+        $nickName = trim($this->request->post('nick_name')); //开通账号昵称
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        if (!checkMobile($mobile) && !empty($mobile)) {
+            return ['code' => '3001']; //手机格式有误
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->admin->getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $mobile, $nickName, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / cms 获取充值记录
      * @apiDescription   getAdminRemittance
      * @apiGroup         admin_admin
