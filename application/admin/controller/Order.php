@@ -107,6 +107,7 @@ class Order extends AdminController {
      * @apiSuccess (order_info) {String} area_name 区域名称
      * @apiSuccess (order_info) {String} address 收货地址
      * @apiSuccess (order_info) {String} message 买家留言信息
+     * @apiSuccess (order_info) {String} express_money 订单总运费
      * @apiSuccess (order_info) {String} third_time 第三方支付时间
      * @apiSuccess (order_info) {String} pay_time 支付时间
      * @apiSuccess (order_info) {String} create_time 生成订单时间

@@ -46,4 +46,10 @@ return [
      */
     'image_path'              => Env::get('conf.imagePath'),
 
+    /**
+     * 提现比率
+     * @var unknown_type
+     */
+    'has_invoice'             => Env::get('proportion.has_invoice'),
+    'no_invoice'              => Env::get('proportion.no_invoice'),
 ];

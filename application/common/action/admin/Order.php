@@ -76,6 +76,7 @@ class Order extends CommonIndex {
             $order_child[$order]['order_goods'] = $order_goods;
             $express_money                      += $child['express_money'];
         }
+        $order_info['express_money'] = $express_money;
         $order_pack = [];
         foreach ($order_child as $order => $child) {
             $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
@@ -115,6 +116,7 @@ class Order extends CommonIndex {
         }
         $no_deliver_goods_num = count($no_deliver_goods);
         // print_r($has_deliver_goods);die;
+        // print_r($express_money);die;
         return ['code' => 200, 'order_info' => $order_info, 'order_pack' => $order_pack, 'order_child' => $order_child, 'no_deliver_goods' => $no_deliver_goods, 'has_deliver_goods' => $has_deliver_goods, 'no_deliver_goods_num' => $no_deliver_goods_num];
     }
 
@@ -134,20 +136,67 @@ class Order extends CommonIndex {
         $order_express_id = DbOrder::getOrderExpress('id', ['order_goods_id' => $order_goods_id], false, false, true);
         // dump( Db::getLastSql());die;
         if ($order_express_id) {
-            return ['code' => 3005, 'msg' => '已添加的订单商品物流分配关系'];
+            return ['code' => '3005', 'msg' => '已添加的订单商品物流分配关系'];
         }
+        $had_express = DbOrder::getOrderExpress('order_goods_id', ['express_key' => $express_key,'express_no' => $express_no]);
+        if (!empty($had_express)) {
+            $had_order_goods = [];
+            foreach ($had_express as $had => $d_express) {
+                $had_order_goods[] = $d_express['order_goods_id'];
+            }
+           
+            $had_child = DbOrder::getOrderGoods('order_child_id', [['id' ,'in', $had_order_goods]]);
+            $had_child_id = [];
+           
+            if (!empty($had_child)) {
+                foreach ($had_child as $had => $child) {
+                    $had_child_id[] = $child['order_child_id'];
+                }
+                
+                if (!empty($had_child_id)) {
+                    $had_order = DbOrder::getOrderChild('order_id', [['id' ,'in', $had_child_id]]);
+                    // print_r($had_child_id);die;
+                    $had_order_id = [];
+                    if (!empty($had_order)) {
+                        foreach ($had_order as $has => $order) {
+                           $had_order_id[] = $order['order_id'];
+                        }
+                        $had_order_user = DbOrder::getOrder('uid', [['id' ,'in', $had_order_id]]);
+                        $had_uid = [];
+                        if ($had_order_user) {
+                            foreach ($had_order_user as $key => $user) {
+                                $had_uid[] = $user['uid'];
+                            }
+                            $had_uid = array_unique($had_uid);
+                            if (count($had_uid) > 1) {
+                                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+                            }
+                        }
+                    }
+                   
+                }
+
+            }
+            
+        }
+        // print_r(array_unique($had_uid));die;
 
         $order_child_id = DbOrder::getOrderGoods('order_child_id', ['id' => $order_goods_id], false, false, true)['order_child_id'];
 
         if (!$order_child_id) {
-            return ['code' => 3003, 'msg' => '不存在的order_goods_id'];
+            return ['code' => '3003', 'msg' => '不存在的order_goods_id'];
         }
         $order_id = DbOrder::getOrderChild('order_id', ['id' => $order_child_id], true)['order_id'];
 
-        $order_status = DbOrder::getOrder('order_status', ['id' => $order_id], true)['order_status'];
-
-        if ($order_status != 4) {
-            return ['code' => 3004, 'msg' => '非待发货订单无法发货'];
+        $thisorder = DbOrder::getOrder('order_status,uid', ['id' => $order_id], true);
+        if (!empty($had_uid)) {
+            if (!in_array($thisorder['uid'],$had_uid)) {
+                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+            } 
+        }
+        
+        if ($thisorder['order_status'] != 4) {
+            return ['code' => '3004', 'msg' => '非待发货订单无法发货'];
         }
 
         $order_childs = DbOrder::getOrderChild('id', ['order_id' => $order_id]);

@@ -6,10 +6,12 @@ use app\common\model\LogBonus;
 use app\common\model\LogOpenboss;
 use app\common\model\LogTrading;
 use app\common\model\LogIntegral;
+use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
 use app\common\model\UserRelation;
+use app\common\model\UserBank;
 use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
@@ -366,6 +368,16 @@ class DbUser {
         return LogTrading::where($where)->sum($field);
     }
 
+    public function saveLogTrading($data){
+        $LogTrading = new LogTrading();
+        $LogTrading->save($data);
+        return $LogTrading->id;
+    }
+
+    public function editLogTrading($data,$id){
+        $LogTrading = new LogTrading;
+        return $LogTrading->save($data,['id' => $id]);
+    }
     public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogIntegral::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -399,15 +411,19 @@ class DbUser {
     }
 
     /**
-     * @param $field
+     * 获取佣金转出记录
      * @param $where
-     * @param $row
-     * @param $orderBy
-     * @param $sc
-     * @param $limit
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
      * @return array
      * @author rzc
      */
+    public function getLogTransfer($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogTransfer::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
     public function getUserRead($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '') {
 
         $obj = UserRead::field($field)->where($where);
@@ -425,26 +441,113 @@ class DbUser {
         return $obj->toArray();
     }
 
-    public function getUserReadSum($where, $field) {
-        return UserRead::where($where)->sum($field);
+    /**
+     * 佣金转出记录计数
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countLogTransfer($where){
+        return LogTransfer::where($where)->count();
     }
 
     /**
+     * 添加佣金转出记录
      * @param $data
-     * @return bool
+     * @return mixed
      * @author rzc
      */
+    public function addLogTransfer($data){
+        $LogTransfer = new LogTransfer;
+        $LogTransfer->save($data);
+        return $LogTransfer->id;
+    }
+
+    /**
+     * 修改佣金转出记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function editLogTransfer($data,$id){
+        $LogTransfer = new LogTransfer;
+        return $LogTransfer->save($data,['id' => $id]);
+    }
     public function addUserRead($data) {
         $UserRead = new UserRead;
         return $UserRead->save($data);
     }
 
     /**
-     * @param $data
-     * @param $id
-     * @return bool
+     * 获取用户银行卡信息
+     * @param $where
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return array
      * @author rzc
      */
+
+    public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = UserBank::field($field)->with(
+            ['adminBank' => function ($query){
+            // $query->field('abbrev,bank_name')->where([]);
+            },
+            'users' => function($query2){
+                $query2->field('id,user_identity,nick_name,avatar,mobile');
+            }]
+        )->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 添加银行卡信息
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+
+     public function saveUserBank($data){
+        $UserBank = new UserBank;
+        $UserBank->save($data);
+        return $UserBank->id;
+     }
+
+     /**
+     * 修改用户银行卡信息
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function editUserBank($data,$id){
+        $UserBank = new UserBank;
+        return $UserBank->save($data,['id' => $id]);
+    }
+
+    /**
+     * 删除用户银行卡信息
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function delUserBank($id){
+        return UserBank::destroy($id);
+    }
+    
+    /**
+     * 银行卡表计数
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countUserBank($where){
+        return UserBank::where($where)->count();
+    }
+
     public function updateUserRead($data, $id) {
         $UserRead = new UserRead;
         return $UserRead->save($data, ['id' => $id]);

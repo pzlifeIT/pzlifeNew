@@ -285,7 +285,7 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }

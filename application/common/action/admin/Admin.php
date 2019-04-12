@@ -2,16 +2,18 @@
 
 namespace app\common\action\admin;
 
-use app\facade\DbShops;
 use app\facade\DbAdmin;
-use app\facade\DbUser;
+use app\facade\DbImage;
 use app\facade\DbOrder;
-use Config;
-use think\Db;
+use app\facade\DbShops;
+use app\facade\DbUser;
 use cache\Phpredis;
+use Config;
+use Env;
+use think\Db;
 
 class Admin extends CommonIndex {
-    private $cmsCipherUserKey = 'adminpass';//用户密码加密key
+    private $cmsCipherUserKey = 'adminpass'; //用户密码加密key
 
     private function redisInit() {
         $this->redis = Phpredis::getConn();
@@ -25,19 +27,19 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function login($adminName, $passwd) {
-        $getPass   = $this->getPassword($passwd, $this->cmsCipherUserKey);//用户填写的密码
+        $getPass   = $this->getPassword($passwd, $this->cmsCipherUserKey); //用户填写的密码
         $adminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName, 'status' => 1], 'id,passwd', true);
         if (empty($adminInfo)) {
-            return ['code' => '3002'];//用户不存在
+            return ['code' => '3002']; //用户不存在
         }
         if ($adminInfo['passwd'] !== $getPass) {
-            return ['code' => '3003'];//密码错误
+            return ['code' => '3003']; //密码错误
         }
         $cmsConId = $this->createCmsConId();
         $this->redis->zAdd($this->redisCmsConIdTime, time(), $cmsConId);
         $conUid = $this->redis->hSet($this->redisCmsConIdUid, $cmsConId, $adminInfo['id']);
         if ($conUid === false) {
-            return ['code' => '3004'];//登录失败
+            return ['code' => '3004']; //登录失败
         }
         return ['code' => '200', 'cms_con_id' => $cmsConId];
     }
@@ -74,14 +76,14 @@ class Admin extends CommonIndex {
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
         if ($adminInfo['stype'] != '2') {
-            return ['code' => '3005'];//没有操作权限
+            return ['code' => '3005']; //没有操作权限
         }
         if ($stype == 2 && $adminId != 1) {
-            return ['code' => '3003'];//只有root账户可以添加超级管理员
+            return ['code' => '3003']; //只有root账户可以添加超级管理员
         }
         $newAdminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName], 'id', true);
         if (!empty($newAdminInfo)) {
-            return ['code' => '3004'];//该账号已存在
+            return ['code' => '3004']; //该账号已存在
         }
         Db::startTrans();
         try {
@@ -94,7 +96,7 @@ class Admin extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3006'];//添加失败
+            return ['code' => '3006']; //添加失败
         }
     }
 
@@ -118,7 +120,7 @@ class Admin extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//修改密码失败
+            return ['code' => '3005']; //修改密码失败
         }
     }
 
@@ -136,14 +138,14 @@ class Admin extends CommonIndex {
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
         if ($adminInfo['stype'] != '2') {
-            return ['code' => '3005'];//没有操作权限
+            return ['code' => '3005']; //没有操作权限
         }
         $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
         if (empty($user)) {
-            return ['code' => '3006'];//用户不存在
+            return ['code' => '3006']; //用户不存在
         }
         if ($user['user_identity'] == 4) {
-            return ['code' => '3007'];//该用户已经是boss
+            return ['code' => '3007']; //该用户已经是boss
         }
         $bossId = $this->getBoss($user['id']);
         if ($bossId == 1) {
@@ -159,13 +161,13 @@ class Admin extends CommonIndex {
                 array_push($userRelationData, $url);
             }
         }
-        $shopData        = [
+        $shopData = [
             'uid'         => $user['id'],
             'shop_right'  => 'all',
             'status'      => 1,
             'create_time' => time(),
         ];
-        $tradingDate     = [
+        $tradingDate = [
             'uid'          => $user['id'],
             'trading_type' => 2,
             'change_type'  => 9,
@@ -182,24 +184,24 @@ class Admin extends CommonIndex {
             'status'   => 1,
             'message'  => $message,
         ];
-        $pid             = $bossId == 1 ? 0 : $bossId;
-        $relationId      = $this->getRelation($user['id'])['id'];
+        $pid        = $bossId == 1 ? 0 : $bossId;
+        $relationId = $this->getRelation($user['id'])['id'];
         Db::startTrans();
         try {
             if (!empty($userRelationData)) {
                 DbUser::updateUserRelation($userRelationData);
             }
             DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
-            DbUser::modifyCommission($user['id'], $money, 'dec');//扣佣金
-            DbOrder::addLogTrading($tradingDate);//写佣金明细
-            DbShops::addShop($shopData);//添加店铺
+            DbUser::modifyCommission($user['id'], $money, 'dec'); //扣佣金
+            DbOrder::addLogTrading($tradingDate); //写佣金明细
+            DbShops::addShop($shopData); //添加店铺
             DbUser::updateUser(['user_identity' => 4], $user['id']);
             DbUser::addLogOpenboss($logOpenbossData);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3008'];//开通失败
+            return ['code' => '3008']; //开通失败
         }
     }
 
@@ -215,8 +217,8 @@ class Admin extends CommonIndex {
      */
     public function getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum) {
         $adminId  = $this->getUidByConId($cmsConId);
-        $allCount = DbUser::getLogOpenbossCount($mobile, $nickName);//总记录数
-        $allPage  = ceil(bcdiv($allCount, $pageNum, 5));//总页数
+        $allCount = DbUser::getLogOpenbossCount($mobile, $nickName); //总记录数
+        $allPage  = ceil(bcdiv($allCount, $pageNum, 5)); //总页数
         $offset   = ($page - 1) * $pageNum;
         $data     = DbUser::getLogOpenboss($offset . ',' . $pageNum, $mobile, $nickName);
         return ['code' => '200', 'data' => $data, 'all_count' => $allCount, 'all_page' => $allPage];
@@ -232,7 +234,7 @@ class Admin extends CommonIndex {
             return 1;
         }
         $pBossUidCheck = $this->getIdentity($bossUid);
-        if ($pBossUidCheck != 4) {//relation第一个关系人不是boss说明是总店下的用户
+        if ($pBossUidCheck != 4) { //relation第一个关系人不是boss说明是总店下的用户
             return 1;
         }
         return $bossUid;
@@ -301,7 +303,7 @@ class Admin extends CommonIndex {
         }
         /* $uid = deUid($uid);
         if (empty($uid)) {
-            return ['code' => '3004'];
+        return ['code' => '3004'];
         } */
         $indexUser = DbUser::getUserInfo(['nick_name' => $nick_name, 'mobile' => $mobile], 'id,balance,commission,integral', true);
         if (empty($indexUser)) {
@@ -345,13 +347,13 @@ class Admin extends CommonIndex {
             return ['code' => '3004'];
         }
         $indexUser = DbUser::getUserInfo(['id' => $remittance['uid']], 'id,balance,commission,integral', true);
-        if ($status == 2) {//审核不通过
+        if ($status == 2) { //审核不通过
             DbAdmin::editRemittance(['audit_admin_id' => $adminId, 'status' => 3], $id);
             return ['code' => '200', 'msg' => '审核失败'];
         }
         if ($remittance['stype'] != 3) {
 
-            if ($remittance['stype'] == 1) {//商票
+            if ($remittance['stype'] == 1) { //商票
                 $tradingData = [
                     'uid'          => $remittance['uid'],
                     'trading_type' => 1,
@@ -361,7 +363,7 @@ class Admin extends CommonIndex {
                     'after_money'  => bcadd($indexUser['balance'], $remittance['credit'], 2),
                     'message'      => $remittance['message'],
                 ];
-            } elseif ($remittance['stype'] == 2) {//佣金
+            } elseif ($remittance['stype'] == 2) { //佣金
                 $tradingData = [
                     'uid'          => $remittance['uid'],
                     'trading_type' => 2,
@@ -379,9 +381,9 @@ class Admin extends CommonIndex {
                     DbOrder::addLogTrading($tradingData);
                 }
 
-                if ($remittance['stype'] == 1) {//商票
+                if ($remittance['stype'] == 1) { //商票
                     DbUser::modifyBalance($remittance['uid'], $remittance['credit'], 'inc');
-                } elseif ($remittance['stype'] == 2) {//佣金
+                } elseif ($remittance['stype'] == 2) { //佣金
                     DbUser::modifyCommission($remittance['uid'], $remittance['credit'], 'inc');
                 }
                 $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
@@ -473,5 +475,441 @@ class Admin extends CommonIndex {
         }
         $total = DbAdmin::getCountAdminRemittance($where);
         return ['code' => '200', 'total' => $total, 'AdminRemittances' => $result];
+    }
+
+    /**
+     * 添加支持银行信息
+     * @param $abbrev
+     * @param $bank_name
+     * @param $icon_img
+     * @param $bg_img
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function addAdminBank($abbrev, $bank_name, $icon_img = '', $bg_img = '', $status) {
+        $is_bank_abbrev = DbAdmin::getAdminBank(['abbrev' => $abbrev], 'id', true);
+        $is_bank_name   = DbAdmin::getAdminBank(['bank_name' => $bank_name], 'id', true);
+        if ($is_bank_abbrev || $is_bank_name) {
+            return ['code' => '3004'];
+        }
+        $icon_img                = $icon_img ?? '';
+        $bg_img                  = $bg_img ?? '';
+        $admin_bank              = [];
+        $admin_bank['abbrev']    = $abbrev;
+        $admin_bank['bank_name'] = $bank_name;
+        $admin_bank['icon_img']  = $icon_img;
+        $admin_bank['bg_img']    = $bg_img;
+        $admin_bank['status']    = $status;
+        Db::startTrans();
+        try {
+            if (!empty($admin_bank['icon_img'])) {
+                $image    = filtraImage(Config::get('qiniu.domain'), $admin_bank['icon_img']);
+                $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+            }
+            if (!empty($admin_bank['bg_img'])) {
+                $image    = filtraImage(Config::get('qiniu.domain'), $admin_bank['bg_img']);
+                $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+            }
+            $add = DbAdmin::saveAdminBank($admin_bank);
+            Db::commit();
+            return ['code' => '200', 'add_id' => $add];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011']; //添加失败
+        }
+    }
+
+    /**
+     * 修改支持银行信息
+     * @param $abbrev
+     * @param $bank_name
+     * @param $icon_img
+     * @param $bg_img
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function editAdminBank(int $id, $abbrev = '', $bank_name = '', $icon_img = '', $bg_img = '', $status = '') {
+        if (empty($abbrev) && empty($bank_name) && empty($icon_img) && empty($bg_img) && empty($status)) {
+            return ['code' => '3004'];
+        }
+        $admin_bank = DbAdmin::getAdminBank(['id' => $id], 'id', true);
+        if (empty($admin_bank)) {
+            return ['code' => '3000'];
+        }
+        if (!empty($abbrev)) {
+            $has_abbrev = DbAdmin::getAdminBank([['abbrev', '=', $abbrev], ['id', '<>', $id]], 'id', true);
+            // print_r($has_abbrev);die;
+            if ($has_abbrev) {
+                return ['code' => '3005'];
+            }
+        }
+
+        if (!empty($bank_name)) {
+
+            // print_r($admin_bank);die;
+            $has_bank_name = DbAdmin::getAdminBank([['bank_name', '=', $bank_name], ['id', '<>', $id]], 'id', true);
+            if ($has_bank_name) {
+                return ['code' => '3005'];
+            }
+        }
+        if (!empty($icon_img)) {
+            $icon_img = filtraImage(Config::get('qiniu.domain'), $icon_img);
+        }
+        if (!empty($bg_img)) {
+            $bg_img = filtraImage(Config::get('qiniu.domain'), $bg_img);
+        }
+        $admin_bank              = [];
+        $admin_bank['abbrev']    = $abbrev;
+        $admin_bank['bank_name'] = $bank_name;
+        $admin_bank['icon_img']  = $icon_img;
+        $admin_bank['bg_img']    = $bg_img;
+        $admin_bank['status']    = $status;
+        $admin_bank              = $this->delDataEmptyKey($admin_bank);
+        Db::startTrans();
+        try {
+            if (!empty($admin_bank['icon_img'])) {
+                // $image    = $admin_bank['icon_img'];
+                $logImage = DbImage::getLogImage($admin_bank['icon_img'], 2); //判断时候有未完成的图片
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+            }
+            if (!empty($admin_bank['bg_img'])) {
+                // $image    =  $admin_bank['bg_img'];
+                $logImage = DbImage::getLogImage($admin_bank['bg_img'], 2); //判断时候有未完成的图片
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+            }
+            $add = DbAdmin::editAdminBank($admin_bank, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011']; //添加失败
+        }
+    }
+    /**
+     * 获取支持银行信息
+     * @param $page
+     * @param $pageNum
+     * @param $abbrev
+     * @param $bank_name
+     * @param $status
+     * @return string
+     * @author rzc
+     */
+    public function getAdminBank(int $page, int $pageNum, $abbrev = '', $bank_name = '', $status = '', $id = '') {
+        $where = [];
+        if (!empty($id)) {
+            $result = DbAdmin::getAdminBank(['id' => $id], '*', true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200', 'admin_bank' => $result];
+        }
+        if (!empty($abbrev)) {
+            array_push($where, ['abbrev', '=', $abbrev]);
+        }
+        if (!empty($bank_name)) {
+            array_push($where, ['bank_name', 'LIKE', '%' . $bank_name . '%']);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        } else {
+            array_push($where, ['status', 'IN', '1,2']);
+        }
+        $offset = $pageNum * ($page - 1);
+        $result = DbAdmin::getAdminBank($where, '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbAdmin::getAdminBankCount($where);
+        return ['code' => '200', 'total' => $total, 'admin_bank' => $result];
+    }
+
+    /**
+     * 用户提现记录
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_name
+     * @param $min_money
+     * @param $max_money
+     * @param $invoice
+     * @param $status
+     * @param $wtype
+     * @param $stype
+     * @param $start_time
+     * @param $end_time
+     * @param $page
+     * @param $pageNum
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function getLogTransfer($bank_card = '', $abbrev = '', $bank_mobile = '', $user_name = '', $bank_name = '', $min_money = '', $max_money = '', $invoice = '', $status = '', $stype = '', $wtype = '', $start_time = '', $end_time = '', $page = '', $pageNum = '', $id = '') {
+        $offset = ($page - 1) * $pageNum;
+        if ($offset < 0) {
+            return ['code' => '3000'];
+        }
+        $where = [];
+        if (!empty($id)) {
+            array_push($where, ['id', '=', $id]);
+            $result = DbUser::getLogTransfer($where, '*', true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200', 'log_transfer' => $result];
+        }
+        if (!empty($bank_card)) {
+            array_push($where, ['bank_card', '=', $bank_card]);
+        }
+        if (!empty($abbrev)) {
+            array_push($where, ['abbrev', '=', $abbrev]);
+        }
+        if (!empty($bank_mobile)) {
+            array_push($where, ['bank_mobile', '=', $bank_mobile]);
+        }
+        if (!empty($user_name)) {
+            array_push($where, ['user_name', 'LIKE', '%' . $user_name . '%']);
+        }
+        if (!empty($bank_name)) {
+            array_push($where, ['bank_name', 'LIKE', '%' . $bank_name . '%']);
+        }
+        if (!empty($min_money)) {
+            array_push($where, ['money', '>=', $min_money]);
+        }
+        if (!empty($max_money)) {
+            array_push($where, ['money', '<=', $max_money]);
+        }
+        if (!empty($invoice)) {
+            array_push($where, ['invoice', '=', $invoice]);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        if (!empty($wtype)) {
+            array_push($where, ['wtype', '=', $wtype]);
+        }
+        if (!empty($stype)) {
+            array_push($where, ['stype', '=', $stype]);
+        }
+        if (!empty($start_time)) {
+            $start_time = strtotime($start_time);
+            array_push($where, ['create_time', '>=', $start_time]);
+        }
+        if (!empty($end_time)) {
+            $end_time = strtotime($end_time);
+            array_push($where, ['create_time', '<=', $end_time]);
+        }
+        $result = DbUser::getLogTransfer($where, '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        foreach ($result as $key => $value) {
+            $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
+        }
+        $total = DbUser::countLogTransfer($where);
+        return ['code' => '200','total' => $total, 'log_transfer' => $result];
+    }
+
+    /**
+     * 审核用户提现
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_mobile
+     * @param $user_name
+     * @param $status
+     * @param $page
+     * @param $page_num
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function checkUserTransfer(int $id, int $status, $message = '') {
+        $transfer     = DbUser::getLogTransfer(['id' => $id], '*', true);
+        $userRedisKey = Config::get('rediskey.user.redisKey');
+        if (empty($transfer)) {
+            return ['code' => '3000'];
+        }
+        if ($transfer['status'] != 1) {
+            return ['code' => '3004'];
+        }
+        if ($transfer['stype'] == 2) { //佣金提现
+            if ($transfer['wtype'] == 1) { //提现方式 1 银行
+                if ($status == 3) { //审核不通过
+                    $indexUser   = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
+                    $tradingData = [
+                        'uid'          => $transfer['uid'],
+                        'trading_type' => 2,
+                        'change_type'  => 10,
+                        'money'        => $transfer['money'],
+                        'befor_money'  => $indexUser['commission'],
+                        'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
+                        'message'      => $message,
+                    ];
+                    // print_r($indexUser);die;
+                    Db::startTrans();
+                    try {
+                        DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
+                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                        DbOrder::addLogTrading($tradingData);
+                        Db::commit();
+                        $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
+                        return ['code' => '200'];
+                    } catch (\Exception $e) {
+                        Db::rollback();
+                        exception($e);
+                        return ['code' => '3007']; //审核失败
+                    }
+                } elseif ($status == 2) { //审核通过
+                    Db::startTrans();
+                    try {
+                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                        Db::commit();
+                        return ['code' => '200'];
+                    } catch (\Exception $e) {
+                        Db::rollback();
+                        return ['code' => '3007']; //审核失败
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取用户提交银行卡
+     * @param $conId
+     * @param $bank_card
+     * @param $bank_mobile
+     * @param $user_name
+     * @param $status
+     * @param $page
+     * @param $page_num
+     * @param $id
+     * @return string
+     * @author rzc
+     */
+    public function getUserBank($id = '', $bank_card = '', $bank_mobile = '', $user_name = '', $status = '', int $page, int $pageNum) {
+        $offset = ($page - 1) * $pageNum;
+        if ($offset < 0) {
+            return ['code' => '3000'];
+        }
+        $where = [];
+        if (!empty($id)) {
+            array_push($where, ['id', '=', $id]);
+            $result = DbUser::getUserBank($where, '*', true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200', 'userbank' => $result];
+        }
+        if (!empty($bank_card)) {
+            array_push($where, ['bank_card', '=', $bank_card]);
+        }
+        if (!empty($bank_mobile)) {
+            array_push($where, ['bank_mobile', '=', $bank_mobile]);
+        }
+        if (!empty($user_name)) {
+            array_push($where, ['user_name', 'LIKE', '%' . $user_name . '%']);
+        }
+        if (!empty($status)) {
+            array_push($where, ['status', '=', $status]);
+        }
+        $result = DbUser::getUserBank($where, '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbUser::countUserBank($where);
+        return ['code' => '200', 'total' => $total, 'userbank' => $result];
+    }
+
+    function delDataEmptyKey($data) {
+        foreach ($data as $key => $value) {
+            if (!$value) {
+                unset($data[$key]);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * 审核用户提交银行卡
+     * @param $id
+     * @param $status
+     * @param $message
+     * @param $error_fields
+     * @return string
+     * @author rzc
+     */
+    public function checkUserBank($id, $status, $message = '', $error_fields = '') {
+        $userbank = DbUser::getUserBank(['id' => $id], '*', true);
+        if (empty($userbank)) {
+            return ['code' => '3000'];
+        }
+        if ($userbank['status'] == 2 || $userbank['status'] == 3) {
+            return ['code' => '3006'];
+        }
+        if ($status == 4) {
+            if ($userbank['status'] != 1) {
+                return ['code' => '3002'];
+            }
+        }
+        if ($status == $userbank['status']) {
+            return ['code' => '3002'];
+        }
+        $check                 = [];
+        $check['status']       = $status;
+        $check['message']      = $message;
+        $check['error_fields'] = $error_fields;
+        Db::startTrans();
+        try {
+            DbUser::editUserBank($check, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011']; //添加失败
+        }
+    }
+
+    /**
+     * 获取提现比率
+     * @return string
+     * @author rzc
+     */
+    public function getInvoice() {
+        // echo ;die;
+        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        if ($invoice == false) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200','invoice' => json_decode($invoice,true)];
+
+    }
+
+    public function editInvoice($cmsConId,$has_invoice,$no_invoice){
+        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
+        $invoice = [];
+        $invoice['has_invoice'] = $has_invoice;
+        $invoice['no_invoice'] = $no_invoice;
+        $invoice = json_encode($invoice,true);
+        file_put_contents(Env::get('root_path')."invoice.json",$invoice);
+        $this->redis->set($redisManageInvoice,$invoice);
+        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        // print_r($invoice);die;
     }
 }

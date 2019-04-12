@@ -4,6 +4,7 @@ namespace app\common\db\user;
 
 use app\common\model\Admin;
 use app\common\model\AdminRemittance;
+use app\common\model\AdminBank;
 use app\common\model\User;
 
 class DbAdmin {
@@ -104,5 +105,58 @@ class DbAdmin {
      */
     public function getCountAdminRemittance($where){
         return AdminRemittance::where($where)->count();
+    }
+
+    /**
+     * 获取支持银行
+     * @param $where
+     * @param $field
+     * @param $row
+     * @param $orderBy
+     * @param $limit
+     * @return mixed
+     * @author rzc
+     */
+    public function getAdminBank($where, $field, $row = false, $orderBy = '', $limit = '',$whereOr = false) {
+        $obj = AdminBank::field($field);
+        if ($whereOr === true) {
+            $obj = $obj->whereOr($where);
+        }else{
+            $obj = $obj->where($where);
+        }
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 获取记录条数
+     * @param $where
+     * @return number
+     * @author rzc
+     */
+    public function getAdminBankCount($where){
+        return AdminBank::where($where)->count();
+    }
+
+    /**
+     * 添加支持银行
+     * @param $data
+     * @return id
+     * @author rzc
+     */
+    public function saveAdminBank($data){
+        $AdminBank = new AdminBank;
+        $AdminBank->save($data);
+        return $AdminBank->id;
+    }
+
+    /**
+     * 修改支持银行
+     * @param $data
+     * @return id
+     * @author rzc
+     */
+    public function editAdminBank($data,$id){
+        $AdminBank = new AdminBank;
+        return $AdminBank->save($data,['id'=>$id]);
     }
 }
