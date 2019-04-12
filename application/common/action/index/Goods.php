@@ -8,10 +8,13 @@ use think\Db;
 use Config;
 
 class Goods extends CommonIndex {
-
+    private $transformRedisKey;
+    private $labelLibraryRedisKey;
     public function __construct() {
         parent::__construct();
         $this->redisGoodsDetail = Config::get('rediskey.index.redisGoodsDetail');
+        $this->transformRedisKey    = Config::get('rediskey.label.redisLabelTransform');
+        $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
     }
 
     /**
@@ -340,5 +343,25 @@ class Goods extends CommonIndex {
 
         }
         return ['code' => 200, 'goods_data' => $result];
+    }
+
+    public function searchLabel($searchContent) {
+        $data     = [];
+        $iterator = null;
+        while (true) {
+            $keys = $this->redis->hScan($this->transformRedisKey, $iterator, $searchContent . '*');
+            if ($keys === false) { //迭代结束，未找到匹配pattern的key
+                break;
+            }
+            foreach ($keys as $key) {
+                $data = array_merge($data, json_decode($key, true));
+            }
+        }
+        if(empty($data)){
+            return ['code' => '3000'];
+        }
+        $data   = array_unique($data);
+        $result = $this->redis->hMGet($this->labelLibraryRedisKey, $data);
+        return ['code' => '200', $result];
     }
 }

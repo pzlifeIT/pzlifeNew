@@ -179,4 +179,22 @@ class Goods extends MyController
         $result = $this->app->goods->getSearchGoods($search,$page,$page_num);
         return $result;
     }
+
+    /**
+     * @api              {post} / 搜索标签
+     * @apiDescription   searchLabel
+     * @apiGroup         index_Goods
+     * @apiName          searchLabel
+     * @apiParam (入参) {String} search_content 搜索的内容
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /index/goods/searchlabel
+     * @return array
+     * @author zyr
+     */
+    public function searchLabel() {
+        $searchContent = trim($this->request->post('search_content')); //搜索内容
+        $result        = $this->app->goods->searchLabel($searchContent);
+        return $result;
+    }
 }
