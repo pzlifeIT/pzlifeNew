@@ -181,11 +181,11 @@ class Rights extends AdminController {
         $refe_type       = trim(input("post.refe_type"));
         $status          = trim(input("post.status"));
 
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
-        $status  = empty($status) ? 1 : $status;
+        $page       = empty($page) ? 1 : $page;
+        $pageNum    = empty($pageNum) ? 10 : $pageNum;
+        $status     = empty($status) ? 1 : $status;
         $target_uid = deUid($target_uid);
-        $refe_uid = deUid($refe_uid);
+        $refe_uid   = deUid($refe_uid);
         if (!empty($target_mobile)) {
             if (checkIdcard($target_mobile) == false) {
                 return ['code' => '3001'];
@@ -202,7 +202,49 @@ class Rights extends AdminController {
         if (!is_numeric($status)) {
             return ['code' => '3004'];
         }
-        $result = $this->app->rights->getShopApplyList($page,$pageNum,$status,$target_uid,$target_uname,$target_nickname,$target_sex,$target_mobile,$target_idcard,$refe_uid,$refe_uname,$shop_id,$refe_type);
+        $result = $this->app->rights->getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type);
         return $result;
+    }
+
+    /**
+     * @api              {post} / 审核申请开通BOSS(未完成)
+     * @apiDescription   auditShopApply
+     * @apiGroup         admin_Rights
+     * @apiName          auditShopApply
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 分享钻石会员机会ID
+     * @apiParam (入参) {Number} status 申请进度 1.提交申请  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:status为空
+     * @apiSuccess (data) {object_array} data 结果
+     * @apiSuccess (data) {String} id 用户ID
+     * @apiSampleRequest /admin/Rights/auditShopApply
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *  {"id":9,"tel":15502123212,
+     *   "name":"喜蓝葡萄酒",
+     *   "status":"1",
+     *   "image":"","title":"",
+     *   "desc":"江浙沪皖任意2瓶包邮，其他地区参考实际支付运费"
+     *  }
+     * ]
+     * @author rzc
+     */
+    public function auditShopApply() {
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
+        if (empty($id)) {
+            return ['code' => '3002'];
+        }
+        if (empty($status)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->rights->auditShopApply($id,$status,$message);
+        return $result;
+
     }
 }
