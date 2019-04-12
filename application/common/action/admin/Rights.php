@@ -189,6 +189,7 @@ class Rights extends CommonIndex {
      * @param $id
      * @param $status
      * @param $message
+     * @param $cmsConId
      * @return array
      * @author rzc
      */
@@ -211,10 +212,19 @@ class Rights extends CommonIndex {
             if ($shopapply['status'] != 2) {
                 return ['code' => '3003'];
             }
-
+            $adminId   = $this->getUidByConId($cmsConId);
+            $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
+            if ($adminInfo['stype'] != '2') {
+                return ['code' => '3005']; //没有操作权限
+            }
         } elseif ($status == 4) { //审核不通过
             if ($shopapply['status'] == 3) {
                 return ['code' => '3003'];
+            }
+            $adminId   = $this->getUidByConId($cmsConId);
+            $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
+            if ($adminInfo['stype'] != '2') {
+                return ['code' => '3005']; //没有操作权限
             }
         }
         $edit_shopapply['status']  = $status;
@@ -282,7 +292,7 @@ class Rights extends CommonIndex {
             // 回滚事务
             exception($e);
             Db::rollback();
-            return ['code' => '3006', 'msg' => '插入数据出错'];
+            return ['code' => '3006', 'msg' => '审核失败'];
         }
     }
 
