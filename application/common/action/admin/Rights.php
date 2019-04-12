@@ -227,7 +227,12 @@ class Rights extends CommonIndex {
         try {
             if ($status == 3) {
                 $admin = new Admin;
-                $admin->openBoss($cmsConId, $shopapply['target_mobile'], $shopapply['target_uname'], 0, $message);
+                $target_user = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'mobile');
+                $openshop = $admin->openBoss($cmsConId, $target_user['target_mobile'], $shopapply['target_uname'], 0, $message);
+                if ($openshop['code'] != 200) {
+                    return ['code' => '3007'];
+                }
+                // print_r($openshop);die;
             }
             // 提交事务
             DbUser::editLogInvest($edit_invest,$invest['id']);
@@ -238,7 +243,7 @@ class Rights extends CommonIndex {
             // 回滚事务
             exception($e);
             Db::rollback();
-            return ['code' => '3004', 'msg' => '插入数据出错'];
+            return ['code' => '3006', 'msg' => '插入数据出错'];
         }
     }
 }

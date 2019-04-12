@@ -207,7 +207,7 @@ class Rights extends AdminController {
     }
 
     /**
-     * @api              {post} / 审核申请开通BOSS(未完成)
+     * @api              {post} / 审核申请开通BOSS
      * @apiDescription   auditShopApply
      * @apiGroup         admin_Rights
      * @apiName          auditShopApply
@@ -221,12 +221,7 @@ class Rights extends AdminController {
      * @apiParamExample (data) {Array} 返回用户列表
      * [
      * "code":"200",返回code码
-     *  {"id":9,"tel":15502123212,
-     *   "name":"喜蓝葡萄酒",
-     *   "status":"1",
-     *   "image":"","title":"",
-     *   "desc":"江浙沪皖任意2瓶包邮，其他地区参考实际支付运费"
-     *  }
+     *  
      * ]
      * @author rzc
      */
