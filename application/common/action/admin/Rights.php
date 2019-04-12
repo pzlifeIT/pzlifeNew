@@ -220,12 +220,13 @@ class Rights extends CommonIndex {
 
         $edit_invest['status']  = $status;
         $edit_invest['message'] = $message;
-
+        $invest = DbUser::getLogInvest();
         Db::startTrans();
         try {
 
             // 提交事务
-            DbRights::editShopApply($edit_shopapply);
+            DbUser::editLogInvest($edit_invest,$id);
+            DbRights::editShopApply($edit_shopapply,$id);
             Db::commit();
             return ['code' => '200', 'msg' => '审核通过'];
         } catch (\Exception $e) {
