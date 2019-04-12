@@ -223,10 +223,11 @@ class Rights extends CommonIndex {
         $edit_invest['message'] = $message;
         $invest = DbUser::getLogInvest(['uid' =>$shopapply['refe_uid'] ,'target_uid' =>$shopapply['target_uid']], 'id', true);
         Db::startTrans();
+        // print_r($status);die;
         try {
             if ($status == 3) {
                 $admin = new Admin;
-                $admin::openBoss($cmsConId, $shopapply['target_mobile'], $shopapply['target_uname'], 0, $message);
+                $admin->openBoss($cmsConId, $shopapply['target_mobile'], $shopapply['target_uname'], 0, $message);
             }
             // 提交事务
             DbUser::editLogInvest($edit_invest,$invest['id']);
