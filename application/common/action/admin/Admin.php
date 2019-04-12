@@ -135,6 +135,7 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function openBoss($cmsConId, $mobile, $nickName, $money, $message) {
+        echo 1;die;
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
         if ($adminInfo['stype'] != '2') {

@@ -6,6 +6,7 @@ use app\facade\DbRights;
 use app\facade\DbShops;
 use app\facade\DbUser;
 use think\Db;
+use app\common\action\admin\Admin;
 
 class Rights extends CommonIndex {
     /**
@@ -190,7 +191,7 @@ class Rights extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function auditShopApply($id, int $status, $message = '') {
+    public function auditShopApply($id, int $status, $message = '',$cmsConId) {
         $shopapply = DbRights::getShopApply(['id' => $id], '*', true);
         if (empty($shopapply)) {
             return ['code' => '3000'];
@@ -223,7 +224,10 @@ class Rights extends CommonIndex {
         $invest = DbUser::getLogInvest(['uid' =>$shopapply['refe_uid'] ,'target_uid' =>$shopapply['target_uid']], 'id', true);
         Db::startTrans();
         try {
-
+            if ($status == 3) {
+                $admin = new Admin;
+                $admin::openBoss($cmsConId, $shopapply['target_mobile'], $shopapply['target_uname'], 0, $message);
+            }
             // 提交事务
             DbUser::editLogInvest($edit_invest,$invest['id']);
             DbRights::editShopApply($edit_shopapply,$id);
