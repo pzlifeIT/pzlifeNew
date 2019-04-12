@@ -231,6 +231,7 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function auditShopApply() {
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $id      = trim($this->request->post('id'));
         $status  = trim($this->request->post('status'));
         $message = trim($this->request->post('message'));
@@ -246,7 +247,7 @@ class Rights extends AdminController {
         if (!in_array($status,[2,3,4])) {
             return ['code' => '3004'];
         }
-        $result = $this->app->rights->auditShopApply($id,$status,$message);
+        $result = $this->app->rights->auditShopApply($id,$status,$message,$cmsConId);
         return $result;
 
     }

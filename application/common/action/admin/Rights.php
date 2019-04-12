@@ -2,9 +2,9 @@
 
 namespace app\common\action\admin;
 
-use app\facade\DbUser;
-use app\facade\DbShops;
 use app\facade\DbRights;
+use app\facade\DbShops;
+use app\facade\DbUser;
 use think\Db;
 
 class Rights extends CommonIndex {
@@ -35,8 +35,8 @@ class Rights extends CommonIndex {
             }
         }
 
-        $data   = [];
-        $data   = [
+        $data = [];
+        $data = [
             'uid'             => $user['id'],
             'shopid'          => $shop['id'],
             'linkman'         => $linkman,
@@ -137,49 +137,49 @@ class Rights extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getShopApplyList($page,$pageNum,$status,$target_uid,$target_uname,$target_nickname,$target_sex,$target_mobile,$target_idcard,$refe_uid,$refe_uname,$shop_id,$refe_type){
+    public function getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type) {
         $offset = $pageNum * ($page - 1);
         //查找所有数据
         $where = [];
         if (!empty($status)) {
-            array_push($where,['status', '=' ,$status]);
+            array_push($where, ['status', '=', $status]);
         }
         if (!empty($target_uid)) {
-            array_push($where,['target_uid', '=' ,$target_uid]);
+            array_push($where, ['target_uid', '=', $target_uid]);
         }
         if (!empty($target_uname)) {
-            array_push($where,['target_uname', 'LIKE' ,'%'.$target_uname.'%']);
+            array_push($where, ['target_uname', 'LIKE', '%' . $target_uname . '%']);
         }
         if (!empty($target_nickname)) {
-            array_push($where,['target_nickname', 'LIKE' ,'%'.$target_nickname.'%']);
+            array_push($where, ['target_nickname', 'LIKE', '%' . $target_nickname . '%']);
         }
         if (!empty($target_sex)) {
-            array_push($where,['target_sex', '=' ,$target_sex]);
+            array_push($where, ['target_sex', '=', $target_sex]);
         }
         if (!empty($target_mobile)) {
-            array_push($where,['target_mobile', '=' ,$target_mobile]);
+            array_push($where, ['target_mobile', '=', $target_mobile]);
         }
         if (!empty($target_idcard)) {
-            array_push($where,['target_idcard', '=' ,$target_idcard]);
+            array_push($where, ['target_idcard', '=', $target_idcard]);
         }
         if (!empty($refe_uid)) {
-            array_push($where,['refe_uid', '=' ,$refe_uid]);
+            array_push($where, ['refe_uid', '=', $refe_uid]);
         }
         if (!empty($refe_uname)) {
-            array_push($where,['refe_uname', 'LIKE' ,'%'.$refe_uname.'%']);
+            array_push($where, ['refe_uname', 'LIKE', '%' . $refe_uname . '%']);
         }
         if (!empty($shop_id)) {
-            array_push($where,['shop_id', '=' ,$shop_id]);
+            array_push($where, ['shop_id', '=', $shop_id]);
         }
         if (!empty($refe_type)) {
-            array_push($where,['refe_type', '=' ,$refe_type]);
+            array_push($where, ['refe_type', '=', $refe_type]);
         }
-        $result = DbRights::getShopApply($where,'*',false,'create_time','DESC',$offset.','.$pageNum);
+        $result = DbRights::getShopApply($where, '*', false, 'create_time', 'DESC', $offset . ',' . $pageNum);
         if (empty($result)) {
             return ['code' => '3000'];
         }
         $total = DbRights::countShopApply($where);
-        return ['code' => '200','total' => $total,'data' => $result];
+        return ['code' => '200', 'total' => $total, 'data' => $result];
     }
 
     /**
@@ -190,8 +190,8 @@ class Rights extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function auditShopApply($id,int $status,$message = ''){
-        $shopapply = DbRights::getShopApply(['id' => $id],'*',true);
+    public function auditShopApply($id, int $status, $message = '') {
+        $shopapply = DbRights::getShopApply(['id' => $id], '*', true);
         if (empty($shopapply)) {
             return ['code' => '3000'];
         }
@@ -199,22 +199,40 @@ class Rights extends CommonIndex {
             return ['code' => '3005'];
         }
         $edit_shopapply = [];
-        $edit_invest = [];
-        if ($status == 2) {//财务审核通过
+        $edit_invest    = [];
+        if ($status == 2) { //财务审核通过
             if ($shopapply['status'] != 1) {
                 return ['code' => '3003'];
             }
 
-        }elseif ($status == 3) {//经理审核通过
+        } elseif ($status == 3) { //经理审核通过
             if ($shopapply['status'] != 2) {
                 return ['code' => '3003'];
             }
-        }elseif ($status == 4) {//审核不通过
+
+        } elseif ($status == 4) { //审核不通过
             if ($shopapply['status'] == 3) {
                 return ['code' => '3003'];
             }
         }
-        $edit_shopapply['status'] = $status;
+        $edit_shopapply['status']  = $status;
         $edit_shopapply['message'] = $message;
+
+        $edit_invest['status']  = $status;
+        $edit_invest['message'] = $message;
+
+        Db::startTrans();
+        try {
+
+            // 提交事务
+            DbRights::editShopApply($edit_shopapply);
+            Db::commit();
+            return ['code' => '200', 'msg' => '审核通过'];
+        } catch (\Exception $e) {
+            // 回滚事务
+            exception($e);
+            Db::rollback();
+            return ['code' => '3004', 'msg' => '插入数据出错'];
+        }
     }
 }
