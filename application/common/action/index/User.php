@@ -435,6 +435,12 @@ class User extends CommonIndex {
             ['uid', '=', $uid],
             // ['create_time', '>=', $threeMonth], //近三个月
         ], 'money')); //已用商票总额
+        $balanceAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'],
+            ['change_type', 'in', [3, 4, 5, 7, 8]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
         $noBbonus = DbUser::getLogBonusSum([
             'to_uid'        => $uid,
             'user_identity' => 4, //boss身份获得的收益
@@ -465,7 +471,7 @@ class User extends CommonIndex {
             ['uid', '=', $uid],
         ], 'money'); //商票总额
         $data = [
-            'balance_all'    => bcadd($balance, $balanceUse, 2), //商票总额
+            'balance_all'    => $balanceAll, //商票总额
             'balance'        => $balance, //商票余额
             'commission'     => $commission, //佣金余额
             'commission_all' => $commissionAll, //佣金总额
