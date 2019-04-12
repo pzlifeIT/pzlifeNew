@@ -271,6 +271,7 @@ class Rights extends CommonIndex {
                 DbUser::updateUser(['user_identity' => 4], $shopapply['target_uid']);
                 DbShops::addShop($shopData); //添加店铺
                 DbOrder::addLogTrading($tradingData);//写佣金明细
+                DbUser::modifyCommission($shopapply['refe_uid'], $invest['cost'],'inc');
             }
             // 提交事务
             DbUser::editLogInvest($edit_invest, $invest['id']);
