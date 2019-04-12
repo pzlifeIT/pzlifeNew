@@ -283,13 +283,13 @@ class Rights extends CommonIndex {
                 DbShops::addShop($shopData); //添加店铺
                 DbOrder::addLogTrading($tradingData);//写佣金明细
                 DbUser::modifyCommission($shopapply['refe_uid'], $invest['cost'],'inc');
+                $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
+                $this->redis->del($redisKey . $shopapply['target_uid']);
             }
             // 提交事务
             DbUser::editLogInvest($edit_invest, $invest['id']);
             DbRights::editShopApply($edit_shopapply, $id);
             Db::commit();
-            $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
-            $this->redis->del($redisKey . $shopapply['target_uid']);
             return ['code' => '200', 'msg' => '审核通过'];
         } catch (\Exception $e) {
             // 回滚事务
