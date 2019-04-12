@@ -384,6 +384,7 @@ class Recommend extends AdminController {
                 }
 
             }
+
         } elseif ($model_id == 5) {
             if (!$title || !$jump_type || !$jump_content) {
                 return ['code' => '3003'];

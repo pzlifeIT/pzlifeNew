@@ -3,16 +3,21 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogOpenboss;
 use app\common\model\LogTrading;
 use app\common\model\LogIntegral;
+use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
 use app\common\model\UserCon;
 use app\common\model\UserRecommend;
 use app\common\model\UserRelation;
+use app\common\model\UserBank;
 use app\common\model\Users;
 use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
+use app\common\model\UserRead;
 use app\common\model\UserIntegral;
+use think\Db;
 
 class DbUser {
     /**
@@ -26,10 +31,10 @@ class DbUser {
         return $user;
     }
 
-    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '',$sc = '') {
+    public function getUserInfo($where, $field, $row = false, $orderBy = '', $limit = '', $sc = '') {
         $obj = Users::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
-            $obj = $obj->order($orderBy,$sc);
+            $obj = $obj->order($orderBy, $sc);
         }
         if (!empty($limit)) {
             $obj = $obj->limit($limit);
@@ -259,7 +264,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyCommission($uid, $commission, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user             = Users::get($uid);
         $user->commission = [$modify, $commission];
         $user->save();
     }
@@ -272,7 +277,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyIntegral($uid, $integral, $modify = 'dec') {
-        $user          = Users::get($uid);
+        $user           = Users::get($uid);
         $user->integral = [$modify, $integral];
         $user->save();
     }
@@ -304,14 +309,50 @@ class DbUser {
         return $userRelation->id;
     }
 
-    public function updateUserRelation($data, $id) {
+    public function updateUserRelation($data, $id = 0) {
         $userRelation = new UserRelation();
+        if ($id == 0) {
+            return $userRelation->saveAll($data);
+        }
         return $userRelation->save($data, ['id' => $id]);
     }
 
     public function getLogBonus($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogBonus::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogBonusDistinct($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogBonus::field($field)->distinct(true)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogBonusGroup($where, $uid, $limit) {
+        array_push($where, ['delete_time', '=', '0']);
+//        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
+//        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
+
+        $subSql = Db::table('pz_log_bonus')
+            ->field('level_uid,sum(result_price) as price')
+            ->where($where)
+            ->group('level_uid')
+            ->order('price desc')
+            ->buildSql();
+
+        $parSql = Db::table('pz_user_relation')
+            ->alias('ur')
+            ->field('uid,w.price,w.level_uid')
+            ->where([['is_boss', '=', '1'], ['pid', '=', $uid], ['delete_time', '=', '0']])
+            ->leftJoin([$subSql => 'w'], 'ur.uid = w.level_uid')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,p.price,u.nick_name,u.avatar,u.user_identity')
+            ->where([['delete_time', '=', '0']])
+            ->join([$parSql => 'p'], 'u.id = p.uid')
+            ->order('p.price desc,id desc')
+            ->limit($limit)
+            ->select();
     }
 
     public function getLogTrading($where, $field, $row = false, $orderBy = '', $limit = '') {
@@ -325,6 +366,25 @@ class DbUser {
 
     public function getLogTradingSum($where, $field) {
         return LogTrading::where($where)->sum($field);
+    }
+
+    public function saveLogTrading($data){
+        $LogTrading = new LogTrading();
+        $LogTrading->save($data);
+        return $LogTrading->id;
+    }
+
+    public function editLogTrading($data,$id){
+        $LogTrading = new LogTrading;
+        return $LogTrading->save($data,['id' => $id]);
+    }
+    public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogIntegral::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+//        $where['i.delete_time'] = 0;
+//        $where['o.delete_time'] = 0;
+//        $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
+//        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -349,15 +409,211 @@ class DbUser {
         }
         return $obj->toArray();
     }
+
     /**
+     * 获取佣金转出记录
+     * @param $where
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return array
+     * @author rzc
+     */
+    public function getLogTransfer($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogTransfer::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+    public function getUserRead($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '') {
+
+        $obj = UserRead::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    /**
+     * 佣金转出记录计数
      * @param $data
-     * @return bool
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countLogTransfer($where){
+        return LogTransfer::where($where)->count();
+    }
+
+    /**
+     * 添加佣金转出记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function addLogTransfer($data){
+        $LogTransfer = new LogTransfer;
+        $LogTransfer->save($data);
+        return $LogTransfer->id;
+    }
+
+    /**
+     * 修改佣金转出记录
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+    public function editLogTransfer($data,$id){
+        $LogTransfer = new LogTransfer;
+        return $LogTransfer->save($data,['id' => $id]);
+    }
+    public function addUserRead($data) {
+        $UserRead = new UserRead;
+        return $UserRead->save($data);
+    }
+
+    /**
+     * 获取用户银行卡信息
+     * @param $where
+     * @param bool $field
+     * @param string $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return array
      * @author rzc
      */
 
-     public function addLogIntegral($data){
-         $LogIntegral = new LogIntegral;
-         $LogIntegral->save($data);
-         return $LogIntegral->id;
+    public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = UserBank::field($field)->with(
+            ['adminBank' => function ($query){
+            // $query->field('abbrev,bank_name')->where([]);
+            },
+            'users' => function($query2){
+                $query2->field('id,user_identity,nick_name,avatar,mobile');
+            }]
+        )->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 添加银行卡信息
+     * @param $data
+     * @return mixed
+     * @author rzc
+     */
+
+     public function saveUserBank($data){
+        $UserBank = new UserBank;
+        $UserBank->save($data);
+        return $UserBank->id;
      }
+
+     /**
+     * 修改用户银行卡信息
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function editUserBank($data,$id){
+        $UserBank = new UserBank;
+        return $UserBank->save($data,['id' => $id]);
+    }
+
+    /**
+     * 删除用户银行卡信息
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function delUserBank($id){
+        return UserBank::destroy($id);
+    }
+    
+    /**
+     * 银行卡表计数
+     * @param $data
+     * @param $id
+     * @return mixed
+     * @author rzc
+     */
+    public function countUserBank($where){
+        return UserBank::where($where)->count();
+    }
+
+    public function updateUserRead($data, $id) {
+        $UserRead = new UserRead;
+        return $UserRead->save($data, ['id' => $id]);
+    }
+
+    public function addLogIntegral($data) {
+        $LogIntegral = new LogIntegral;
+        $LogIntegral->save($data);
+        return $LogIntegral->id;
+    }
+
+    public function addLogOpenboss($data) {
+        $logOpenboss = new LogOpenboss();
+        $logOpenboss->save($data);
+        return $logOpenboss->id;
+    }
+
+    public function getLogOpenboss($limit, $mobile, $nickName) {
+        $where = $this->getLogOpenbossWhere($mobile, $nickName);
+        return Db::table('pz_log_openboss')
+            ->alias('lo')
+            ->field('lo.money,u.nick_name,u.mobile,a.admin_name,lo.create_time,lo.message')
+            ->join(['pz_users' => 'u'], 'lo.uid=u.id')
+            ->join(['pz_admin' => 'a'], 'lo.admin_id=a.id')
+            ->whereOr($where)
+            ->limit($limit)
+            ->select();
+    }
+
+    public function getLogOpenbossCount($mobile, $nickName) {
+        $where = $this->getLogOpenbossWhere($mobile, $nickName);
+        return Db::table('pz_log_openboss')
+            ->alias('lo')
+            ->join(['pz_users' => 'u'], 'lo.uid=u.id')
+            ->join(['pz_admin' => 'a'], 'lo.admin_id=a.id')
+            ->whereOr($where)
+            ->count();
+    }
+
+    private function getLogOpenbossWhere($mobile, $nickName) {
+        $where = [];
+        $map1  = [];
+        $map2  = [];
+        if (!empty($mobile)) {
+            $map1 = [
+                ['lo.status', '=', '1'],
+                ['u.mobile', '=', $mobile],
+            ];
+        }
+        if (!empty($nickName)) {
+            $map2 = [
+                ['lo.status', '=', '1'],
+                ['u.nick_name', 'like', '%' . $nickName . '%'],
+            ];
+        }
+        if (!empty($map1)) {
+            array_push($where, $map1);
+        }
+        if (!empty($map2)) {
+            array_push($where, $map2);
+        }
+        if (empty($where)) {
+            $where = [
+                ['lo.status', '=', '1'],
+            ];
+        }
+        return $where;
+    }
 }

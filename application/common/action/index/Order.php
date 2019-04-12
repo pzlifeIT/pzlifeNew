@@ -709,9 +709,9 @@ class Order extends CommonIndex {
             $fCount                              = bcmul(1, $cartSum, 2);
             $freightCount[$value['freight_id']]  = isset($freightCount[$value['freight_id']]) ? bcadd($freightCount[$value['freight_id']], $fCount, 0) : $fCount;//同一个供应商模版id的商品数量累加
             $fWeight                             = bcmul($value['weight'], $cartSum, 2);
-            $freightWeight[$value['freight_id']] = isset($freightWeight[$value['freight_id']]) ? bcadd($freightWeight[$value['freight_id']], $fWeight, 0) : $fWeight;//同一个供应商模版id的商品重量累加
+            $freightWeight[$value['freight_id']] = isset($freightWeight[$value['freight_id']]) ? bcadd($freightWeight[$value['freight_id']], $fWeight, 2) : $fWeight;//同一个供应商模版id的商品重量累加
             $fVolume                             = bcmul($value['volume'], $cartSum, 2);
-            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 0) : $fVolume;//同一个供应商模版id的商品体积累加
+            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume;//同一个供应商模版id的商品体积累加
             $distrProfits                        = $this->getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
             $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
@@ -896,7 +896,7 @@ class Order extends CommonIndex {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $field = 'id,order_no,third_order_id,uid,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
+        $field = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
         $where = ['uid' => $uid];
         if ($order_status) {
             $where = ['uid' => $uid, 'order_status' => $order_status];
@@ -910,8 +910,9 @@ class Order extends CommonIndex {
         }
 
         foreach ($result as $key => $value) {
-            $order_child   = DbOrder::getOrderChild('*', ['order_id' => $value['id']]);
+            $order_child   = DbOrder::getOrderChild('id,express_money,supplier_id,supplier_name', ['order_id' => $value['id']]);
             $integral      = 0;
+            $commission    = 0;
             $express_money = 0;
             foreach ($order_child as $order => $child) {
                 $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
@@ -924,6 +925,7 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
+                            $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
                         }
                     }
                 }
@@ -935,6 +937,7 @@ class Order extends CommonIndex {
             }
             $result[$key]['express_money'] = $express_money;
             $result[$key]['integral']      = $integral;
+            $result[$key]['commission']    = $commission;
             $result[$key]['order_child']   = $order_child;
             unset($result[$key]['id']);
         }
@@ -954,7 +957,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $field  = '*';
+        $field  = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
         $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
@@ -963,17 +966,21 @@ class Order extends CommonIndex {
         $order_child   = DbOrder::getOrderChild('*', ['order_id' => $result['id']]);
         $integral      = 0;
         $express_money = 0;
+        $commission    = 0;
         foreach ($order_child as $order => $child) {
-            $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
+            $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json,sku_image', ['order_child_id' => $child['id']], false, true);
             $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
             foreach ($order_goods as $og => $goods) {
 
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                        if (empty($goods['sku_image'])){
+                            $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                        }
                         $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                      += $goods['integral'] * $goods_num['goods_num'];
+                        $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
                     }
                 }
             }
@@ -986,6 +993,7 @@ class Order extends CommonIndex {
         }
         $result['express_money'] = $express_money;
         $result['integral']      = $integral;
+        $result['commission']    = $commission;
         $result['order_child']   = $order_child;
         $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
         $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
@@ -1000,7 +1008,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false) {
+    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false, $old_parent_id = '') {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -1009,12 +1017,17 @@ class Order extends CommonIndex {
             $parent_id = 1;
         } else {
             $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
-            if ($parent_info['user_identity'] < 2) {
+            if (empty($parent_info)) {
                 $parent_id = 1;
+            } else {
+                if ($parent_info['user_identity'] < 2) {
+                    $parent_id = 1;
+                }
+                if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                    $parent_id = 1;
+                }
             }
-            if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                $parent_id = 1;
-            }
+
         }
 
         /* 计算支付金额 */
@@ -1036,15 +1049,26 @@ class Order extends CommonIndex {
         }
 
         /* 先查询是否有已存在未结算订单 */
-        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid,'from_uid'=>$parent_id, 'user_type' => $user_type, 'pay_status' => 1], '*', true);
+        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'from_uid' => $parent_id, 'user_type' => $user_type, 'pay_status' => 1], '*', true);
         if ($has_member_order) {
             /* 判断订单金额是否与最新订单金额相等 */
             if ($pay_money != $has_member_order['pay_money']) {
                 $has_member_order['pay_money'] = $pay_money;
                 /* 更新支付金额 */
-                DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['uid' => $uid, 'user_type' => $user_type, 'pay_status' => 1]);
+                DbOrder::updateMemberOrder(['pay_money' => $pay_money, 'pay_type' => $pay_type], ['id' => $has_member_order['id']]);
+
             }
-            unset($has_member_order['from_uid']);
+            // unset($has_member_order['from_uid']);
+            Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder', 'data' => json_encode([
+                    'member_order_id' => $has_member_order['id'],
+                    'uid'             => $uid,
+                    'user_type'       => $user_type,
+                    'parent_id'       => $parent_id,
+                    'old_parent_id'   => $old_parent_id,
+                    'pay_money'       => $pay_money,
+                ])]
+            );
+            $has_member_order['from_uid'] = enUid($has_member_order['from_uid']);
             return ['code' => '200', 'order_data' => $has_member_order];
         } else {
             $order              = [];
@@ -1056,8 +1080,17 @@ class Order extends CommonIndex {
             if ($parent_id) {
                 $order['from_uid'] = $parent_id;
             }
-            DbOrder::addMemberOrder($order);
+            $add               = DbOrder::addMemberOrder($order);
             $order['from_uid'] = enUid($parent_id);
+            Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder', 'data' => json_encode([
+                    'member_order_id' => $add,
+                    'uid'             => $uid,
+                    'user_type'       => $user_type,
+                    'pay_money'       => $pay_money,
+                    'parent_id'       => $parent_id,
+                    'old_parent_id'   => $old_parent_id
+                ])]
+            );
             return ['code' => '200', 'order_data' => $order];
         }
 
@@ -1080,7 +1113,7 @@ class Order extends CommonIndex {
         if (empty($order)) {
             return ['code' => '3003'];//没有可确认的订单
         }
-        DbOrder::updataOrder(['order_status' => 6], $order['id']);
+        DbOrder::updataOrder(['order_status' => 6, 'rece_time' => time()], $order['id']);
         return ['code' => 200, 'msg' => '确认成功'];
     }
 
@@ -1128,21 +1161,24 @@ class Order extends CommonIndex {
             ];
             $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
             foreach ($has_express_goodsid as $has_express => $goods) {
-                $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+                $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_image,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
                 // print_r($express_goods);die;
-                $express_goods['sku_json'] = json_decode($express_goods['sku_json'],true);
-                $express['express_goods'][]  = $express_goods;
+                if (empty($express_goods['sku_image'])) {
+                    $express_goods['sku_image'] =  DbGoods::getOneGoodsSku(['id' => $express_goods['sku_id']], 'sku_image', true)['sku_image'];
+                }
+                $express_goods['sku_json']  = json_decode($express_goods['sku_json'], true);
+                $express['express_goods'][] = $express_goods;
             }
-            $key = $express['express_no'].'&'.$express['express_key'];
-        // $key = 'shentong&3701622486414';
-            $expresslog = $this->redis->get($this->redisDeliverOrderKey.$key);
+            $key = $express['express_no'] . '&' . $express['express_key'];
+            // $key = 'shentong&3701622486414';
+            $expresslog = $this->redis->get($this->redisDeliverOrderKey . $key);
             if (!empty($expresslog)) {
-                $expresslog = json_decode($expresslog,true);
-                $express['express_info'] = $expresslog['data'][0]['context']; 
-            }else{
+                $expresslog              = json_decode($expresslog, true);
+                $express['express_info'] = $expresslog['data'][0]['context'];
+            } else {
                 $express['express_info'] = '';
             }
-            
+
             $order_subpackage[] = $express;
         }
         $package_num = count($has_order_express);
@@ -1157,61 +1193,79 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getExpressLog($express_key,$express_no,$order_no,$conId){
+    public function getExpressLog($express_key, $express_no, $order_no, $conId) {
         $uid = $this->getUidByConId($conId);
         // $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $order_address = DbOrder::getOrder('order_status,province_id,city_id,area_id,address,message', ['uid' => $uid, 'order_no' => $order_no], true);
+        $order_address = DbOrder::getOrder('id,order_status,province_id,city_id,area_id,address,message', ['uid' => $uid, 'order_no' => $order_no], true);
         if (empty($order_address)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
         if ($order_address['order_status'] < 5) {
             return ['code' => '3006', 'msg' => '未发货的订单无法查询分包信息'];
         }
-        $where               = [
-            'express_no'   => $express_no,
-            'express_key'  => $express_key
+        $order_child  = DbOrder::getOrderChild('id', ['order_id' => $order_address['id']]);
+        $order_childs = [];
+
+        foreach ($order_child as $key => $value) {
+            $order_childs[] = $value['id'];
+        }
+        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
+
+        $order_goods_ids = [];
+        foreach ($order_goods_id as $goods => $goods_id) {
+            $order_goods_ids[] = $goods_id['id'];
+        }
+        // $where               = [
+        //     'express_no'   => $express_no,
+        //     'express_key'  => $express_key
+        // ];
+        $where = [
+            ['express_no', '=', $express_no],
+            ['express_key', '=', $express_key],
+            ['order_goods_id', 'in', $order_goods_ids]
         ];
+
 
         $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
         // print_r($has_express_goodsid);die;
         $express_goods = [];
-        if (empty($has_express_goodsid)){
-            return ['code' => '3007','msg' => '无效的分包信息'];
+        if (empty($has_express_goodsid)) {
+            return ['code' => '3007', 'msg' => '无效的分包信息'];
         }
 
         foreach ($has_express_goodsid as $has_express => $goods) {
-            $deliver_express_goods             = DbOrder::getOrderGoods('goods_name,sku_json', [['id', '=', $goods['order_goods_id']]],false,false,true);
+            $deliver_express_goods = DbOrder::getOrderGoods('sku_id,goods_name,sku_json', [['id', '=', $goods['order_goods_id']]], false, false, true);
             // print_r($express_goods);die;
-            $deliver_express_goods['sku_json'] = json_decode($deliver_express_goods['sku_json'],true);
-            $express_goods[]  = $deliver_express_goods;
+            $deliver_express_goods['sku_json'] = json_decode($deliver_express_goods['sku_json'], true);
+            $express_goods[]                   = $deliver_express_goods;
         }
-        $express = [];
+        $express                  = [];
         $express['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_address['province_id']])['area_name'];
         $express['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_address['city_id']])['area_name'];
         $express['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_address['area_id']])['area_name'];
         $express['address']       = $order_address['address'];
         $express['message']       = $order_address['message'];
-        $key = $express_key.'&'.$express_no;
+        $key                      = $express_key . '&' . $express_no;
         // $key = 'shentong&3701622486414';
-        $expresslog = $this->redis->get($this->redisDeliverOrderKey.$key);
+        $expresslog = $this->redis->get($this->redisDeliverOrderKey . $key);
         if (empty($expresslog)) {
-            $expresslog = [];
+            $expresslog         = [];
             $express['is_sign'] = 2;
-            return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog];
-        }else{
-            $expresslog = json_decode($expresslog,true);
+            return ['code' => 200, 'address' => $express, 'express_goods' => $express_goods, 'expresslog' => $expresslog];
+        } else {
+            $expresslog = json_decode($expresslog, true);
         }
         if ($expresslog['state'] == 3) {
             $express['is_sign'] = 1;
-        }else{
+        } else {
             $express['is_sign'] = 2;
         }
-        return ['code' => 200,'address' => $express,'express_goods' => $express_goods,'expresslog' => $expresslog['data']];
+        return ['code' => 200, 'address' => $express, 'express_goods' => $express_goods, 'expresslog' => $expresslog['data']];
         // $express = 
-       
+
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

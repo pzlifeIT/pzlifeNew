@@ -29,7 +29,7 @@ class Recommend extends CommonIndex {
             return ['code' => 3000];
         }
         $indexShow = json_decode($indexShow,true);
-        foreach ($indexShow as $key => $value) {
+       /*  foreach ($indexShow as $key => $value) {
             if ($value['son'] && $value['model_id'] == 5) {
                
                 foreach ($value['son'] as $val => $son) {
@@ -41,7 +41,7 @@ class Recommend extends CommonIndex {
 
             }
             // print_r($value);die;
-        }
+        } */
         return ['code' => 200,'recommends' => $indexShow ];
     }
 }

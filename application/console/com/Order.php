@@ -45,10 +45,10 @@ class Order extends Pzlife {
         try {
             foreach ($order as $o) {
                 if ($o['deduction_money'] != 0) {
-                    $userSql        = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
-                    $user           = Db::query($userSql);
-                    $user           = $user[0];
-                    $tradingData    = [
+                    $userSql       = sprintf("select balance from pz_users where delete_time=0 and id=%d", $o['uid']);
+                    $user          = Db::query($userSql);
+                    $user          = $user[0];
+                    $tradingData   = [
                         'uid'          => $o['uid'],
                         'trading_type' => 1,
                         'change_type'  => 2,
@@ -58,7 +58,7 @@ class Order extends Pzlife {
                         'message'      => '',
                         'create_time'  => time(),
                     ];
-                    $userUpdateSql  = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
+                    $userUpdateSql = sprintf("update pz_users set balance=balance+%.2f where delete_time=0 and id=%d", $o['deduction_money'], $o['uid']);
                     Db::execute($userUpdateSql);
                     Db::name('log_trading')->insert($tradingData);
                 }
@@ -90,13 +90,13 @@ class Order extends Pzlife {
         $days      = Config::get('conf.bonus_days');//付款后15天分利正式给到账户
         $times     = bcmul($days, 86400, 0);
         $diffTimes = strtotime(date('Y-m-d', strtotime('+1 day'))) - $times;
-        $sql       = sprintf("select id from pz_orders where delete_time=0 and order_status=5 and create_time<=%s", $diffTimes);
+        $sql       = sprintf("select id from pz_orders where delete_time=0 and order_status=5 and ((create_time<=%s and send_time=0) or (send_time<=%s and send_time<>0))", $diffTimes, $diffTimes);
         $result    = Db::query($sql);
         if (empty($result)) {
             exit('order_is_null');
         }
         $orderIdList = implode(',', array_column($result, 'id'));
-        $updateSql   = sprintf("update pz_orders set order_status=6 where delete_time=0 and id in (%s)", $orderIdList);
+        $updateSql   = sprintf("update pz_orders set order_status=6,rece_time=%d where delete_time=0 and id in (%s)", time(), $orderIdList);
         Db::startTrans();
         try {
             Db::execute($updateSql);
@@ -123,8 +123,17 @@ class Order extends Pzlife {
         if (empty($result)) {
             exit('log_bonus_null');
         }
-        $data = [];
+        $orders    = array_unique(array_column($result, 'order_no'));
+        $orderSql  = sprintf("select order_no from pz_orders where delete_time=0 and order_status=6 and send_time<=%s and order_no in ('" . implode("','", $orders) . "')", $diffTimes);
+        $orderList = Db::query($orderSql);
+        $orderList = array_column($orderList, 'order_no');
+        $data      = [];
+        $idListArr = [];
         foreach ($result as $rVal) {
+            if (!in_array($rVal['order_no'], $orderList)) {//已收货并且满15天
+                continue;
+            }
+            array_push($idListArr, $rVal['id']);
             $kkey = $rVal['to_uid'] . $rVal['order_no'];
             if (!key_exists($kkey, $data)) {
                 $data[$kkey]['uid'] = $rVal['to_uid'];
@@ -138,7 +147,7 @@ class Order extends Pzlife {
             }
         }
         $data            = array_values($data);
-        $idList          = implode(',', array_column($result, 'id'));
+        $idList          = implode(',', $idListArr);
         $updateSql       = sprintf("update pz_log_bonus set status=2 where delete_time=0 and id in (%s)", $idList);//更新分利发放日志状态为已结算
         $userSql         = sprintf("select id,balance,commission from pz_users where delete_time=0 and id in (%s)", implode(',', array_unique(array_column($result, 'to_uid'))));
         $userInfo        = Db::query($userSql);
@@ -195,6 +204,7 @@ class Order extends Pzlife {
         $redisListKey = Config::get('redisKey.order.redisOrderBonus');
         $data         = [];
         $tradingData  = [];
+        $integralData = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -226,10 +236,9 @@ class Order extends Pzlife {
 //                $orderGoods[$ogrVal['sku_id']] = $ogrVal;
                 array_push($orderGoods, $ogrVal);
             }
-            $userSql      = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
-            $user         = Db::query($userSql);
-            $user         = $user[0];
-            $integralData = [];
+            $userSql = sprintf("select balance from pz_users where delete_time=0 and id=%d", $uid);
+            $user    = Db::query($userSql);
+            $user    = $user[0];
             foreach ($orderGoods as $ogVal) {
                 $o        = [
                     'order_no'     => $orderNo,
@@ -254,45 +263,66 @@ class Order extends Pzlife {
                     $f                  = 1;
                     $firstShopPrice     = bcmul($calculate['first_price'], $constShop, 2);//购买店铺的分利
                     $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['level_uid']     = $uid;
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
-                    $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 2;//经营性收益
                     $o['user_identity'] = 4;
                     array_push($data, $o);
-                } else if ($identity != 1 && $shopBoss != 1) {
+                } else if ($identity != 1 && $shopBoss != 1 && $shopBoss != $uid) {
                     $f                  = 2;
                     $firstShopPrice     = bcmul($calculate['second_price'], $constShop, 2);//购买店铺的分利
                     $o['result_price']  = $firstShopPrice;//实际得到分利
+                    $o['level_uid']     = $uid;
                     $o['to_uid']        = $shopBoss;
                     $o['stype']         = 2;//分利类型 1.推荐关系分利 2.店铺购买分利
-                    $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                    $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 2;
+                    $o['bonus_type']    = 2;
                     $o['user_identity'] = 4;
                     array_push($data, $o);
                 }
-                $o['result_price']  = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
-                $o['to_uid']        = $bossList['first_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                $o['result_price'] = $f == 1 ? bcsub($calculate['first_price'], $firstShopPrice, 2) : $calculate['first_price'];//实际得到分利
+                $o['level_uid']    = $uid;
+                $o['to_uid']       = $bossList['first_uid'];
+                $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 1;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                if ($identity == 2) {
+                    $o['bonus_type'] = 1;
+                } else {
+                    $o['bonus_type'] = 2;
+                }
                 $userIden           = $this->getIdentity($bossList['first_uid']);
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
-                $o['result_price']  = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
-                $o['to_uid']        = $bossList['second_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
+                $o['result_price'] = $f == 2 ? bcsub($calculate['second_price'], $firstShopPrice, 2) : $calculate['second_price'];//实际得到分利
+                $o['level_uid']    = $bossList['first_uid'];
+                $o['to_uid']       = $bossList['second_uid'];
+                $o['stype']        = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                $o['layer']        = 2;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                if ($identity == 2) {
+                    $o['bonus_type'] = 2;
+                } else {
+                    $o['bonus_type'] = 3;
+                }
                 $userIden           = $this->getIdentity($bossList['second_uid']);
                 $o['user_identity'] = $userIden;
                 array_push($data, $o);
-                $o['result_price']  = $calculate['third_price'];//实际得到分利
-                $o['to_uid']        = $bossList['third_uid'];
-                $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)'
-                $o['user_identity'] = 4;
-                array_push($data, $o);
+                if ($identity == 2) {
+                    $o['result_price']  = $calculate['third_price'];//实际得到分利
+                    $o['to_uid']        = $bossList['third_uid'];
+                    $o['level_uid']     = $bossList['second_uid'];
+                    $o['stype']         = 1;//分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 3;//分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['bonus_type']    = 3;
+                    $o['user_identity'] = 4;
+                    array_push($data, $o);
+                }
                 if (key_exists($orderId, $integralData)) {
-                    $integralData[$orderId]['result_integral'] += $ogrVal['integral'];
+                    $integralData[$orderId]['result_integral'] += $ogVal['integral'];
                 } else {
-                    $integralData[$orderId] = ['order_no' => $orderNo, 'result_integral' => $ogrVal['integral'], 'uid' => $uid, 'create_time' => time()];
+                    $integralData[$orderId] = ['order_no' => $orderNo, 'result_integral' => $ogVal['integral'], 'uid' => $uid, 'create_time' => time()];
                 }
             }
         }
@@ -328,7 +358,7 @@ class Order extends Pzlife {
         try {
             foreach ($result as $r) {
                 Db::table('pz_users')->where('id', $r['uid'])->setInc('integral', $r['result_integral']);
-                $logIntegralSql = sprintf("update pz_log_integral set status=3 where delete_time=0 and id=%d", $r['id']);
+                $logIntegralSql = sprintf("update pz_log_integral set status=2 where delete_time=0 and id=%d", $r['id']);
                 Db::execute($logIntegralSql);
             }
             Db::commit();
@@ -346,7 +376,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 4);
+        // $this->redis->rPush($redisListKey, 35);
         $memberOrderId = $this->redis->lPop($redisListKey);//购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -488,13 +518,13 @@ class Order extends Pzlife {
         } else {
             $re = $myBoss . ',' . $uid;
         }
-        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%" . $uid . ',' . "%'";
+        $otherUserSql     = "select id,uid,relation from pz_user_relation where delete_time=0 and relation like '%," . $uid . ",%'";
         $userOther        = Db::query($otherUserSql);
         $userRelationData = [];
         if (!empty($userOther)) {
             foreach ($userOther as $uo) {
 //                $uo['relation'] = $uid . ',' . $uo['uid'];
-                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], $uid . ','));
+                $uo['relation'] = substr($uo['relation'], stripos($uo['relation'], ',' . $uid . ',') + 1);
                 unset($uo['uid']);
                 array_push($userRelationData, $uo);
             }
@@ -536,7 +566,8 @@ class Order extends Pzlife {
             }
             $shopId = Db::name('shops')->insertGetId($shopData);
             Db::table('pz_users')->where('id', $uid)->update(['user_identity' => 4, 'bindshop' => $shopId]);
-            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re]);
+            $pid = $myBoss == 1 ? 0 : $myBoss;
+            Db::table('pz_user_relation')->where('uid', $uid)->update(['is_boss' => 1, 'relation' => $re, 'pid' => $pid]);
             Db::commit();
         } catch (\Exception $e) {
 //            error_log($e . PHP_EOL . PHP_EOL, 3, dirname(dirname(dirname(__DIR__))) . '/error.log');
@@ -653,8 +684,11 @@ class Order extends Pzlife {
             }
             Db::commit();
         } catch (\Exception $e) {
-            print_r($e);
+            // $error =  $e->getMessage();
+            // echo $error;
+            // $error = exception($e);
             Db::rollback();
+            Db::name('log_error')->insert(['title' => 'console/com/order/diamondvipSettlement', 'data' => $e]);
             exit('rollback');
         }
     }
@@ -684,36 +718,36 @@ class Order extends Pzlife {
         return $userInfo[0];
     }
 
-    public function orderExpressLog(){
+    public function orderExpressLog() {
         $this->orderInit();
         $redisDeliverExpressList = Config::get('redisKey.order.redisDeliverExpressList');
-        $redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
+        $redisDeliverOrderKey    = Config::get('rediskey.order.redisDeliverOrderExpress');
         // print_r($redisDeliverExpressList);die;
         // $this->redis->rPush($redisDeliverExpressList, 4);
         // $this->redis->rPush($redisDeliverExpressList, 'zhongtong&3915414258779');
         $new_redisDeliverExpressList = [];
-        while(true){
+        while (true) {
             $deliverexpresslist = $this->redis->lPop($redisDeliverExpressList);//购买会员的订单id
             if (empty($deliverexpresslist)) {
                 break;
             }
-            $express = explode('&',$deliverexpresslist);
+            $express        = explode('&', $deliverexpresslist);
             $HundredExpress = new HundredExpress;
-            $express_log = $HundredExpress->getExpressLog($express[0],$express[1]);
+            $express_log    = $HundredExpress->getExpressLog($express[0], $express[1]);
             // print_r($express_log);die;
-            if ($express_log){
-                $express_log = json_decode($express_log,true);
+            if ($express_log) {
+                $express_log = json_decode($express_log, true);
                 if ($express_log['message'] == 'ok') {
-                    if ($express_log['state'] != 3){//快递签收
+                    if ($express_log['state'] != 3) {//快递签收
                         $new_redisDeliverExpressList[] = $deliverexpresslist;
                     }
-                    $this->redis->set($redisDeliverOrderKey.$deliverexpresslist, json_encode($express_log,true));
-                    $this->redis->expire($redisDeliverOrderKey. $deliverexpresslist, 2592000);
-                }else{
+                    $this->redis->set($redisDeliverOrderKey . $deliverexpresslist, json_encode($express_log, true));
+                    $this->redis->expire($redisDeliverOrderKey . $deliverexpresslist, 2592000);
+                } else {
                     $new_redisDeliverExpressList[] = $deliverexpresslist;
                 }
-                
-            }else{
+
+            } else {
                 $new_redisDeliverExpressList[] = $deliverexpresslist;
             }
         }
@@ -725,13 +759,12 @@ class Order extends Pzlife {
     }
 }
 
-    /**
-     * 快递100物流查询类
-     * @return array
-     * @author rzc
-     */
-class HundredExpress
-{
+/**
+ * 快递100物流查询类
+ * @return array
+ * @author rzc
+ */
+class HundredExpress {
 
     /**
      * 修改订单发货信息
@@ -740,29 +773,28 @@ class HundredExpress
      * @return array
      * @author rzc
      */
-    public function getExpressLog($ShipperCode, $LogisticCode)
-    {
-        $post_data = array();
+    public function getExpressLog($ShipperCode, $LogisticCode) {
+        $post_data             = array();
         $post_data["customer"] = '389C6F5CB8C771CC620DCC88932229F3';
-        $key = 'jrsaVPbM2682';
-        $post_data["param"] = '{"com":"' . $ShipperCode . '","num":"' . $LogisticCode . '"}';
+        $key                   = 'jrsaVPbM2682';
+        $post_data["param"]    = '{"com":"' . $ShipperCode . '","num":"' . $LogisticCode . '"}';
 
-        $url = 'http://poll.kuaidi100.com/poll/query.do';
+        $url               = 'http://poll.kuaidi100.com/poll/query.do';
         $post_data["sign"] = md5($post_data["param"] . $key . $post_data["customer"]);
         $post_data["sign"] = strtoupper($post_data["sign"]);
-        $o = "";
+        $o                 = "";
         foreach ($post_data as $k => $v) {
             $o .= "$k=" . urlencode($v) . "&"; //默认UTF-8编码格式
         }
         $post_data = substr($o, 0, -1);
-        $ch = curl_init();
+        $ch        = curl_init();
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
         $result = curl_exec($ch);
-        $data = str_replace("\&quot;", '"', $result);
+        $data   = str_replace("\&quot;", '"', $result);
         // $data = json_decode($data, true);
         return $data;
     }

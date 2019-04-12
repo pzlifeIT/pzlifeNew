@@ -131,18 +131,24 @@ function enUid($uid) {
  * @author zyr
  */
 function deUid($enUid) {
+    if (empty($enUid)) {
+        return '';
+    }
     $str      = 'AcEgIkMoQs';
     $newEnUid = substr($enUid, 1);
-    $id       = '';
+    if (empty($newEnUid)) {
+        return '';
+    }
+    $id = '';
     for ($i = 0; $i < strlen($newEnUid); $i++) {
         $f = strpos($str, $newEnUid[$i]);
         if ($f === false) {
-            return false;
+            return '';
         }
         $id .= $f;
     }
     if ($str[getOneNum($id)] != substr($enUid, 0, 1)) {
-        return false;
+        return '';
     }
     return strrev($id);
 //    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
@@ -299,4 +305,61 @@ function getExpressList() {
         'SJPS'           => '商家派送',
     ];
     return $ExpressList;
+}
+
+/**
+ * 检测银行卡号是否合法
+ * @return array
+ * @author rzc
+ */
+function checkBankCard($cardNum){
+    $arr_no = str_split($cardNum);
+    $last_n = $arr_no[count($arr_no) - 1];
+    krsort($arr_no);
+    $i = 1;
+    $total = 0;
+    foreach ($arr_no as $n) {
+        if ($i % 2 == 0) {
+            $ix = $n * 2;
+            if ($ix >= 10) {
+                $nx = 1 + ($ix % 10);
+                $total += $nx;
+            } else {
+                $total += $ix;
+            }
+        } else {
+            $total += $n;
+        }
+        $i++;
+    }
+    $total -= $last_n;
+    $x = 10 - ($total % 10);
+
+    if ($x == 10) {
+        $x = 0;
+    }
+
+    if ($x == $last_n) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * 获取银行卡号银行信息
+ * @return array
+ * @author rzc
+ */
+function getBancardKey($cardNo){
+    $url = 'https://ccdcapi.alipay.com/validateAndCacheCardInfo.json?_input_charset=utf-8&cardNo=';
+    $url .= $cardNo;
+    $url .= "&cardBinCheck=true";
+    $cardmessage = sendRequest($url);
+    $cardmessage = json_decode($cardmessage, true);
+    // print_r($cardmessage);die;
+    if (!isset($cardmessage['bank'])){
+        return false;
+    }
+    return ['bank' => $cardmessage['bank'], 'cardNo' => $cardNo];
 }

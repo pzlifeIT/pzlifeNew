@@ -20,6 +20,10 @@ return [
         'redisCmsConIdUid'        => 'cms:user:cmsConId:adminid',//后台cmsConId和adminid的hSet
     ],
     'index' => [
-        'redisIndexShow' => 'index:index:show',
+        'redisIndexShow'   => 'index:index:show',
+        'redisGoodsDetail' => 'index:goods:goodsDetail:',//商品详情
+    ],
+    'manage' => [
+        'redisManageInvoice' => 'cms:manage:invoice', //后台CMS提现比率key
     ],
 ];

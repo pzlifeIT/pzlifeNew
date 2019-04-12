@@ -5,11 +5,11 @@ namespace app\common\model;
 use think\Model;
 use think\model\concern\SoftDelete;
 
-class LogBonus extends Model {
+class LogOpenboss extends Model {
     use SoftDelete;
     protected $pk = 'id';
     // 设置当前模型对应的完整数据表名称
-    protected $table = 'pz_log_bonus';
+    protected $table = 'pz_log_openboss';
     // 设置当前模型的数据库连接
     protected $connection = '';
     protected $deleteTime = 'delete_time';
@@ -23,13 +23,5 @@ class LogBonus extends Model {
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
-    }
-
-    public function getskuJsonAttr($value) {
-        return json_decode($value, true);
-    }
-
-    public function users() {
-        return $this->belongsTo('users', 'level_uid', 'id');
     }
 }
