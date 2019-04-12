@@ -5,6 +5,7 @@ namespace app\common\action\admin;
 use app\common\action\admin\Admin;
 use app\facade\DbRights;
 use app\facade\DbShops;
+use app\facade\DbOrder;
 use app\facade\DbUser;
 use think\Db;
 
@@ -226,12 +227,28 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
-                $admin       = new Admin;
-                $target_user = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'mobile');
-                $openshop    = $admin->openBoss($cmsConId, $target_user['target_mobile'], $shopapply['target_uname'], 0, $message);
-                if ($openshop['code'] != 200) {
-                    return ['code' => '3007'];
+                $target_user = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile');
+                $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
+                $userRelationData = [];
+                $bossId = $this->getBoss($target_user['id']);
+                if ($bossId == 1) {
+                    $re = $target_user['id'];
+                } else {
+                    $re = $bossId . ',' . $target_user['id'];
                 }
+                if (!empty($userRelationList)) {
+                    foreach ($userRelationList as $url) {
+                        $url['relation'] = substr($url['relation'], stripos($url['relation'], ',' . $target_user['id'] . ',') + 1);
+                        array_push($userRelationData, $url);
+                    }
+                }
+                
+                $shopData = [
+                    'uid'         => $target_user['id'],
+                    'shop_right'  => 'all',
+                    'status'      => 1,
+                    'create_time' => time(),
+                ];
                 $refe_user   = DbUser::getUserOne(['id' => $shopapply['refe_uid']], 'commission');
                 $tradingData = [
                     'uid'          => $shopapply['refe_uid'],
@@ -242,8 +259,18 @@ class Rights extends CommonIndex {
                     'after_money'  => bcadd($refe_user['commission'], $invest['cost'], 2),
                     'message'      => '',
                 ];
-                DbOrder::addLogTrading($tradingData);
-                // print_r($openshop);die;
+                if (!empty($userRelationData)) {
+                    DbUser::updateUserRelation($userRelationData);
+                }
+                $relationId = $this->getRelation($shopapply['target_uid'])['id'];
+                // print_r($relationId);
+                // print_r($shopData);
+                // print_r($userRelationData);
+                // print_r($tradingData);die;
+                DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $shopapply['refe_uid']], $relationId);
+                DbUser::updateUser(['user_identity' => 4], $shopapply['target_uid']);
+                DbShops::addShop($shopData); //添加店铺
+                DbOrder::addLogTrading($tradingData);//写佣金明细
             }
             // 提交事务
             DbUser::editLogInvest($edit_invest, $invest['id']);
@@ -256,5 +283,41 @@ class Rights extends CommonIndex {
             Db::rollback();
             return ['code' => '3006', 'msg' => '插入数据出错'];
         }
+    }
+
+
+    private function getBoss($uid) {
+        if ($uid == 1) {
+            return 1;
+        }
+        $relation = $this->getRelation($uid);
+        $bossUid  = explode(',', $relation['relation'])[0];
+        if ($uid == $bossUid) {
+            return 1;
+        }
+        $pBossUidCheck = $this->getIdentity($bossUid);
+        if ($pBossUidCheck != 4) { //relation第一个关系人不是boss说明是总店下的用户
+            return 1;
+        }
+        return $bossUid;
+    }
+
+    private function getRelation($uid) {
+        $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,pid,is_boss,relation', true);
+        return $userRelation;
+    }
+
+    /**
+     * 获取用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    private function getIdentity($uid) {
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if (empty($user)) {
+            return false;
+        }
+        return $user['user_identity'];
     }
 }
