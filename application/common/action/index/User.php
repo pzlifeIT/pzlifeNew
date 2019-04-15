@@ -648,8 +648,10 @@ class User extends CommonIndex {
                 break;
             case 10:
                 $ctype = '提现审核不通过退回';
+                break;
             case 11:
                 $ctype = '老商城转入';
+                break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['message']);
