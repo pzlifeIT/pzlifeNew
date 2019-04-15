@@ -824,7 +824,7 @@ class User extends CommonIndex {
         ], 'result_price'); //待到账商票
         $balanceAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '1'],
-            ['change_type', 'in', [3, 4, 5, 7, 8]],
+            ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商票总额
