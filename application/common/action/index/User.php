@@ -773,7 +773,7 @@ class User extends CommonIndex {
                 $ctype = '订单取消商票退回';
                 break;
             case 4:
-                $ctype = '钻石返利';
+                $ctype = '钻石再让利';
                 break;
             case 5:
                 $ctype = '钻石会员邀请奖励';
