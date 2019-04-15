@@ -648,8 +648,10 @@ class User extends CommonIndex {
                 break;
             case 10:
                 $ctype = '提现审核不通过退回';
+                break;
             case 11:
                 $ctype = '老商城转入';
+                break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['message']);
@@ -751,7 +753,7 @@ class User extends CommonIndex {
         if ($stype == 4) { //总额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [3, 4, 5, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [3, 4, 5, 8, 7, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['money', '>', 0],
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
@@ -771,7 +773,7 @@ class User extends CommonIndex {
                 $ctype = '订单取消商票退回';
                 break;
             case 4:
-                $ctype = '钻石返利';
+                $ctype = '钻石再让利';
                 break;
             case 5:
                 $ctype = '钻石会员邀请奖励';
