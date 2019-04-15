@@ -59,6 +59,7 @@ class TemporaryScript extends Pzlife {
                                 'uid'             => $value['uid'],
                                 'result_integral' => $member_count[0]['bonuspoints'],
                                 'stype'           => 3,
+                                'status'          => 2,
                                 'message'         => '老商城转入',
                                 'create_time'     => 1552147200,
                                 'delete_time'     => 0,
