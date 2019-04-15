@@ -1,11 +1,8 @@
 <?php
-
 namespace app\index\controller;
-
 use app\index\MyController;
 
-class Goods extends MyController
-{
+class Goods extends MyController {
     /**
      * @api              {post} / 分类商品列表
      * @apiDescription   getCategoryGoods
@@ -14,7 +11,7 @@ class Goods extends MyController
      * @apiParam (入参) {Number} cate_id 对应商品三级分类id
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
@@ -23,21 +20,20 @@ class Goods extends MyController
      * @apiSuccess (data) {String} cate_id 分类ID
      * @apiSuccess (data) {String} goods_name 商品名称
      * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
-     * @apiSuccess (data) {String} title 主标题 
-     * @apiSuccess (data) {String} subtitle 副标题 
-     * @apiSuccess (data) {String} image 商品标题图 
-     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} title 主标题
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_market_price 最低市场价
      * @apiSuccess (data) {String} min_retail_price 最低零售价
      * @apiSuccess (data) {String} min_brokerage 最低钻石返利
      * @apiSampleRequest /index/goods/getCategoryGoods
      * @author rzc
      */
-    public function getCategoryGoods(){
-        $cate_id = trim($this->request->post('cate_id'));
-        $page = trim($this->request->post('page'));
-        $page_num = trim($this->request->post('page_num'));
-
-        $goodslist = $this->app->goods->getCategoryGoods($cate_id,$page,$page_num);
+    public function getCategoryGoods() {
+        $cate_id   = trim($this->request->post('cate_id'));
+        $page      = trim($this->request->post('page'));
+        $page_num  = trim($this->request->post('page_num'));
+        $goodslist = $this->app->goods->getCategoryGoods($cate_id, $page, $page_num);
         return $goodslist;
     }
 
@@ -60,12 +56,12 @@ class Goods extends MyController
      * @apiSuccess (goods_data) {String} cate_id 分类ID
      * @apiSuccess (goods_data) {String} goods_name 商品名称
      * @apiSuccess (goods_data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
-     * @apiSuccess (goods_data) {String} title 主标题 
-     * @apiSuccess (goods_data) {String} subtitle 副标题 
-     * @apiSuccess (goods_data) {String} image 商品标题图 
+     * @apiSuccess (goods_data) {String} title 主标题
+     * @apiSuccess (goods_data) {String} subtitle 副标题
+     * @apiSuccess (goods_data) {String} image 商品标题图
      * @apiSuccess (goods_banner) {String} goods_id 商品ID
      * @apiSuccess (goods_banner) {String} image_type 图片类型 1.详情图 2.轮播图
-     * @apiSuccess (goods_banner) {String} image_path 图片地址 
+     * @apiSuccess (goods_banner) {String} image_path 图片地址
      * @apiSuccess (goods_details) {String} goods_id 商品ID
      * @apiSuccess (goods_details) {String} image_type 图片类型 1.详情图 2.轮播图
      * @apiSuccess (goods_details) {String} image_path 图片地址
@@ -95,13 +91,13 @@ class Goods extends MyController
      * @apiSampleRequest /index/goods/getGoods
      * @author rzc
      */
-    public function getGoods(){
+    public function getGoods() {
         $goods_id = trim($this->request->post('goods_id'));
-        $source = trim($this->request->post('source'));
-        $result = $this->app->goods->getGoodsinfo($goods_id,intval($source));
+        $source   = trim($this->request->post('source'));
+        $result   = $this->app->goods->getGoodsinfo($goods_id, intval($source));
         return $result;
     }
-    
+
     /**
      * @api              {post} / 专题商品列表
      * @apiDescription   getSubjectGoods
@@ -110,7 +106,7 @@ class Goods extends MyController
      * @apiParam (入参) {Number} subject_id 对应专题三级分类id
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {Array} data 分类数据
      * @apiSuccess (data) {String} id 商品ID
@@ -118,23 +114,23 @@ class Goods extends MyController
      * @apiSuccess (data) {String} subject_id 分类ID
      * @apiSuccess (data) {String} goods_name 商品名称
      * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
-     * @apiSuccess (data) {String} title 主标题 
-     * @apiSuccess (data) {String} subtitle 副标题 
-     * @apiSuccess (data) {String} image 商品标题图 
-     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} title 主标题
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_market_price 最低市场价
      * @apiSuccess (data) {String} min_retail_price 最低零售价
      * @apiSuccess (data) {String} min_brokerage 最低钻石返利
      * @apiSampleRequest /index/goods/getSubjectGoods
      * @author rzc
      */
-    public function getSubjectGoods(){
+    public function getSubjectGoods() {
         $subject_id = trim($this->request->post('subject_id'));
-        $page = trim($this->request->post('page'));
-        $page_num = trim($this->request->post('page_num'));
+        $page       = trim($this->request->post('page'));
+        $page_num   = trim($this->request->post('page_num'));
         if (!is_numeric($subject_id) || empty($subject_id)) {
             return ['code' => '3001'];
         }
-        $goodslist = $this->app->goods->getSubjectGoods($subject_id,$page,$page_num);
+        $goodslist = $this->app->goods->getSubjectGoods($subject_id, $page, $page_num);
         return $goodslist;
     }
 
@@ -146,7 +142,7 @@ class Goods extends MyController
      * @apiParam (入参) {String} search 搜索内容
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.page和page_num必须是数字 / 3002.搜索参数不存在 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.page和page_num必须是数字 / 3002.搜索参数不存在
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据
@@ -155,20 +151,20 @@ class Goods extends MyController
      * @apiSuccess (data) {String} subject_id 分类ID
      * @apiSuccess (data) {String} goods_name 商品名称
      * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
-     * @apiSuccess (data) {String} title 主标题 
-     * @apiSuccess (data) {String} subtitle 副标题 
-     * @apiSuccess (data) {String} image 商品标题图 
-     * @apiSuccess (data) {String} min_market_price 最低市场价 
+     * @apiSuccess (data) {String} title 主标题
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_market_price 最低市场价
      * @apiSuccess (data) {String} min_retail_price 最低零售价
      * @apiSuccess (data) {String} min_brokerage 最低钻石返利
      * @apiSampleRequest /index/goods/getSearchGoods
      * @author rzc
      */
-    public function getSearchGoods(){
-        $search = trim($this->request->post('search'));
-        $page = trim($this->request->post('page'));
+    public function getSearchGoods() {
+        $search   = trim($this->request->post('search'));
+        $page     = trim($this->request->post('page'));
         $page_num = trim($this->request->post('page_num'));
-        $page = $page ? $page : 1;
+        $page     = $page ? $page : 1;
         $page_num = $page_num ? $page_num : 10;
         if (empty($search)) {
             return ['code' => '3002'];
@@ -176,7 +172,50 @@ class Goods extends MyController
         if (!is_numeric($page) || !is_numeric($page_num)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->goods->getSearchGoods($search,$page,$page_num);
+        $result = $this->app->goods->getSearchGoods($search, $page, $page_num);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 标签搜索商品列表
+     * @apiDescription   getSearchGoodsByLabel
+     * @apiGroup         index_Goods
+     * @apiName          getSearchGoodsByLabel
+     * @apiParam (入参) {String} label_id 搜索内容
+     * @apiParam (入参) {Number} [page] 页码 (默认:1)
+     * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.page和page_num必须是数字 / 3002.搜索参数不存在
+     * @apiSuccess (返回) {Number} total 总条数
+     * @apiSuccess (返回) {String} type_name 上级分类的name
+     * @apiSuccess (返回) {Array} data 分类数据
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} supplier_id 供应商ID
+     * @apiSuccess (data) {String} subject_id 分类ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (data) {String} title 主标题
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_market_price 最低市场价
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
+     * @apiSampleRequest /index/goods/getsearchgoodsbylabel
+     * @author zyr
+     */
+    public function getSearchGoodsByLabel() {
+        $labelId = trim($this->request->post('label_id')); //标签id
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($labelId)) {
+            return ['code' => '3001']; //标签id必须为大于0的数字
+        }
+        $labelId = intval($labelId);
+        if ($labelId <= 0) {
+            return ['code' => '3001']; //标签id必须为大于0的数字
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->goods->getSearchGoodsByLabel($labelId, $page, $pageNum);
         return $result;
     }
 

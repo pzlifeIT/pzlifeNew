@@ -1,10 +1,7 @@
 <?php
-
 namespace app\common\action\index;
-
 use app\facade\DbGoods;
-use third\PHPTree;
-use think\Db;
+use app\facade\DbLabel;
 use Config;
 
 class Goods extends CommonIndex {
@@ -12,7 +9,7 @@ class Goods extends CommonIndex {
     private $labelLibraryRedisKey;
     public function __construct() {
         parent::__construct();
-        $this->redisGoodsDetail = Config::get('rediskey.index.redisGoodsDetail');
+        $this->redisGoodsDetail     = Config::get('rediskey.index.redisGoodsDetail');
         $this->transformRedisKey    = Config::get('rediskey.label.redisLabelTransform');
         $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
     }
@@ -34,7 +31,6 @@ class Goods extends CommonIndex {
         if (!is_numeric($cate_id) || !is_numeric($page) || !is_numeric($page_num)) {
             return ['code' => 3001, 'msg' => '参数必须是数字'];
         }
-
         $field  = 'id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image';
         $offect = ($page - 1) * $page_num;
         if ($offect < 0) {
@@ -44,28 +40,25 @@ class Goods extends CommonIndex {
         $order  = 'id';
         $where  = ['status' => 1, 'cate_id' => $cate_id];
         $result = DbGoods::getGoods($field, $limit, $order, $where);
-
         if (empty($result)) {
             return ['code' => 200, 'data' => $result];
         }
-
         /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
         foreach ($result as $key => $value) {
             /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-             $result[$key]['spec'] = $goods_spec;
-             $result[$key]['goods_sku'] = $goods_sku; */
+            $result[$key]['spec'] = $goods_spec;
+            $result[$key]['goods_sku'] = $goods_sku; */
             $where                            = ['goods_id' => $value['id']];
             $field                            = 'market_price';
-            $result[$key]['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+            $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $field                            = 'retail_price';
-            $result[$key]['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
-            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            list($goods_spec, $goods_sku)     = $this->getGoodsSku($value['id']);
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']]    = $sku['brokerage'];
             }
             $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
-
         }
         return ['code' => 200, 'data' => $result];
     }
@@ -104,11 +97,11 @@ class Goods extends CommonIndex {
         }
         $where                          = ['goods_id' => $goods_id, 'status' => 1];
         $field                          = 'market_price';
-        $goods_data['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
-        $goods_data['max_market_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
+        $goods_data['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+        $goods_data['max_market_price'] = DbGoods::getOneSkuMost($where, 2, $field);
         $field                          = 'retail_price';
-        $goods_data['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
-        $goods_data['max_retail_price'] = DbGoods:: getOneSkuMost($where, 2, $field);
+        $goods_data['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+        $goods_data['max_retail_price'] = DbGoods::getOneSkuMost($where, 2, $field);
 
         /* 查询商品轮播图 */
         $where        = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
@@ -122,12 +115,12 @@ class Goods extends CommonIndex {
 
         /* 商品对应规格及SKU价格 */
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
-        $integral_active = [];
-        $brokerage       = [];
+        $integral_active              = [];
+        $brokerage                    = [];
         // print_r($goods_sku);die;
         foreach ($goods_sku as $key => $value) {
             $integral_active[] = $value['integral_active'];
-            $brokerage []      = $value['brokerage'];
+            $brokerage[]       = $value['brokerage'];
         }
         $min_integral_active               = [0];
         $min_brokerage                     = [0];
@@ -200,7 +193,6 @@ class Goods extends CommonIndex {
                 }
             }
             $goods_sku[$goods]['sku_name'] = $sku_name;
-
         }
         return [$goods_spec, $goods_sku];
     }
@@ -222,8 +214,6 @@ class Goods extends CommonIndex {
         if (!is_numeric($subject_id) || !is_numeric($page) || !is_numeric($page_num)) {
             return ['code' => 3001, 'msg' => '参数必须是数字'];
         }
-
-
         $offect = ($page - 1) * $page_num;
         if ($offect < 0) {
             return ['code' => '3000'];
@@ -241,7 +231,6 @@ class Goods extends CommonIndex {
             return ['code' => 3003, 'msg' => '传入专题ID有误'];
         }
         // getSubjectRelation($where, $field, $row = false,$limit = false)
-
         $field     = 'goods_id';
         $where     = ['subject_id' => $subject_id];
         $goodslist = DbGoods::getSubjectRelation($where, $field, false);
@@ -249,13 +238,10 @@ class Goods extends CommonIndex {
         foreach ($goodslist as $goods => $list) {
             $goodsid[] = $list['goods_id'];
         }
-
         if (empty($goodslist)) {
             return ['code' => 200, 'data' => []];
         }
-
         /* 获取专题商品关联关系 */
-
         $field = 'id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image';
         $order = 'id';
         // $where = ['status' => 1, 'cate_id' => $cate_id];
@@ -271,14 +257,13 @@ class Goods extends CommonIndex {
         /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
         foreach ($result as $key => $value) {
             /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-             $result[$key]['spec'] = $goods_spec;
-             $result[$key]['goods_sku'] = $goods_sku; */
-            $where = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
-
+            $result[$key]['spec'] = $goods_spec;
+            $result[$key]['goods_sku'] = $goods_sku; */
+            $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
             $field                            = 'market_price';
-            $result[$key]['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+            $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $field                            = 'retail_price';
-            $result[$key]['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             // print_r($value['id']);die;
             list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
             if ($goods_sku) {
@@ -298,8 +283,6 @@ class Goods extends CommonIndex {
                 $result[$key]['min_brokerage']       = 0;
                 $result[$key]['min_integral_active'] = 0;
             }
-
-
         }
         return ['code' => 200, 'data' => $result];
     }
@@ -324,23 +307,50 @@ class Goods extends CommonIndex {
         }
         foreach ($result as $key => $value) {
             /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
-             $result[$key]['spec'] = $goods_spec;
-             $result[$key]['goods_sku'] = $goods_sku; */
+            $result[$key]['spec'] = $goods_spec;
+            $result[$key]['goods_sku'] = $goods_sku; */
             $where                            = ['goods_id' => $value['id'], 'status' => 1];
             $field                            = 'market_price';
-            $result[$key]['min_market_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+            $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $field                            = 'retail_price';
-            $result[$key]['min_retail_price'] = DbGoods:: getOneSkuMost($where, 1, $field);
+            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             //  echo Db::getLastSQl();die;
             list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
-            $retail_price = [];
-            $brokerage    = [];
+            $retail_price                 = [];
+            $brokerage                    = [];
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']]    = $sku['brokerage'];
             }
             $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
+        }
+        return ['code' => 200, 'goods_data' => $result];
+    }
 
+    public function getSearchGoodsByLabel($labelId, $page, $pageNum) {
+        $goodsIdList = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelId], 'goods_id');
+        $goodsIdList = array_column($goodsIdList, 'goods_id');
+        $offset      = ($page - 1) * $pageNum;
+        $result      = DbGoods::getGoodsList('*', [['id', 'in', $goodsIdList], ['status', '=', 1]], $offset, $pageNum);
+        // print_r($goods_data);die;
+        if (empty($result)) {
+            return ['code' => 200, 'goods_data' => []];
+        }
+        foreach ($result as $key => $value) {
+            $where                            = ['goods_id' => $value['id'], 'status' => 1];
+            $field                            = 'market_price';
+            $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            $field                            = 'retail_price';
+            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            //  echo Db::getLastSQl();die;
+            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+            $retail_price                 = [];
+            $brokerage                    = [];
+            foreach ($goods_sku as $goods => $sku) {
+                $retail_price[$sku['id']] = $sku['retail_price'];
+                $brokerage[$sku['id']]    = $sku['brokerage'];
+            }
+            $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
         }
         return ['code' => 200, 'goods_data' => $result];
     }
@@ -357,7 +367,7 @@ class Goods extends CommonIndex {
                 $data = array_merge($data, json_decode($key, true));
             }
         }
-        if(empty($data)){
+        if (empty($data)) {
             return ['code' => '3000'];
         }
         $data   = array_unique($data);
