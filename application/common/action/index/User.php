@@ -733,7 +733,7 @@ class User extends CommonIndex {
         if ($stype == 3) { //余额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
             ];
@@ -751,7 +751,7 @@ class User extends CommonIndex {
         if ($stype == 4) { //总额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [3, 4, 5, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [3, 4, 5, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['money', '>', 0],
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
@@ -1154,6 +1154,9 @@ class User extends CommonIndex {
                 break;
             case 2:
                 $ctype = '后台充值';
+                break;
+            case 3:
+                $ctype = '老商城转入积分';
                 break;
             }
             $d['ctype'] = $ctype;
