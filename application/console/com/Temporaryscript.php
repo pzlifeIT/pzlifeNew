@@ -99,6 +99,8 @@ class TemporaryScript extends Pzlife {
                     }
                 }
             }
+             // 提交事务
+             Db::commit();
         } catch (\Exception $e) {
             // 回滚事务
             exception($e);
