@@ -220,6 +220,7 @@ class Rights extends CommonIndex {
             if ($adminInfo['stype'] != '2') {
                 return ['code' => '3005']; //没有操作权限
             }
+            $edit_shopapply['finish_time'] = time();
         } elseif ($status == 4) { //审核不通过
             if ($shopapply['status'] == 3) {
                 return ['code' => '3003'];
@@ -229,6 +230,7 @@ class Rights extends CommonIndex {
             if ($adminInfo['stype'] != '2') {
                 return ['code' => '3005']; //没有操作权限
             }
+            $edit_shopapply['finish_time'] = time();
         }
         $edit_shopapply['status']  = $status;
         $edit_shopapply['message'] = $message;
