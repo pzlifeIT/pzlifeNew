@@ -3,9 +3,6 @@
 namespace app\index\controller;
 
 use app\index\MyController;
-use Config;
-use function Qiniu\json_decode;
-use think\Db;
 
 class User extends MyController {
     protected $beforeActionList = [
@@ -376,12 +373,74 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 个人中心佣金明细
+     * @apiDescription   getShopCommission
+     * @apiGroup         index_user
+     * @apiName          getShopCommission
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Decimal} money 金额
+     * @apiSuccess (data) {Date} create_time 到账时间
+     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+     * @apiSuccess (data) {String} ctype 描述
+     * @apiSampleRequest /index/user/getshopcommission
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommission() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getShopCommission($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 个人中心佣金统计
+     * @apiDescription   getShopCommissionSum
+     * @apiGroup         index_user
+     * @apiName          getShopCommissionSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Decimal} commission 佣金余额
+     * @apiSuccess (返回) {Decimal} commission_all 佣金总额
+     * @apiSuccess (返回) {Decimal} commission_extract 提现
+     * @apiSuccess (返回) {Decimal} commission_to_balance 转商票
+     * @apiSampleRequest /index/user/getshopcommissionsum
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommissionSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getShopCommissionSum($conId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取店铺商票明细
      * @apiDescription   getShopBalance
      * @apiGroup         index_user
      * @apiName          getShopBalance
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细 4.总额明细
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} money 商票金额
@@ -395,7 +454,9 @@ class User extends MyController {
     public function getShopBalance() {
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
-        $stypeArr = [1, 2, 3];
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2, 3, 4];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -405,7 +466,36 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->getShopBalance($conId, $stype);
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getShopBalance($conId, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 个人中心我的商票
+     * @apiDescription   getShopBalanceSum
+     * @apiGroup         index_user
+     * @apiName          getShopBalanceSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} balanceUse 已用商票
+     * @apiSuccess (返回) {Decimal} balanceAll 商票总额
+     * @apiSuccess (返回) {Decimal} noBbonus 待到账商票
+     * @apiSampleRequest /index/user/getshopbalancesum
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalanceSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getShopBalanceSum($conId);
         return $result;
     }
 
@@ -542,6 +632,39 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 其他收益
+     * @apiDescription   getOtherEarn
+     * @apiGroup         index_user
+     * @apiName          getOtherEarn
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Decimal} money 获利金额
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSuccess (返回) {String} message 描述
+     * @apiSampleRequest /index/user/getotherearn
+     * @return array
+     * @author zyr
+     */
+    public function getOtherEarn() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getOtherEarn($conId, $page, $pageNum);
         return $result;
     }
 

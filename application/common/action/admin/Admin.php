@@ -144,6 +144,10 @@ class Admin extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
         }
+        $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
+        if ($this->redis->setNx($redisKey . $user['id'], 1) === false) {
+            return ['code' => '3009'];
+        }
         if ($user['user_identity'] == 4) {
             return ['code' => '3007']; //该用户已经是boss
         }
@@ -198,6 +202,7 @@ class Admin extends CommonIndex {
             DbUser::updateUser(['user_identity' => 4], $user['id']);
             DbUser::addLogOpenboss($logOpenbossData);
             Db::commit();
+            $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
@@ -294,8 +299,9 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message) {
-        $message   = $message ?? '';
+    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message,$admin_message){
+        $message = $message ?? '';
+        $admin_message = $admin_message ?? '';
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
@@ -321,6 +327,7 @@ class Admin extends CommonIndex {
         $add_remittance['status']            = 1;
         $add_remittance['credit']            = $credit;
         $add_remittance['message']           = $message;
+        $add_remittance['admin_message']     = $admin_message;
         DbAdmin::addAdminRemittance($add_remittance);
         return ['code' => '200'];
     }

@@ -18,14 +18,11 @@ return [
         'redisUserNextLevelCount' => 'index:user:nextLevelCount:uid:', //boss用户关系下的总人数
         'redisCmsConIdTime'       => 'cms:user:cmsConId:expiration', //后台cmsConId到期时间的zadd
         'redisCmsConIdUid'        => 'cms:user:cmsConId:adminid', //后台cmsConId和adminid的hSet
+        'redisUserOpenbossLock'   => 'index:user:openboss:lock:', //开通boss锁
     ],
     'index'  => [
         'redisIndexShow'   => 'index:index:show',
         'redisGoodsDetail' => 'index:goods:goodsDetail:', //商品详情
-    ],
-    'label'  => [
-        'redisLabelTransform' => 'label:labelLibrary:transform', //标签库生成拼音标签后的对应关系
-        'redisLabelLibrary'  => 'label:labelLibrary:list', //标签库缓存
     ],
     'manage' => [
         'redisManageInvoice' => 'cms:manage:invoice', //后台CMS提现比率key

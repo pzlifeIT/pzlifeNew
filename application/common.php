@@ -55,7 +55,7 @@ function checkVercode($code) {
  */
 function checkPassword($password) {
     // /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\s\S]{8,16}$/  至少8-16个字符，至少1个大写字母，1个小写字母和1个数字，其他可以是任意字符：
-    if (!empty($password) && preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[\s\S]{6,16}$/', $password)) {//6-16个字符，至少1个字母和1个数字，其他可以是任意字符
+    if (!empty($password) && preg_match('/^(?=.*[a-zA-Z])(?=.*\d)[\s\S]{6,16}$/', $password)) { //6-16个字符，至少1个字母和1个数字，其他可以是任意字符
         return true;
     }
     return false;
@@ -68,7 +68,7 @@ function checkPassword($password) {
  * @author zyr
  */
 function checkCmsPassword($password) {
-    if (!empty($password) && preg_match('/^(?=.*)[\s\S]{6,16}$/', $password)) {//6-16个字符,可以是任意字符
+    if (!empty($password) && preg_match('/^(?=.*)[\s\S]{6,16}$/', $password)) { //6-16个字符,可以是任意字符
         return true;
     }
     return false;
@@ -115,14 +115,14 @@ function enUid($uid) {
     $result = $str[getOneNum($tit)] . $newStr;
     return $result;
 //    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
-//    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
-//    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
-//    if (strlen($uid) > 15) {
-//        return 0;
-//    }
-//    $uid     = intval($uid);
-//    $encrypt = base64_encode(openssl_encrypt($uid, $cryptMethod, $cryptKey, 0, $cryptIv));
-//    return $encrypt;
+    //    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+    //    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+    //    if (strlen($uid) > 15) {
+    //        return 0;
+    //    }
+    //    $uid     = intval($uid);
+    //    $encrypt = base64_encode(openssl_encrypt($uid, $cryptMethod, $cryptKey, 0, $cryptIv));
+    //    return $encrypt;
 }
 
 /**
@@ -152,14 +152,14 @@ function deUid($enUid) {
     }
     return strrev($id);
 //    $cryptMethod = Env::get('cipher.userAesMethod', 'AES-256-CBC');
-//    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
-//    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
-//    $decrypt     = openssl_decrypt(base64_decode($enUid), $cryptMethod, $cryptKey, 0, $cryptIv);
-//    if ($decrypt) {
-//        return $decrypt;
-//    } else {
-//        return 0;
-//    }
+    //    $cryptKey    = Env::get('cipher.userAesKey', 'pzlife');
+    //    $cryptIv     = Env::get('cipher.userAesIv', '1111111100000000');
+    //    $decrypt     = openssl_decrypt(base64_decode($enUid), $cryptMethod, $cryptKey, 0, $cryptIv);
+    //    if ($decrypt) {
+    //        return $decrypt;
+    //    } else {
+    //        return 0;
+    //    }
 }
 
 /**
@@ -207,7 +207,6 @@ function getOneNum($num) {
     return getOneNum($res);
 }
 
-
 /**
  * 发送请求
  * @param $requestUrl
@@ -226,9 +225,9 @@ function sendRequest($requestUrl, $method = 'get', $data = []) {
             return [];
         }
     }
-    $curl = curl_init();// 初始化一个 cURL 对象
-    curl_setopt($curl, CURLOPT_URL, $requestUrl);// 设置你需要抓取的URL
-    curl_setopt($curl, CURLOPT_HEADER, 0);// 设置header 响应头是否输出
+    $curl = curl_init(); // 初始化一个 cURL 对象
+    curl_setopt($curl, CURLOPT_URL, $requestUrl); // 设置你需要抓取的URL
+    curl_setopt($curl, CURLOPT_HEADER, 0); // 设置header 响应头是否输出
     if ($method == 'post') {
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 60);
@@ -239,9 +238,9 @@ function sendRequest($requestUrl, $method = 'get', $data = []) {
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-    $res = curl_exec($curl);// 运行cURL，请求网页
-    curl_close($curl);// 关闭URL请求
-    return $res;// 显示获得的数据
+    $res = curl_exec($curl); // 运行cURL，请求网页
+    curl_close($curl); // 关闭URL请求
+    return $res; // 显示获得的数据
 }
 
 /**
@@ -312,11 +311,11 @@ function getExpressList() {
  * @return array
  * @author rzc
  */
-function checkBankCard($cardNum){
+function checkBankCard($cardNum) {
     $arr_no = str_split($cardNum);
     $last_n = $arr_no[count($arr_no) - 1];
     krsort($arr_no);
-    $i = 1;
+    $i     = 1;
     $total = 0;
     foreach ($arr_no as $n) {
         if ($i % 2 == 0) {
@@ -351,15 +350,75 @@ function checkBankCard($cardNum){
  * @return array
  * @author rzc
  */
-function getBancardKey($cardNo){
+function getBancardKey($cardNo) {
     $url = 'https://ccdcapi.alipay.com/validateAndCacheCardInfo.json?_input_charset=utf-8&cardNo=';
     $url .= $cardNo;
     $url .= "&cardBinCheck=true";
     $cardmessage = sendRequest($url);
     $cardmessage = json_decode($cardmessage, true);
     // print_r($cardmessage);die;
-    if (!isset($cardmessage['bank'])){
+    if (!isset($cardmessage['bank'])) {
         return false;
     }
     return ['bank' => $cardmessage['bank'], 'cardNo' => $cardNo];
+}
+
+/**
+ * 校验身份证号码
+ * @return array
+ * @author rzc
+ */
+function checkIdcard($idcard) {
+    $idcard        = strtoupper($idcard);
+    $regx      = "/(^\d{15}$)|(^\d{17}([0-9]|X)$)/";
+    $arr_split = array();
+    if (!preg_match($regx, $idcard)) {
+        return false;
+    }
+
+    if (15 == strlen($idcard)) //检查15位
+    {
+        $regx = "/^(\d{6})+(\d{2})+(\d{2})+(\d{2})+(\d{3})$/";
+
+        @preg_match($regx, $idcard, $arr_split);
+        //检查生日日期是否正确
+        $dtm_birth = "19" . $arr_split[2] . '/' . $arr_split[3] . '/' . $arr_split[4];
+        if (!strtotime($dtm_birth)) {
+            return false;
+        } else {
+            return true;
+        }
+    } else //检查18位
+    {
+        $regx = "/^(\d{6})+(\d{4})+(\d{2})+(\d{2})+(\d{3})([0-9]|X)$/";
+
+        @preg_match($regx, $idcard, $arr_split);
+        $dtm_birth = $arr_split[2] . '/' . $arr_split[3] . '/' . $arr_split[4];
+
+        if (!strtotime($dtm_birth)) //检查生日日期是否正确
+        {
+            return false;
+        } else {
+            //检验18位身份证的校验码是否正确。
+            //校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+            $arr_int = array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+            $arr_ch  = array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+            $sign    = 0;
+
+            for ($i = 0; $i < 17; $i++) {
+                $b = (int) $idcard{$i};
+                $w = $arr_int[$i];
+                $sign += $b * $w;
+            }
+
+            $n       = $sign % 11;
+            $val_num = $arr_ch[$n];
+
+            if ($val_num != substr($idcard, 17, 1)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
 }
