@@ -912,7 +912,9 @@ class User extends MyController {
         if (strlen($scene) > 32) {
             return ['code' => '3007'];
         }
-
+        if (!in_array($stype,[1,2])) {
+            return ['code' => '3010','msg' => '二维码类型 只能为1,2'];
+        }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
         return $result;
     }
