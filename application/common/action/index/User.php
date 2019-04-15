@@ -9,7 +9,6 @@ use app\facade\DbOrder;
 use app\facade\DbProvinces;
 use app\facade\DbUser;
 use Config;
-use Endroid\QrCode\QrCode;
 use Env;
 use think\Db;
 
@@ -439,7 +438,7 @@ class User extends CommonIndex {
         ], 'money')); //已用商票总额
         $balanceAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '1'],
-            ['change_type', 'in', [3, 4, 5, 7, 8]],
+            ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商票总额
@@ -468,7 +467,7 @@ class User extends CommonIndex {
         ], 'cost'); //招商加盟收益
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 8]],
+            ['change_type', 'in', [3, 4, 5, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商票总额
@@ -617,7 +616,7 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         $where  = [
             ['trading_type', '=', '2'], //佣金交易
-            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
             ['uid', '=', $uid],
         ];
         $field  = 'change_type,money,create_time,message';
@@ -649,6 +648,10 @@ class User extends CommonIndex {
                 break;
             case 10:
                 $ctype = '提现审核不通过退回';
+                break;
+            case 11:
+                $ctype = '老商城转入';
+                break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['message']);
@@ -678,7 +681,7 @@ class User extends CommonIndex {
         }
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9]],
+            ['change_type', 'in', [3, 4, 5, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //佣金总额
@@ -732,7 +735,7 @@ class User extends CommonIndex {
         if ($stype == 3) { //余额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
             ];
@@ -750,7 +753,7 @@ class User extends CommonIndex {
         if ($stype == 4) { //总额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [3, 4, 5, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [3, 4, 5, 8, 7, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['money', '>', 0],
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
@@ -823,7 +826,7 @@ class User extends CommonIndex {
         ], 'result_price'); //待到账商票
         $balanceAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '1'],
-            ['change_type', 'in', [3, 4, 5, 7, 8]],
+            ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商票总额
@@ -1153,6 +1156,9 @@ class User extends CommonIndex {
                 break;
             case 2:
                 $ctype = '后台充值';
+                break;
+            case 3:
+                $ctype = '老商城转入积分';
                 break;
             }
             $d['ctype'] = $ctype;

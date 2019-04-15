@@ -469,6 +469,10 @@ class DbUser {
         return $obj->toArray();
     }
 
+    public function getUserReadSum($where, $field) {
+        return UserRead::where($where)->sum($field);
+    }
+
     /**
      * 佣金转出记录计数
      * @param $data
