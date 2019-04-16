@@ -1,5 +1,7 @@
 <?php
+
 namespace app\admin\controller;
+
 use app\admin\AdminController;
 
 class Label extends AdminController {
@@ -8,6 +10,7 @@ class Label extends AdminController {
         'isLogin' => ['except' => 'searchLabel'], //除去login其他方法都进行isLogin前置操作
         // 'three'   => ['only' => 'hello,data'], //只有hello,data方法进行three前置操作
     ];
+
     /**
      * @api              {post} / 给商品添加标签
      * @apiDescription   addLabelToGoods
@@ -40,6 +43,7 @@ class Label extends AdminController {
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $labelName, $goodsId], $result['code'], $cmsConId);
         return $result;
     }
+
     /**
      * @api              {post} / 搜索标签
      * @apiDescription   searchLabel
@@ -65,7 +69,7 @@ class Label extends AdminController {
      * @apiDescription   goodsLabelList
      * @apiGroup         admin_label
      * @apiName          goodsLabelList
-     * @apiParam (入参) {String} cms_con_id 
+     * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} goods_id 商品id
      * @apiSuccess (返回) {String} code 200:成功
      * @apiSuccess (返回) {Array} data 返回消息
@@ -87,6 +91,42 @@ class Label extends AdminController {
         }
         $result = $this->app->label->goodsLabelList($goodsId);
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $goodsId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 删除商品标签
+     * @apiDescription   labelDel
+     * @apiGroup         admin_label
+     * @apiName          labelDel
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} goods_id 商品id
+     * @apiParam (入参) {Int} label_id 标签id
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSampleRequest /admin/label/labeldel
+     * @return array
+     * @author zyr
+     */
+    public function labelDel() {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $goodsId  = trim($this->request->post('goods_id')); //商品id
+        $labelId  = trim($this->request->post('label_id')); //标签id
+        if (!is_numeric($labelId)) {
+            return ['code' => '3001']; //标签id必须为数字
+        }
+        $labelId = intval($labelId);
+        if ($labelId <= 0) {
+            return ['code' => '3001']; //标签id必须为数字
+        }
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3002']; //商品id必须为数字
+        }
+        $goodsId = intval($goodsId);
+        if ($goodsId <= 0) {
+            return ['code' => '3002']; //商品id必须为数字
+        }
+        $result = $this->app->label->labelDel($labelId, $goodsId);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $goodsId, $labelId], $result['code'], $cmsConId);
         return $result;
     }
 }
