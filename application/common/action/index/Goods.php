@@ -1,5 +1,7 @@
 <?php
+
 namespace app\common\action\index;
+
 use app\facade\DbGoods;
 use app\facade\DbLabel;
 use Config;
@@ -7,6 +9,7 @@ use Config;
 class Goods extends CommonIndex {
     private $transformRedisKey;
     private $labelLibraryRedisKey;
+
     public function __construct() {
         parent::__construct();
         $this->redisGoodsDetail     = Config::get('rediskey.index.redisGoodsDetail');
@@ -53,7 +56,7 @@ class Goods extends CommonIndex {
             $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $field                            = 'retail_price';
             $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
-            list($goods_spec, $goods_sku)     = $this->getGoodsSku($value['id']);
+            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']]    = $sku['brokerage'];
@@ -115,8 +118,8 @@ class Goods extends CommonIndex {
 
         /* 商品对应规格及SKU价格 */
         list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
-        $integral_active              = [];
-        $brokerage                    = [];
+        $integral_active = [];
+        $brokerage       = [];
         // print_r($goods_sku);die;
         foreach ($goods_sku as $key => $value) {
             $integral_active[] = $value['integral_active'];
@@ -316,8 +319,8 @@ class Goods extends CommonIndex {
             $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             //  echo Db::getLastSQl();die;
             list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
-            $retail_price                 = [];
-            $brokerage                    = [];
+            $retail_price = [];
+            $brokerage    = [];
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']]    = $sku['brokerage'];
@@ -344,8 +347,8 @@ class Goods extends CommonIndex {
             $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             //  echo Db::getLastSQl();die;
             list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
-            $retail_price                 = [];
-            $brokerage                    = [];
+            $retail_price = [];
+            $brokerage    = [];
             foreach ($goods_sku as $goods => $sku) {
                 $retail_price[$sku['id']] = $sku['retail_price'];
                 $brokerage[$sku['id']]    = $sku['brokerage'];
@@ -372,6 +375,15 @@ class Goods extends CommonIndex {
         }
         $data   = array_unique($data);
         $result = $this->redis->hMGet($this->labelLibraryRedisKey, $data);
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $this->labelProcess($result)];
+    }
+
+    private function labelProcess($result) {
+        $data = [];
+        foreach ($result as $k => $v) {
+            $arr = ['label_id' => $k, 'label_name' => $v];
+            array_push($data, $arr);
+        }
+        return $data;
     }
 }
