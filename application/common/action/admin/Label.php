@@ -178,8 +178,8 @@ class Label extends CommonIndex {
     /**
      * 通过标签库的id列表获取标签列表
      * @param $labeLibIdList array
-     * @return: array
-     * @author: zyr
+     * @return array
+     * @author zyr
      */
     private function getLabelLibrary($labeLibIdList) {
         return $this->redis->hMGet($this->labelLibraryRedisKey, $labeLibIdList);
@@ -194,10 +194,10 @@ class Label extends CommonIndex {
     private function setTransform($trans, $labelLibId) {
         $redisKey = $this->transformRedisKey;
         foreach ($trans as $t) {
-            if (!$this->redis->hSetNx($redisKey, $t, json_encode([$labeLibId]))) {
+            if (!$this->redis->hSetNx($redisKey, $t, json_encode([$labelLibId]))) {
                 $transLabel = json_decode($this->redis->hGet($redisKey, $t), true);
-                if (!in_array($labeLibId, $transLabel)) {
-                    array_push($transLabel, $labeLibId);
+                if (!in_array($labelLibId, $transLabel)) {
+                    array_push($transLabel, $labelLibId);
                     $this->redis->hSet($redisKey, $t, json_encode($transLabel));
                 }
             }
