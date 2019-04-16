@@ -57,6 +57,4 @@ class Label extends AdminController {
         $result        = $this->app->label->searchLabel($searchContent);
         return $result;
     }
-
-    public
 }
