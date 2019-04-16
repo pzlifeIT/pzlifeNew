@@ -1,6 +1,7 @@
 <?php
+
 namespace app\common\action\admin;
-use app\common\action\admin\CommonIndex;
+
 use app\facade\DbGoods;
 use app\facade\DbLabel;
 use Config;
@@ -10,6 +11,7 @@ use think\Db;
 class Label extends CommonIndex {
     private $transformRedisKey;
     private $labelLibraryRedisKey;
+
     public function __construct() {
         parent::__construct();
         $this->transformRedisKey    = Config::get('rediskey.label.redisLabelTransform');
@@ -19,8 +21,8 @@ class Label extends CommonIndex {
     /**
      * 商品标签列表
      * @param $goodsId
-     * @return: array
-     * @author: zyr
+     * @return array
+     * @author zyr
      */
     public function goodsLabelList($goodsId) {
         $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['goods_id' => $goodsId], 'label_lib_id');
@@ -36,7 +38,7 @@ class Label extends CommonIndex {
      * 标签搜索
      * @param $searchContent
      * @return array
-     * @author: zyr
+     * @author zyr
      */
     public function searchLabel($searchContent) {
         $data     = [];
@@ -57,6 +59,7 @@ class Label extends CommonIndex {
         $result = $this->getLabelLibrary($data);
         return ['code' => '200', 'data' => $this->labelProcess($result)];
     }
+
     /**
      * 打标签
      * @param $labelName
@@ -98,19 +101,78 @@ class Label extends CommonIndex {
         return ['code' => '200'];
     }
 
+    /**
+     * 删除商品标签
+     * @param $labeLibId
+     * @param $goodsId
+     * @return array
+     * @author zyr
+     */
+    public function labelDel($labeLibId, $goodsId) {
+        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labeLibId, 'goods_id' => $goodsId], 'id', true); //要删除的商品标签关联
+        if (empty($labelGoodsRelation)) {
+            return ['code' => '3003']; //商品标签不存在
+        }
+        $delLabelGoodsRelationId = $labelGoodsRelation['id'];
+        $labelGoodsRelationList  = DbLabel::getLabelGoodsRelation([
+            ['label_lib_id', '=', $labeLibId],
+            ['goods_id', '<>', $goodsId],
+        ], 'id');
+        $delLabelLibraryId       = 0;
+        if (empty($labelGoodsRelationList)) { //没有其他商品关联这个标签
+            $delLabelLibraryId = $labeLibId;
+            $labelLibName      = DbLabel::getLabelLibrary(['id' => $delLabelLibraryId], 'label_name', true);
+            $labelLibName      = $labelLibName['label_name'];
+        }
+        $flag = false;
+        Db::startTrans();
+        try {
+            DbLabel::delLabelGoodsRelation($delLabelGoodsRelationId);
+            if (!empty($delLabelLibraryId)) {
+                DbLabel::delLabelLibrary($delLabelLibraryId);
+                $flag = true;
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005']; //删除失败
+        }
+        if ($flag === true) {
+            $transList = $this->getTransformPinyin($labelLibName);
+            foreach ($transList as $tlk => $tl) {
+                $labelLibraryIdList = json_decode($this->redis->hGet($this->transformRedisKey, $tl), true);
+                if (!in_array($delLabelLibraryId, $labelLibraryIdList)) {
+                    continue;
+                }
+                $indexKey = array_search($delLabelLibraryId, $labelLibraryIdList);
+                if ($indexKey !== false) {
+                    array_splice($labelLibraryIdList, $indexKey, 1);
+                }
+                if (!empty($labelLibraryIdList)) {
+                    $this->redis->hSet($this->transformRedisKey, $tl, json_encode($labelLibraryIdList));
+                } else {
+                    $this->redis->hDel($this->transformRedisKey, $tl);
+                }
+            }
+            $this->redis->hDel($this->labelLibraryRedisKey, $delLabelLibraryId);
+        }
+        return ['code' => '200'];
+    }
+
     private function getTransformPinyin($name) {
         $pinyin       = new Pinyin();
         $ucWord       = $pinyin->transformUcwords($name); //拼音首字母,包含非汉字内容
         $ucWord2      = $pinyin->transformUcwords($name, ' ', true); //拼音首字母,不包含非汉字内容
         $withoutTone  = $pinyin->transformWithoutTone($name, '', false); //包含非中文的全拼音
         $withoutTone2 = $pinyin->transformWithoutTone($name, '', true); //不包含非中文的全拼音
-        return [
-            '1' => $name, //全名
-            '2' => $withoutTone, //包含非中文的全拼音
-            '3' => $withoutTone2, //不包含非中文的全拼音
-            '4' => $ucWord, //拼音首字母,包含非汉字内容
-            '5' => $ucWord2, //拼音首字母,不包含非汉字内容
+        $data         = [
+            $name, //全名
+            $withoutTone, //包含非中文的全拼音
+            $withoutTone2, //不包含非中文的全拼音
+            $ucWord, //拼音首字母,包含非汉字内容
+            $ucWord2, //拼音首字母,不包含非汉字内容
         ];
+        return array_unique($data);
     }
 
     /**
@@ -127,9 +189,9 @@ class Label extends CommonIndex {
      * 标签转换后存储
      * @param $trans 标签转换后的列表
      * @param $labelLibId 标签库id
-     * @author: zyr
+     * @author zyr
      */
-    private function setTransform($trans, $labeLibId) {
+    private function setTransform($trans, $labelLibId) {
         $redisKey = $this->transformRedisKey;
         foreach ($trans as $t) {
             if (!$this->redis->hSetNx($redisKey, $t, json_encode([$labeLibId]))) {
@@ -146,7 +208,7 @@ class Label extends CommonIndex {
      * @description:
      * @param $labelLibId 标签库id
      * @param $name 标签名
-     * @author: zyr
+     * @author zyr
      */
     private function setLabelLibrary($labelLibId, $name) {
         $redisKey = $this->labelLibraryRedisKey;
