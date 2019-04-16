@@ -40,21 +40,23 @@ class Label extends AdminController {
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $labelName, $goodsId], $result['code'], $cmsConId);
         return $result;
     }
-/**
- * @api              {post} / 搜索标签
- * @apiDescription   searchLabel
- * @apiGroup         admin_label
- * @apiName          searchLabel
- * @apiParam (入参) {String} search_content 搜索的内容
- * @apiSuccess (返回) {String} code 200:成功
- * @apiSuccess (返回) {String} msg 返回消息
- * @apiSampleRequest /admin/label/searchlabel
- * @return array
- * @author zyr
- */
+    /**
+     * @api              {post} / 搜索标签
+     * @apiDescription   searchLabel
+     * @apiGroup         admin_label
+     * @apiName          searchLabel
+     * @apiParam (入参) {String} search_content 搜索的内容
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/label/searchlabel
+     * @return array
+     * @author zyr
+     */
     public function searchLabel() {
         $searchContent = trim($this->request->post('search_content')); //搜索内容
         $result        = $this->app->label->searchLabel($searchContent);
         return $result;
     }
+
+    public
 }
