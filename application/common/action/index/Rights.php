@@ -186,15 +186,13 @@ class Rights extends CommonIndex {
      * @author rzc
      */
     public function shopApplyBoss($con_id, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id) {
-        $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
+        $redisKey  = Config::get('rediskey.user.redisUserOpenbossLock');
         $refe_type = 2; //暂时只支持购买合伙人
         $uid       = $this->getUidByConId($con_id);
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        if($this->redis->setNx($redisKey . $uid, 1)===false){
-            return ['code'=>'3013'];
-        }
+
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name', true);
         if ($userInfo['user_identity'] == 4) {
             return ['code' => '3010'];
@@ -233,6 +231,9 @@ class Rights extends CommonIndex {
         $log_invest['target_uid'] = $uid;
         $log_invest['status']     = 1;
         $log_invest['cost']       = 5000;
+        if ($this->redis->setNx($redisKey . $uid, 1) === false) {
+            return ['code' => '3013'];
+        }
         Db::startTrans();
         try {
             DbRights::saveShopApply($apply_data);
@@ -240,6 +241,7 @@ class Rights extends CommonIndex {
             Db::commit();
             return ['code' => '200']; //领取成功
         } catch (\Exception $e) {
+            $this->redis->del($redisKey.$uid);
             exception($e);
             Db::rollback();
             return ['code' => '3005']; //领取失败
