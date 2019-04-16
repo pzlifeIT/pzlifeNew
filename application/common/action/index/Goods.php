@@ -372,6 +372,6 @@ class Goods extends CommonIndex {
         }
         $data   = array_unique($data);
         $result = $this->redis->hMGet($this->labelLibraryRedisKey, $data);
-        return ['code' => '200', $result];
+        return ['code' => '200', 'data' => $result];
     }
 }
