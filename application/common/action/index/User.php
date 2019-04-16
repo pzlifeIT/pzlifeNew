@@ -1681,14 +1681,14 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getQrcode($conId, $page, $scene, $type) {
+    public function getQrcode($conId, $page, $scene, $stype) {
         $uid    = $this->getUidByConId($conId);
         $Upload = new Upload;
         if (empty($uid)) {
             return ['code' => '3000'];
         }
         // 先查询是否有已存在图片
-        $has_QrImage = DbImage::getUserImage('*', ['uid' => $uid, 'stype' => 1], true);
+        $has_QrImage = DbImage::getUserImage('*', ['uid' => $uid, 'stype' => $stype], true);
         if (!empty($has_QrImage)) {
             $Qrcode = $has_QrImage['image'];
             return ['code' => '200', 'Qrcode' => $Qrcode];
@@ -1711,7 +1711,7 @@ class User extends CommonIndex {
                 }
                 $upUserInfo          = [];
                 $upUserInfo['uid']   = $uid;
-                $upUserInfo['stype'] = $type;
+                $upUserInfo['stype'] = $stype;
                 $upUserInfo['image'] = $upload['image_path'];
                 Db::startTrans();
                 try {
