@@ -16,6 +16,28 @@ class Label extends CommonIndex {
         $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
     }
 
+    /**
+     * 商品标签列表
+     * @param $goodsId
+     * @return: array
+     * @author: zyr
+     */
+    public function goodsLabelList($goodsId) {
+        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['goods_id' => $goodsId], 'label_lib_id');
+        if (empty($labelGoodsRelation)) {
+            return ['code' => '3000'];
+        }
+        $labelIdList = array_column($labelGoodsRelation, 'label_lib_id');
+        $restlt      = $this->getLabelLibrary($labelIdList);
+        return ['code' => '200', 'data' => $this->labelProcess($restlt)];
+    }
+
+    /**
+     * 标签搜索
+     * @param $searchContent
+     * @return array
+     * @author: zyr
+     */
     public function searchLabel($searchContent) {
         $data     = [];
         $iterator = null;
@@ -28,12 +50,12 @@ class Label extends CommonIndex {
                 $data = array_merge($data, json_decode($key, true));
             }
         }
-        if(empty($data)){
+        if (empty($data)) {
             return ['code' => '3000'];
         }
         $data   = array_unique($data);
-        $result = $this->redis->hMGet($this->labelLibraryRedisKey, $data);
-        return ['code' => '200', $result];
+        $result = $this->getLabelLibrary($data);
+        return ['code' => '200', 'data' => $this->labelProcess($result)];
     }
     /**
      * 打标签
@@ -66,7 +88,6 @@ class Label extends CommonIndex {
             DbLabel::addLabelGoodsRelation(['goods_id' => $goodsId, 'label_lib_id' => $labeLibId]); //添加标签商品关联
             Db::commit();
         } catch (\Exception $e) {
-            print_r($e);
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
@@ -130,5 +151,14 @@ class Label extends CommonIndex {
     private function setLabelLibrary($labelLibId, $name) {
         $redisKey = $this->labelLibraryRedisKey;
         $this->redis->hSetNx($redisKey, $labelLibId, $name);
+    }
+
+    private function labelProcess($result) {
+        $data = [];
+        foreach ($result as $k => $v) {
+            $arr = ['label_id' => $k, 'label_name' => $v];
+            array_push($data, $arr);
+        }
+        return $data;
     }
 }
