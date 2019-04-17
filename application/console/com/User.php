@@ -190,7 +190,7 @@ class User extends Pzlife {
                 Db::commit();
             } catch (\Exception $e) {
                 // 回滚事务
-                print_r($e);
+                exception($e);
                 die;
                 Db::rollback();
                 continue;

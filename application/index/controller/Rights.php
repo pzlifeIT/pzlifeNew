@@ -215,11 +215,12 @@ class Rights extends MyController {
             return ['code' => '3001'];
         }
         if (empty($parent_id)) {
-            // return ['code' => '3003'];
-            $parent_id = 1;
-        }else{
-            $parent_id = $parent_id;
+            return ['code' => '3003'];
+            // $parent_id = 1;
         }
+        // else{
+        //     $parent_id = $parent_id;
+        // }
         if (!is_numeric($target_sex)) {
             return ['code' => '3004'];
         }

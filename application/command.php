@@ -10,8 +10,9 @@
 // +----------------------------------------------------------------------
 $commandPath = \think\facade\Config::get('console.command_path');
 return [
-    'curl'  => $commandPath . 'Curl',
-    'user'  => $commandPath . 'User',
-    'areas' => $commandPath . 'Areas',
-    'order' => $commandPath . 'Order',
+    'curl'            => $commandPath . 'Curl',
+    'user'            => $commandPath . 'User',
+    'areas'           => $commandPath . 'Areas',
+    'order'           => $commandPath . 'Order',
+    'temporaryscript' => $commandPath . 'Temporaryscript',
 ];
