@@ -148,14 +148,19 @@ class Label extends CommonIndex {
         if ($flag === true) {
             $transList = $this->getTransformPinyin($labelLibName);
             foreach ($transList as $tlk => $tl) {
-                $labelLibraryIdList = json_decode($this->redis->hGet($this->transformRedisKey, $tl), true);
+                $labelKey = $this->redis->hGet($this->transformRedisKey, $tl);
+                if ($labelKey === false) {
+                    continue;
+                }
+                $labelLibraryIdList = json_decode($labelKey, true);
                 if (!in_array($delLabelLibraryId, $labelLibraryIdList)) {
                     continue;
                 }
                 $indexKey = array_search($delLabelLibraryId, $labelLibraryIdList);
-                if ($indexKey !== false) {
-                    array_splice($labelLibraryIdList, $indexKey, 1);
+                if ($indexKey === false) {
+                    continue;
                 }
+                array_splice($labelLibraryIdList, $indexKey, 1);
                 if (!empty($labelLibraryIdList)) {
                     $this->redis->hSet($this->transformRedisKey, $tl, json_encode($labelLibraryIdList));
                 } else {
