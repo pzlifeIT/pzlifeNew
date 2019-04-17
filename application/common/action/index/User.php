@@ -2237,9 +2237,9 @@ class User extends CommonIndex {
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            if ($stype == 1) { //1.佣金提现
+            if ($stype == 2) { //1.佣金提现
                 DbUser::modifyCommission($uid, $money);
-            } elseif ($stype == 2) { //2.奖励金提现
+            } elseif ($stype == 4) { //2.奖励金提现
                 DbUser::modifyBounty($uid, $money);
             }
             DbUser::saveLogTrading($tradingData);
