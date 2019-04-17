@@ -74,11 +74,11 @@ class Label extends CommonIndex {
         if (empty($goods)) {
             return ['code' => '3003']; //商品不存在
         }
-        $labeLibId = 0;
-        $labeLib   = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
-        if (!empty($labeLib)) { //标签库有该标签
-            $labeLibId          = $labeLib['id'];
-            $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labeLibId, 'goods_id' => $goodsId], 'id', true);
+        $labelLibId = 0;
+        $labelLib   = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
+        if (!empty($labelLib)) { //标签库有该标签
+            $labelLibId         = $labelLib['id'];
+            $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelLibId, 'goods_id' => $goodsId], 'id', true);
             if (!empty($labelGoodsRelation)) {
                 return ['code' => '3004']; //标签已关联该商品
             }
@@ -86,48 +86,49 @@ class Label extends CommonIndex {
         $flag = false;
         Db::startTrans();
         try {
-            if (empty($labeLibId)) { //标签库没有就添加
-                $labeLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
-                $flag      = true;
+            if (empty($labelLibId)) { //标签库没有就添加
+                $labelLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
+                $flag       = true;
             } else {
-                DbLabel::modifyHeat($labeLibId);
+                DbLabel::modifyHeat($labelLibId);
             }
-            DbLabel::addLabelGoodsRelation(['goods_id' => $goodsId, 'label_lib_id' => $labeLibId]); //添加标签商品关联
+            DbLabel::addLabelGoodsRelation(['goods_id' => $goodsId, 'label_lib_id' => $labelLibId]); //添加标签商品关联
             Db::commit();
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
         if ($flag === true) {
-            $this->setTransform($this->getTransformPinyin($labelName), $labeLibId);
-            $this->setLabelLibrary($labeLibId, $labelName);
-            $this->setLabelHeat($labeLibId, true);//执行zAdd
+            $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
+            $this->setLabelLibrary($labelLibId, $labelName);
+            $this->setLabelHeat($labelLibId, true);//执行zAdd
         } else {
-            $this->setLabelHeat($labeLibId, false);//执行zIncrBy
+            $this->setLabelHeat($labelLibId, false);//执行zIncrBy
         }
         return ['code' => '200'];
     }
 
     /**
      * 删除商品标签
-     * @param $labeLibId
+     * @param $labelLibId
      * @param $goodsId
      * @return array
      * @author zyr
      */
-    public function labelDel($labeLibId, $goodsId) {
-        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labeLibId, 'goods_id' => $goodsId], 'id', true); //要删除的商品标签关联
+    public function labelDel($labelLibId, $goodsId) {
+        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelLibId, 'goods_id' => $goodsId], 'id', true); //要删除的商品标签关联
         if (empty($labelGoodsRelation)) {
             return ['code' => '3003']; //商品标签不存在
         }
         $delLabelGoodsRelationId = $labelGoodsRelation['id'];
         $labelGoodsRelationList  = DbLabel::getLabelGoodsRelation([
-            ['label_lib_id', '=', $labeLibId],
+            ['label_lib_id', '=', $labelLibId],
             ['goods_id', '<>', $goodsId],
         ], 'id');
         $delLabelLibraryId       = 0;
+        $labelLibName            = '';
         if (empty($labelGoodsRelationList)) { //没有其他商品关联这个标签
-            $delLabelLibraryId = $labeLibId;
+            $delLabelLibraryId = $labelLibId;
             $labelLibName      = DbLabel::getLabelLibrary(['id' => $delLabelLibraryId], 'label_name', true);
             $labelLibName      = $labelLibName['label_name'];
         }
@@ -167,6 +168,9 @@ class Label extends CommonIndex {
     }
 
     private function getTransformPinyin($name) {
+        if (empty($name)) {
+            return [];
+        }
         $pinyin       = new Pinyin();
         $ucWord       = $pinyin->transformUcwords($name); //拼音首字母,包含非汉字内容
         $ucWord2      = $pinyin->transformUcwords($name, ' ', true); //拼音首字母,不包含非汉字内容
