@@ -181,7 +181,7 @@ class Goods extends MyController {
      * @apiDescription   getSearchGoodsByLabel
      * @apiGroup         index_Goods
      * @apiName          getSearchGoodsByLabel
-     * @apiParam (入参) {String} label_id 搜索内容
+     * @apiParam (入参) {String} label_name 搜索内容
      * @apiParam (入参) {Number} [page] 页码 (默认:1)
      * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.page和page_num必须是数字 / 3002.搜索参数不存在
@@ -203,19 +203,15 @@ class Goods extends MyController {
      * @author zyr
      */
     public function getSearchGoodsByLabel() {
-        $labelId = trim($this->request->post('label_id')); //标签id
+        $labelName = trim($this->request->post('label_name')); //标签id
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
-        if (!is_numeric($labelId)) {
-            return ['code' => '3001']; //标签id必须为大于0的数字
-        }
-        $labelId = intval($labelId);
-        if ($labelId <= 0) {
-            return ['code' => '3001']; //标签id必须为大于0的数字
+        if(empty($labelName)){
+            return ['code' => '3001']; //搜索内容不能空
         }
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
-        $result  = $this->app->goods->getSearchGoodsByLabel($labelId, $page, $pageNum);
+        $result  = $this->app->goods->getSearchGoodsByLabel($labelName, $page, $pageNum);
         return $result;
     }
 

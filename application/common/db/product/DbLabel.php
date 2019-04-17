@@ -35,6 +35,20 @@ class DbLabel {
     }
 
     /**
+     * @param $where
+     * @param $field
+     * @param $row
+     * @param $orderBy
+     * @param $limit
+     * @return array
+     * @author zyr
+     */
+    public function getLabelGoodsRelationDistinct($where) {
+        return LabelGoodsRelation::distinct(true)->field('goods_id')->where($where)->select()->toArray();
+
+    }
+
+    /**
      * @param $data
      * @return int
      * @author zyr
@@ -43,6 +57,18 @@ class DbLabel {
         $labelLibrary = new LabelLibrary();
         $labelLibrary->save($data);
         return $labelLibrary->id;
+    }
+
+    /**
+     * @param $labelLibId
+     * @param string $modify
+     * @return bool
+     * @author zyr
+     */
+    public function modifyHeat($labelLibId, $modify = 'inc') {
+        $labelLibrary        = LabelLibrary::get($labelLibId);
+        $labelLibrary->the_heat = [$modify, 1];
+        return $labelLibrary->save();
     }
 
     /**
