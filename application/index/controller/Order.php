@@ -6,9 +6,9 @@ use app\index\MyController;
 
 class Order extends MyController {
     protected $beforeActionList = [
-        'isLogin',//所有方法的前置操作
-//        'isLogin' => ['except' => ''],//除去getFirstCate其他方法都进行second前置操作
-//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        'isLogin', //所有方法的前置操作
+        //        'isLogin' => ['except' => ''],//除去getFirstCate其他方法都进行second前置操作
+        //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -454,6 +454,7 @@ class Order extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} pay_type 支付类型 1.支付宝 2.微信 3.银联 4.线下 [目前只支持微信]
      * @apiParam (入参) {Number} user_type 用户订单类型 1.钻石会员(100) 2.boss 3.钻石会员500
+     * @apiParam (入参) {Number} actype 用户订单类型 活动类型：1.无活动 2兼职网推
      * @apiParam (入参) {String} parent_id 分享用户uid
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:user_type和pay_type必须是数字
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
@@ -475,8 +476,9 @@ class Order extends MyController {
             return ['code' => 3003];
         }
         $old_parent_id = $parent_id;
-        $parent_id = deUid($parent_id);
-        $result    = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id,$old_parent_id);
+        $parent_id     = deUid($parent_id);
+        $actype        = $actype ? 1 : 2;
+        $result        = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id, $old_parent_id, intval($actype));
         return $result;
     }
 
@@ -534,18 +536,18 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/getExpressLog
      * @author rzc
      */
-    public function getExpressLog(){
-        $conId      = trim($this->request->post('con_id'));
+    public function getExpressLog() {
+        $conId       = trim($this->request->post('con_id'));
         $express_key = trim($this->request->post('express_key'));
         $express_no  = trim($this->request->post('express_no'));
-        $orderNo = trim($this->request->post('order_no'));
+        $orderNo     = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3002'];
         }
-        $result = $this->app->order->getExpressLog($express_key,$express_no,$orderNo,$conId);
+        $result = $this->app->order->getExpressLog($express_key, $express_no, $orderNo, $conId);
         return $result;
     }
 }

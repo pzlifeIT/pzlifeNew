@@ -374,12 +374,12 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 35);
+        $this->redis->rPush($redisListKey, 40);
         $memberOrderId = $this->redis->lPop($redisListKey); //购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
         }
-        $memberSql   = sprintf("select id,uid,order_no,user_type,pay_money,from_uid from pz_member_order where delete_time=0 and pay_status=4 and id = '%d'", $memberOrderId);
+        $memberSql   = sprintf("select id,uid,order_no,user_type,pay_money,from_uid,actype from pz_member_order where delete_time=0 and pay_status=4 and id = '%d'", $memberOrderId);
         $memberOrder = Db::query($memberSql);
         if (empty($memberOrder)) {
             exit('order_id_error'); //订单id有误
@@ -388,7 +388,7 @@ class Order extends Pzlife {
         $userType    = $memberOrder['user_type'];
 //        print_r($memberOrder);die;
         if ($userType == 1) { //钻石会员
-            $this->diamondvipSettlement($memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid'], $memberOrder['order_no']);
+            $this->diamondvipSettlement($memberOrder['uid'], $memberOrder['pay_money'], $memberOrder['from_uid'], $memberOrder['order_no'], $memberOrder['actype']);
         }
         if ($userType == 2) { //boss
             $this->bossSettlement($memberOrder['uid'], $memberOrder['from_uid'], $memberOrder['order_no']);
@@ -592,25 +592,51 @@ class Order extends Pzlife {
      * @param $from_uid
      * @param $memberOrder
      */
-    private function diamondvipSettlement($uid, $payMoney, $from_uid, $memberOrder) {
+    private function diamondvipSettlement($uid, $payMoney, $from_uid, $memberOrder, $actype) {
         $redisListKey      = Config::get('redisKey.order.redisMemberShare');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
         Db::startTrans();
         try {
-            if ($payMoney == 500) {
-                Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
-            } elseif ($payMoney == 100) {
-                $from_user    = $this->getUserInfo($from_uid);
-                $from_balance = 0;
-                if (!$fromDiamondvipGet) {
-                    if ($from_user['user_identity'] > 1) {
-                        $from_diamondvip_get              = [];
-                        $from_diamondvip_get['uid']       = $from_uid;
-                        $from_diamondvip_get['share_uid'] = 1;
-                        // $from_diamondvip_get['redmoney'] = 50;
-                        // $from_diamondvip_get['share_num']      = 1;
-                        $from_diamondvip_get['create_time'] = time();
-                        Db::name('diamondvip_get')->insert($from_diamondvip_get);
+            if ($actype == 1) { //无活动
+                if ($payMoney == 500) {
+                    Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
+                } elseif ($payMoney == 100) {
+                    $from_user    = $this->getUserInfo($from_uid);
+                    $from_balance = 0;
+                    if (!$fromDiamondvipGet) {
+                        if ($from_user['user_identity'] > 1) {
+                            $from_diamondvip_get              = [];
+                            $from_diamondvip_get['uid']       = $from_uid;
+                            $from_diamondvip_get['share_uid'] = 1;
+                            // $from_diamondvip_get['redmoney'] = 50;
+                            // $from_diamondvip_get['share_num']      = 1;
+                            $from_diamondvip_get['create_time'] = time();
+                            Db::name('diamondvip_get')->insert($from_diamondvip_get);
+                            $from_balance = $from_user['balance'] + 50;
+                            Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
+                            Db::name('log_trading')->insert(
+                                [
+                                    'uid'          => $from_uid,
+                                    'trading_type' => 1,
+                                    'change_type'  => 5,
+                                    'order_no'     => $memberOrder,
+                                    'money'        => 50,
+                                    'befor_money'  => $from_user['balance'],
+                                    'after_money'  => $from_balance,
+                                    'create_time'  => time(),
+                                ]
+                            );
+                            /* 写入缓存 */
+                            $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
+                            $this->redis->expire($redisListKey . $from_uid, 2592000);
+                            $userRedisKey = Config::get('rediskey.user.redisKey');
+                            $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
+                        }
+                    } else {
+                        /* 给上级发钱 */
+                        $from_diamondvip_get = [];
+                        // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
+                        Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
                         $from_balance = $from_user['balance'] + 50;
                         Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                         Db::name('log_trading')->insert(
@@ -625,68 +651,123 @@ class Order extends Pzlife {
                                 'create_time'  => time(),
                             ]
                         );
-                        /* 写入缓存 */
-                        $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
-                        $this->redis->expire($redisListKey . $from_uid, 2592000);
                         $userRedisKey = Config::get('rediskey.user.redisKey');
                         $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
+                        $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
+                        $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
+                        $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['share_uid']);
+                        // Db::getLastSql();die;
+                        // print_r($fromDiamondvipGet['share_uid']);die;
+                        if ($share_from_user['user_identity'] == 4) { //给上级BOSS发佣金
+                            $share_from_balance = 0;
+                            $share_from_balance = $share_from_user['balance'] + 50;
+                            Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
+                            Db::name('log_trading')->insert(
+                                [
+                                    'uid'          => $share_from_user['id'],
+                                    'trading_type' => 1,
+                                    'change_type'  => 5,
+                                    'order_no'     => $memberOrder,
+                                    'money'        => 50,
+                                    'befor_money'  => $share_from_user['balance'],
+                                    'after_money'  => $share_from_balance,
+                                    'create_time'  => time(),
+                                ]
+                            );
+                            /* 写入缓存 */
+                            $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
+                            $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
+                            $this->redis->del($userRedisKey . 'userinfo:' . $share_from_user['id']);
+                        }
                     }
+                    $diamondvip_get                = [];
+                    $diamondvip_get['uid']         = $uid;
+                    $diamondvip_get['source']      = 1;
+                    $diamondvip_get['share_uid']   = $from_uid;
+                    $diamondvip_get['create_time'] = time();
+                    Db::name('diamondvip_get')->insert($diamondvip_get);
+                    Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
+                }
+            } elseif ($actype == 2) { //兼职网推活动
+                $from_user    = $this->getUserInfo($from_uid);
+                $from_balance = 0;
+                if (!$fromDiamondvipGet) {
+
+                    $from_diamondvip_get              = [];
+                    $from_diamondvip_get['uid']       = $from_uid;
+                    $from_diamondvip_get['source']    = 2;
+                    $from_diamondvip_get['share_uid'] = 1;
+                    // $from_diamondvip_get['redmoney'] = 50;
+                    $from_diamondvip_get['share_num'] = 1;
+                    if ($from_user['user_identity'] < 2) {
+                        $from_diamondvip_get['status'] = 2;
+                    }
+                    $from_diamondvip_get['create_time'] = time();
+                    Db::name('diamondvip_get')->insert($from_diamondvip_get);
+                    $from_balance = $from_user['bounty'] + 40;
+                    Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                    Db::name('log_trading')->insert(
+                        [
+                            'uid'          => $from_uid,
+                            'trading_type' => 3,
+                            'change_type'  => 5,
+                            'order_no'     => $memberOrder,
+                            'money'        => 40,
+                            'befor_money'  => $from_user['balance'],
+                            'after_money'  => $from_balance,
+                            'create_time'  => time(),
+                        ]
+                    );
+                    /* 写入缓存 */
+                    $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
+                    $this->redis->expire($redisListKey . $from_uid, 2592000);
+                    $userRedisKey = Config::get('rediskey.user.redisKey');
+                    $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                 } else {
                     /* 给上级 */
                     $from_diamondvip_get = [];
                     // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
-                    $from_balance = $from_user['balance'] + 50;
-                    Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
+                    $from_balance = $from_user['bounty'] + 40;
+                    Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
                     Db::name('log_trading')->insert(
                         [
                             'uid'          => $from_uid,
-                            'trading_type' => 1,
+                            'trading_type' => 3,
                             'change_type'  => 5,
                             'order_no'     => $memberOrder,
-                            'money'        => 50,
-                            'befor_money'  => $from_user['balance'],
+                            'money'        => 40,
+                            'befor_money'  => $from_user['bounty'],
                             'after_money'  => $from_balance,
                             'create_time'  => time(),
                         ]
                     );
                     $userRedisKey = Config::get('rediskey.user.redisKey');
                     $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
-                    $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
-                    $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
-                    $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['share_uid']);
+                    // $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
+                    $share_from_user = $this->getUserInfo($fromDiamondvipGet['uid']);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['uid']);
                     // Db::getLastSql();die;
-                    // print_r($fromDiamondvipGet['share_uid']);die;
-                    if ($share_from_user['user_identity'] == 4) {
-                        $share_from_balance = 0;
-                        $share_from_balance = $share_from_user['balance'] + 50;
-                        Db::name('users')->where('id', $share_from_user['id'])->update(['balance' => $share_from_balance]);
-                        Db::name('log_trading')->insert(
-                            [
-                                'uid'          => $share_from_user['id'],
-                                'trading_type' => 1,
-                                'change_type'  => 5,
-                                'order_no'     => $memberOrder,
-                                'money'        => 50,
-                                'befor_money'  => $share_from_user['balance'],
-                                'after_money'  => $share_from_balance,
-                                'create_time'  => time(),
-                            ]
-                        );
-                        /* 写入缓存 */
-                        $this->redis->hset($redisListKey . $share_from_user['id'], $share_from_user['id'], time());
-                        $this->redis->expire($redisListKey . $share_from_user['id'], 2592000);
-                        $this->redis->del($userRedisKey . 'userinfo:' . $share_from_user['id']);
+                    // print_r($fromDiamondvipGet);die;
+                    if ($fromDiamondvipGet['share_num'] + 1 > 1) { //如果分享2个将会员升级钻石
+                        if ($share_from_user['user_identity'] < 2) {
+                            Db::name('users')->where('id', $fromDiamondvipGet['uid'])->update(['user_identity' => 2]);
+                            Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
+                        }
                     }
+                    Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['share_num' => $fromDiamondvipGet['share_num'] + 1]);
                 }
                 $diamondvip_get                = [];
                 $diamondvip_get['uid']         = $uid;
                 $diamondvip_get['share_uid']   = $from_uid;
+                $diamondvip_get['source']      = 2;
                 $diamondvip_get['create_time'] = time();
                 Db::name('diamondvip_get')->insert($diamondvip_get);
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
             }
+
             Db::commit();
+            exit('ok!');
         } catch (\Exception $e) {
             // $error =  $e->getMessage();
             // echo $error;
@@ -701,7 +782,7 @@ class Order extends Pzlife {
      * @param $uid
      */
     private function diamondvipGet($uid) {
-        $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
+        $diamondvipGetSql = sprintf("select id,diamondvips_id,uid,share_uid,redmoney,share_num from pz_diamondvip_get where delete_time=0 and uid = %d", $uid);
         $diamondvipGet    = Db::query($diamondvipGetSql);
         if (!$diamondvipGet) {
             return [];
@@ -713,7 +794,7 @@ class Order extends Pzlife {
      * @param $uid
      */
     private function getUserInfo($uid) {
-        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
+        $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission,bounty from pz_users where delete_time=0 and id = %d", $uid);
         // print_r($getUserSql);die;
         $userInfo = Db::query($getUserSql);
         if (!$userInfo) {
