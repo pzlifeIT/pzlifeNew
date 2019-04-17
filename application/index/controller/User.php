@@ -239,7 +239,7 @@ class User extends MyController {
      * @apiSuccess (data) {Double} balance 商票
      * @apiSuccess (data) {Double} commission 佣金
      * @apiSuccess (data) {Number} integral 剩余积分
-     * @apiSuccess (data) {Double} bounty 剩余积分
+     * @apiSuccess (data) {Double} bounty 奖励金
      * @apiSampleRequest /index/user/getuser
      * @return array
      * @author zyr
