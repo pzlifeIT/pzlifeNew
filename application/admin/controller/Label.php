@@ -60,7 +60,7 @@ class Label extends AdminController {
      */
     public function searchLabel() {
         $searchContent = trim($this->request->post('search_content')); //搜索内容
-        $result        = $this->app->label->searchLabel($searchContent);
+        $result        = $this->app->label->searchLabel(strtolower($searchContent));
         return $result;
     }
 
