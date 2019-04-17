@@ -2138,7 +2138,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice = 2, $stype = '') {
+    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice = 2, $stype = 2) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
