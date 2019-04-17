@@ -9,12 +9,14 @@ use Config;
 class Goods extends CommonIndex {
     private $transformRedisKey;
     private $labelLibraryRedisKey;
+    private $labelLibraryHeatRedisKey;
 
     public function __construct() {
         parent::__construct();
-        $this->redisGoodsDetail     = Config::get('rediskey.index.redisGoodsDetail');
-        $this->transformRedisKey    = Config::get('rediskey.label.redisLabelTransform');
-        $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
+        $this->redisGoodsDetail         = Config::get('rediskey.index.redisGoodsDetail');
+        $this->transformRedisKey        = Config::get('rediskey.label.redisLabelTransform');
+        $this->labelLibraryRedisKey     = Config::get('rediskey.label.redisLabelLibrary');
+        $this->labelLibraryHeatRedisKey = Config::get('rediskey.label.redisLabelLibraryHeat');
     }
 
     /**
