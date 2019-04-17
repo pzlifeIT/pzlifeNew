@@ -330,8 +330,9 @@ class Goods extends CommonIndex {
         return ['code' => 200, 'goods_data' => $result];
     }
 
-    public function getSearchGoodsByLabel($labelId, $page, $pageNum) {
-        $goodsIdList = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelId], 'goods_id');
+    public function getSearchGoodsByLabel($labelName, $page, $pageNum) {
+        $labelIdList = $this->getLabelScan($labelName);
+        $goodsIdList = DbLabel::getLabelGoodsRelationDistinct([['label_lib_id', 'in', $labelIdList]]);
         $goodsIdList = array_column($goodsIdList, 'goods_id');
         $offset      = ($page - 1) * $pageNum;
         $result      = DbGoods::getGoodsList('*', [['id', 'in', $goodsIdList], ['status', '=', 1]], $offset, $pageNum);
@@ -359,6 +360,50 @@ class Goods extends CommonIndex {
     }
 
     public function searchLabel($searchContent) {
+        $data = $this->getLabelScan($searchContent);
+        if (empty($data)) {
+            return ['code' => '3000'];
+        }
+        $heat   = $this->redis->zRevRange($this->labelLibraryHeatRedisKey, 0, -1);
+        $result = [];
+        foreach ($heat as $v) {
+            if (in_array($v, $data)) {
+                array_push($result, $v);
+                if (count($result) >= 10) {
+                    break;
+                }
+            }
+        }
+        $result = $this->getLabelLibrary($result);
+        return ['code' => '200', 'data' => $this->labelProcess($result)];
+    }
+
+    private function labelProcess($result) {
+        $data = [];
+        foreach ($result as $k => $v) {
+            $arr = ['label_id' => $k, 'label_name' => $v];
+            array_push($data, $arr);
+        }
+        return $data;
+    }
+
+    /**
+     * 通过标签库的id列表获取标签列表
+     * @param $labeLibIdList array
+     * @return array
+     * @author zyr
+     */
+    private function getLabelLibrary($labeLibIdList) {
+        return $this->redis->hMGet($this->labelLibraryRedisKey, $labeLibIdList);
+    }
+
+    /**
+     * 标签库模糊查询
+     * @param $searchContent
+     * @return array
+     * @author zyr
+     */
+    private function getLabelScan($searchContent) {
         $data     = [];
         $iterator = null;
         while (true) {
@@ -371,19 +416,9 @@ class Goods extends CommonIndex {
             }
         }
         if (empty($data)) {
-            return ['code' => '3000'];
+            return [];
         }
-        $data   = array_unique($data);
-        $result = $this->redis->hMGet($this->labelLibraryRedisKey, $data);
-        return ['code' => '200', 'data' => $this->labelProcess($result)];
-    }
-
-    private function labelProcess($result) {
-        $data = [];
-        foreach ($result as $k => $v) {
-            $arr = ['label_id' => $k, 'label_name' => $v];
-            array_push($data, $arr);
-        }
+        $data = array_unique($data);
         return $data;
     }
 }

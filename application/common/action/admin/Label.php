@@ -11,11 +11,13 @@ use think\Db;
 class Label extends CommonIndex {
     private $transformRedisKey;
     private $labelLibraryRedisKey;
+    private $labelLibraryHeatRedisKey;
 
     public function __construct() {
         parent::__construct();
-        $this->transformRedisKey    = Config::get('rediskey.label.redisLabelTransform');
-        $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
+        $this->transformRedisKey        = Config::get('rediskey.label.redisLabelTransform');
+        $this->labelLibraryRedisKey     = Config::get('rediskey.label.redisLabelLibrary');
+        $this->labelLibraryHeatRedisKey = Config::get('rediskey.label.redisLabelLibraryHeat');
     }
 
     /**
@@ -41,22 +43,22 @@ class Label extends CommonIndex {
      * @author zyr
      */
     public function searchLabel($searchContent) {
-        $data     = [];
-        $iterator = null;
-        while (true) {
-            $keys = $this->redis->hScan($this->transformRedisKey, $iterator, $searchContent . '*');
-            if ($keys === false) { //迭代结束，未找到匹配pattern的key
-                break;
-            }
-            foreach ($keys as $key) {
-                $data = array_merge($data, json_decode($key, true));
-            }
-        }
+        $data = $this->getLabelScan($searchContent);
         if (empty($data)) {
             return ['code' => '3000'];
         }
         $data   = array_unique($data);
-        $result = $this->getLabelLibrary($data);
+        $heat   = $this->redis->zRevRange($this->labelLibraryHeatRedisKey, 0, -1);
+        $result = [];
+        foreach ($heat as $v) {
+            if (in_array($v, $data)) {
+                array_push($result, $v);
+                if (count($result) >= 10) {
+                    break;
+                }
+            }
+        }
+        $result = $this->getLabelLibrary($result);
         return ['code' => '200', 'data' => $this->labelProcess($result)];
     }
 
@@ -87,6 +89,8 @@ class Label extends CommonIndex {
             if (empty($labeLibId)) { //标签库没有就添加
                 $labeLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
                 $flag      = true;
+            } else {
+                DbLabel::modifyHeat($labeLibId);
             }
             DbLabel::addLabelGoodsRelation(['goods_id' => $goodsId, 'label_lib_id' => $labeLibId]); //添加标签商品关联
             Db::commit();
@@ -94,9 +98,12 @@ class Label extends CommonIndex {
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
-        if ($flag) {
+        if ($flag === true) {
             $this->setTransform($this->getTransformPinyin($labelName), $labeLibId);
             $this->setLabelLibrary($labeLibId, $labelName);
+            $this->setLabelHeat($labeLibId, true);//执行zAdd
+        } else {
+            $this->setLabelHeat($labeLibId, false);//执行zIncrBy
         }
         return ['code' => '200'];
     }
@@ -213,6 +220,40 @@ class Label extends CommonIndex {
     private function setLabelLibrary($labelLibId, $name) {
         $redisKey = $this->labelLibraryRedisKey;
         $this->redis->hSetNx($redisKey, $labelLibId, $name);
+    }
+
+    /**
+     * 标签库模糊查询
+     * @param $searchContent
+     * @return array
+     * @author zyr
+     */
+    private function getLabelScan($searchContent) {
+        $data     = [];
+        $iterator = null;
+        while (true) {
+            $keys = $this->redis->hScan($this->transformRedisKey, $iterator, $searchContent . '*');
+            if ($keys === false) { //迭代结束，未找到匹配pattern的key
+                break;
+            }
+            foreach ($keys as $key) {
+                $data = array_merge($data, json_decode($key, true));
+            }
+        }
+        if (empty($data)) {
+            return [];
+        }
+        $data = array_unique($data);
+        return $data;
+    }
+
+    private function setLabelHeat($labelLibId, $heat) {
+        $redisKey = $this->labelLibraryHeatRedisKey;
+        if ($heat === true) {
+            $this->redis->zAdd($redisKey, 1, $labelLibId);
+        } else {
+            $this->redis->zIncrBy($redisKey, 1, $labelLibId);
+        }
     }
 
     private function labelProcess($result) {
