@@ -2155,18 +2155,18 @@ class User extends CommonIndex {
         if ($money < 2000 || $money > 200000) {
             return ['code' => '3007'];
         }
-        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission', true);
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($stype == 1) { //1.佣金转商票
+        if ($stype == 2) { //1.佣金提现
             if ($userInfo['commission'] <= 0) {
                 return ['code' => '3005'];
             }
             if ($userInfo['commission'] - $money < 0) {
                 return ['code' => '3005'];
             }
-        } elseif ($stype == 2) { //2.奖励金转商票
+        } elseif ($stype == 4) { //2.奖励金提现
             if ($userInfo['bounty'] <= 0) {
                 return ['code' => '3005'];
             }
@@ -2209,7 +2209,7 @@ class User extends CommonIndex {
         $transfer['invoice']    = $invoice;
 
         //扣除佣金
-        if ($stype == 1) { //1.佣金转商票
+        if ($stype == 3) { //1.佣金转商票
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 2,
@@ -2219,7 +2219,7 @@ class User extends CommonIndex {
                 'after_money'  => bcsub($userInfo['commission'], $money, 2),
                 // 'message'      => $remittance['message'],
             ];
-        } elseif ($stype == 2) { //2.奖励金转商票
+        } elseif ($stype == 4) { //2.奖励金转商票
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 3,
