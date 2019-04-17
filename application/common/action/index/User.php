@@ -2152,14 +2152,15 @@ class User extends CommonIndex {
         if (!in_array($user_bank_card['status'], [1, 2])) {
             return ['code' => '3008', 'msg' => '该银行卡暂不可用'];
         }
-        if ($money < 2000 || $money > 200000) {
-            return ['code' => '3007'];
-        }
+        
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
         if ($stype == 2) { //1.佣金提现
+            if ($money < 2000 || $money > 200000) {
+                return ['code' => '3007'];
+            }
             if ($userInfo['commission'] <= 0) {
                 return ['code' => '3005'];
             }
