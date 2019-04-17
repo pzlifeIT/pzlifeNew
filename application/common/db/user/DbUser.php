@@ -26,7 +26,7 @@ class DbUser {
      * @return array
      */
     public function getUser($where) {
-        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze'];
+        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze', 'bounty_freeze'];
         $user  = Users::where($where)->field($field, true)->findOrEmpty()->toArray();
         return $user;
     }
@@ -279,6 +279,19 @@ class DbUser {
     public function modifyIntegral($uid, $integral, $modify = 'dec') {
         $user           = Users::get($uid);
         $user->integral = [$modify, $integral];
+        $user->save();
+    }
+
+    /**
+     * 改奖励金余额
+     * @param $uid
+     * @param $bounty
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyBounty($uid, $bounty, $modify = 'dec') {
+        $user           = Users::get($uid);
+        $user->bounty = [$modify, $bounty];
         $user->save();
     }
 

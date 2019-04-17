@@ -239,6 +239,7 @@ class User extends MyController {
      * @apiSuccess (data) {Double} balance 商票
      * @apiSuccess (data) {Double} commission 佣金
      * @apiSuccess (data) {Number} integral 剩余积分
+     * @apiSuccess (data) {Double} bounty 奖励金
      * @apiSampleRequest /index/user/getuser
      * @return array
      * @author zyr
@@ -1248,7 +1249,7 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4.奖励金提现
      * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
@@ -1388,7 +1389,7 @@ class User extends MyController {
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
      * @author rzc
@@ -1408,9 +1409,42 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, $money);
+        $result = $this->app->user->commissionTransferBalance($conId, $money,1);
         return $result;
     }
+
+    /**
+     * @api              {post} / 奖励金转商票
+     * @apiDescription   bountyTransferBalance
+     * @apiGroup         index_user
+     * @apiName          bountyTransferBalance
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} money 用户转出金额
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSampleRequest /index/user/bountyTransferBalance
+     * @return array
+     * @author rzc
+     */
+    public function bountyTransferBalance() {
+        $conId = trim($this->request->post('con_id'));
+        $money = trim($this->request->post('money'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];
+        }
+        if ($money <= 0) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->commissionTransferBalance($conId, $money,2);
+        return $result;
+    }
+
+
     /**
      ** @api              {post} / 分享浏览人次
      * @apiDescription   getUserRead
