@@ -282,6 +282,19 @@ class DbUser {
         $user->save();
     }
 
+    /**
+     * 改奖励金余额
+     * @param $uid
+     * @param $bounty
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyBounty($uid, $bounty, $modify = 'dec') {
+        $user           = Users::get($uid);
+        $user->bounty = [$modify, $bounty];
+        $user->save();
+    }
+
     public function addUserRecommend($data) {
         $userRecommend = new UserRecommend();
         $userRecommend->save($data);
