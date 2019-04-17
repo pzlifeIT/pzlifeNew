@@ -800,19 +800,19 @@ class Goods extends CommonIndex {
         if (empty($name)) {
             return [];
         }
-        $pinyin       = new Pinyin();
-        $ucWord       = $pinyin->transformUcwords($name); //拼音首字母,包含非汉字内容
-        $ucWord2      = $pinyin->transformUcwords($name, ' ', true); //拼音首字母,不包含非汉字内容
-        $withoutTone  = $pinyin->transformWithoutTone($name, '', false); //包含非中文的全拼音
-        $withoutTone2 = $pinyin->transformWithoutTone($name, '', true); //不包含非中文的全拼音
-        $data         = [
-            $name, //全名
-            $withoutTone, //包含非中文的全拼音
-            $withoutTone2, //不包含非中文的全拼音
-            $ucWord, //拼音首字母,包含非汉字内容
-            $ucWord2, //拼音首字母,不包含非汉字内容
+        $pinyin = new Pinyin();
+        $ucWord = $pinyin->transformUcwords($name); //拼音首字母,包含非汉字内容
+//        $ucWord2      = $pinyin->transformUcwords($name, ' ', true); //拼音首字母,不包含非汉字内容
+        $withoutTone = $pinyin->transformWithoutTone($name, '', false); //包含非中文的全拼音
+//        $withoutTone2 = $pinyin->transformWithoutTone($name, '', true); //不包含非中文的全拼音
+        $data = [
+            strtolower($name), //全名
+            strtolower($withoutTone), //包含非中文的全拼音
+//            strtolower($withoutTone2), //不包含非中文的全拼音
+            strtolower($ucWord), //拼音首字母,包含非汉字内容
+//            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
         ];
-        return array_unique($data);
+        return array_filter(array_unique($data));
     }
 
     /**

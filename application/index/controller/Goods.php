@@ -211,7 +211,7 @@ class Goods extends MyController {
         }
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
-        $result  = $this->app->goods->getSearchGoodsByLabel($labelName, $page, $pageNum);
+        $result  = $this->app->goods->getSearchGoodsByLabel(strtolower($labelName), $page, $pageNum);
         return $result;
     }
 
@@ -229,7 +229,7 @@ class Goods extends MyController {
      */
     public function searchLabel() {
         $searchContent = trim($this->request->post('search_content')); //搜索内容
-        $result        = $this->app->goods->searchLabel($searchContent);
+        $result        = $this->app->goods->searchLabel(strtolower($searchContent));
         return $result;
     }
 }
