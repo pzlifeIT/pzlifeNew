@@ -1873,6 +1873,9 @@ class User extends CommonIndex {
             'after_money'  => bcadd($userInfo['balance'], $money, 2),
             // 'message'      => $remittance['message'],
         ];
+        if ($type == 2) {
+            $addtrading['change_type'] = 12;
+        }
         // print_r($addtrading);die;
         Db::startTrans();
         try {

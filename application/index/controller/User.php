@@ -1231,7 +1231,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} [max_money] 用户转出最大金额
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
      * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
-     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现
+     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
      * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
      * @apiParam (入参) {String} [start_time] 开始时间
      * @apiParam (入参) {String} [end_time] 结束时间
@@ -1249,7 +1249,7 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4.奖励金提现
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
      * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
