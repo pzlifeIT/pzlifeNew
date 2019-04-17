@@ -1795,44 +1795,75 @@ class User extends CommonIndex {
      * 用户转商票
      * @param $conId
      * @param $money
+     * @param $type 1.佣金转商票,2.奖励金转商票
      * @return string
      * @author rzc
      */
-    public function commissionTransferBalance($conId, $money) {
+    public function commissionTransferBalance($conId, $money ,$type = '') {
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,balance,commission', true);
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,balance,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($userInfo['commission'] <= 0) {
-            return ['code' => '3005'];
+        if ($type == 1) {//1.佣金转商票
+            if ($userInfo['commission'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['commission'] - $money < 0) {
+                return ['code' => '3005'];
+            }
+        }elseif ($type == 2) {//2.奖励金转商票
+            if ($userInfo['bounty'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['bounty'] - $money < 0) {
+                return ['code' => '3005'];
+            }
         }
-        if ($userInfo['commission'] - $money < 0) {
-            return ['code' => '3005'];
-        }
+        
         $transfer               = [];
         $transfer['uid']        = $uid;
         $transfer['status']     = 2;
-        $transfer['stype']      = 1;
+        if ($type == 1) {//1.佣金转商票
+            $transfer['stype']  = 1;
+        }elseif ($type == 2) {//2.奖励金转商票
+            $transfer['stype']  = 3;
+        }
         $transfer['wtype']      = 4;
         $transfer['money']      = $money;
         $transfer['proportion'] = 0;
         $transfer['invoice']    = 2;
         //扣除佣金
-        $tradingData = [
-            'uid'          => $uid,
-            'trading_type' => 2,
-            'change_type'  => 7,
-            'money'        => -$money,
-            'befor_money'  => $userInfo['commission'],
-            'after_money'  => bcsub($userInfo['commission'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        if ($type == 1) {//1.佣金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 2,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['commission'],
+                'after_money'  => bcsub($userInfo['commission'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }elseif ($type == 2) {//2.奖励金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 3,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['bounty'],
+                'after_money'  => bcsub($userInfo['bounty'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }
+        
         //增加商票日志
+        if ($type == 2) {
+            $money = bcmul($money,1.25,2);
+        }
         $addtrading = [
             'uid'          => $uid,
             'trading_type' => 1,
@@ -1846,7 +1877,12 @@ class User extends CommonIndex {
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            DbUser::modifyCommission($uid, $money);
+            if ($type == 1) {//1.佣金转商票
+                DbUser::modifyCommission($uid, $money);
+            }elseif ($type == 2) {//2.奖励金转商票
+                $money = bcdiv($money,1.25,2);
+                DbUser::modifyBounty($uid, $money);
+            }
             DbUser::saveLogTrading($tradingData);
             DbUser::saveLogTrading($addtrading);
             DbUser::modifyBalance($uid, $money, 'inc');
@@ -1854,7 +1890,7 @@ class User extends CommonIndex {
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
         } catch (\Exception $e) {
-            print_r($e);
+            exception($e);
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
