@@ -156,7 +156,7 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function adminRemittance(){
+    public function adminRemittance() {
         $cmsConId      = trim($this->request->post('cms_con_id'));
         $passwd        = trim($this->request->post('passwd'));
         $stype         = trim($this->request->post('stype'));
@@ -184,7 +184,7 @@ class Admin extends AdminController {
             return ['code' => '3005'];
         }
         // $uid = enUid($uid);
-        $result = $this->app->admin->adminRemittance($cmsConId,$passwd,intval($stype),$nick_name,$mobile,$credit,$message,$admin_message);
+        $result = $this->app->admin->adminRemittance($cmsConId, $passwd, intval($stype), $nick_name, $mobile, $credit, $message, $admin_message);
         return $result;
     }
 
@@ -419,7 +419,7 @@ class Admin extends AdminController {
         if ($has_invoice > 100 || $no_invoice > 100) {
             return ['code' => '3002'];
         }
-        $result = $this->app->admin->editInvoice($cmsConId,$has_invoice,$no_invoice);
+        $result = $this->app->admin->editInvoice($cmsConId, $has_invoice, $no_invoice);
         return $result;
     }
 
@@ -565,7 +565,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {Number} [bank_card] 银行卡号
      * @apiParam (入参) {String} [bank_mobile] 银行开户手机号
      * @apiParam (入参) {String} [user_name] 银行开户人
-     * @apiParam (入参) {String} [stype] 类型 1.佣金转商票 2.佣金提现
+     * @apiParam (入参) {String} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
      * @apiParam (入参) {String} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
      * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
