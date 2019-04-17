@@ -299,11 +299,11 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId,$passwd,$stype,$nick_name,$mobile,$credit,$message,$admin_message){
-        $message = $message ?? '';
+    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message, $admin_message) {
+        $message       = $message ?? '';
         $admin_message = $admin_message ?? '';
-        $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
+        $adminId       = $this->getUidByConId($cmsConId);
+        $adminInfo     = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
             return ['code' => '3001'];
         }
@@ -730,7 +730,7 @@ class Admin extends CommonIndex {
             $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         $total = DbUser::countLogTransfer($where);
-        return ['code' => '200','total' => $total, 'log_transfer' => $result];
+        return ['code' => '200', 'total' => $total, 'log_transfer' => $result];
     }
 
     /**
@@ -758,20 +758,37 @@ class Admin extends CommonIndex {
         if ($transfer['stype'] == 2) { //佣金提现
             if ($transfer['wtype'] == 1) { //提现方式 1 银行
                 if ($status == 3) { //审核不通过
-                    $indexUser   = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
-                    $tradingData = [
-                        'uid'          => $transfer['uid'],
-                        'trading_type' => 2,
-                        'change_type'  => 10,
-                        'money'        => $transfer['money'],
-                        'befor_money'  => $indexUser['commission'],
-                        'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
-                        'message'      => $message,
-                    ];
+                    $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty', true);
+                    if ($transfer['stype'] == 2) { //2.佣金提现
+                        $tradingData = [
+                            'uid'          => $transfer['uid'],
+                            'trading_type' => 2,
+                            'change_type'  => 10,
+                            'money'        => $transfer['money'],
+                            'befor_money'  => $indexUser['commission'],
+                            'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
+                            'message'      => $message,
+                        ];
+                    } elseif ($transfer['stype'] == 4) { //奖励金提现
+                        $tradingData = [
+                            'uid'          => $transfer['uid'],
+                            'trading_type' => 3,
+                            'change_type'  => 10,
+                            'money'        => $transfer['money'],
+                            'befor_money'  => $indexUser['bounty'],
+                            'after_money'  => bcadd($indexUser['bounty'], $transfer['money'], 2),
+                            'message'      => $message,
+                        ];
+                    }
+
                     // print_r($indexUser);die;
                     Db::startTrans();
                     try {
-                        DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
+                        if ($transfer['stype'] == 2) { //2.佣金提现
+                            DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
+                        } elseif ($transfer['stype'] == 4) { //4.奖励金提现
+                            DbUser::modifyBounty($transfer['uid'], $transfer['money'], 'inc');
+                        }
                         DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
                         DbOrder::addLogTrading($tradingData);
                         Db::commit();
@@ -900,23 +917,23 @@ class Admin extends CommonIndex {
      */
     public function getInvoice() {
         // echo ;die;
-        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        $invoice = @file_get_contents(Env::get('root_path') . "invoice.json");
         if ($invoice == false) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
 
     }
 
-    public function editInvoice($cmsConId,$has_invoice,$no_invoice){
-        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
-        $invoice = [];
+    public function editInvoice($cmsConId, $has_invoice, $no_invoice) {
+        $redisManageInvoice     = Config::get('rediskey.manage.redisManageInvoice');
+        $invoice                = [];
         $invoice['has_invoice'] = $has_invoice;
-        $invoice['no_invoice'] = $no_invoice;
-        $invoice = json_encode($invoice,true);
-        file_put_contents(Env::get('root_path')."invoice.json",$invoice);
-        $this->redis->set($redisManageInvoice,$invoice);
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        $invoice['no_invoice']  = $no_invoice;
+        $invoice                = json_encode($invoice, true);
+        file_put_contents(Env::get('root_path') . "invoice.json", $invoice);
+        $this->redis->set($redisManageInvoice, $invoice);
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
         // print_r($invoice);die;
     }
 }

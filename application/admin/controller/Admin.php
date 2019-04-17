@@ -678,7 +678,7 @@ class Admin extends AdminController {
             }
         }
         if (!empty($stype)) {
-            if (!in_array($stype, [1, 2])) {
+            if (!in_array($stype, [1, 2, 3, 4])) {
                 return ['code' => '3011'];
             }
         }
