@@ -2188,6 +2188,7 @@ class User extends CommonIndex {
         } elseif ($invoice == 2) {
             $proportion = $invoice_data['no_invoice'];
         }
+
         $userRedisKey            = Config::get('rediskey.user.redisKey');
         $transfer                = [];
         $transfer['uid']         = $uid;
@@ -2198,18 +2199,19 @@ class User extends CommonIndex {
         $transfer['bank_mobile'] = $user_bank_card['bank_mobile'];
         $transfer['user_name']   = $user_bank_card['user_name'];
         $transfer['status']      = 1;
-        if ($stype == 1) { //1.佣金提现
-            $transfer['stype'] = 2;
-        } elseif ($stype == 2) { //2.奖励金提现
-            $transfer['stype'] = 4;
-        }
-        $transfer['wtype']      = 1;
-        $transfer['money']      = $money;
-        $transfer['proportion'] = $proportion;
-        $transfer['invoice']    = $invoice;
+        $transfer['stype']       = $stype;
+        $transfer['wtype']       = 1;
+        $transfer['money']       = $money;
+        $transfer['proportion']  = $proportion;
+        $transfer['invoice']     = $invoice;
 
+        // if ($stype == 2) { //1.佣金提现
+        //     $transfer['stype'] = 2;
+        // } elseif ($stype == 4) { //2.奖励金提现
+
+        // }
         //扣除佣金
-        if ($stype == 3) { //1.佣金转商票
+        if ($stype == 2) { //1.佣金提现
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 2,
@@ -2219,7 +2221,7 @@ class User extends CommonIndex {
                 'after_money'  => bcsub($userInfo['commission'], $money, 2),
                 // 'message'      => $remittance['message'],
             ];
-        } elseif ($stype == 4) { //2.奖励金转商票
+        } elseif ($stype == 4) { //2.奖励金提现
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 3,
@@ -2327,11 +2329,11 @@ class User extends CommonIndex {
         }
         foreach ($result as $key => $value) {
             if ($value['stype'] == 1) {
-                $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
-            }elseif ($value['stype'] == 3) {
-                $result[$key]['real_money']   = bcmul($value['money'], 1.25,2);
+                $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            } elseif ($value['stype'] == 3) {
+                $result[$key]['real_money'] = bcmul($value['money'], 1.25, 2);
             }
-            
+
             $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         return ['code' => '200', 'log_transfer' => $result];
