@@ -2149,7 +2149,7 @@ class User extends CommonIndex {
         if (empty($user_bank_card)) {
             return ['code' => '3006'];
         }
-        if (!in_array($user_bank_card['status'], [1, 2, 4])) {
+        if (!in_array($user_bank_card['status'], [2, 4])) {
             return ['code' => '3008', 'msg' => '该银行卡暂不可用'];
         }
         
