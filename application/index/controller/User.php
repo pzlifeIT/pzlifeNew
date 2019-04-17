@@ -1215,7 +1215,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, $invoice);
+        $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, $invoice, 2);
         return $result;
     }
 
