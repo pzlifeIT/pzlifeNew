@@ -1799,9 +1799,9 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function commissionTransferBalance($conId, $money ,$type = '') {
+    public function commissionTransferBalance($conId, $money, $type = '') {
         $userRedisKey = Config::get('rediskey.user.redisKey');
-        $uid = $this->getUidByConId($conId);
+        $uid          = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
@@ -1809,14 +1809,14 @@ class User extends CommonIndex {
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($type == 1) {//1.佣金转商票
+        if ($type == 1) { //1.佣金转商票
             if ($userInfo['commission'] <= 0) {
                 return ['code' => '3005'];
             }
             if ($userInfo['commission'] - $money < 0) {
                 return ['code' => '3005'];
             }
-        }elseif ($type == 2) {//2.奖励金转商票
+        } elseif ($type == 2) { //2.奖励金转商票
             if ($userInfo['bounty'] <= 0) {
                 return ['code' => '3005'];
             }
@@ -1824,21 +1824,21 @@ class User extends CommonIndex {
                 return ['code' => '3005'];
             }
         }
-        
-        $transfer               = [];
-        $transfer['uid']        = $uid;
-        $transfer['status']     = 2;
-        if ($type == 1) {//1.佣金转商票
-            $transfer['stype']  = 1;
-        }elseif ($type == 2) {//2.奖励金转商票
-            $transfer['stype']  = 3;
+
+        $transfer           = [];
+        $transfer['uid']    = $uid;
+        $transfer['status'] = 2;
+        if ($type == 1) { //1.佣金转商票
+            $transfer['stype'] = 1;
+        } elseif ($type == 2) { //2.奖励金转商票
+            $transfer['stype'] = 3;
         }
         $transfer['wtype']      = 4;
         $transfer['money']      = $money;
         $transfer['proportion'] = 0;
         $transfer['invoice']    = 2;
         //扣除佣金
-        if ($type == 1) {//1.佣金转商票
+        if ($type == 1) { //1.佣金转商票
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 2,
@@ -1848,7 +1848,7 @@ class User extends CommonIndex {
                 'after_money'  => bcsub($userInfo['commission'], $money, 2),
                 // 'message'      => $remittance['message'],
             ];
-        }elseif ($type == 2) {//2.奖励金转商票
+        } elseif ($type == 2) { //2.奖励金转商票
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 3,
@@ -1859,10 +1859,10 @@ class User extends CommonIndex {
                 // 'message'      => $remittance['message'],
             ];
         }
-        
+
         //增加商票日志
         if ($type == 2) {
-            $money = bcmul($money,1.25,2);
+            $money = bcmul($money, 1.25, 2);
         }
         $addtrading = [
             'uid'          => $uid,
@@ -1880,10 +1880,10 @@ class User extends CommonIndex {
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            if ($type == 1) {//1.佣金转商票
+            if ($type == 1) { //1.佣金转商票
                 DbUser::modifyCommission($uid, $money);
-            }elseif ($type == 2) {//2.奖励金转商票
-                $money = bcdiv($money,1.25,2);
+            } elseif ($type == 2) { //2.奖励金转商票
+                $money = bcdiv($money, 1.25, 2);
                 DbUser::modifyBounty($uid, $money);
             }
             DbUser::saveLogTrading($tradingData);
@@ -1976,10 +1976,10 @@ class User extends CommonIndex {
             }
             // print_r($user_bank);die;
             if ($user_bank['error_fields']) {
-                $error_fields = explode(',',$user_bank['error_fields']);
-                $new_fields = [];
+                $error_fields = explode(',', $user_bank['error_fields']);
+                $new_fields   = [];
                 foreach ($error_fields as $error => $fields) {
-                    $new_fields[$fields]=1;
+                    $new_fields[$fields] = 1;
                 }
                 $user_bank['error_fields'] = $new_fields;
             }
@@ -2040,7 +2040,7 @@ class User extends CommonIndex {
         if ($bankcard_message['bank'] != $admin_bank['abbrev']) {
             return ['code' => '3010'];
         }
-        
+
         $userBank                  = [];
         $userBank['uid']           = $uid;
         $userBank['user_name']     = $user_name;
@@ -2072,7 +2072,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function changeUserBankcardStatus($conId,int $id,int $status){
+    public function changeUserBankcardStatus($conId, int $id, int $status) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -2082,7 +2082,7 @@ class User extends CommonIndex {
         if (empty($bank_card)) {
             return ['code' => '3006'];
         }
-        if (!in_array($bank_card['status'],[1,2,3])) {
+        if (!in_array($bank_card['status'], [1, 2, 3])) {
             return ['code' => '3004'];
         }
         if ($status == 3) { //撤销
@@ -2090,43 +2090,43 @@ class User extends CommonIndex {
                 return ['code' => '3004'];
             }
             Db::startTrans();
-                try {
-                    DbUser::delUserBank($id);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    exception($e);
-                    Db::rollback();
-                    return ['code' => '3007']; //添加失败
-              }
-        }elseif ($status == 1) { //启用
-            if ($bank_card['status'] != 3) {
-                return ['code' => '3004'];
-            }
-            Db::startTrans();
-                try {
-                    DbUser::editUserBank(['status' => 2],$id);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    exception($e);
-                    Db::rollback();
-                    return ['code' => '3007']; //添加失败
-              }
-        }elseif ($status == 2) {//启用
-            if ($bank_card['status'] != 2) {
-                return ['code' => '3004'];
-            }
-            Db::startTrans();
             try {
-                DbUser::editUserBank(['status' => 3],$id);
+                DbUser::delUserBank($id);
                 Db::commit();
                 return ['code' => '200'];
             } catch (\Exception $e) {
                 exception($e);
                 Db::rollback();
                 return ['code' => '3007']; //添加失败
-          }
+            }
+        } elseif ($status == 1) { //启用
+            if ($bank_card['status'] != 3) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+            try {
+                DbUser::editUserBank(['status' => 2], $id);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3007']; //添加失败
+            }
+        } elseif ($status == 2) { //启用
+            if ($bank_card['status'] != 2) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+            try {
+                DbUser::editUserBank(['status' => 3], $id);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3007']; //添加失败
+            }
         }
     }
 
@@ -2138,7 +2138,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice) {
+    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice = 2, $stype = '') {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -2159,27 +2159,36 @@ class User extends CommonIndex {
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($userInfo['commission'] <= 0) {
-            return ['code' => '3005'];
-        }
-        if ($userInfo['commission'] - $money < 0) {
-            return ['code' => '3005'];
+        if ($stype == 1) { //1.佣金转商票
+            if ($userInfo['commission'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['commission'] - $money < 0) {
+                return ['code' => '3005'];
+            }
+        } elseif ($stype == 2) { //2.奖励金转商票
+            if ($userInfo['bounty'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['bounty'] - $money < 0) {
+                return ['code' => '3005'];
+            }
         }
         $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
-        $invoice_data = $this->redis->get($redisManageInvoice);
+        $invoice_data       = $this->redis->get($redisManageInvoice);
         if (empty($invoice_data)) {
-            $invoice_data = @file_get_contents(Env::get('root_path')."invoice.json");
+            $invoice_data = @file_get_contents(Env::get('root_path') . "invoice.json");
             if ($invoice_data == false) {
                 return ['code' => '3009'];
             }
         }
-        $invoice_data = json_decode($invoice_data,true);
+        $invoice_data = json_decode($invoice_data, true);
         if ($invoice == 1) {
             $proportion = $invoice_data['has_invoice'];
         } elseif ($invoice == 2) {
-            $proportion = $invoice_data['no_invoice'];;
+            $proportion = $invoice_data['no_invoice'];
         }
-        $userRedisKey = Config::get('rediskey.user.redisKey');
+        $userRedisKey            = Config::get('rediskey.user.redisKey');
         $transfer                = [];
         $transfer['uid']         = $uid;
         $transfer['abbrev']      = $user_bank_card['admin_bank']['abbrev'];
@@ -2189,26 +2198,48 @@ class User extends CommonIndex {
         $transfer['bank_mobile'] = $user_bank_card['bank_mobile'];
         $transfer['user_name']   = $user_bank_card['user_name'];
         $transfer['status']      = 1;
-        $transfer['stype']       = 2;
-        $transfer['wtype']       = 1;
-        $transfer['money']       = $money;
-        $transfer['proportion']  = $proportion;
-        $transfer['invoice']     = $invoice;
+        if ($stype == 1) { //1.佣金提现
+            $transfer['stype'] = 2;
+        } elseif ($stype == 2) { //2.奖励金提现
+            $transfer['stype'] = 4;
+        }
+        $transfer['wtype']      = 1;
+        $transfer['money']      = $money;
+        $transfer['proportion'] = $proportion;
+        $transfer['invoice']    = $invoice;
+
         //扣除佣金
-        $tradingData = [
-            'uid'          => $uid,
-            'trading_type' => 2,
-            'change_type'  => 6,
-            'money'        => -$money,
-            'befor_money'  => $userInfo['commission'],
-            'after_money'  => bcsub($userInfo['commission'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        if ($stype == 1) { //1.佣金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 2,
+                'change_type'  => 6,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['commission'],
+                'after_money'  => bcsub($userInfo['commission'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        } elseif ($stype == 2) { //2.奖励金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 3,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['bounty'],
+                'after_money'  => bcsub($userInfo['bounty'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }
+
         // print_r($transfer);die;
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            DbUser::modifyCommission($uid, $money);
+            if ($stype == 1) { //1.佣金提现
+                DbUser::modifyCommission($uid, $money);
+            } elseif ($stype == 2) { //2.奖励金提现
+                DbUser::modifyBounty($uid, $money);
+            }
             DbUser::saveLogTrading($tradingData);
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
@@ -2295,8 +2326,8 @@ class User extends CommonIndex {
             return ['code' => '200', 'log_transfer' => []];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
-            $result[$key]['deduct_money'] = bcmul(bcdiv ($value['proportion'], 100, 2), $value['money'], 2);
+            $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         return ['code' => '200', 'log_transfer' => $result];
     }
@@ -2420,18 +2451,18 @@ class User extends CommonIndex {
         return ['code' => '200', 'adminBank' => $result];
     }
 
-     /**
+    /**
      * 获取提现比率
      * @return string
      * @author rzc
      */
     public function getInvoice() {
         // echo ;die;
-        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        $invoice = @file_get_contents(Env::get('root_path') . "invoice.json");
         if ($invoice == false) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
 
     }
 }

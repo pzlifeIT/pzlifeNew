@@ -1220,6 +1220,39 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 奖励金提现
+     * @apiDescription   bountyTransferCash
+     * @apiGroup         index_user
+     * @apiName          bountyTransferCash
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
+     * @apiParam (入参) {Number} money 用户转出金额
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
+     * @apiSampleRequest /index/user/bountyTransferCash
+     * @return array
+     * @author rzc
+     */
+    public function bountyTransferCash(){
+        $conId       = trim($this->request->post('con_id'));
+        $bankcard_id = trim($this->request->post('bankcard_id'));
+        $money       = trim($this->request->post('money'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];
+        }
+        if ($money <= 0) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, 2, 4);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 查看用户佣金转出记录(支持用户筛选)
      * @apiDescription   getLogTransfer
      * @apiGroup         index_user
@@ -1339,7 +1372,7 @@ class User extends MyController {
             }
         }
         if (!empty($stype)) {
-            if (!in_array($stype, [1, 2])) {
+            if (!in_array($stype, [1, 2, 3, 4])) {
                 return ['code' => '3011'];
             }
         }
