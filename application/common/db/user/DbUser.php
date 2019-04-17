@@ -26,7 +26,7 @@ class DbUser {
      * @return array
      */
     public function getUser($where) {
-        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze'];
+        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze', 'bounty_freeze'];
         $user  = Users::where($where)->field($field, true)->findOrEmpty()->toArray();
         return $user;
     }
