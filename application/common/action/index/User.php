@@ -2326,7 +2326,12 @@ class User extends CommonIndex {
             return ['code' => '200', 'log_transfer' => []];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            if ($value['stype'] == 1) {
+                $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            }elseif ($value['stype'] == 3) {
+                $result[$key]['real_money']   = bcmul($value['money'], 1.25,2);
+            }
+            
             $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         return ['code' => '200', 'log_transfer' => $result];
