@@ -2496,7 +2496,7 @@ class User extends CommonIndex {
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //奖励金总额
-        $diamondvip = DbRights::getDiamondvip(['uid' => $uid],'share_num',true);
+        $diamondvip = DbRights::getDiamondvip(['uid' => $uid],'uid,id,share_num',true);
         if (!$diamondvip) {
             $share_num = 0;
         }else{
