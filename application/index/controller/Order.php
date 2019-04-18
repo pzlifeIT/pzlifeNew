@@ -478,7 +478,9 @@ class Order extends MyController {
         }
         $old_parent_id = $parent_id;
         $parent_id     = deUid($parent_id);
-        $actype        = $actype ? $actype : 1;
+        if ($actype != 1) {
+            $actype = 2;
+        }
         $result        = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id, $old_parent_id, intval($actype));
         return $result;
     }
