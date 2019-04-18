@@ -1478,7 +1478,7 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 查看用户奖励金明细(未完成)
+     * @api              {post} / 查看用户奖励金明细
      * @apiDescription   bountyDetail
      * @apiGroup         index_user
      * @apiName          bountyDetail
@@ -1486,6 +1486,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} page page
      * @apiParam (入参) {Number} pageNum pageNum
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:page和pageNum必须为数字
+     * @apiSuccess (返回) {String} share_num 总人数
      * @apiSuccess (返回) {String} bounty 奖励金余额
      * @apiSuccess (返回) {String} bountyAll 奖励金总额
      * @apiSuccess (返回) {Array} bountyDetail 明细
@@ -1501,11 +1502,11 @@ class User extends MyController {
      * @author rzc
      */
     public function bountyDetail() {
-        $conId = trim($this->request->post('con_id'));
-        $page       = trim($this->request->post('page'));
-        $pageNum    = trim($this->request->post('pageNum'));
-        $page       = empty($page) ? 1 : $page;
-        $pageNum    = empty($pageNum) ? 10 : $pageNum;
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('pageNum'));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
