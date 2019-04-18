@@ -6,7 +6,7 @@ use app\common\model\DiamondvipBinding;
 use app\common\model\DiamondvipGet;
 use app\common\model\Diamondvips;
 use app\common\model\ShopApply;
-use app\common\model\Users;
+use app\common\model\User;
 
 class DbRights {
     /**
@@ -42,11 +42,7 @@ class DbRights {
      * @return array
      */
     public function getDiamondvips($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
-        $obj = Diamondvips::field($field)->with([
-            'user' => function ($query) {
-                $query->field('id,nick_name,avatar');
-            },
-        ])->where($where);
+        $obj = Diamondvips::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }
@@ -138,7 +134,11 @@ class DbRights {
      * @return array
      */
     public function getDiamondvip($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
-        $obj = DiamondvipGet::field($field)->where($where);
+        $obj = DiamondvipGet::field($field)->with([
+            'user' => function ($query) {
+                $query->field('id,nick_name,avatar');
+            },
+        ])->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }
