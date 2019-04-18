@@ -913,8 +913,8 @@ class User extends MyController {
         if (strlen($scene) > 32) {
             return ['code' => '3007'];
         }
-        if (!in_array($stype,[1,2])) {
-            return ['code' => '3010','msg' => '二维码类型 只能为1,2'];
+        if (!in_array($stype, [1, 2])) {
+            return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
         }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
         return $result;
@@ -1232,7 +1232,7 @@ class User extends MyController {
      * @return array
      * @author rzc
      */
-    public function bountyTransferCash(){
+    public function bountyTransferCash() {
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1442,7 +1442,7 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, $money,1);
+        $result = $this->app->user->commissionTransferBalance($conId, $money, 1);
         return $result;
     }
 
@@ -1473,10 +1473,41 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, $money,2);
+        $result = $this->app->user->commissionTransferBalance($conId, $money, 2);
         return $result;
     }
 
+    /**
+     * @api              {post} / 查看用户奖励金明细(未完成)
+     * @apiDescription   bountyDetail
+     * @apiGroup         index_user
+     * @apiName          bountyDetail
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} page page
+     * @apiParam (入参) {Number} pageNum pageNum
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:page和pageNum必须为数字
+     * @apiSampleRequest /index/user/bountyDetail
+     * @return array
+     * @author rzc
+     */
+    public function bountyDetail() {
+        $conId = trim($this->request->post('con_id'));
+        $page       = trim($this->request->post('page'));
+        $pageNum    = trim($this->request->post('pageNum'));
+        $page       = empty($page) ? 1 : $page;
+        $pageNum    = empty($pageNum) ? 10 : $pageNum;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->user->bountyDetail($conId, $page, $pageNum);
+        return $result;
+    }
 
     /**
      ** @api              {post} / 分享浏览人次

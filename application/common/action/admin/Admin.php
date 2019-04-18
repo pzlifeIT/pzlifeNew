@@ -755,63 +755,62 @@ class Admin extends CommonIndex {
         if ($transfer['status'] != 1) {
             return ['code' => '3004'];
         }
-        if ($transfer['stype'] == 2) { //佣金提现
-            if ($transfer['wtype'] == 1) { //提现方式 1 银行
-                if ($status == 3) { //审核不通过
-                    $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty', true);
-                    if ($transfer['stype'] == 2) { //2.佣金提现
-                        $tradingData = [
-                            'uid'          => $transfer['uid'],
-                            'trading_type' => 2,
-                            'change_type'  => 10,
-                            'money'        => $transfer['money'],
-                            'befor_money'  => $indexUser['commission'],
-                            'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
-                            'message'      => $message,
-                        ];
-                    } elseif ($transfer['stype'] == 4) { //奖励金提现
-                        $tradingData = [
-                            'uid'          => $transfer['uid'],
-                            'trading_type' => 3,
-                            'change_type'  => 10,
-                            'money'        => $transfer['money'],
-                            'befor_money'  => $indexUser['bounty'],
-                            'after_money'  => bcadd($indexUser['bounty'], $transfer['money'], 2),
-                            'message'      => $message,
-                        ];
-                    }
+        if ($transfer['wtype'] == 1) { //提现方式 1 银行
+            if ($status == 3) { //审核不通过
+                $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty', true);
+                if ($transfer['stype'] == 2) { //2.佣金提现
+                    $tradingData = [
+                        'uid'          => $transfer['uid'],
+                        'trading_type' => 2,
+                        'change_type'  => 10,
+                        'money'        => $transfer['money'],
+                        'befor_money'  => $indexUser['commission'],
+                        'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
+                        'message'      => $message,
+                    ];
+                } elseif ($transfer['stype'] == 4) { //奖励金提现
+                    $tradingData = [
+                        'uid'          => $transfer['uid'],
+                        'trading_type' => 3,
+                        'change_type'  => 10,
+                        'money'        => $transfer['money'],
+                        'befor_money'  => $indexUser['bounty'],
+                        'after_money'  => bcadd($indexUser['bounty'], $transfer['money'], 2),
+                        'message'      => $message,
+                    ];
+                }
 
-                    // print_r($indexUser);die;
-                    Db::startTrans();
-                    try {
-                        if ($transfer['stype'] == 2) { //2.佣金提现
-                            DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
-                        } elseif ($transfer['stype'] == 4) { //4.奖励金提现
-                            DbUser::modifyBounty($transfer['uid'], $transfer['money'], 'inc');
-                        }
-                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
-                        DbOrder::addLogTrading($tradingData);
-                        Db::commit();
-                        $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
-                        return ['code' => '200'];
-                    } catch (\Exception $e) {
-                        Db::rollback();
-                        exception($e);
-                        return ['code' => '3007']; //审核失败
+                // print_r($indexUser);die;
+                Db::startTrans();
+                try {
+                    if ($transfer['stype'] == 2) { //2.佣金提现
+                        DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
+                    } elseif ($transfer['stype'] == 4) { //4.奖励金提现
+                        DbUser::modifyBounty($transfer['uid'], $transfer['money'], 'inc');
                     }
-                } elseif ($status == 2) { //审核通过
-                    Db::startTrans();
-                    try {
-                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
-                        Db::commit();
-                        return ['code' => '200'];
-                    } catch (\Exception $e) {
-                        Db::rollback();
-                        return ['code' => '3007']; //审核失败
-                    }
+                    DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                    DbOrder::addLogTrading($tradingData);
+                    Db::commit();
+                    $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    exception($e);
+                    return ['code' => '3007']; //审核失败
+                }
+            } elseif ($status == 2) { //审核通过
+                Db::startTrans();
+                try {
+                    DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                    Db::commit();
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    return ['code' => '3007']; //审核失败
                 }
             }
         }
+
     }
 
     /**
