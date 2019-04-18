@@ -6,6 +6,7 @@ use app\common\model\DiamondvipBinding;
 use app\common\model\DiamondvipGet;
 use app\common\model\Diamondvips;
 use app\common\model\ShopApply;
+use app\common\model\Users;
 
 class DbRights {
     /**
@@ -15,7 +16,7 @@ class DbRights {
      */
     public function creatDiamondvip($data) {
         $Diamondvips = new Diamondvips;
-        $Diamondvips -> save($data);
+        $Diamondvips->save($data);
         return $Diamondvips->id;
     }
 
@@ -25,9 +26,9 @@ class DbRights {
      * @param $id
      * @return array
      */
-    public function updateDiamondvip($data,$id){
+    public function updateDiamondvip($data, $id) {
         $Diamondvips = new Diamondvips;
-        return $Diamondvips -> save($data,['id' => $id]);
+        return $Diamondvips->save($data, ['id' => $id]);
     }
 
     /**
@@ -40,8 +41,12 @@ class DbRights {
      * @param $limit
      * @return array
      */
-    public function getDiamondvips($where, $field, $row = false, $orderBy = '', $sc = '', $limit = ''){
-        $obj = Diamondvips::field($field)->where($where);
+    public function getDiamondvips($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = Diamondvips::field($field)->with([
+            'user' => function ($query) {
+                $query->field('id,nick_name,avatar');
+            },
+        ])->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }
@@ -60,7 +65,7 @@ class DbRights {
      * 查询钻石分享表记录条数
      * @return number
      */
-    public function getCountDiamondvip(){
+    public function getCountDiamondvip() {
         return Diamondvips::count();
     }
 
@@ -71,7 +76,7 @@ class DbRights {
      */
     public function creatDiamondvipBinding($data) {
         $DiamondvipBinding = new DiamondvipBinding;
-        $DiamondvipBinding -> save($data);
+        $DiamondvipBinding->save($data);
         return $DiamondvipBinding->id;
     }
 
@@ -85,7 +90,7 @@ class DbRights {
      * @param $limit
      * @return array
      */
-    public function getDiamondvipBinding($where, $field, $row = false, $orderBy = '', $sc = '', $limit = ''){
+    public function getDiamondvipBinding($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = DiamondvipBinding::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
@@ -106,7 +111,7 @@ class DbRights {
      * @param $data
      * @return number
      */
-    public function receiveDiamondvip($data){
+    public function receiveDiamondvip($data) {
         $DiamondvipGet = new DiamondvipGet;
         $DiamondvipGet->save($data);
         return $DiamondvipGet->id;
@@ -117,9 +122,9 @@ class DbRights {
      * @param $data
      * @return number
      */
-    public function editGetDiamondvip($data,$id){
+    public function editGetDiamondvip($data, $id) {
         $DiamondvipGet = new DiamondvipGet;
-        return $DiamondvipGet->save($data,['id' => $id]);
+        return $DiamondvipGet->save($data, ['id' => $id]);
     }
 
     /**
@@ -132,7 +137,7 @@ class DbRights {
      * @param $limit
      * @return array
      */
-    public function getDiamondvip($where, $field, $row = false, $orderBy = '', $sc = '', $limit = ''){
+    public function getDiamondvip($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = DiamondvipGet::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
@@ -148,13 +153,12 @@ class DbRights {
         return $obj->toArray();
     }
 
-
     /**
      * 查询钻石分享表记录条数
      * @param $where
      * @return number
      */
-    public function getCountDiamondvips($where){
+    public function getCountDiamondvips($where) {
         if ($where) {
             return DiamondvipGet::where($where)->count();
         }
@@ -171,7 +175,7 @@ class DbRights {
      * @param $limit
      * @return array
      */
-    public function getShopApply($where, $field, $row = false, $orderBy = '', $sc = '', $limit = ''){
+    public function getShopApply($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
         $obj = ShopApply::field($field)->where($where);
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
@@ -192,7 +196,7 @@ class DbRights {
      * @param $data
      * @return number
      */
-    public function saveShopApply($data){
+    public function saveShopApply($data) {
         $ShopApply = new ShopApply;
         $ShopApply->save($data);
         return $ShopApply->id;
@@ -204,9 +208,9 @@ class DbRights {
      * @param $id
      * @return number
      */
-    public function editShopApply($data,$id){
+    public function editShopApply($data, $id) {
         $ShopApply = new ShopApply;
-        return $ShopApply->save($data,['id'=>$id]);
+        return $ShopApply->save($data, ['id' => $id]);
     }
 
     /**
@@ -214,7 +218,7 @@ class DbRights {
      * @param $where
      * @return number
      */
-    public function countShopApply($where){
+    public function countShopApply($where) {
         return ShopApply::where($where)->count();
     }
 }

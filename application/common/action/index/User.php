@@ -7,6 +7,7 @@ use app\facade\DbAdmin;
 use app\facade\DbImage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
+use app\facade\DbRights;
 use app\facade\DbUser;
 use Config;
 use Env;
@@ -2152,7 +2153,7 @@ class User extends CommonIndex {
         if (!in_array($user_bank_card['status'], [2, 4])) {
             return ['code' => '3008', 'msg' => '该银行卡暂不可用'];
         }
-        
+
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
@@ -2472,5 +2473,29 @@ class User extends CommonIndex {
         }
         return ['code' => '200', 'invoice' => json_decode($invoice, true)];
 
+    }
+
+    public function bountyDetail($conId, int $page, int $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,bounty,bounty_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $bounty = $user['bounty']; //奖励金余额
+        if ($user['bounty_freeze'] == 1) { //奖励金冻结
+            $bounty = 0;
+        }
+        $bountyAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '3'],
+            ['change_type', 'in', [5]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //奖励金总额
+        $bountyDetail = DbRights::getDiamondvips(['share_uid' => $uid, 'source' => 2], 'uid,create_time', false, 'id', 'desc', $offset . ',' . $pageNum);
+        return ['code' => '200', 'bounty' => $bounty, 'bountyAll' => $bountyAll];
     }
 }
