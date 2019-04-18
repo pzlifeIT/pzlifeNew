@@ -466,6 +466,7 @@ class Order extends MyController {
         $user_type = trim($this->request->post('user_type'));
         $pay_type  = trim($this->request->post('pay_type'));
         $parent_id = trim($this->request->post('parent_id'));
+        $actype    = trim($this->request->post('actype'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
