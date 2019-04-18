@@ -118,6 +118,9 @@ class TemporaryScript extends Pzlife {
 //        exit('ok!!');
     }
 
+    /**
+     * 标签库redis缓存脚本
+     */
     public function labelScript() {
         $list = Db::query('select id,label_name,the_heat from pz_label_library where delete_time=0');
         foreach ($list as $l) {
