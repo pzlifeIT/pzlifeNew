@@ -2496,7 +2496,7 @@ class User extends CommonIndex {
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //奖励金总额
-        $bountyDetail = DbRights::getDiamondvips(['share_uid' => $uid, 'source' => 2], 'uid,create_time', false, 'id', 'desc', $offset . ',' . $pageNum);
-        return ['code' => '200', 'bounty' => $bounty, 'bountyAll' => $bountyAll];
+        $bountyDetail = DbRights::getDiamondvip(['share_uid' => $uid, 'source' => 2], 'id,uid,create_time', false, 'id', 'desc', $offset . ',' . $pageNum);
+        return ['code' => '200', 'bounty' => $bounty, 'bountyAll' => $bountyAll, 'bountyDetail' => $bountyDetail];
     }
 }

@@ -1486,6 +1486,16 @@ class User extends MyController {
      * @apiParam (入参) {Number} page page
      * @apiParam (入参) {Number} pageNum pageNum
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:page和pageNum必须为数字
+     * @apiSuccess (返回) {String} bounty 奖励金余额
+     * @apiSuccess (返回) {String} bountyAll 奖励金总额
+     * @apiSuccess (返回) {Array} bountyDetail 明细
+     * @apiSuccess (bountyDetail) {String} id 明细
+     * @apiSuccess (bountyDetail) {String} uid 用户ID
+     * @apiSuccess (bountyDetail) {String} create_time 时间
+     * @apiSuccess (bountyDetail) {Array} user 用户信息
+     * @apiSuccess (bountyDetail[user]) {String} user id
+     * @apiSuccess (bountyDetail[user]) {String} nick_name 用户昵称
+     * @apiSuccess (bountyDetail[user]) {String} avatar 用户头像
      * @apiSampleRequest /index/user/bountyDetail
      * @return array
      * @author rzc
