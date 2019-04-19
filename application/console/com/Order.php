@@ -773,6 +773,7 @@ class Order extends Pzlife {
                                     'timekey' => $timekey,
                                 ])->update([
                                     'count' => $NetPush_M['count'] + 1,
+                                    'update_time' => time(),
                                 ]);
                             } else {
                                 Db::name('statistics_month')->insert([

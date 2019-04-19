@@ -1889,6 +1889,9 @@ class User extends CommonIndex {
             }
             DbUser::saveLogTrading($tradingData);
             DbUser::saveLogTrading($addtrading);
+            if ($type == 2) {
+                $money = bcmul($money, 1.25, 2);
+            }
             DbUser::modifyBalance($uid, $money, 'inc');
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
