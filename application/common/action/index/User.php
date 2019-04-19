@@ -33,6 +33,9 @@ class User extends CommonIndex {
      */
     public function login($mobile, $password, $buid) {
         $user = DbUser::getUserOne(['mobile' => $mobile], 'id,passwd');
+        if (empty($user)) {
+            return ['code' => '3002'];
+        }
         $uid  = $user['id'];
         if (empty($uid)) {
             return ['code' => '3002'];
