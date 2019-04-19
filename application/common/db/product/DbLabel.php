@@ -4,6 +4,7 @@ namespace app\common\db\product;
 
 use app\common\model\LabelGoodsRelation;
 use app\common\model\LabelLibrary;
+use think\Db;
 
 class DbLabel {
     /**
@@ -32,6 +33,16 @@ class DbLabel {
     public function getLabelGoodsRelation($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LabelGoodsRelation::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLabelGoodsRelationByGoods($where, $field) {
+        return Db::table('pz_label_goods_relation')
+            ->alias('gr')
+            ->field($field)
+            ->join(['pz_goods' => 'g'], 'gr.goods_id=g.id')
+            ->where($where)
+//            ->limit($limit)
+            ->select();
     }
 
     /**
@@ -66,7 +77,7 @@ class DbLabel {
      * @author zyr
      */
     public function modifyHeat($labelLibId, $modify = 'inc') {
-        $labelLibrary        = LabelLibrary::get($labelLibId);
+        $labelLibrary           = LabelLibrary::get($labelLibId);
         $labelLibrary->the_heat = [$modify, 1];
         return $labelLibrary->save();
     }
