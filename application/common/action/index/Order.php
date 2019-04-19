@@ -1064,6 +1064,7 @@ class Order extends CommonIndex {
                     'member_order_id' => $has_member_order['id'],
                     'uid'             => $uid,
                     'user_type'       => $user_type,
+                    'actype'          => $actype,
                     'parent_id'       => $parent_id,
                     'old_parent_id'   => $old_parent_id,
                     'pay_money'       => $pay_money,
@@ -1088,6 +1089,7 @@ class Order extends CommonIndex {
                     'member_order_id' => $add,
                     'uid'             => $uid,
                     'user_type'       => $user_type,
+                    'actype'          => $actype,
                     'pay_money'       => $pay_money,
                     'parent_id'       => $parent_id,
                     'old_parent_id'   => $old_parent_id
