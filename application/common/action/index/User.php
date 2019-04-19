@@ -1863,17 +1863,28 @@ class User extends CommonIndex {
 
         //增加商票日志
         if ($type == 2) {
-            $money = bcmul($money, 1.25, 2);
+            // $money = bcmul($money, 1.25, 2);
+            $addtrading = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 7,
+                'money'        => bcmul($money, 1.25, 2),
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcadd($userInfo['balance'], bcmul($money, 1.25, 2), 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }else{
+            $addtrading = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 7,
+                'money'        => $money,
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcadd($userInfo['balance'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
         }
-        $addtrading = [
-            'uid'          => $uid,
-            'trading_type' => 1,
-            'change_type'  => 7,
-            'money'        => $money,
-            'befor_money'  => $userInfo['balance'],
-            'after_money'  => bcadd($userInfo['balance'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        
         if ($type == 2) {
             $addtrading['change_type'] = 12;
         }
@@ -1884,15 +1895,17 @@ class User extends CommonIndex {
             if ($type == 1) { //1.佣金转商票
                 DbUser::modifyCommission($uid, $money);
             } elseif ($type == 2) { //2.奖励金转商票
-                $money = bcdiv($money, 1.25, 2);
+                // $money = bcdiv($money, 1.25, 2);
                 DbUser::modifyBounty($uid, $money);
             }
             DbUser::saveLogTrading($tradingData);
             DbUser::saveLogTrading($addtrading);
             if ($type == 2) {
-                $money = bcmul($money, 1.25, 2);
+                DbUser::modifyBalance($uid, bcmul($money, 1.25, 2), 'inc');
+            }else{
+                DbUser::modifyBalance($uid, $money, 'inc');
             }
-            DbUser::modifyBalance($uid, $money, 'inc');
+            
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
