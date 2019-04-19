@@ -7,6 +7,7 @@ use app\common\model\DiamondvipGet;
 use app\common\model\Diamondvips;
 use app\common\model\ShopApply;
 use app\common\model\User;
+use app\common\model\StatisticsMonth;
 
 class DbRights {
     /**
