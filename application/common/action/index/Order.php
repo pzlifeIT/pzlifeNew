@@ -1016,21 +1016,20 @@ class Order extends CommonIndex {
         if (!$parent_id) {
             $parent_id = 1;
         } else {
-            if ($actype != 2) {
-                $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
-                if (empty($parent_info)) {
+            $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
+            if (empty($parent_info)) {
+                $parent_id = 1;
+            } else {
+                if ($parent_info['user_identity'] < 2) {
                     $parent_id = 1;
-                } else {
-                    if ($parent_info['user_identity'] < 2) {
-                        $parent_id = 1;
-                    }
-                    if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                        $parent_id = 1;
-                    }
+                }
+                if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                    $parent_id = 1;
                 }
             }
-            
+
         }
+
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
