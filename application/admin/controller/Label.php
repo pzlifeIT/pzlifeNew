@@ -19,7 +19,7 @@ class Label extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} label_name
      * @apiParam (入参) {int} goods_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:标签名不能未空 / 3002:商品id必须为数字 / 3003:商品不存在 / 3004:标签已关联该商品 /3006:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:标签名不能未空 / 3002:商品id必须为数字 / 3003:商品不存在 / 3004:标签已关联该商品 / 3005:标签长度不能超过50 /3006:添加失败
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/label/addlabeltogoods
      * @return array
@@ -38,6 +38,9 @@ class Label extends AdminController {
         $goodsId = intval($goodsId);
         if ($goodsId <= 0) {
             return ['code' => '3002']; //商品id必须为数字
+        }
+        if (strlen($labelName) > 50) {
+            return ['code' => '3005'];//标签长度不能超过50
         }
         $result = $this->app->label->addLabelToGoods($labelName, $goodsId);
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $labelName, $goodsId], $result['code'], $cmsConId);

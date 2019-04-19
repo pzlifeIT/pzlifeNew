@@ -32,8 +32,9 @@ class Label extends CommonIndex {
             return ['code' => '3000'];
         }
         $labelIdList = array_column($labelGoodsRelation, 'label_lib_id');
-        $restlt      = $this->getLabelLibrary($labelIdList);
-        return ['code' => '200', 'data' => $this->labelProcess($restlt)];
+//        $restlt      = $this->getLabelLibrary($labelIdList);
+        $result = DbLabel::getLabelLibrary([['id', 'in', $labelIdList]], 'id as label_id,label_name');
+        return ['code' => '200', 'data' => $result];
     }
 
     /**
@@ -83,7 +84,9 @@ class Label extends CommonIndex {
                 return ['code' => '3004']; //标签已关联该商品
             }
         }
-        $flag = false;
+        $goodsStatus = DbGoods::getOneGoods(['id' => $goodsId], 'status');
+        $goodsStatus = $goodsStatus['status'];
+        $flag        = false;
         Db::startTrans();
         try {
             if (empty($labelLibId)) { //标签库没有就添加
@@ -98,12 +101,14 @@ class Label extends CommonIndex {
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
-        if ($flag === true) {
-            $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
-            $this->setLabelLibrary($labelLibId, $labelName);
-            $this->setLabelHeat($labelLibId, true);//执行zAdd
-        } else {
-            $this->setLabelHeat($labelLibId, false);//执行zIncrBy
+        if ($goodsStatus == '1') {
+            if ($flag === true) {
+                $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
+                $this->setLabelLibrary($labelLibId, $labelName);
+                $this->setLabelHeat($labelLibId, true);//执行zAdd
+            } else {
+                $this->setLabelHeat($labelLibId, false);//执行zIncrBy
+            }
         }
         return ['code' => '200'];
     }
@@ -167,6 +172,7 @@ class Label extends CommonIndex {
                     $this->redis->hDel($this->transformRedisKey, $tl);
                 }
             }
+            $this->redis->zDelete($this->labelLibraryHeatRedisKey, $delLabelLibraryId);
             $this->redis->hDel($this->labelLibraryRedisKey, $delLabelLibraryId);
         }
         return ['code' => '200'];
