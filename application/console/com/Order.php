@@ -687,6 +687,7 @@ class Order extends Pzlife {
                     $diamondvip_get['create_time'] = time();
                     Db::name('diamondvip_get')->insert($diamondvip_get);
                     Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 }
             } elseif ($actype == 2) { //兼职网推活动
                 $from_user    = $this->getUserInfo($from_uid);
@@ -704,20 +705,22 @@ class Order extends Pzlife {
                     }
                     $from_diamondvip_get['create_time'] = time();
                     Db::name('diamondvip_get')->insert($from_diamondvip_get);
-                    $from_balance = $from_user['bounty'] + 40;
-                    Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
-                    Db::name('log_trading')->insert(
-                        [
-                            'uid'          => $from_uid,
-                            'trading_type' => 3,
-                            'change_type'  => 5,
-                            'order_no'     => $memberOrder,
-                            'money'        => 40,
-                            'befor_money'  => $from_user['balance'],
-                            'after_money'  => $from_balance,
-                            'create_time'  => time(),
-                        ]
-                    );
+                    if ($from_user['user_identity'] > 1) {
+                        $from_balance = $from_user['bounty'] + 40;
+                        Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                        Db::name('log_trading')->insert(
+                            [
+                                'uid'          => $from_uid,
+                                'trading_type' => 3,
+                                'change_type'  => 5,
+                                'order_no'     => $memberOrder,
+                                'money'        => 40,
+                                'befor_money'  => $from_user['balance'],
+                                'after_money'  => $from_balance,
+                                'create_time'  => time(),
+                            ]
+                        );
+                    }
                     /* 写入缓存 */
                     $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                     $this->redis->expire($redisListKey . $from_uid, 2592000);
@@ -756,6 +759,34 @@ class Order extends Pzlife {
                         }
                     }
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['share_num' => $fromDiamondvipGet['share_num'] + 1]);
+                    /* 给上级boss计数 */
+                    //    print_r($fromDiamondvipGet);die;
+                    if ($share_from_user['user_identity'] != 4) {
+                        $shareUser = $this->getUserInfo($fromDiamondvipGet['share_uid']);
+                        if ($shareUser['user_identity'] == 4) {
+                            $timekey   = date('Ym', time());
+                            $NetPush_M = Db::query(sprintf("select * from pz_statistics_month where delete_time=0 and timekey =" . $timekey . " and typeid = %d", $shareUser['id']));
+                            if ($NetPush_M) {
+                                $NetPush_M = $NetPush_M[0];
+                                Db::name('statistics_month')->where([
+                                    'typeid'  => $shareUser['id'],
+                                    'timekey' => $timekey,
+                                ])->update([
+                                    'count' => $NetPush_M['count'] + 1,
+                                ]);
+                            } else {
+                                Db::name('statistics_month')->insert([
+                                    'typeid'      => $shareUser['id'],
+                                    'type'        => 'diamondvipNetPush',
+                                    'timekey'     => $timekey,
+                                    'count'       => 1,
+                                    'create_time' => time(),
+                                ]);
+                            }
+                        }
+                    }
+                    // print_r(date('Ym', time()));die;
+
                 }
                 $diamondvip_get                = [];
                 $diamondvip_get['uid']         = $uid;
@@ -764,6 +795,7 @@ class Order extends Pzlife {
                 $diamondvip_get['create_time'] = time();
                 Db::name('diamondvip_get')->insert($diamondvip_get);
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
+                $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             }
 
             Db::commit();
@@ -771,7 +803,7 @@ class Order extends Pzlife {
         } catch (\Exception $e) {
             // $error =  $e->getMessage();
             // echo $error;
-            // $error = exception($e);
+            $error = exception($e);
             Db::rollback();
             Db::name('log_error')->insert(['title' => 'console/com/order/diamondvipSettlement', 'data' => $e]);
             exit('rollback');
