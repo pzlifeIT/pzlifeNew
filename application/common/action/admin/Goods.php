@@ -4,7 +4,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbImage;
 use app\facade\DbLabel;
-use pinyin\Pinyin;
+use Overtrue\Pinyin\Pinyin;
 use think\Db;
 use app\facade\DbGoods;
 use Config;
@@ -660,15 +660,15 @@ class Goods extends CommonIndex {
         if (empty($res['cate_id'])) {
             return ['code' => '3009'];
         }
-        $labelGoodsRelation   = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id');//该商品的所有标签
-        $labelGoodsRelationId = array_column($labelGoodsRelation, 'label_lib_id');
-        $labelGoodsRelation2 = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他已上架的商品
+        $labelGoodsRelation    = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id');//该商品的所有标签
+        $labelGoodsRelationId  = array_column($labelGoodsRelation, 'label_lib_id');
+        $labelGoodsRelation2   = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他已上架的商品
             ['gr.label_lib_id', 'in', $labelGoodsRelationId],
             ['gr.goods_id', '<>', $id],
             ['g.status', '=', '1'],
         ], 'gr.label_lib_id');
         $labelGoodsRelationId2 = empty($labelGoodsRelation2) ? [] : array_column($labelGoodsRelation2, 'label_lib_id');
-        $labelRelationId = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
+        $labelRelationId       = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
         if ($type == 1) {// 上架
             $stockAll = 0;
             $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
@@ -755,7 +755,7 @@ class Goods extends CommonIndex {
                     $labelLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
                     $flag       = true;
                 } else {
-                    if($labelRelationFlag === true){
+                    if ($labelRelationFlag === true) {
                         DbLabel::modifyHeat($labelLibId);
                     }
                 }
@@ -850,17 +850,17 @@ class Goods extends CommonIndex {
         if (empty($name)) {
             return [];
         }
-        $pinyin = new Pinyin();
-        $ucWord = $pinyin->transformUcwords($name); //拼音首字母,包含非汉字内容
-//        $ucWord2      = $pinyin->transformUcwords($name, ' ', true); //拼音首字母,不包含非汉字内容
-        $withoutTone = $pinyin->transformWithoutTone($name, '', false); //包含非中文的全拼音
-//        $withoutTone2 = $pinyin->transformWithoutTone($name, '', true); //不包含非中文的全拼音
-        $data = [
+        $pinyin       = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
+        $withoutTone2 = implode('', $pinyin->convert($name, PINYIN_UMLAUT_V));
+        $withoutTone  = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
+        $ucWord       = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
+        $ucWord2      = $pinyin->abbr($name, '');
+        $data         = [
             strtolower($name), //全名
             strtolower($withoutTone), //包含非中文的全拼音
-//            strtolower($withoutTone2), //不包含非中文的全拼音
+            strtolower($withoutTone2), //不包含非中文的全拼音
             strtolower($ucWord), //拼音首字母,包含非汉字内容
-//            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
+            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
         ];
         return array_filter(array_unique($data));
     }
