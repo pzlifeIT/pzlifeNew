@@ -1492,6 +1492,7 @@ class User extends MyController {
      * @apiSuccess (返回) {Array} bountyDetail 明细
      * @apiSuccess (bountyDetail) {String} id 明细
      * @apiSuccess (bountyDetail) {String} uid 用户ID
+     * @apiSuccess (bountyDetail) {String} bounty_status 分享用户奖励金否激活 1.激活 2.未激活
      * @apiSuccess (bountyDetail) {String} create_time 时间
      * @apiSuccess (bountyDetail) {Array} user 用户信息
      * @apiSuccess (bountyDetail[user]) {String} user id

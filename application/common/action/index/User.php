@@ -2521,7 +2521,7 @@ class User extends CommonIndex {
         }else{
             $share_num = $diamondvip['share_num'];
         }
-        $bountyDetail = DbRights::getDiamondvip(['share_uid' => $uid, 'source' => 2], 'id,uid,create_time', false, 'id', 'desc', $offset . ',' . $pageNum);
+        $bountyDetail = DbRights::getDiamondvip(['share_uid' => $uid, 'source' => 2], 'id,uid,create_time,bounty_status', false, 'id', 'desc', $offset . ',' . $pageNum);
         return ['code' => '200', 'share_num' => $share_num, 'bounty' => $bounty, 'bountyAll' => $bountyAll, 'bountyDetail' => $bountyDetail];
     }
 }

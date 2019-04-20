@@ -3,13 +3,13 @@
 namespace app\common\action\admin;
 
 use app\common\action\admin\Admin;
+use app\facade\DbAdmin;
+use app\facade\DbOrder;
 use app\facade\DbRights;
 use app\facade\DbShops;
-use app\facade\DbOrder;
 use app\facade\DbUser;
-use app\facade\DbAdmin;
-use think\Db;
 use Config;
+use think\Db;
 
 class Rights extends CommonIndex {
     /**
@@ -242,10 +242,10 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
-                $target_user = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile');
+                $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile');
                 $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
                 $userRelationData = [];
-                $bossId = $this->getBoss($target_user['id']);
+                $bossId           = $this->getBoss($target_user['id']);
                 if ($bossId == 1) {
                     $re = $target_user['id'];
                 } else {
@@ -257,7 +257,7 @@ class Rights extends CommonIndex {
                         array_push($userRelationData, $url);
                     }
                 }
-                
+
                 $shopData = [
                     'uid'         => $target_user['id'],
                     'shop_right'  => 'all',
@@ -285,11 +285,11 @@ class Rights extends CommonIndex {
                 DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $shopapply['refe_uid']], $relationId);
                 DbUser::updateUser(['user_identity' => 4], $shopapply['target_uid']);
                 DbShops::addShop($shopData); //添加店铺
-                DbOrder::addLogTrading($tradingData);//写佣金明细
-                DbUser::modifyCommission($shopapply['refe_uid'], $invest['cost'],'inc');
-                
+                DbOrder::addLogTrading($tradingData); //写佣金明细
+                DbUser::modifyCommission($shopapply['refe_uid'], $invest['cost'], 'inc');
+
                 $this->redis->del($redisKey . $shopapply['target_uid']);
-            }elseif ($status == 4) {
+            } elseif ($status == 4) {
                 $this->redis->del($redisKey . $shopapply['target_uid']);
             }
             // 提交事务
@@ -304,7 +304,6 @@ class Rights extends CommonIndex {
             return ['code' => '3006', 'msg' => '审核失败'];
         }
     }
-
 
     private function getBoss($uid) {
         if ($uid == 1) {
@@ -346,14 +345,29 @@ class Rights extends CommonIndex {
      * @return mixed
      * @author zyr
      */
-    public function getDiamondvipNetPush($page,$pageNum,$status = 1){
-        $offset = ($page-1)*$pageNum;
-        $where = [];
-        array_push($where,['status', '=', $status]);
-        $result = DbRights::getDiamondvipNetPush('*', $where, false, '', '',$offset.','.$pageNum);
+    public function getDiamondvipNetPush($page, $pageNum, $status = 1) {
+        $offset = ($page - 1) * $pageNum;
+        $where  = [];
+        array_push($where, ['status', '=', $status]);
+        $result = DbRights::getDiamondvipNetPush('*', $where, false, '', '', $offset . ',' . $pageNum);
         if (empty($result)) {
             return ['code' => '3000'];
         }
         return ['code' => '200', 'diamondvipNetPush' => $result];
+    }
+    /**
+     * 发放奖励金
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    public function auditDiamondvipBounty($id, $status) {
+        $result = DbRights::getDiamondvipNetPush('*', ['id' => $id], true);
+        if (empty($result)) {
+            return ['code' => '3002'];
+        }
+        if (date('Ym') <= $result['timekey']) {
+            return ['code' => ]
+        }
     }
 }

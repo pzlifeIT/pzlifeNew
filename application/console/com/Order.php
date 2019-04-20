@@ -798,6 +798,11 @@ class Order extends Pzlife {
                 $diamondvip_get['share_uid']   = $from_uid;
                 $diamondvip_get['source']      = 2;
                 $diamondvip_get['create_time'] = time();
+                if ($share_from_user['user_identity'] < 2) {
+                    $diamondvip_get['bounty_status'] = 2;
+                }else{
+                    $diamondvip_get['bounty_status'] = 1;
+                }
                 Db::name('diamondvip_get')->insert($diamondvip_get);
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
                 $this->redis->del($userRedisKey . 'userinfo:' . $uid);
