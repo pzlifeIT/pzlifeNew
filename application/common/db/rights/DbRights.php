@@ -222,4 +222,34 @@ class DbRights {
     public function countShopApply($where) {
         return ShopApply::where($where)->count();
     }
+
+    /**
+     * 获取统计记录
+     * @param $field
+     * @param $where
+     * @param $row
+     * @param $orderBy
+     * @param $sc
+     * @param $limit
+     * @return array
+     */
+    public function getDiamondvipNetPush($field, $where, $row = false, $orderBy = '', $sc = '', $limit = ''){
+        $obj = StatisticsMonth::field($field)->with([
+            'user' => function ($query) {
+                $query->field('id,nick_name,avatar');
+            },
+        ])->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
 }

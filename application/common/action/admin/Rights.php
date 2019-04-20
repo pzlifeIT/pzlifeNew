@@ -340,4 +340,20 @@ class Rights extends CommonIndex {
         }
         return $user['user_identity'];
     }
+    /**
+     * boss兼职网推每月记录
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    public function getDiamondvipNetPush($page,$pageNum,$status = 1){
+        $offset = ($page-1)*$pageNum;
+        $where = [];
+        array_push($where,['status', '=', $status]);
+        $result = DbRights::getDiamondvipNetPush('*', $where, false, '', '',$offset.','.$pageNum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        return ['code' => '200', 'diamondvipNetPush' => $result];
+    }
 }
