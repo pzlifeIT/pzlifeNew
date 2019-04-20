@@ -181,8 +181,8 @@ class Rights extends AdminController {
         $refe_type       = trim(input("post.refe_type"));
         $status          = trim(input("post.status"));
 
-        $page       = empty($page) ? 1 : $page;
-        $pageNum    = empty($pageNum) ? 10 : $pageNum;
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
         // $status     = empty($status) ? 1 : $status;
         $target_uid = deUid($target_uid);
         $refe_uid   = deUid($refe_uid);
@@ -221,15 +221,15 @@ class Rights extends AdminController {
      * @apiParamExample (data) {Array} 返回用户列表
      * [
      * "code":"200",返回code码
-     *  
+     *
      * ]
      * @author rzc
      */
     public function auditShopApply() {
         $cmsConId = trim($this->request->post('cms_con_id'));
-        $id      = trim($this->request->post('id'));
-        $status  = trim($this->request->post('status'));
-        $message = trim($this->request->post('message'));
+        $id       = trim($this->request->post('id'));
+        $status   = trim($this->request->post('status'));
+        $message  = trim($this->request->post('message'));
         if (empty($id)) {
             return ['code' => '3002'];
         }
@@ -239,11 +239,38 @@ class Rights extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        if (!in_array($status,[2,3,4])) {
+        if (!in_array($status, [2, 3, 4])) {
             return ['code' => '3004'];
         }
-        $result = $this->app->rights->auditShopApply($id,$status,$message,$cmsConId);
+        $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
         return $result;
 
+    }
+
+    /**
+     * @api              {post} / 兼职网推奖励金列表
+     * @apiDescription   getDiamondvipNetPush
+     * @apiGroup         admin_Rights
+     * @apiName          getDiamondvipNetPush
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 分享钻石会员机会ID
+     * @apiParam (入参) {Number} status 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限
+     * @apiSuccess (data) {object_array} data 结果
+     * @apiSuccess (data) {String} id 用户ID
+     * @apiSampleRequest /admin/Rights/getDiamondvipNetPush
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *
+     * ]
+     * @author rzc
+     */
+    public function getDiamondvipNetPush() {
+        $page            = trim(input("post.page"));
+        $pageNum         = trim(input("post.page_num"));
+        $status          = trim(input("post.status"));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
     }
 }

@@ -730,32 +730,34 @@ class Order extends Pzlife {
                     /* 给上级 */
                     $from_diamondvip_get = [];
                     // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
-                    Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
-                    $from_balance = $from_user['bounty'] + 40;
-                    Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
-                    Db::name('log_trading')->insert(
-                        [
-                            'uid'          => $from_uid,
-                            'trading_type' => 3,
-                            'change_type'  => 5,
-                            'order_no'     => $memberOrder,
-                            'money'        => 40,
-                            'befor_money'  => $from_user['bounty'],
-                            'after_money'  => $from_balance,
-                            'create_time'  => time(),
-                        ]
-                    );
-                    $userRedisKey = Config::get('rediskey.user.redisKey');
-                    $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
+                    // Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
+                   
                     // $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
                     $share_from_user = $this->getUserInfo($fromDiamondvipGet['uid']);
-                    $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['uid']);
+                    // $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['uid']);
                     // Db::getLastSql();die;
                     // print_r($fromDiamondvipGet);die;
                     if ($fromDiamondvipGet['share_num'] + 1 > 1) { //如果分享2个将会员升级钻石
                         if ($share_from_user['user_identity'] < 2) {
                             Db::name('users')->where('id', $fromDiamondvipGet['uid'])->update(['user_identity' => 2]);
                             Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
+                        }else{
+                            $from_balance = $from_user['bounty'] + 40;
+                            Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                            Db::name('log_trading')->insert(
+                                [
+                                    'uid'          => $from_uid,
+                                    'trading_type' => 3,
+                                    'change_type'  => 5,
+                                    'order_no'     => $memberOrder,
+                                    'money'        => 40,
+                                    'befor_money'  => $from_user['bounty'],
+                                    'after_money'  => $from_balance,
+                                    'create_time'  => time(),
+                                ]
+                            );
+                            $userRedisKey = Config::get('rediskey.user.redisKey');
+                            $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                         }
                     }
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['share_num' => $fromDiamondvipGet['share_num'] + 1]);
@@ -769,10 +771,10 @@ class Order extends Pzlife {
                             if ($NetPush_M) {
                                 $NetPush_M = $NetPush_M[0];
                                 Db::name('statistics_month')->where([
-                                    'typeid'  => $shareUser['id'],
-                                    'timekey' => $timekey,
+                                    'id'  => $NetPush_M['id'],
                                 ])->update([
                                     'count' => $NetPush_M['count'] + 1,
+                                    'cost'  => bcadd($NetPush_M['cost'],20),
                                     'update_time' => time(),
                                 ]);
                             } else {
@@ -781,6 +783,7 @@ class Order extends Pzlife {
                                     'type'        => 'diamondvipNetPush',
                                     'timekey'     => $timekey,
                                     'count'       => 1,
+                                    'cost'        => 20,
                                     'create_time' => time(),
                                 ]);
                             }
