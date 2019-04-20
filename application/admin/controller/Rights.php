@@ -255,9 +255,20 @@ class Rights extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 分享钻石会员机会ID
      * @apiParam (入参) {Number} status 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限
-     * @apiSuccess (data) {object_array} data 结果
-     * @apiSuccess (data) {String} id 用户ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字  
+     * @apiSuccess (data) {object_array} diamondvipNetPush 结果
+     * @apiSuccess (diamondvipNetPush) {String} id 
+     * @apiSuccess (diamondvipNetPush) {String} typeid BOSSid
+     * @apiSuccess (diamondvipNetPush) {String} type  统计类型,钻石网推:diamondvipNetPush
+     * @apiSuccess (diamondvipNetPush) {String} timekey 关联时间索引
+     * @apiSuccess (diamondvipNetPush) {String} count 统计数量
+     * @apiSuccess (diamondvipNetPush) {String} cost 金额
+     * @apiSuccess (diamondvipNetPush) {String} status 状态  1:待发放 2:已经发放  3:取消发放
+     * @apiSuccess (diamondvipNetPush) {String} create_time 创建时间
+     * @apiSuccess (diamondvipNetPush) {String} update_time 最后修改时间
+     * @apiSuccess (diamondvipNetPush[user]) {String} id 用户ID
+     * @apiSuccess (diamondvipNetPush[user]) {nick_name} id 用户昵称
+     * @apiSuccess (diamondvipNetPush[user]) {avatar} id 用户头像
      * @apiSampleRequest /admin/Rights/getDiamondvipNetPush
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -272,10 +283,11 @@ class Rights extends AdminController {
         $status          = trim(input("post.status"));
         $page    = empty($page) ? 1 : $page;
         $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $status = empty($status) ? 1 : $status;
         if (!is_numeric($page) || !is_numeric($status) || !is_numeric($pageNum)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getDiamondvipNetPush($page,$pageNum);
+        $result = $this->app->rights->getDiamondvipNetPush($page,$pageNum,$status);
         return $result;
     }
 }
