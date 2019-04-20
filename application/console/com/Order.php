@@ -692,6 +692,7 @@ class Order extends Pzlife {
             } elseif ($actype == 2) { //兼职网推活动
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
+                $userRedisKey = Config::get('rediskey.user.redisKey');
                 if (!$fromDiamondvipGet) {
 
                     $from_diamondvip_get              = [];
@@ -724,11 +725,9 @@ class Order extends Pzlife {
                     /* 写入缓存 */
                     $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                     $this->redis->expire($redisListKey . $from_uid, 2592000);
-                    $userRedisKey = Config::get('rediskey.user.redisKey');
                     $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                 } else {
                     /* 给上级 */
-                    $userRedisKey = Config::get('rediskey.user.redisKey');
                     $from_diamondvip_get = [];
                     // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
                     // Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
@@ -798,7 +797,7 @@ class Order extends Pzlife {
                 $diamondvip_get['share_uid']   = $from_uid;
                 $diamondvip_get['source']      = 2;
                 $diamondvip_get['create_time'] = time();
-                if ($share_from_user['user_identity'] < 2) {
+                if ($from_user['user_identity'] < 2) {
                     $diamondvip_get['bounty_status'] = 2;
                 }else{
                     $diamondvip_get['bounty_status'] = 1;
