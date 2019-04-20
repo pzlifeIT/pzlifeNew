@@ -737,10 +737,12 @@ class Order extends Pzlife {
                     // $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['uid']);
                     // Db::getLastSql();die;
                     // print_r($fromDiamondvipGet);die;
-                    if ($fromDiamondvipGet['share_num'] + 1 > 1) { //如果分享2个将会员升级钻石
+                    
                         if ($share_from_user['user_identity'] < 2) {
+                            if ($fromDiamondvipGet['share_num'] + 1 > 1) { //如果分享2个将会员升级钻石
                             Db::name('users')->where('id', $fromDiamondvipGet['uid'])->update(['user_identity' => 2]);
                             Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
+                            }
                         }else{
                             $from_balance = $from_user['bounty'] + 40;
                             Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
@@ -759,7 +761,7 @@ class Order extends Pzlife {
                             
                         }
                         $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
-                    }
+                    
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['share_num' => $fromDiamondvipGet['share_num'] + 1]);
                     /* 给上级boss计数 */
                     //    print_r($fromDiamondvipGet);die;
