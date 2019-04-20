@@ -374,7 +374,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 40);
+        $this->redis->rPush($redisListKey, 40);
         $memberOrderId = $this->redis->lPop($redisListKey); //购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -728,6 +728,7 @@ class Order extends Pzlife {
                     $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                 } else {
                     /* 给上级 */
+                    $userRedisKey = Config::get('rediskey.user.redisKey');
                     $from_diamondvip_get = [];
                     // $from_diamondvip_get['share_num'] = $fromDiamondvipGet['share_num'] + 1;
                     // Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update($from_diamondvip_get);
@@ -756,9 +757,9 @@ class Order extends Pzlife {
                                     'create_time'  => time(),
                                 ]
                             );
-                            $userRedisKey = Config::get('rediskey.user.redisKey');
-                            $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
+                            
                         }
+                        $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                     }
                     Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['share_num' => $fromDiamondvipGet['share_num'] + 1]);
                     /* 给上级boss计数 */
