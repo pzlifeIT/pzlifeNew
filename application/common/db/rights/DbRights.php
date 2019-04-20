@@ -252,4 +252,15 @@ class DbRights {
         }
         return $obj->toArray();
     }
+
+    /**
+     * 修改
+     * @param $data
+     * @param $id
+     * @return array
+     */
+    public function editDiamondvipNetPush($data, $id){
+        return StatisticsMonth::save($data, ['id' => $id]);
+    }
+
 }

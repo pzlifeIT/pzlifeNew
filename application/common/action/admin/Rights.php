@@ -367,7 +367,47 @@ class Rights extends CommonIndex {
             return ['code' => '3002'];
         }
         if (date('Ym') <= $result['timekey']) {
-            return ['code' => ]
+            return ['code' => '3008'];
+        }
+        if ($result['status'] != 1) {
+            return ['code' => '3005'];
+        }
+        if ($status == 2) { //发放
+            $refe_user   = DbUser::getUserOne(['id' => $result['typeid']], 'bounty');
+            $tradingData = [
+                'uid'          => $refe_user['id'],
+                'trading_type' => 3,
+                'change_type'  => 12,
+                'money'        => $result['cost'],
+                'befor_money'  => $refe_user['bounty'],
+                'after_money'  => bcadd($refe_user['bounty'], $result['cost'], 2),
+                'message'      => '',
+            ];
+            Db::startTrans();
+            try {
+                DbUser::modifyBounty($refe_user['id'], $result['cost'], 'inc');
+                DbOrder::addLogTrading($tradingData); //写佣金明细
+                DbRights::editDiamondvipNetPush(['status' => 2], $id);
+                Db::commit();
+                return ['code' => '200', 'msg' => '审核通过'];
+            } catch (\Exception $e) {
+                // 回滚事务
+                exception($e);
+                Db::rollback();
+                return ['code' => '3006', 'msg' => '审核失败'];
+            }
+        } elseif ($status == 3) { //取消发放
+            Db::startTrans();
+            try {
+                DbRights::editDiamondvipNetPush(['status' => 3], $id);
+                Db::commit();
+                return ['code' => '200', 'msg' => '审核通过'];
+            } catch (\Exception $e) {
+                // 回滚事务
+                exception($e);
+                Db::rollback();
+                return ['code' => '3006', 'msg' => '审核失败'];
+            }
         }
     }
 }
