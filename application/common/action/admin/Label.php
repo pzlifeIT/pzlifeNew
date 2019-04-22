@@ -34,6 +34,10 @@ class Label extends CommonIndex {
         $labelIdList = array_column($labelGoodsRelation, 'label_lib_id');
 //        $restlt      = $this->getLabelLibrary($labelIdList);
         $result = DbLabel::getLabelLibrary([['id', 'in', $labelIdList]], 'id as label_id,label_name');
+        foreach ($result as &$r) {
+            $r['label_name'] = htmlspecialchars_decode($r['label_name']);
+        }
+        unset($r);
         return ['code' => '200', 'data' => $result];
     }
 

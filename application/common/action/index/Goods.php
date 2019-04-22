@@ -92,11 +92,13 @@ class Goods extends CommonIndex {
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
+        $goods_data['goods_name']    = htmlspecialchars_decode($goods_data['goods_name']);
         $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
         $redisGoodsDetailKey         = $this->redisGoodsDetail . $goods_id . ':' . $source;
         if ($this->redis->exists($redisGoodsDetailKey)) {
             $goodsInfo                                = json_decode($this->redis->get($redisGoodsDetailKey), true);
             $goodsInfo['goods_data']['supplier_desc'] = $goods_data['supplier_desc'];
+            $goodsInfo['goods_data']['goods_name']    = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
             $result                                   = array_merge(['code' => '200'], $goodsInfo);
             return $result;
         }
@@ -146,7 +148,8 @@ class Goods extends CommonIndex {
             'goods_sku'     => $goods_sku,
         ];
         $this->redis->setEx($redisGoodsDetailKey, 86400, json_encode($goodsInfo));
-        $result = array_merge(['code' => '200'], $goodsInfo);
+        $goodsInfo['goods_data']['goods_name'] = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
+        $result                                = array_merge(['code' => '200'], $goodsInfo);
         return $result;
     }
 
@@ -264,6 +267,7 @@ class Goods extends CommonIndex {
             /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             $result[$key]['spec'] = $goods_spec;
             $result[$key]['goods_sku'] = $goods_sku; */
+            $result[$key]['goods_name']       = htmlspecialchars_decode($value['goods_name']);
             $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
             $field                            = 'market_price';
             $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
