@@ -24,6 +24,11 @@ return [
         'redisIndexShow'   => 'index:index:show',
         'redisGoodsDetail' => 'index:goods:goodsDetail:', //商品详情
     ],
+    'label'  => [
+        'redisLabelTransform'   => 'label:labelLibrary:transform', //标签库生成拼音标签后的对应关系
+        'redisLabelLibrary'     => 'label:labelLibrary:list', //标签库缓存
+        'redisLabelLibraryHeat' => 'label:labelLibrary:heat', //标签热度排序
+    ],
     'manage' => [
         'redisManageInvoice' => 'cms:manage:invoice', //后台CMS提现比率key
     ],
