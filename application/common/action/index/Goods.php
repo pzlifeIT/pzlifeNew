@@ -347,6 +347,7 @@ class Goods extends CommonIndex {
             return ['code' => 200, 'goods_data' => []];
         }
         foreach ($result as $key => $value) {
+            $result[$key]['goods_name']       = htmlspecialchars_decode($value['goods_name']);
             $where                            = ['goods_id' => $value['id'], 'status' => 1];
             $field                            = 'market_price';
             $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
