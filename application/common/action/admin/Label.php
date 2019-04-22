@@ -102,13 +102,13 @@ class Label extends CommonIndex {
             return ['code' => '3006']; //添加失败
         }
         if ($goodsStatus == '1') {
-            if ($flag === true) {
-                $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
-                $this->setLabelLibrary($labelLibId, $labelName);
-                $this->setLabelHeat($labelLibId, true);//执行zAdd
-            } else {
-                $this->setLabelHeat($labelLibId, false);//执行zIncrBy
-            }
+            $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
+            $this->setLabelLibrary($labelLibId, $labelName);
+        }
+        if ($flag === true) {
+            $this->setLabelHeat($labelLibId, true);//执行zAdd
+        } else {
+            $this->setLabelHeat($labelLibId, false);//执行zIncrBy
         }
         return ['code' => '200'];
     }
@@ -132,16 +132,32 @@ class Label extends CommonIndex {
         ], 'id');
         $delLabelLibraryId       = 0;
         $labelLibName            = '';
+        $trueDel                 = false;
+        $flag                    = false;
         if (empty($labelGoodsRelationList)) { //没有其他商品关联这个标签
+            $trueDel           = true;
+            $flag              = true;
             $delLabelLibraryId = $labelLibId;
             $labelLibName      = DbLabel::getLabelLibrary(['id' => $delLabelLibraryId], 'label_name', true);
             $labelLibName      = $labelLibName['label_name'];
+        } else {
+            $labelGoodsRelation2 = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他上架的商品
+                ['gr.label_lib_id', '=', $labelLibId],
+                ['gr.goods_id', '<>', $goodsId],
+                ['g.status', '=', '1'],
+            ], 'gr.label_lib_id,g.status');
+            if (empty($labelGoodsRelation2)) {
+                $delLabelLibraryId = $labelLibId;
+                $labelLibName      = DbLabel::getLabelLibrary(['id' => $delLabelLibraryId], 'label_name', true);
+                $labelLibName      = $labelLibName['label_name'];
+                $flag              = true;
+            }
         }
-        $flag = false;
         Db::startTrans();
         try {
             DbLabel::delLabelGoodsRelation($delLabelGoodsRelationId);
-            if (!empty($delLabelLibraryId)) {
+            DbLabel::modifyHeat($labelLibId, 'dec');
+            if ($trueDel === true) {
                 DbLabel::delLabelLibrary($delLabelLibraryId);
                 $flag = true;
             }
@@ -172,8 +188,11 @@ class Label extends CommonIndex {
                     $this->redis->hDel($this->transformRedisKey, $tl);
                 }
             }
-            $this->redis->zDelete($this->labelLibraryHeatRedisKey, $delLabelLibraryId);
+            $this->redis->zIncrBy($this->labelLibraryHeatRedisKey, -1, $delLabelLibraryId);
             $this->redis->hDel($this->labelLibraryRedisKey, $delLabelLibraryId);
+        }
+        if ($trueDel === true) {
+            $this->redis->zDelete($this->labelLibraryHeatRedisKey, $delLabelLibraryId);
         }
         return ['code' => '200'];
     }
@@ -185,14 +204,16 @@ class Label extends CommonIndex {
         $pinyin       = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
         $withoutTone2 = implode('', $pinyin->convert($name, PINYIN_UMLAUT_V));
         $withoutTone  = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
-        $ucWord       = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
-        $ucWord2      = $pinyin->abbr($name, '');
+        $ucWord       = $pinyin->abbr($name, '');
+        $ucWord2      = $pinyin->abbr($name, '', PINYIN_KEEP_NUMBER);
+        $ucWord3      = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
         $data         = [
             strtolower($name), //全名
             strtolower($withoutTone), //包含非中文的全拼音
             strtolower($withoutTone2), //不包含非中文的全拼音
-            strtolower($ucWord), //拼音首字母,包含非汉字内容
-            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
+            strtolower($ucWord3), //拼音首字母,包含字母
+            strtolower($ucWord2), //拼音首字母,包含数字
+            strtolower($ucWord), //拼音首字母,不包含非汉字内容
         ];
         return array_filter(array_unique($data));
     }

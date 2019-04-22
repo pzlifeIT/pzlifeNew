@@ -36,6 +36,8 @@ class DbLabel {
     }
 
     public function getLabelGoodsRelationByGoods($where, $field) {
+        array_push($where,['gr.delete_time','=','0']);
+        array_push($where,['g.delete_time','=','0']);
         return Db::table('pz_label_goods_relation')
             ->alias('gr')
             ->field($field)
