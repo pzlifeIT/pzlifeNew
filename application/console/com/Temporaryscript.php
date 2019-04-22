@@ -122,7 +122,10 @@ class TemporaryScript extends Pzlife {
      * 标签库redis缓存脚本
      */
     public function labelScript() {
-        $list = Db::query('select id,label_name,the_heat from pz_label_library where delete_time=0');
+        $goodsRelation = Db::query('select lgr.label_lib_id from pz_label_goods_relation as lgr join pz_goods as g on lgr.goods_id=g.id where g.delete_time=0 and lgr.delete_time=0 and g.status=1');
+        $labelIdList   = array_values(array_unique(array_column($goodsRelation, 'label_lib_id')));
+//        print_r($labelIdList);die;
+        $list = Db::query('select id,label_name,the_heat from pz_label_library where delete_time=0 and id in (' . implode(',', $labelIdList) . ')');
         foreach ($list as $l) {
             $this->setTransform($this->getTransformPinyin($l['label_name']), $l['id']);
             $this->setLabelLibrary($l['id'], $l['label_name']);
@@ -172,14 +175,16 @@ class TemporaryScript extends Pzlife {
         $pinyin       = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
         $withoutTone2 = implode('', $pinyin->convert($name, PINYIN_UMLAUT_V));
         $withoutTone  = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
-        $ucWord       = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
-        $ucWord2      = $pinyin->abbr($name, '');
+        $ucWord       = $pinyin->abbr($name, '');
+        $ucWord2      = $pinyin->abbr($name, '', PINYIN_KEEP_NUMBER);
+        $ucWord3      = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
         $data         = [
             strtolower($name), //全名
             strtolower($withoutTone), //包含非中文的全拼音
             strtolower($withoutTone2), //不包含非中文的全拼音
-            strtolower($ucWord), //拼音首字母,包含非汉字内容
-            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
+            strtolower($ucWord3), //拼音首字母,包含字母
+            strtolower($ucWord2), //拼音首字母,包含数字
+            strtolower($ucWord), //拼音首字母,不包含非汉字内容
         ];
         return array_filter(array_unique($data));
     }

@@ -464,6 +464,7 @@ class Goods extends CommonIndex {
             $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
             $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
             $goods_data['supplier_name'] = $supplier['name'];
+            $goods_data['goods_name']   = htmlspecialchars_decode($goods_data['goods_name']);
         }
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
@@ -728,7 +729,7 @@ class Goods extends CommonIndex {
                     }
                 }
                 if ($delFlag === true) {
-                    $this->redis->zDelete($this->labelLibraryHeatRedisKey, $lri);
+//                    $this->redis->zDelete($this->labelLibraryHeatRedisKey, $lri);
                     $this->redis->hDel($this->labelLibraryRedisKey, $lri);
                 }
             }
@@ -853,14 +854,16 @@ class Goods extends CommonIndex {
         $pinyin       = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
         $withoutTone2 = implode('', $pinyin->convert($name, PINYIN_UMLAUT_V));
         $withoutTone  = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
-        $ucWord       = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
-        $ucWord2      = $pinyin->abbr($name, '');
+        $ucWord       = $pinyin->abbr($name, '');
+        $ucWord2      = $pinyin->abbr($name, '', PINYIN_KEEP_NUMBER);
+        $ucWord3      = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
         $data         = [
             strtolower($name), //全名
             strtolower($withoutTone), //包含非中文的全拼音
             strtolower($withoutTone2), //不包含非中文的全拼音
-            strtolower($ucWord), //拼音首字母,包含非汉字内容
-            strtolower($ucWord2), //拼音首字母,不包含非汉字内容
+            strtolower($ucWord3), //拼音首字母,包含字母
+            strtolower($ucWord2), //拼音首字母,包含数字
+            strtolower($ucWord), //拼音首字母,不包含非汉字内容
         ];
         return array_filter(array_unique($data));
     }
