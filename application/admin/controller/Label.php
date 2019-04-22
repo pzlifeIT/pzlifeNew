@@ -39,7 +39,7 @@ class Label extends AdminController {
         if ($goodsId <= 0) {
             return ['code' => '3002']; //商品id必须为数字
         }
-        if (strlen($labelName) > 50) {
+        if (mb_strlen($labelName, 'utf8') > 50) {
             return ['code' => '3005'];//标签长度不能超过50
         }
         $result = $this->app->label->addLabelToGoods($labelName, $goodsId);
