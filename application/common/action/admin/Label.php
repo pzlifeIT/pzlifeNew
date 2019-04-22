@@ -295,7 +295,7 @@ class Label extends CommonIndex {
     private function labelProcess($result) {
         $data = [];
         foreach ($result as $k => $v) {
-            $arr = ['label_id' => $k, 'label_name' => $v];
+            $arr = ['label_id' => $k, 'label_name' => htmlspecialchars_decode($v)];
             array_push($data, $arr);
         }
         return $data;
