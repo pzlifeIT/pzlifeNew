@@ -366,6 +366,7 @@ class Goods extends CommonIndex {
         if (empty($data)) {
             return ['code' => '3000'];
         }
+        $data   = array_unique($data);
         $heat   = $this->redis->zRevRange($this->labelLibraryHeatRedisKey, 0, -1);
         $result = [];
         foreach ($heat as $v) {
