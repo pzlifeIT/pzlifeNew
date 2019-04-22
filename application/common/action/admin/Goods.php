@@ -783,8 +783,6 @@ class Goods extends CommonIndex {
                 $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
                 $this->setLabelLibrary($labelLibId, $labelName);
                 $this->setLabelHeat($labelLibId, true);//执行zAdd
-            } else {
-                $this->setLabelHeat($labelLibId, false);//执行zIncrBy
             }
         }
         return ["msg" => '成功', "code" => '200'];
