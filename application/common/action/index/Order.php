@@ -1031,6 +1031,9 @@ class Order extends CommonIndex {
             }
             
         }
+        if ($uid == $parent_id) {
+            $parent_id = 1;
+        }
         
         /* 计算支付金额 */
         if ($user_type == 1) {
