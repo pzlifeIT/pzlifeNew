@@ -464,6 +464,7 @@ class Goods extends CommonIndex {
             $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
             $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
             $goods_data['supplier_name'] = $supplier['name'];
+            $goods_data['goods_name']   = htmlspecialchars_decode($goods_data['goods_name']);
         }
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
