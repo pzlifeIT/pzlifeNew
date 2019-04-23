@@ -414,6 +414,7 @@ class Goods extends CommonIndex {
         ], 'id');
         $supGoodsId = array_column($goodsList, 'id');
 
+        $goodsIdRes = [];
         if (!empty($goodsList)) {
             $goodsLabelRelation = DbLabel::getLabelGoodsRelationByGoods([
                 ['gr.goods_id', 'in', $supGoodsId],
@@ -452,9 +453,11 @@ class Goods extends CommonIndex {
             arsort($goodsHeat2);
             $goodsIdRes2 = array_keys($goodsHeat2);
             $goodsIdRes2 = array_slice($goodsIdRes2, 0, 2);
+            $goodsIdRes  = array_merge($goodsIdRes, $goodsIdRes2);
         }
-        $goodsIdRes = array_merge($goodsIdRes, $goodsIdRes2);
-
+        if (empty($goodsIdRes)) {
+            return ['code' => 200, 'data' => []];
+        }
         $field  = 'id,goods_name,subtitle,image';
         $where  = [['status', '=', 1], ['id', 'IN', $goodsIdRes]];
         $result = DbGoods::getGoodsList2($where, $field);
