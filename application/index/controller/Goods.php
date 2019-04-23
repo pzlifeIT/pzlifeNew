@@ -232,4 +232,38 @@ class Goods extends MyController {
         $result        = $this->app->goods->searchLabel(strtolower($searchContent));
         return $result;
     }
+
+    /**
+     * @api              {post} / 商品推荐
+     * @apiDescription   goodsRecommend
+     * @apiGroup         index_Goods
+     * @apiName          goodsRecommend
+     * @apiParam (入参) {Int} goods_id 商品id
+     * @apiParam (入参) {Int} goods_num 推荐数量 (默认6个)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品id为数字 / 3002:商品不存在
+     * @apiSuccess (返回) {String} data 返回消息
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
+     * @apiSampleRequest /index/goods/goodsrecommend
+     * @return array
+     * @author zyr
+     */
+    public function goodsRecommend() {
+        $goodsId  = trim($this->request->post('goods_id'));
+        $goodsNum = trim($this->request->post('goods_num'));
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3001'];
+        }
+        if ($goodsId < 1) {
+            return ['code' => '3001'];
+        }
+        $goodsId  = intval($goodsId);
+        $goodsNum = is_numeric($goodsNum) ? intval($goodsNum) : 6;
+        $result   = $this->app->goods->goodsRecommend($goodsId, $goodsNum);
+        return $result;
+    }
 }
