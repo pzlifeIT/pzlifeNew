@@ -435,6 +435,7 @@ class Goods extends CommonIndex {
             ksort($goodsHeat);
             asort($goodsHeat);
             $goodsIdRes = array_keys($goodsHeat);
+            $goodsIdRes = array_slice($goodsIdRes, 0, 6);
         }
         if (count($goodsIdRes) < $goodsNum) {//供应商下不够就查相同标签的
             $goodsLabelRelation2 = DbLabel::getLabelGoodsRelationByGoods([
@@ -452,7 +453,7 @@ class Goods extends CommonIndex {
             krsort($goodsHeat2);
             arsort($goodsHeat2);
             $goodsIdRes2 = array_keys($goodsHeat2);
-            $goodsIdRes2 = array_slice($goodsIdRes2, 0, 2);
+            $goodsIdRes2 = array_slice($goodsIdRes2, 0, bcsub($goodsNum, count($goodsIdRes), 0));
             $goodsIdRes  = array_merge($goodsIdRes, $goodsIdRes2);
         }
         if (empty($goodsIdRes)) {
