@@ -65,4 +65,12 @@ class MemberOrder extends Model {
         $payType = array_flip($this->payType);
         return $payType[$value];
     }
+
+    public function user(){
+        return $this->belongsTo('users', 'uid', 'id');
+    }
+
+    public function fromuser(){
+        return $this->belongsTo('users', 'from_uid', 'id');
+    }
 }

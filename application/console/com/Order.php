@@ -594,12 +594,20 @@ class Order extends Pzlife {
      */
     private function diamondvipSettlement($uid, $payMoney, $from_uid, $memberOrder, $actype) {
         $redisListKey      = Config::get('redisKey.order.redisMemberShare');
+        $userRedisKey = Config::get('rediskey.user.redisKey');
         $fromDiamondvipGet = $this->diamondvipGet($from_uid);
         Db::startTrans();
         try {
             if ($actype == 1) { //无活动
-                if ($payMoney == 500) {
+                if ($payMoney == 120) {
+                    $diamondvip_get                = [];
+                    $diamondvip_get['uid']         = $uid;
+                    $diamondvip_get['source']      = 1;
+                    $diamondvip_get['share_uid']   = $from_uid;
+                    $diamondvip_get['create_time'] = time();
+                    Db::name('diamondvip_get')->insert($diamondvip_get);
                     Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
+                    $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 } elseif ($payMoney == 100) {
                     $from_user    = $this->getUserInfo($from_uid);
                     $from_balance = 0;
@@ -629,7 +637,6 @@ class Order extends Pzlife {
                             /* 写入缓存 */
                             $this->redis->hset($redisListKey . $from_uid, $from_uid, time());
                             $this->redis->expire($redisListKey . $from_uid, 2592000);
-                            $userRedisKey = Config::get('rediskey.user.redisKey');
                             $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                         }
                     } else {
@@ -651,7 +658,7 @@ class Order extends Pzlife {
                                 'create_time'  => time(),
                             ]
                         );
-                        $userRedisKey = Config::get('rediskey.user.redisKey');
+                        // $userRedisKey = Config::get('rediskey.user.redisKey');
                         $this->redis->del($userRedisKey . 'userinfo:' . $from_uid);
                         $sharefromDiamondvipGet = $this->diamondvipGet($fromDiamondvipGet['share_uid']);
                         $share_from_user        = $this->getUserInfo($fromDiamondvipGet['share_uid']);
@@ -692,7 +699,7 @@ class Order extends Pzlife {
             } elseif ($actype == 2) { //兼职网推活动
                 $from_user    = $this->getUserInfo($from_uid);
                 $from_balance = 0;
-                $userRedisKey = Config::get('rediskey.user.redisKey');
+                // $userRedisKey = Config::get('rediskey.user.redisKey');
                 if (!$fromDiamondvipGet) {
 
                     $from_diamondvip_get              = [];

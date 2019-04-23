@@ -290,4 +290,19 @@ class Order extends CommonIndex {
         }
 
     }
+
+
+    public function getMemberOrders(int $page, int $pagenum){
+        $offset = ($page - 1) * $pagenum;
+        if ($offset < 0) {
+            return ['code' => 3000];
+        }
+        $result = DbOrder::getMemberOrder(['pay_status' => 4], 'order_no,from_uid,uid,actype,user_type,pay_money,pay_type,pay_time,create_time', false, 'id', 'desc', $offset . ',' . $pagenum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbOrder::countMemberOrder(['pay_status' => 4]);
+        return ['code' => '200', 'total' => $total, 'memberOrderList' => $result];
+
+    }
 }
