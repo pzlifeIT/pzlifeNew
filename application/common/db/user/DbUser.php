@@ -3,20 +3,20 @@
 namespace app\common\db\user;
 
 use app\common\model\LogBonus;
+use app\common\model\LogIntegral;
+use app\common\model\LogInvest;
 use app\common\model\LogOpenboss;
 use app\common\model\LogTrading;
-use app\common\model\LogIntegral;
 use app\common\model\LogTransfer;
 use app\common\model\LogVercode;
+use app\common\model\UserAddress;
+use app\common\model\UserBank;
 use app\common\model\UserCon;
+use app\common\model\UserRead;
 use app\common\model\UserRecommend;
 use app\common\model\UserRelation;
-use app\common\model\UserBank;
 use app\common\model\Users;
-use app\common\model\UserAddress;
 use app\common\model\UserWxinfo;
-use app\common\model\UserRead;
-use app\common\model\UserIntegral;
 use think\Db;
 
 class DbUser {
@@ -26,7 +26,7 @@ class DbUser {
      * @return array
      */
     public function getUser($where) {
-        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze'];
+        $field = ['passwd', 'delete_time', 'bindshop', 'balance_freeze', 'commission_freeze', 'bounty_freeze'];
         $user  = Users::where($where)->field($field, true)->findOrEmpty()->toArray();
         return $user;
     }
@@ -282,6 +282,19 @@ class DbUser {
         $user->save();
     }
 
+    /**
+     * 改奖励金余额
+     * @param $uid
+     * @param $bounty
+     * @param string $modify 增加/减少 inc/dec
+     * @author zyr
+     */
+    public function modifyBounty($uid, $bounty, $modify = 'dec') {
+        $user           = Users::get($uid);
+        $user->bounty = [$modify, $bounty];
+        $user->save();
+    }
+
     public function addUserRecommend($data) {
         $userRecommend = new UserRecommend();
         $userRecommend->save($data);
@@ -329,9 +342,8 @@ class DbUser {
 
     public function getLogBonusGroup($where, $uid, $limit) {
         array_push($where, ['delete_time', '=', '0']);
-//        $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
-//        return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
-
+        // $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
+        // return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
         $subSql = Db::table('pz_log_bonus')
             ->field('level_uid,sum(result_price) as price')
             ->where($where)
@@ -368,23 +380,52 @@ class DbUser {
         return LogTrading::where($where)->sum($field);
     }
 
-    public function saveLogTrading($data){
+    public function saveLogTrading($data) {
         $LogTrading = new LogTrading();
         $LogTrading->save($data);
         return $LogTrading->id;
     }
 
-    public function editLogTrading($data,$id){
+    public function saveLogInvest($data) {
+        $LogInvest = new LogInvest;
+        $LogInvest->save($data);
+        return $LogInvest->id;
+    }
+
+    public function editLogInvest($data, $id) {
+        $LogInvest = new LogInvest;
+        return $LogInvest->save($data, ['id' => $id]);
+    }
+
+    public function editLogTrading($data, $id) {
         $LogTrading = new LogTrading;
-        return $LogTrading->save($data,['id' => $id]);
+        return $LogTrading->save($data, ['id' => $id]);
     }
     public function getLogIntegral($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = LogIntegral::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
-//        $where['i.delete_time'] = 0;
-//        $where['o.delete_time'] = 0;
-//        $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
-//        return $this->getResult($obj, $row, $orderBy, $limit);
+        // $where['i.delete_time'] = 0;
+        // $where['o.delete_time'] = 0;
+        // $obj                    = LogIntegral::alias('i')->join(['pz_orders' => 'o'], 'o.order_no=i.order_no')->field($field)->where($where);
+        // return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getLogInvestSum($where, $field) {
+        return LogInvest::where($where)->sum($field);
+    }
+
+    /**
+     * 招商代理收益日志
+     * @param $obj
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return mixed
+     * @author zyr
+     */
+    public function getLogInvest($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = LogInvest::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
     /**
@@ -441,6 +482,10 @@ class DbUser {
         return $obj->toArray();
     }
 
+    public function getUserReadSum($where, $field) {
+        return UserRead::where($where)->sum($field);
+    }
+
     /**
      * 佣金转出记录计数
      * @param $data
@@ -448,7 +493,7 @@ class DbUser {
      * @return mixed
      * @author rzc
      */
-    public function countLogTransfer($where){
+    public function countLogTransfer($where) {
         return LogTransfer::where($where)->count();
     }
 
@@ -458,7 +503,7 @@ class DbUser {
      * @return mixed
      * @author rzc
      */
-    public function addLogTransfer($data){
+    public function addLogTransfer($data) {
         $LogTransfer = new LogTransfer;
         $LogTransfer->save($data);
         return $LogTransfer->id;
@@ -470,9 +515,9 @@ class DbUser {
      * @return mixed
      * @author rzc
      */
-    public function editLogTransfer($data,$id){
+    public function editLogTransfer($data, $id) {
         $LogTransfer = new LogTransfer;
-        return $LogTransfer->save($data,['id' => $id]);
+        return $LogTransfer->save($data, ['id' => $id]);
     }
     public function addUserRead($data) {
         $UserRead = new UserRead;
@@ -489,15 +534,14 @@ class DbUser {
      * @return array
      * @author rzc
      */
-
     public function getUserBank($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = UserBank::field($field)->with(
-            ['adminBank' => function ($query){
-            // $query->field('abbrev,bank_name')->where([]);
+            ['adminBank' => function ($query) {
+                // $query->field('abbrev,bank_name')->where([]);
             },
-            'users' => function($query2){
-                $query2->field('id,user_identity,nick_name,avatar,mobile');
-            }]
+                'users'      => function ($query2) {
+                    $query2->field('id,user_identity,nick_name,avatar,mobile');
+                }]
         )->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
@@ -509,22 +553,22 @@ class DbUser {
      * @author rzc
      */
 
-     public function saveUserBank($data){
+    public function saveUserBank($data) {
         $UserBank = new UserBank;
         $UserBank->save($data);
         return $UserBank->id;
-     }
+    }
 
-     /**
+    /**
      * 修改用户银行卡信息
      * @param $data
      * @param $id
      * @return mixed
      * @author rzc
      */
-    public function editUserBank($data,$id){
+    public function editUserBank($data, $id) {
         $UserBank = new UserBank;
-        return $UserBank->save($data,['id' => $id]);
+        return $UserBank->save($data, ['id' => $id]);
     }
 
     /**
@@ -533,10 +577,10 @@ class DbUser {
      * @return mixed
      * @author rzc
      */
-    public function delUserBank($id){
+    public function delUserBank($id) {
         return UserBank::destroy($id);
     }
-    
+
     /**
      * 银行卡表计数
      * @param $data
@@ -544,7 +588,7 @@ class DbUser {
      * @return mixed
      * @author rzc
      */
-    public function countUserBank($where){
+    public function countUserBank($where) {
         return UserBank::where($where)->count();
     }
 
@@ -552,7 +596,6 @@ class DbUser {
         $UserRead = new UserRead;
         return $UserRead->save($data, ['id' => $id]);
     }
-
     public function addLogIntegral($data) {
         $LogIntegral = new LogIntegral;
         $LogIntegral->save($data);

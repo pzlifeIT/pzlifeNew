@@ -3,9 +3,6 @@
 namespace app\index\controller;
 
 use app\index\MyController;
-use Config;
-use function Qiniu\json_decode;
-use think\Db;
 
 class User extends MyController {
     protected $beforeActionList = [
@@ -242,6 +239,7 @@ class User extends MyController {
      * @apiSuccess (data) {Double} balance 商票
      * @apiSuccess (data) {Double} commission 佣金
      * @apiSuccess (data) {Number} integral 剩余积分
+     * @apiSuccess (data) {Double} bounty 奖励金
      * @apiSampleRequest /index/user/getuser
      * @return array
      * @author zyr
@@ -376,12 +374,74 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 个人中心佣金明细
+     * @apiDescription   getShopCommission
+     * @apiGroup         index_user
+     * @apiName          getShopCommission
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Decimal} money 金额
+     * @apiSuccess (data) {Date} create_time 到账时间
+     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+     * @apiSuccess (data) {String} ctype 描述
+     * @apiSampleRequest /index/user/getshopcommission
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommission() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getShopCommission($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 个人中心佣金统计
+     * @apiDescription   getShopCommissionSum
+     * @apiGroup         index_user
+     * @apiName          getShopCommissionSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Decimal} commission 佣金余额
+     * @apiSuccess (返回) {Decimal} commission_all 佣金总额
+     * @apiSuccess (返回) {Decimal} commission_extract 提现
+     * @apiSuccess (返回) {Decimal} commission_to_balance 转商票
+     * @apiSampleRequest /index/user/getshopcommissionsum
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommissionSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getShopCommissionSum($conId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取店铺商票明细
      * @apiDescription   getShopBalance
      * @apiGroup         index_user
      * @apiName          getShopBalance
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细
+     * @apiParam (入参) {Int} stype 1.已使用明细 2.未使用明细 3.余额明细 4.总额明细
+     * @apiParam (入参) {Int} [page] 当前页 默认1
+     * @apiParam (入参) {Int} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
      * @apiSuccess (返回) {Decimal} money 商票金额
@@ -395,7 +455,9 @@ class User extends MyController {
     public function getShopBalance() {
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
-        $stypeArr = [1, 2, 3];
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $stypeArr = [1, 2, 3, 4];
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -405,7 +467,36 @@ class User extends MyController {
         if (!in_array($stype, $stypeArr)) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->getShopBalance($conId, $stype);
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getShopBalance($conId, $stype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 个人中心我的商票
+     * @apiDescription   getShopBalanceSum
+     * @apiGroup         index_user
+     * @apiName          getShopBalanceSum
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
+     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} balanceUse 已用商票
+     * @apiSuccess (返回) {Decimal} balanceAll 商票总额
+     * @apiSuccess (返回) {Decimal} noBbonus 待到账商票
+     * @apiSampleRequest /index/user/getshopbalancesum
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalanceSum() {
+        $conId = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getShopBalanceSum($conId);
         return $result;
     }
 
@@ -542,6 +633,39 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 其他收益
+     * @apiDescription   getOtherEarn
+     * @apiGroup         index_user
+     * @apiName          getOtherEarn
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} page 当前页
+     * @apiParam (入参) {Int} page_num 每页数量
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在
+     * @apiSuccess (返回) {Array} data 列表
+     * @apiSuccess (返回) {Decimal} money 获利金额
+     * @apiSuccess (返回) {Decimal} create_time 到账时间
+     * @apiSuccess (返回) {String} message 描述
+     * @apiSampleRequest /index/user/getotherearn
+     * @return array
+     * @author zyr
+     */
+    public function getOtherEarn() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $page    = is_numeric($page) ? $page : 1;
+        $pageNum = is_numeric($pageNum) ? $pageNum : 10;
+        $result  = $this->app->user->getOtherEarn($conId, $page, $pageNum);
         return $result;
     }
 
@@ -761,6 +885,7 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {String} page 跳转页面
      * @apiParam (入参) {String} scene 跳转页面
+     * @apiParam (入参) {Number} stype 二维码类型 1.个人中心 2.店铺
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserQrcode
@@ -771,6 +896,7 @@ class User extends MyController {
         $page  = trim($this->request->get('page'));
         $scene = trim($this->request->get('scene'));
         $conId = trim($this->request->get('con_id'));
+        $stype = trim($this->request->get('stype'));
         // print_r(Config::get('conf.image_path'));die;
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -787,8 +913,10 @@ class User extends MyController {
         if (strlen($scene) > 32) {
             return ['code' => '3007'];
         }
-
-        $result = $this->app->user->getQrcode($conId, $page, $scene, 1);
+        if (!in_array($stype, [1, 2])) {
+            return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
+        }
+        $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
         return $result;
     }
 
@@ -1092,6 +1220,39 @@ class User extends MyController {
     }
 
     /**
+     * @api              {post} / 奖励金提现
+     * @apiDescription   bountyTransferCash
+     * @apiGroup         index_user
+     * @apiName          bountyTransferCash
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
+     * @apiParam (入参) {Number} money 用户转出金额
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
+     * @apiSampleRequest /index/user/bountyTransferCash
+     * @return array
+     * @author rzc
+     */
+    public function bountyTransferCash() {
+        $conId       = trim($this->request->post('con_id'));
+        $bankcard_id = trim($this->request->post('bankcard_id'));
+        $money       = trim($this->request->post('money'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];
+        }
+        if ($money <= 0) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, 2, 4);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 查看用户佣金转出记录(支持用户筛选)
      * @apiDescription   getLogTransfer
      * @apiGroup         index_user
@@ -1103,7 +1264,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} [max_money] 用户转出最大金额
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
      * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
-     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现
+     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
      * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
      * @apiParam (入参) {String} [start_time] 开始时间
      * @apiParam (入参) {String} [end_time] 结束时间
@@ -1121,7 +1282,7 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
      * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
@@ -1211,7 +1372,7 @@ class User extends MyController {
             }
         }
         if (!empty($stype)) {
-            if (!in_array($stype, [1, 2])) {
+            if (!in_array($stype, [1, 2, 3, 4])) {
                 return ['code' => '3011'];
             }
         }
@@ -1261,7 +1422,7 @@ class User extends MyController {
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
      * @author rzc
@@ -1281,9 +1442,85 @@ class User extends MyController {
         if ($money <= 0) {
             return ['code' => '3004'];
         }
-        $result = $this->app->user->commissionTransferBalance($conId, $money);
+        $result = $this->app->user->commissionTransferBalance($conId, $money, 1);
         return $result;
     }
+
+    /**
+     * @api              {post} / 奖励金转商票
+     * @apiDescription   bountyTransferBalance
+     * @apiGroup         index_user
+     * @apiName          bountyTransferBalance
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} money 用户转出金额
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSampleRequest /index/user/bountyTransferBalance
+     * @return array
+     * @author rzc
+     */
+    public function bountyTransferBalance() {
+        $conId = trim($this->request->post('con_id'));
+        $money = trim($this->request->post('money'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($money)) {
+            return ['code' => '3003'];
+        }
+        if ($money <= 0) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->commissionTransferBalance($conId, $money, 2);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查看用户奖励金明细
+     * @apiDescription   bountyDetail
+     * @apiGroup         index_user
+     * @apiName          bountyDetail
+     * @apiParam (入参) {String} con_id 用户登录con_id
+     * @apiParam (入参) {Number} page page
+     * @apiParam (入参) {Number} pageNum pageNum
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:page和pageNum必须为数字
+     * @apiSuccess (返回) {String} share_num 总人数
+     * @apiSuccess (返回) {String} bounty 奖励金余额
+     * @apiSuccess (返回) {String} bountyAll 奖励金总额
+     * @apiSuccess (返回) {Array} bountyDetail 明细
+     * @apiSuccess (bountyDetail) {String} id 明细
+     * @apiSuccess (bountyDetail) {String} uid 用户ID
+     * @apiSuccess (bountyDetail) {String} bounty_status 分享用户奖励金否激活 1.激活 2.未激活
+     * @apiSuccess (bountyDetail) {String} create_time 时间
+     * @apiSuccess (bountyDetail) {Array} user 用户信息
+     * @apiSuccess (bountyDetail[user]) {String} user id
+     * @apiSuccess (bountyDetail[user]) {String} nick_name 用户昵称
+     * @apiSuccess (bountyDetail[user]) {String} avatar 用户头像
+     * @apiSampleRequest /index/user/bountyDetail
+     * @return array
+     * @author rzc
+     */
+    public function bountyDetail() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('pageNum'));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->user->bountyDetail($conId, $page, $pageNum);
+        return $result;
+    }
+
     /**
      ** @api              {post} / 分享浏览人次
      * @apiDescription   getUserRead

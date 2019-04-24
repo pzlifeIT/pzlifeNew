@@ -1008,7 +1008,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false, $old_parent_id = '') {
+    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false, $old_parent_id = '' , int $actype) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -1016,20 +1016,25 @@ class Order extends CommonIndex {
         if (!$parent_id) {
             $parent_id = 1;
         } else {
-            $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
-            if (empty($parent_info)) {
-                $parent_id = 1;
-            } else {
-                if ($parent_info['user_identity'] < 2) {
+                $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
+                if (empty($parent_info)) {
                     $parent_id = 1;
-                }
-                if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                    $parent_id = 1;
+                } else {
+                    if ($actype != 2) {
+                        if ($parent_info['user_identity'] < 2) {
+                            $parent_id = 1;
+                        }
+                        if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                            $parent_id = 1;
+                        }
                 }
             }
-
+            
         }
-
+        if ($uid == $parent_id) {
+            $parent_id = 1;
+        }
+        
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
@@ -1049,7 +1054,7 @@ class Order extends CommonIndex {
         }
 
         /* 先查询是否有已存在未结算订单 */
-        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'from_uid' => $parent_id, 'user_type' => $user_type, 'pay_status' => 1], '*', true);
+        $has_member_order = DbOrder::getMemberOrder(['uid' => $uid, 'from_uid' => $parent_id, 'user_type' => $user_type, 'pay_status' => 1, 'actype' => $actype], '*', true);
         if ($has_member_order) {
             /* 判断订单金额是否与最新订单金额相等 */
             if ($pay_money != $has_member_order['pay_money']) {
@@ -1063,6 +1068,7 @@ class Order extends CommonIndex {
                     'member_order_id' => $has_member_order['id'],
                     'uid'             => $uid,
                     'user_type'       => $user_type,
+                    'actype'          => $actype,
                     'parent_id'       => $parent_id,
                     'old_parent_id'   => $old_parent_id,
                     'pay_money'       => $pay_money,
@@ -1077,6 +1083,7 @@ class Order extends CommonIndex {
             $order['user_type'] = $user_type;
             $order['pay_money'] = $pay_money;
             $order['pay_type']  = $pay_type;
+            $order['actype']    = $actype;
             if ($parent_id) {
                 $order['from_uid'] = $parent_id;
             }
@@ -1086,6 +1093,7 @@ class Order extends CommonIndex {
                     'member_order_id' => $add,
                     'uid'             => $uid,
                     'user_type'       => $user_type,
+                    'actype'          => $actype,
                     'pay_money'       => $pay_money,
                     'parent_id'       => $parent_id,
                     'old_parent_id'   => $old_parent_id

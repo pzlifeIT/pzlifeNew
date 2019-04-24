@@ -7,9 +7,9 @@ use app\facade\DbAdmin;
 use app\facade\DbImage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
+use app\facade\DbRights;
 use app\facade\DbUser;
 use Config;
-use Endroid\QrCode\QrCode;
 use Env;
 use think\Db;
 
@@ -33,6 +33,9 @@ class User extends CommonIndex {
      */
     public function login($mobile, $password, $buid) {
         $user = DbUser::getUserOne(['mobile' => $mobile], 'id,passwd');
+        if (empty($user)) {
+            return ['code' => '3002'];
+        }
         $uid  = $user['id'];
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -421,65 +424,71 @@ class User extends CommonIndex {
         if ($user['user_identity'] != '4') {
             return ['code' => '3004']; //不是boss
         }
-        $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
-        if ($this->redis->exists($redisKey)) {
-            $data = json_decode($this->redis->get($redisKey), true);
-        } else {
-            // $toMonth    = strtotime(date('Y-m-01')); //当月的开始时间
-            // $preMonth   = strtotime(date('Y-m-01', strtotime('-1 month'))); //上月的开始时间
-            // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
-            $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商票余额
-            $commission = $user['commission_freeze'] == '1' ? 0 : $user['commission']; //佣金余额
-            $integral   = $user['integral']; //积分余额
-            $balanceUse = abs(DbUser::getLogTradingSum([
-                ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
-                ['uid', '=', $uid],
-                // ['create_time', '>=', $threeMonth], //近三个月
-            ], 'money')); //已用商票总额
-            $noBbonus = DbUser::getLogBonusSum([
-                'to_uid'        => $uid,
-                'user_identity' => 4, //boss身份获得的收益
-                'status'        => 1, //待结算的
-                // 'bonus_type'    => 2, //经营性收益
-            ], 'result_price'); //未到账
+        // $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
+        // if ($this->redis->exists($redisKey)) {
+        //     $data = json_decode($this->redis->get($redisKey), true);
+        // } else {
+        // $toMonth    = strtotime(date('Y-m-01')); //当月的开始时间
+        // $preMonth   = strtotime(date('Y-m-01', strtotime('-1 month'))); //上月的开始时间
+        // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
+        $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商票余额
+        $commission = $user['commission_freeze'] == '1' ? 0 : $user['commission']; //佣金余额
+        $integral   = $user['integral']; //积分余额
+        $balanceUse = abs(DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'], //商票交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['uid', '=', $uid],
+            // ['create_time', '>=', $threeMonth], //近三个月
+        ], 'money')); //已用商票总额
+        $balanceAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'],
+            ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
+        $noBbonus = DbUser::getLogBonusSum([
+            'to_uid'        => $uid,
+            'user_identity' => 4, //boss身份获得的收益
+            'status'        => 1, //待结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //未到账
 
-            $bonus = DbUser::getLogBonusSum([
-                'to_uid'        => $uid,
-                'user_identity' => 4, //boss身份获得的收益
-                'status'        => 2, //已结算的
-                // 'bonus_type'    => 2, //经营性收益
-            ], 'result_price'); //全部返利(已入账)
-            // $merchants = DbUser::getLogTradingSum([
-            //     ['trading_type', '=', '2'],
-            //     ['change_type', '=', 5],
-            //     ['uid', '=', $uid],
-            //     // ['create_time', '>=', $threeMonth], //近三个月
-            // ], 'money'); //招商加盟收益
-            $merchants = DbUser::getLogInvestSum([
-                ['uid', '=', $uid],
-                ['status', '=', 3],
-            ], 'cost'); //招商加盟收益
-            $commissionAll = DbUser::getLogTradingSum([
-                ['trading_type', '=', '2'],
-                ['change_type', 'in', [3, 4, 5, 8]],
-                ['money', '>', 0],
-                ['uid', '=', $uid],
-            ], 'money'); //商票总额
-            $data = [
-                'balance_all'    => bcadd($balance, $balanceUse, 2), //商票总额
-                'balance'        => $balance, //商票余额
-                'commission'     => $commission, //佣金余额
-                'commission_all' => $commissionAll, //佣金总额
-                'integral'       => $integral, //积分余额
-                'balance_use'    => $balanceUse, //已使用商票
-                'no_bonus'       => $noBbonus, //未到账
-                'bonus'          => $bonus, //已到账返利
-                'bonus_all'      => bcadd($noBbonus, $bonus, 2),
-                'merchants'      => $merchants, //招商加盟收益
-            ];
-            $this->redis->setEx($redisKey, 120, json_encode($data));
-        }
+        $bonus = DbUser::getLogBonusSum([
+            'to_uid'        => $uid,
+            'user_identity' => 4, //boss身份获得的收益
+            'status'        => 2, //已结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //全部返利(已入账)
+        // $merchants = DbUser::getLogTradingSum([
+        //     ['trading_type', '=', '2'],
+        //     ['change_type', '=', 5],
+        //     ['uid', '=', $uid],
+        //     // ['create_time', '>=', $threeMonth], //近三个月
+        // ], 'money'); //招商加盟收益
+        $merchants = DbUser::getLogInvestSum([
+            ['uid', '=', $uid],
+            ['status', '=', 3],
+        ], 'cost'); //招商加盟收益
+        $commissionAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', 'in', [3, 4, 5, 8, 11]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
+        $data = [
+            'balance_all'    => $balanceAll, //商票总额
+            'balance'        => $balance, //商票余额
+            'commission'     => $commission, //佣金余额
+            'commission_all' => $commissionAll, //佣金总额
+            'integral'       => $integral, //积分余额
+            'balance_use'    => $balanceUse, //已使用商票
+            'no_bonus'       => $noBbonus, //未到账
+            'bonus'          => $bonus, //已到账返利
+            'bonus_all'      => bcadd($noBbonus, $bonus, 2),
+            'merchants'      => $merchants, //招商加盟收益
+        ];
+        //     $this->redis->setEx($redisKey, 120, json_encode($data));
+        // }
         return ['code' => '200', 'data' => $data];
     }
 
@@ -559,11 +568,11 @@ class User extends CommonIndex {
         }
 
         $field    = 'from_uid,to_uid,result_price,order_no,status,create_time';
-        $distinct = DbUser::getLogBonusDistinct($where, 'order_no', false, ['order_no' => 'desc'], $offset . ',' . $pageNum);
+        $distinct = DbUser::getLogBonusDistinct($where, 'order_no', false, 'order_no desc', $offset . ',' . $pageNum);
         $distinct = array_column($distinct, 'order_no');
         $where2   = $where;
         $where2[] = ['order_no', 'in', $distinct];
-        $bonus    = DbUser::getLogBonus($where2, $field);
+        $bonus    = DbUser::getLogBonus($where2, $field, false, 'create_time desc');
         $combined = DbUser::getLogBonusSum($where, 'result_price'); //合计
         $userList = DbUser::getUserInfo([['id', 'in', array_unique(array_column($bonus, 'from_uid'))]], 'id,nick_name,avatar,user_identity');
         $userList = array_combine(array_column($userList, 'id'), $userList);
@@ -592,13 +601,117 @@ class User extends CommonIndex {
     }
 
     /**
-     * 获取店铺商票明细
+     * 个人中心佣金明细
      * @param $conId
-     * @param $stype
+     * @param $page
+     * @param $pageNum
      * @return array
      * @author zyr
      */
-    public function getShopBalance($conId, $stype) {
+    public function getShopCommission($conId, $page, $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $where  = [
+            ['trading_type', '=', '2'], //佣金交易
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
+            ['uid', '=', $uid],
+        ];
+        $field  = 'change_type,money,create_time,message';
+        $data   = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
+        $result = [];
+        foreach ($data as $d) {
+            $trType = $d['change_type'];
+            switch ($trType) {
+            case 3:
+                $ctype = '充值';
+                break;
+            case 4:
+                $ctype = '订单收益';
+                break;
+            case 5:
+                $ctype = '招商代理收益';
+                break;
+            case 6:
+                $ctype = '提现';
+                break;
+            case 7:
+                $ctype = '转商票';
+                break;
+            case 8:
+                $ctype = '后台充值操作';
+                break;
+            case 9:
+                $ctype = '开通boss预扣款';
+                break;
+            case 10:
+                $ctype = '提现审核不通过退回';
+                break;
+            case 11:
+                $ctype = '老商城转入';
+                break;
+            }
+            $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
+            unset($d['message']);
+            array_push($result, $d);
+        }
+        return ['code' => '200', 'data' => $result];
+    }
+
+    /**
+     * 个人中心佣金统计
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function getShopCommissionSum($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,commission,commission_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $commission = $user['commission']; //佣金余额
+        if ($user['commission_freeze'] == 1) { //佣金冻结
+            $commission = 0;
+        }
+        $commissionAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', 'in', [3, 4, 5, 8, 11]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金总额
+        $commissionExtract = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', 'in', [6, 10]],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金提现
+        $commissionToBalance = DbUser::getLogTradingSum([
+            ['trading_type', '=', '2'],
+            ['change_type', '=', 7],
+            ['uid', '=', $uid],
+        ], 'money'); //佣金转商票
+        return ['code' => '200', 'commission' => $commission, 'commission_all' => $commissionAll, 'commission_extract' => abs($commissionExtract), 'commission_to_balance' => abs($commissionToBalance)];
+    }
+
+    /**
+     * 获取店铺商票明细
+     * @param $conId
+     * @param $stype
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalance($conId, $stype, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
             return ['code' => '3003'];
@@ -610,35 +723,47 @@ class User extends CommonIndex {
         // if ($user['user_identity'] == '1') { //普通用户
         //     return ['code' => '3000']; //普通用户没有权限查看
         // }
-        $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
-        $data       = [];
+        $offset = ($page - 1) * $pageNum;
+        // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
+        $data = [];
         if ($stype == 1) { //已使用
             $where = [
                 ['trading_type', '=', '1'], //商票交易
                 ['change_type', 'in', [1, 2]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
                 ['uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
+                // ['create_time', '>=', $threeMonth], //近三个月
             ];
             $field = 'change_type,order_no,money,create_time,message';
-            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         if ($stype == 3) { //余额明细
             $where = [
                 ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2, 4, 5, 7, 8]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
                 ['uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
+                // ['create_time', '>=', $threeMonth], //近三个月
             ];
             $field = 'change_type,order_no,money,create_time,message';
-            $data  = DbUser::getLogTrading($where, $field, false, 'id desc');
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         if ($stype == 2) { //未结算商票
             $data = DbUser::getLogBonus([
                 ['user_identity', '=', 2], //只查商票
                 ['status', '=', '1'], //待结算(未到账的)
                 ['to_uid', '=', $uid],
-                ['create_time', '>=', $threeMonth], //近三个月
-            ], 'order_no,result_price as money,create_time'); //未结算商票
+                // ['create_time', '>=', $threeMonth], //近三个月
+            ], 'order_no,result_price as money,create_time', false, 'id desc', $offset . ',' . $pageNum); //未结算商票
+        }
+        if ($stype == 4) { //总额明细
+            $where = [
+                ['trading_type', '=', '1'], //商票交易
+                ['change_type', 'in', [3, 4, 5, 8, 7, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['money', '>', 0],
+                ['uid', '=', $uid],
+                // ['create_time', '>=', $threeMonth], //近三个月
+            ];
+            $field = 'change_type,order_no,money,create_time,message';
+            $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
         $result = [];
         // print_r($data);die;
@@ -649,10 +774,10 @@ class User extends CommonIndex {
                 $ctype = '已使用商票';
                 break;
             case 2:
-                $ctype = '商票退款';
+                $ctype = '订单取消商票退回';
                 break;
             case 4:
-                $ctype = '钻石返利';
+                $ctype = '钻石再让利';
                 break;
             case 5:
                 $ctype = '钻石会员邀请奖励';
@@ -671,6 +796,45 @@ class User extends CommonIndex {
         // print_r($data);die;
         return ['code' => '200', 'data' => $result];
         //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
+    }
+
+    /**
+     * 个人中心我的商票
+     * @param {type}
+     * @return array
+     * @author zyr
+     */
+    public function getShopBalanceSum($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,balance,balance_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $balance = $user['balance']; //商票余额
+        if ($user['balance_freeze'] == 1) { //商票冻结
+            $balance = 0;
+        }
+        $balanceUse = abs(DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'], //商票交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['uid', '=', $uid],
+        ], 'money')); //已用商票
+        $noBbonus = DbUser::getLogBonusSum([
+            'to_uid'     => $uid,
+            'bonus_type' => 1, //返利
+            'status'     => 1, //待结算的
+            // 'bonus_type'    => 2, //经营性收益
+        ], 'result_price'); //待到账商票
+        $balanceAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '1'],
+            ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //商票总额
+        return ['code' => '200', 'balance' => $balance, 'balanceUse' => $balanceUse, 'balanceAll' => $balanceAll, 'noBbonus' => $noBbonus];
     }
 
     /**
@@ -992,10 +1156,13 @@ class User extends CommonIndex {
             $trType = $d['stype'] ?? 1;
             switch ($trType) {
             case 1:
-                $ctype = '分利';
+                $ctype = '购物积分';
                 break;
             case 2:
                 $ctype = '后台充值';
+                break;
+            case 3:
+                $ctype = '老商城转入积分';
                 break;
             }
             $d['ctype'] = $ctype;
@@ -1518,14 +1685,14 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getQrcode($conId, $page, $scene, $type) {
+    public function getQrcode($conId, $page, $scene, $stype) {
         $uid    = $this->getUidByConId($conId);
         $Upload = new Upload;
         if (empty($uid)) {
             return ['code' => '3000'];
         }
         // 先查询是否有已存在图片
-        $has_QrImage = DbImage::getUserImage('*', ['uid' => $uid, 'stype' => 1], true);
+        $has_QrImage = DbImage::getUserImage('*', ['uid' => $uid, 'stype' => $stype], true);
         if (!empty($has_QrImage)) {
             $Qrcode = $has_QrImage['image'];
             return ['code' => '200', 'Qrcode' => $Qrcode];
@@ -1548,7 +1715,7 @@ class User extends CommonIndex {
                 }
                 $upUserInfo          = [];
                 $upUserInfo['uid']   = $uid;
-                $upUserInfo['stype'] = $type;
+                $upUserInfo['stype'] = $stype;
                 $upUserInfo['image'] = $upload['image_path'];
                 Db::startTrans();
                 try {
@@ -1632,66 +1799,121 @@ class User extends CommonIndex {
      * 用户转商票
      * @param $conId
      * @param $money
+     * @param $type 1.佣金转商票,2.奖励金转商票
      * @return string
      * @author rzc
      */
-    public function commissionTransferBalance($conId, $money) {
+    public function commissionTransferBalance($conId, $money, $type = '') {
         $userRedisKey = Config::get('rediskey.user.redisKey');
-        $uid = $this->getUidByConId($conId);
+        $uid          = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,balance,commission', true);
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,balance,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($userInfo['commission'] <= 0) {
-            return ['code' => '3005'];
+        if ($type == 1) { //1.佣金转商票
+            if ($userInfo['commission'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['commission'] - $money < 0) {
+                return ['code' => '3005'];
+            }
+        } elseif ($type == 2) { //2.奖励金转商票
+            if ($userInfo['bounty'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['bounty'] - $money < 0) {
+                return ['code' => '3005'];
+            }
         }
-        if ($userInfo['commission'] - $money < 0) {
-            return ['code' => '3005'];
+
+        $transfer           = [];
+        $transfer['uid']    = $uid;
+        $transfer['status'] = 2;
+        if ($type == 1) { //1.佣金转商票
+            $transfer['stype'] = 1;
+        } elseif ($type == 2) { //2.奖励金转商票
+            $transfer['stype'] = 3;
         }
-        $transfer               = [];
-        $transfer['uid']        = $uid;
-        $transfer['status']     = 2;
-        $transfer['stype']      = 1;
         $transfer['wtype']      = 4;
         $transfer['money']      = $money;
         $transfer['proportion'] = 0;
         $transfer['invoice']    = 2;
         //扣除佣金
-        $tradingData = [
-            'uid'          => $uid,
-            'trading_type' => 2,
-            'change_type'  => 7,
-            'money'        => -$money,
-            'befor_money'  => $userInfo['commission'],
-            'after_money'  => bcsub($userInfo['commission'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        if ($type == 1) { //1.佣金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 2,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['commission'],
+                'after_money'  => bcsub($userInfo['commission'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        } elseif ($type == 2) { //2.奖励金转商票
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 3,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['bounty'],
+                'after_money'  => bcsub($userInfo['bounty'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }
+
         //增加商票日志
-        $addtrading = [
-            'uid'          => $uid,
-            'trading_type' => 1,
-            'change_type'  => 7,
-            'money'        => $money,
-            'befor_money'  => $userInfo['balance'],
-            'after_money'  => bcadd($userInfo['balance'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        if ($type == 2) {
+            // $money = bcmul($money, 1.25, 2);
+            $addtrading = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 7,
+                'money'        => bcmul($money, 1.25, 2),
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcadd($userInfo['balance'], bcmul($money, 1.25, 2), 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }else{
+            $addtrading = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 7,
+                'money'        => $money,
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcadd($userInfo['balance'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }
+        
+        if ($type == 2) {
+            $addtrading['change_type'] = 12;
+        }
         // print_r($addtrading);die;
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            DbUser::modifyCommission($uid, $money);
+            if ($type == 1) { //1.佣金转商票
+                DbUser::modifyCommission($uid, $money);
+            } elseif ($type == 2) { //2.奖励金转商票
+                // $money = bcdiv($money, 1.25, 2);
+                DbUser::modifyBounty($uid, $money);
+            }
             DbUser::saveLogTrading($tradingData);
             DbUser::saveLogTrading($addtrading);
-            DbUser::modifyBalance($uid, $money, 'inc');
+            if ($type == 2) {
+                DbUser::modifyBalance($uid, bcmul($money, 1.25, 2), 'inc');
+            }else{
+                DbUser::modifyBalance($uid, $money, 'inc');
+            }
+            
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
         } catch (\Exception $e) {
-            print_r($e);
+            exception($e);
             Db::rollback();
             return ['code' => '3006']; //添加失败
         }
@@ -1774,10 +1996,10 @@ class User extends CommonIndex {
             }
             // print_r($user_bank);die;
             if ($user_bank['error_fields']) {
-                $error_fields = explode(',',$user_bank['error_fields']);
-                $new_fields = [];
+                $error_fields = explode(',', $user_bank['error_fields']);
+                $new_fields   = [];
                 foreach ($error_fields as $error => $fields) {
-                    $new_fields[$fields]=1;
+                    $new_fields[$fields] = 1;
                 }
                 $user_bank['error_fields'] = $new_fields;
             }
@@ -1838,7 +2060,7 @@ class User extends CommonIndex {
         if ($bankcard_message['bank'] != $admin_bank['abbrev']) {
             return ['code' => '3010'];
         }
-        
+
         $userBank                  = [];
         $userBank['uid']           = $uid;
         $userBank['user_name']     = $user_name;
@@ -1870,7 +2092,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function changeUserBankcardStatus($conId,int $id,int $status){
+    public function changeUserBankcardStatus($conId, int $id, int $status) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -1880,7 +2102,7 @@ class User extends CommonIndex {
         if (empty($bank_card)) {
             return ['code' => '3006'];
         }
-        if (!in_array($bank_card['status'],[1,2,3])) {
+        if (!in_array($bank_card['status'], [1, 2, 3])) {
             return ['code' => '3004'];
         }
         if ($status == 3) { //撤销
@@ -1888,43 +2110,43 @@ class User extends CommonIndex {
                 return ['code' => '3004'];
             }
             Db::startTrans();
-                try {
-                    DbUser::delUserBank($id);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    exception($e);
-                    Db::rollback();
-                    return ['code' => '3007']; //添加失败
-              }
-        }elseif ($status == 1) { //启用
-            if ($bank_card['status'] != 3) {
-                return ['code' => '3004'];
-            }
-            Db::startTrans();
-                try {
-                    DbUser::editUserBank(['status' => 2],$id);
-                    Db::commit();
-                    return ['code' => '200'];
-                } catch (\Exception $e) {
-                    exception($e);
-                    Db::rollback();
-                    return ['code' => '3007']; //添加失败
-              }
-        }elseif ($status == 2) {//启用
-            if ($bank_card['status'] != 2) {
-                return ['code' => '3004'];
-            }
-            Db::startTrans();
             try {
-                DbUser::editUserBank(['status' => 3],$id);
+                DbUser::delUserBank($id);
                 Db::commit();
                 return ['code' => '200'];
             } catch (\Exception $e) {
                 exception($e);
                 Db::rollback();
                 return ['code' => '3007']; //添加失败
-          }
+            }
+        } elseif ($status == 1) { //启用
+            if ($bank_card['status'] != 3) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+            try {
+                DbUser::editUserBank(['status' => 2], $id);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3007']; //添加失败
+            }
+        } elseif ($status == 2) { //启用
+            if ($bank_card['status'] != 2) {
+                return ['code' => '3004'];
+            }
+            Db::startTrans();
+            try {
+                DbUser::editUserBank(['status' => 3], $id);
+                Db::commit();
+                return ['code' => '200'];
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3007']; //添加失败
+            }
         }
     }
 
@@ -1936,7 +2158,7 @@ class User extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice) {
+    public function commissionTransferCash($conId, int $bankcard_id, $money, int $invoice = 2, $stype = 2) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -1947,37 +2169,49 @@ class User extends CommonIndex {
         if (empty($user_bank_card)) {
             return ['code' => '3006'];
         }
-        if (!in_array($user_bank_card['status'], [1, 2])) {
+        if (!in_array($user_bank_card['status'], [2, 4])) {
             return ['code' => '3008', 'msg' => '该银行卡暂不可用'];
         }
-        if ($money < 2000 || $money > 200000) {
-            return ['code' => '3007'];
-        }
-        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission', true);
+
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,nick_name,commission,bounty', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($userInfo['commission'] <= 0) {
-            return ['code' => '3005'];
-        }
-        if ($userInfo['commission'] - $money < 0) {
-            return ['code' => '3005'];
-        }
-        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
-        $invoice_data = $this->redis->get($redisManageInvoice);
-        if (empty($invoice_data)) {
-            $invoice_data = @file_get_contents(Env::get('root_path')."invoice.json");
-            if ($invoice_data == false) {
-                return ['code' => '3009'];
+        if ($stype == 2) { //1.佣金提现
+            if ($money < 2000 || $money > 200000) {
+                return ['code' => '3007'];
             }
+            if ($userInfo['commission'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['commission'] - $money < 0) {
+                return ['code' => '3005'];
+            }
+            $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
+            $invoice_data       = $this->redis->get($redisManageInvoice);
+            if (empty($invoice_data)) {
+                $invoice_data = @file_get_contents(Env::get('root_path') . "invoice.json");
+                if ($invoice_data == false) {
+                    return ['code' => '3009'];
+                }
+            }
+            $invoice_data = json_decode($invoice_data, true);
+            if ($invoice == 1) {
+                $proportion = $invoice_data['has_invoice'];
+            } elseif ($invoice == 2) {
+                $proportion = $invoice_data['no_invoice'];
+            }
+    
+        } elseif ($stype == 4) { //2.奖励金提现
+            if ($userInfo['bounty'] <= 0) {
+                return ['code' => '3005'];
+            }
+            if ($userInfo['bounty'] - $money < 0) {
+                return ['code' => '3005'];
+            }
+            $proportion = 0;
         }
-        $invoice_data = json_decode($invoice_data,true);
-        if ($invoice == 1) {
-            $proportion = $invoice_data['has_invoice'];
-        } elseif ($invoice == 2) {
-            $proportion = $invoice_data['no_invoice'];;
-        }
-        $userRedisKey = Config::get('rediskey.user.redisKey');
+        $userRedisKey            = Config::get('rediskey.user.redisKey');
         $transfer                = [];
         $transfer['uid']         = $uid;
         $transfer['abbrev']      = $user_bank_card['admin_bank']['abbrev'];
@@ -1987,26 +2221,49 @@ class User extends CommonIndex {
         $transfer['bank_mobile'] = $user_bank_card['bank_mobile'];
         $transfer['user_name']   = $user_bank_card['user_name'];
         $transfer['status']      = 1;
-        $transfer['stype']       = 2;
+        $transfer['stype']       = $stype;
         $transfer['wtype']       = 1;
         $transfer['money']       = $money;
         $transfer['proportion']  = $proportion;
         $transfer['invoice']     = $invoice;
+
+        // if ($stype == 2) { //1.佣金提现
+        //     $transfer['stype'] = 2;
+        // } elseif ($stype == 4) { //2.奖励金提现
+
+        // }
         //扣除佣金
-        $tradingData = [
-            'uid'          => $uid,
-            'trading_type' => 2,
-            'change_type'  => 6,
-            'money'        => -$money,
-            'befor_money'  => $userInfo['commission'],
-            'after_money'  => bcsub($userInfo['commission'], $money, 2),
-            // 'message'      => $remittance['message'],
-        ];
+        if ($stype == 2) { //1.佣金提现
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 2,
+                'change_type'  => 6,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['commission'],
+                'after_money'  => bcsub($userInfo['commission'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        } elseif ($stype == 4) { //2.奖励金提现
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 3,
+                'change_type'  => 7,
+                'money'        => -$money,
+                'befor_money'  => $userInfo['bounty'],
+                'after_money'  => bcsub($userInfo['bounty'], $money, 2),
+                // 'message'      => $remittance['message'],
+            ];
+        }
+
         // print_r($transfer);die;
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            DbUser::modifyCommission($uid, $money);
+            if ($stype == 2) { //1.佣金提现
+                DbUser::modifyCommission($uid, $money);
+            } elseif ($stype == 4) { //2.奖励金提现
+                DbUser::modifyBounty($uid, $money);
+            }
             DbUser::saveLogTrading($tradingData);
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
@@ -2093,8 +2350,13 @@ class User extends CommonIndex {
             return ['code' => '200', 'log_transfer' => []];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
-            $result[$key]['deduct_money'] = bcmul(bcdiv ($value['proportion'], 100, 2), $value['money'], 2);
+            if ($value['stype'] == 1) {
+                $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+            } elseif ($value['stype'] == 3) {
+                $result[$key]['real_money'] = bcmul($value['money'], 1.25, 2);
+            }
+
+            $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
         }
         return ['code' => '200', 'log_transfer' => $result];
     }
@@ -2218,18 +2480,48 @@ class User extends CommonIndex {
         return ['code' => '200', 'adminBank' => $result];
     }
 
-     /**
+    /**
      * 获取提现比率
      * @return string
      * @author rzc
      */
     public function getInvoice() {
         // echo ;die;
-        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        $invoice = @file_get_contents(Env::get('root_path') . "invoice.json");
         if ($invoice == false) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
 
+    }
+
+    public function bountyDetail($conId, int $page, int $pageNum) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'mobile,user_identity,bounty,bounty_freeze');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $bounty = $user['bounty']; //奖励金余额
+        if ($user['bounty_freeze'] == 1) { //奖励金冻结
+            $bounty = 0;
+        }
+        $bountyAll = DbUser::getLogTradingSum([
+            ['trading_type', '=', '3'],
+            ['change_type', 'in', [5]],
+            ['money', '>', 0],
+            ['uid', '=', $uid],
+        ], 'money'); //奖励金总额
+        $diamondvip = DbRights::getDiamondvip(['uid' => $uid],'uid,id,share_num',true);
+        if (!$diamondvip) {
+            $share_num = 0;
+        }else{
+            $share_num = $diamondvip['share_num'];
+        }
+        $bountyDetail = DbRights::getDiamondvip(['share_uid' => $uid, 'source' => 2], 'id,uid,create_time,bounty_status', false, 'id', 'desc', $offset . ',' . $pageNum);
+        return ['code' => '200', 'share_num' => $share_num, 'bounty' => $bounty, 'bountyAll' => $bountyAll, 'bountyDetail' => $bountyDetail];
     }
 }

@@ -144,6 +144,10 @@ class Admin extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
         }
+        $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
+        if ($this->redis->setNx($redisKey . $user['id'], 1) === false) {
+            return ['code' => '3009'];
+        }
         if ($user['user_identity'] == 4) {
             return ['code' => '3007']; //该用户已经是boss
         }
@@ -198,6 +202,7 @@ class Admin extends CommonIndex {
             DbUser::updateUser(['user_identity' => 4], $user['id']);
             DbUser::addLogOpenboss($logOpenbossData);
             Db::commit();
+            $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
@@ -294,10 +299,11 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message) {
-        $message   = $message ?? '';
-        $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
+    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message, $admin_message) {
+        $message       = $message ?? '';
+        $admin_message = $admin_message ?? '';
+        $adminId       = $this->getUidByConId($cmsConId);
+        $adminInfo     = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
             return ['code' => '3001'];
         }
@@ -321,6 +327,7 @@ class Admin extends CommonIndex {
         $add_remittance['status']            = 1;
         $add_remittance['credit']            = $credit;
         $add_remittance['message']           = $message;
+        $add_remittance['admin_message']     = $admin_message;
         DbAdmin::addAdminRemittance($add_remittance);
         return ['code' => '200'];
     }
@@ -719,11 +726,13 @@ class Admin extends CommonIndex {
             return ['code' => '3000'];
         }
         foreach ($result as $key => $value) {
-            $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
-            $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
+            if ($value['stype'] == 1) {
+                $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+                $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
+            } 
         }
         $total = DbUser::countLogTransfer($where);
-        return ['code' => '200','total' => $total, 'log_transfer' => $result];
+        return ['code' => '200', 'total' => $total, 'log_transfer' => $result];
     }
 
     /**
@@ -748,10 +757,10 @@ class Admin extends CommonIndex {
         if ($transfer['status'] != 1) {
             return ['code' => '3004'];
         }
-        if ($transfer['stype'] == 2) { //佣金提现
-            if ($transfer['wtype'] == 1) { //提现方式 1 银行
-                if ($status == 3) { //审核不通过
-                    $indexUser   = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission', true);
+        if ($transfer['wtype'] == 1) { //提现方式 1 银行
+            if ($status == 3) { //审核不通过
+                $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty', true);
+                if ($transfer['stype'] == 2) { //2.佣金提现
                     $tradingData = [
                         'uid'          => $transfer['uid'],
                         'trading_type' => 2,
@@ -761,33 +770,49 @@ class Admin extends CommonIndex {
                         'after_money'  => bcadd($indexUser['commission'], $transfer['money'], 2),
                         'message'      => $message,
                     ];
-                    // print_r($indexUser);die;
-                    Db::startTrans();
-                    try {
+                } elseif ($transfer['stype'] == 4) { //奖励金提现
+                    $tradingData = [
+                        'uid'          => $transfer['uid'],
+                        'trading_type' => 3,
+                        'change_type'  => 10,
+                        'money'        => $transfer['money'],
+                        'befor_money'  => $indexUser['bounty'],
+                        'after_money'  => bcadd($indexUser['bounty'], $transfer['money'], 2),
+                        'message'      => $message,
+                    ];
+                }
+
+                // print_r($indexUser);die;
+                Db::startTrans();
+                try {
+                    if ($transfer['stype'] == 2) { //2.佣金提现
                         DbUser::modifyCommission($transfer['uid'], $transfer['money'], 'inc');
-                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
-                        DbOrder::addLogTrading($tradingData);
-                        Db::commit();
-                        $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
-                        return ['code' => '200'];
-                    } catch (\Exception $e) {
-                        Db::rollback();
-                        exception($e);
-                        return ['code' => '3007']; //审核失败
+                    } elseif ($transfer['stype'] == 4) { //4.奖励金提现
+                        DbUser::modifyBounty($transfer['uid'], $transfer['money'], 'inc');
                     }
-                } elseif ($status == 2) { //审核通过
-                    Db::startTrans();
-                    try {
-                        DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
-                        Db::commit();
-                        return ['code' => '200'];
-                    } catch (\Exception $e) {
-                        Db::rollback();
-                        return ['code' => '3007']; //审核失败
-                    }
+                    DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                    DbOrder::addLogTrading($tradingData);
+                    Db::commit();
+                    $this->redis->del($userRedisKey . 'userinfo:' . $transfer['uid']);
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    exception($e);
+                    return ['code' => '3007']; //审核失败
+                }
+            } elseif ($status == 2) { //审核通过
+                Db::startTrans();
+                try {
+                    DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
+                    Db::commit();
+                    return ['code' => '200'];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    return ['code' => '3007']; //审核失败
                 }
             }
         }
+
     }
 
     /**
@@ -893,23 +918,23 @@ class Admin extends CommonIndex {
      */
     public function getInvoice() {
         // echo ;die;
-        $invoice = @file_get_contents(Env::get('root_path')."invoice.json");
+        $invoice = @file_get_contents(Env::get('root_path') . "invoice.json");
         if ($invoice == false) {
             return ['code' => '3000'];
         }
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
 
     }
 
-    public function editInvoice($cmsConId,$has_invoice,$no_invoice){
-        $redisManageInvoice = Config::get('rediskey.manage.redisManageInvoice');
-        $invoice = [];
+    public function editInvoice($cmsConId, $has_invoice, $no_invoice) {
+        $redisManageInvoice     = Config::get('rediskey.manage.redisManageInvoice');
+        $invoice                = [];
         $invoice['has_invoice'] = $has_invoice;
-        $invoice['no_invoice'] = $no_invoice;
-        $invoice = json_encode($invoice,true);
-        file_put_contents(Env::get('root_path')."invoice.json",$invoice);
-        $this->redis->set($redisManageInvoice,$invoice);
-        return ['code' => '200','invoice' => json_decode($invoice,true)];
+        $invoice['no_invoice']  = $no_invoice;
+        $invoice                = json_encode($invoice, true);
+        file_put_contents(Env::get('root_path') . "invoice.json", $invoice);
+        $this->redis->set($redisManageInvoice, $invoice);
+        return ['code' => '200', 'invoice' => json_decode($invoice, true)];
         // print_r($invoice);die;
     }
 }

@@ -14,11 +14,13 @@ class ShopApply extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
-        'finish_time' => 'timestamp:Y-m-d H:i:s',//最后登录时间
+        'finish_time' => 'timestamp:Y-m-d H:i:s',//完成时间
+        'delete_time' => 'timestamp:Y-m-d H:i:s',//删除时间
     ];
-    private $status = [1 => '生效', 2 => '未生效',];//状态1.生效2.未生效
+    private $status = [1 => '申请中' , 2 => '财务审核通过', 3 => '经理审核通过', 4 => '审核不通过'];// 申请进度 1.提交申请  2:财务审核通过 3:经理审核通过 4 审核不通过
 
     // 模型初始化
     protected static function init() {

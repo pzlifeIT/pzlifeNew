@@ -19,11 +19,11 @@ return [
 //    'dividend'  => app\common\action\index\Dividend::class,
     'adminLog'  => app\common\action\admin\AdminLog::class,
     'subject'   => app\common\action\admin\Subject::class,
-    'Upload'    => app\common\action\admin\Upload::class,
     'user'      => app\common\action\admin\User::class,
     'upload'    => app\common\action\admin\Upload::class,
     'admin'     => app\common\action\admin\Admin::class,
     'rights'    => app\common\action\admin\Rights::class,
     'order'     => app\common\action\admin\Order::class,
     'recommend' => app\common\action\admin\Recommend::class,
+    'label'     => app\common\action\admin\Label::class,
 ];

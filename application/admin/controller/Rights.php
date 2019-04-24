@@ -2,14 +2,14 @@
 
 namespace app\admin\controller;
 
-use think\Controller;
 use app\admin\AdminController;
+use think\Controller;
 
 class Rights extends AdminController {
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -43,7 +43,7 @@ class Rights extends AdminController {
         $redmoney_status = trim($this->request->post('redmoney_status'));
         $type            = trim($this->request->post('type'));
         if (checkMobile($mobile) === false) {
-            return ['code' => '3001'];//手机号格式错误
+            return ['code' => '3001']; //手机号格式错误
         }
         if (!is_numeric($stock) || !is_numeric($coupon_money) || !is_numeric($redmoney_status) || !is_numeric($type)) {
             return ['code' => '3002'];
@@ -127,5 +127,205 @@ class Rights extends AdminController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 邀请会员成为Boss列表
+     * @apiDescription   getShopApplyList
+     * @apiGroup         admin_Rights
+     * @apiName          getShopApplyList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiParam (入参) {String} [target_uid] 被邀请人id
+     * @apiParam (入参) {String} [target_uname] 被邀请人昵称
+     * @apiParam (入参) {String} [target_nickname] 被邀请人姓名
+     * @apiParam (入参) {Number} [target_sex] 被邀请人性别 1.男2.女
+     * @apiParam (入参) {String} [target_mobile] 被邀请人手机号
+     * @apiParam (入参) {String} [target_idcard] 被邀请人身份证号
+     * @apiParam (入参) {String} [refe_uid] 邀请人id
+     * @apiParam (入参) {String} [refe_uname] 邀请人昵称
+     * @apiParam (入参) {Number} [shop_id] 邀请人门店id
+     * @apiParam (入参) {Number} [refe_type] 邀请人门店id
+     * @apiParam (入参) {Number} [status] 申请进度 1.提交申请  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page手机号校验失败 / 3002:page_num和page只能为数字 / 3003:target_idcard校验失败 / 3004:status参数必须为数字 / 3005:
+     * @apiSuccess (返回) {Number} total 条数
+     * @apiSuccess (返回) {Array} data 返回数据
+     * @apiSuccess (data) {Number} id id
+     * @apiSuccess (data) {String} target_uid 被邀请人id
+     * @apiSuccess (data) {String} target_uname 被邀请人昵称
+     * @apiSuccess (data) {String} target_nickname 被邀请人姓名
+     * @apiSuccess (data) {String} target_sex 被邀请人性别 1.男2.女
+     * @apiSuccess (data) {String} target_mobile 被邀请人手机号
+     * @apiSuccess (data) {String} target_idcard 被邀请人身份证号
+     * @apiSuccess (data) {String} refe_uid 邀请人id
+     * @apiSuccess (data) {String} refe_uname 邀请人昵称
+     * @apiSuccess (data) {String} shop_id 邀请人门店id
+     * @apiSuccess (data) {String} refe_type 被邀请成为店主类型1.创业店主2.boss合伙人
+     * @apiSuccess (data) {Number} status 申请进度 1.提交申请  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSampleRequest /admin/Rights/getShopApplyList
+     * @author wujunjie
+     * 2018/12/26-18:04
+     */
+    public function getShopApplyList() {
+        $page            = trim(input("post.page"));
+        $pageNum         = trim(input("post.page_num"));
+        $status          = trim(input("post.status"));
+        $target_uid      = trim(input("post.target_uid"));
+        $target_uname    = trim(input("post.target_uname"));
+        $target_nickname = trim(input("post.target_nickname"));
+        $target_sex      = trim(input("post.target_sex"));
+        $target_mobile   = trim(input("post.target_mobile"));
+        $target_idcard   = trim(input("post.target_idcard"));
+        $refe_uid        = trim(input("post.refe_uid"));
+        $refe_uname      = trim(input("post.refe_uname"));
+        $shop_id         = trim(input("post.shop_id"));
+        $refe_type       = trim(input("post.refe_type"));
+        $status          = trim(input("post.status"));
 
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        // $status     = empty($status) ? 1 : $status;
+        $target_uid = deUid($target_uid);
+        $refe_uid   = deUid($refe_uid);
+        if (!empty($target_mobile)) {
+            if (checkIdcard($target_mobile) == false) {
+                return ['code' => '3001'];
+            }
+        }
+        if (!is_numeric($page) || !is_numeric($pageNum)) {
+            return ['code' => '3002'];
+        }
+        if (!empty($target_idcard)) {
+            if (checkIdcard($target_idcard) == false) {
+                return ['code' => '3003'];
+            }
+        }
+        // if (!is_numeric($status)) {
+        //     return ['code' => '3004'];
+        // }
+        $result = $this->app->rights->getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 审核申请开通BOSS
+     * @apiDescription   auditShopApply
+     * @apiGroup         admin_Rights
+     * @apiName          auditShopApply
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 分享钻石会员机会ID
+     * @apiParam (入参) {Number} status 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限
+     * @apiSuccess (data) {object_array} data 结果
+     * @apiSuccess (data) {String} id 用户ID
+     * @apiSampleRequest /admin/Rights/auditShopApply
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *
+     * ]
+     * @author rzc
+     */
+    public function auditShopApply() {
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        $status   = trim($this->request->post('status'));
+        $message  = trim($this->request->post('message'));
+        if (empty($id)) {
+            return ['code' => '3002'];
+        }
+        if (empty($status)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($status, [2, 3, 4])) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
+        return $result;
+
+    }
+
+    /**
+     * @api              {post} / 兼职网推奖励金列表
+     * @apiDescription   getDiamondvipNetPush
+     * @apiGroup         admin_Rights
+     * @apiName          getDiamondvipNetPush
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [page] 当前页 默认1
+     * @apiParam (入参) {Number} [page_num] 每页数量 默认10
+     * @apiParam (入参) {Number} [status] 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字  
+     * @apiSuccess (data) {object_array} diamondvipNetPush 结果
+     * @apiSuccess (diamondvipNetPush) {String} id 
+     * @apiSuccess (diamondvipNetPush) {String} typeid BOSSid
+     * @apiSuccess (diamondvipNetPush) {String} type  统计类型,钻石网推:diamondvipNetPush
+     * @apiSuccess (diamondvipNetPush) {String} timekey 关联时间索引
+     * @apiSuccess (diamondvipNetPush) {String} count 统计数量
+     * @apiSuccess (diamondvipNetPush) {String} cost 金额
+     * @apiSuccess (diamondvipNetPush) {String} status 状态  1:待发放 2:已经发放  3:取消发放
+     * @apiSuccess (diamondvipNetPush) {String} create_time 创建时间
+     * @apiSuccess (diamondvipNetPush) {String} update_time 最后修改时间
+     * @apiSuccess (diamondvipNetPush[user]) {String} id 用户ID
+     * @apiSuccess (diamondvipNetPush[user]) {nick_name} id 用户昵称
+     * @apiSuccess (diamondvipNetPush[user]) {avatar} id 用户头像
+     * @apiSampleRequest /admin/Rights/getDiamondvipNetPush
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *
+     * ]
+     * @author rzc
+     */
+    public function getDiamondvipNetPush() {
+        $page            = trim(input("post.page"));
+        $pageNum         = trim(input("post.page_num"));
+        $status          = trim(input("post.status"));
+        $page    = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $status = empty($status) ? 1 : $status;
+        if (!is_numeric($page) || !is_numeric($status) || !is_numeric($pageNum)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->rights->getDiamondvipNetPush($page,$pageNum,$status);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 发放奖励金
+     * @apiDescription   auditDiamondvipBounty
+     * @apiGroup         admin_Rights
+     * @apiName          auditDiamondvipBounty
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 分享钻石会员机会ID
+     * @apiParam (入参) {Number} status 申请进度  2:发放  3:取消发放
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:该记录不存在  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限 / 3008:当前审核时间不正确
+     * @apiSuccess (data) {object_array} data 结果
+     * @apiSuccess (data) {String} id 用户ID
+     * @apiSampleRequest /admin/Rights/auditDiamondvipBounty
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *
+     * ]
+     * @author rzc
+     */
+    public function auditDiamondvipBounty(){
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        $status   = trim($this->request->post('status'));
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($status, [2, 3])) {
+            return ['code' => '3004'];
+        }
+        if (empty($id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->rights->auditDiamondvipBounty($id,$status);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
+        return $result;
+    }
 }
