@@ -22,8 +22,8 @@ class TemporaryScript extends Pzlife {
      *
      */
     public function ModifyDataScript() {
-//        Db::startTrans();
-//        try {
+       Db::startTrans();
+       try {
 //            /* 将大鲨鱼(13122511746)钻石购买关系挂在黄甍(13381867868)下面  2019/04/12 */
 //
 //            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 13122511746 AND delete_time=0 ");
@@ -108,14 +108,20 @@ class TemporaryScript extends Pzlife {
 //                    }
 //                }
 //            }
-//             // 提交事务
-//             Db::commit();
-//        } catch (\Exception $e) {
-//            // 回滚事务
-//            exception($e);
-//            Db::rollback();
-//        }
-//        exit('ok!!');
+            // 提交事务
+
+            /* 将支改改(13661691673)登录手机号改为(17891936793)  2019/04/23 */
+            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 13661691673 AND delete_time=0 ");
+            Db::table('pz_users')->where('id', $user[0]['id'])->update(['mobile' => '17891936793']);
+
+            
+            Db::commit();
+       } catch (\Exception $e) {
+           // 回滚事务
+           exception($e);
+           Db::rollback();
+       }
+       exit('ok!!');
     }
 
     /**
