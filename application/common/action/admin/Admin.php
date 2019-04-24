@@ -11,6 +11,7 @@ use cache\Phpredis;
 use Config;
 use Env;
 use think\Db;
+use third\PHPTree;
 
 class Admin extends CommonIndex {
     private $cmsCipherUserKey = 'adminpass'; //用户密码加密key
@@ -936,5 +937,14 @@ class Admin extends CommonIndex {
         $this->redis->set($redisManageInvoice, $invoice);
         return ['code' => '200', 'invoice' => json_decode($invoice, true)];
         // print_r($invoice);die;
+    }
+
+    public function cmsMenu() {
+        $data = DbAdmin::getMenu();
+        $tree = new PHPTree($data);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        return ["code" => 200, "data" => $cate_tree];
     }
 }
