@@ -5,6 +5,7 @@ namespace app\common\db\user;
 use app\common\model\Admin;
 use app\common\model\AdminRemittance;
 use app\common\model\AdminBank;
+use app\common\model\Menu;
 use app\common\model\User;
 
 class DbAdmin {
@@ -158,5 +159,10 @@ class DbAdmin {
     public function editAdminBank($data,$id){
         $AdminBank = new AdminBank;
         return $AdminBank->save($data,['id'=>$id]);
+    }
+
+    public function getMenu() {
+        $obj = Menu::select()->toArray();
+        return $obj;
     }
 }

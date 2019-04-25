@@ -851,4 +851,22 @@ class Admin extends AdminController {
         $result = $this->app->admin->checkUserBank($id, $status, $message, $error_fields);
         return $result;
     }
+
+    /**
+     * @api              {post} / cms左侧菜单
+     * @apiDescription   cmsMenu
+     * @apiGroup         admin_admin
+     * @apiName          cmsMenu
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
+     * @apiSuccess (data) {String} type_name 分类名称
+     * @apiSampleRequest /admin/admin/cmsmenu
+     * @author zyr
+     */
+    public function cmsMenu() {
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $result = $this->app->admin->cmsMenu();
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId], $result['code'], $cmsConId);
+        return $result;
+    }
 }
