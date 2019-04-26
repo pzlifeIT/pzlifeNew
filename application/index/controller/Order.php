@@ -553,4 +553,29 @@ class Order extends MyController {
         $result = $this->app->order->getExpressLog($express_key, $express_no, $orderNo, $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 测试模板消息发送
+     * @apiDescription   sendModelMessage
+     * @apiGroup         index_order
+     * @apiName          sendModelMessage
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo长度必须为23位 / 3002.con_id长度为32位或者不能为空 /3004:订单不存在 / 3005:uid为空 / 3006:未发货的订单无法查询分包信息 / 3007:无效的分包信息
+     * @apiSampleRequest /index/order/sendModelMessage
+     * @author rzc
+     */
+    public function sendModelMessage(){
+        $conId       = trim($this->request->post('con_id'));
+        $orderNo     = trim($this->request->post('order_no'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        // print_r($conId);die;
+        $result = $this->app->order->sendModelMessage( $orderNo, $conId);
+        return $result;
+    }
 }
