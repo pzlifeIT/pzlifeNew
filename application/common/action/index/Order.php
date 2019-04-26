@@ -1290,55 +1290,55 @@ class Order extends CommonIndex {
         }
         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $uid], 'openid', true);
         $order                     = DbOrder::getOrderDetail(['uid' => $uid, 'order_no' => $orderNo], '*');
-        $data['keyword1']['value'] = $order_id['create_time'];
-        $data['keyword2']['value'] = $orderNo;
-        $data['keyword3']['value'] = '';
+        $data['keyword1'][] = $order_id['create_time'];
+        $data['keyword2'][] = $orderNo;
+        $data['keyword3'][] = '';
         // $goo
         // 商品名称
         foreach ($order as $key => $value) {
             //    echo $value['sku_json'];die;
-            $data['keyword3']['value'] .= $value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
+            $data['keyword3'][] .= $value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
         }
         switch ($order_id['order_status']) {
         case '1':
-            $data['keyword4']['value'] = '待付款';
+            $data['keyword4'][] = '待付款';
             break;
         case '2':
-            $data['keyword4']['value'] = '取消订单';
+            $data['keyword4'][] = '取消订单';
             break;
         case '3':
-            $data['keyword4']['value'] = '已关闭';
+            $data['keyword4'][] = '已关闭';
             break;
         case '4':
-            $data['keyword4']['value'] = '已付款';
+            $data['keyword4'][] = '已付款';
             break;
         case '5':
-            $data['keyword4']['value'] = '已发货';
+            $data['keyword4'][] = '已发货';
             break;
         case '6':
-            $data['keyword4']['value'] = '已收货';
+            $data['keyword4'][] = '已收货';
             break;
         case '7':
-            $data['keyword4']['value'] = '待评价';
+            $data['keyword4'][] = '待评价';
             break;
         case '8':
-            $data['keyword4']['value'] = '退款申请确认';
+            $data['keyword4'][] = '退款申请确认';
             break;
         case '9':
-            $data['keyword4']['value'] = '退款中';
+            $data['keyword4'][] = '退款中';
             break;
         case '10':
-            $data['keyword4']['value'] = '退款成功';
+            $data['keyword4'][] = '退款成功';
             break;
         }
-        $data['keyword5']['value'] = $order_id['pay_time'];
+        $data['keyword5'][] = $order_id['pay_time'];
 
         $send_data                = [];
         $send_data['touser']      = $user_wxinfo['openid'];
         $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
         $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderNo;
         $send_data['form_id']     = $order_id['id'];
-        $send_data['data']        = $data;
+        // $send_data['data']        = $data;
         // print_r($send_data);die;
         $appid = Config::get('conf.weixin_miniprogram_appid');
         // $appid         = 'wx1771b2e93c87e22c';
@@ -1354,9 +1354,26 @@ class Order extends CommonIndex {
             return ['code' => '3005'];
         }
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
-        $result     = sendRequest($requestUrl, 'POST', json_encode($send_data));
+        // print_r(json_encode($send_data,true));die;
+        $result     = $this->sendRequest2($requestUrl, json_encode($send_data,true));
         print_r($result);die;
 
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
     }
 
 }
