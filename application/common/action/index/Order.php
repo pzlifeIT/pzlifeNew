@@ -313,6 +313,9 @@ class Order extends CommonIndex {
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
         $goodsSku = $goodsSku[0];
+        if(empty($goodsSku)){
+            return ['code' => '3004'];//商品下架
+        }
         if ($goodsSku['stock'] < $num) {
             return ['code' => '3007'];//库存不足商品
         }
