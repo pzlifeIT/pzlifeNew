@@ -297,7 +297,7 @@ class Order extends CommonIndex {
         if ($offset < 0) {
             return ['code' => 3000];
         }
-        $result = DbOrder::getMemberOrder(['pay_status' => 4], 'order_no,from_uid,uid,actype,user_type,pay_money,pay_type,pay_time,create_time', false, 'id', 'desc', $offset . ',' . $pagenum);
+        $result = DbOrder::getMemberOrders(['pay_status' => 4], 'order_no,from_uid,uid,actype,user_type,pay_money,pay_type,pay_time,create_time', false, 'id', 'desc', $offset . ',' . $pagenum);
         if (empty($result)) {
             return ['code' => '3000'];
         }
