@@ -101,7 +101,7 @@ class Cart extends MyController {
         if (!is_numeric($goods_skuid)) {
             return ['code' => '3003', 'msg' => '商品SKU_ID必须是数字'];
         }
-        if (!is_numeric($goods_num) || $goods_num < 1) {
+        if (!is_numeric($goods_num)) {
             return ['code' => '3004', 'msg' => '购买数量必须是数字'];
         }
         $parent_id = empty(deUid($parent_id)) ? 1 : deUid($parent_id);
