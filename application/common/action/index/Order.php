@@ -1338,24 +1338,16 @@ class Order extends CommonIndex {
         $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
         $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderNo;
         $send_data['form_id']     = $order_id['id'];
-        // $send_data['data']        = $data;
-        // print_r($send_data);die;
-        $appid = Config::get('conf.weixin_miniprogram_appid');
-        // $appid         = 'wx1771b2e93c87e22c';
-        $secret = Config::get('conf.weixin_miniprogram_appsecret');
-        // $secret        = '1566dc764f46b71b33085ba098f58317';
-        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
-        if (!$requestUrl) {
-            return ['code' => '3004'];
+        $send_data['data']        = $data;
+        // print_r(json_encode($send_data,true));die;
+        $access_token = $this->getWeiXinAccessToken();
+        if (empty($access_token)) {
+            return ['code' => ''];
         }
-        $requsest_subject = json_decode(sendRequest($requestUrl), true);
-        $access_token     = $requsest_subject['access_token'];
-        if (!$access_token) {
-            return ['code' => '3005'];
-        }
+        // echo $access_token;die;
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
         // print_r(json_encode($send_data,true));die;
-        $result     = $this->sendRequest2($requestUrl, json_encode($send_data,true));
+        $result     = $this->sendRequest2($requestUrl, $send_data);
         print_r($result);die;
 
     }
