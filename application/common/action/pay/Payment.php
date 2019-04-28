@@ -124,6 +124,9 @@ class Payment {
         if (!empty($addRes)) {
             $wxPay  = new WxMiniprogramPay($openid, $data['pay_no'], $data['money']);
             $result = $wxPay->pay();
+            /* 调用模板消息ID 2019/04/28 */
+            $logPayRes    = DbOrder::getLogPay(['pay_no' => $payNo], 'id,order_id,payment', true);
+            DbOrder::updateLogPay(['prepay_id' => $result['prepay_id']], $logPayRes['id']);
             return $result;
         }
         return false;
@@ -164,7 +167,7 @@ class Payment {
         unset($wxReturn['sign']);
         $makeSign = $this->makeSign($wxReturn, Config::get('conf.wx_pay_key'));
         if ($makeSign == $sign) {//验证签名
-            $logPayRes    = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment', true);
+            $logPayRes    = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment,prepay_id', true);
             $data         = [
                 'notifydata' => json_encode($notifyData),
                 'status'     => 1,
@@ -175,7 +178,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getOrder('id', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id,uid,create_time,pay_time,order_status,orderNo', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -190,6 +193,7 @@ class Payment {
                 ];
             }
             if (!empty($orderRes) || !empty($memOrderRes)) {
+
                 Db::startTrans();
                 try {
                     DbOrder::updateLogPay($data, $logPayRes['id']);
@@ -197,6 +201,36 @@ class Payment {
                         DbOrder::updataOrder($orderData, $orderRes['id']);
                         $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
+
+                        /* 发送模板消息开始 2019/04/28 */
+                        $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
+                        $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['orderNo']], '*');
+                        $data['keyword1'][] = $orderRes['create_time'];
+                        $data['keyword2'][] = $orderRes['orderNo'];
+                        $data['keyword3'][] = '';
+                        // $goo
+                        // 商品名称
+                        foreach ($order as $key => $value) {
+                            //    echo $value['sku_json'];die;
+                            $data['keyword3'][] .= $value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
+                        }
+                        $data['keyword4'][] = '代发货';
+                        $data['keyword5'][] = $orderRes['pay_time'];
+                
+                        $send_data                = [];
+                        $send_data['touser']      = $user_wxinfo['openid'];
+                        $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
+                        $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderRes['orderNo'];
+                        $send_data['form_id']     = $logPayRes['prepay_id'];
+                        $send_data['data']        = $data;
+                        // print_r(json_encode($send_data,true));die;
+                        $access_token = $this->getWeiXinAccessToken();
+                        // echo $access_token;die;
+                        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
+                        // print_r(json_encode($send_data,true));die;
+                        $this->sendRequest2($requestUrl, $send_data);
+                        /* 发送模板消息代码结束 2019/04/28 */
+        
                     }
                     if (!empty($memOrderData)) {
                         DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes['id']]);
@@ -253,5 +287,21 @@ class Payment {
             $string = implode("&", $array);
         }
         return $string;
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
     }
 }

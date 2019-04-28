@@ -51,6 +51,7 @@ class WxMiniprogramPay {
         );
         //签名
         $parameters['paySign'] = $this->getSign($parameters);
+        $parameters['prepay_id'] = $unifiedorder['prepay_id'];
         return $parameters;
     }
 

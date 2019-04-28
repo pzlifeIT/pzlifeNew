@@ -369,7 +369,7 @@ function getBancardKey($cardNo) {
  * @author rzc
  */
 function checkIdcard($idcard) {
-    $idcard        = strtoupper($idcard);
+    $idcard    = strtoupper($idcard);
     $regx      = "/(^\d{15}$)|(^\d{17}([0-9]|X)$)/";
     $arr_split = array();
     if (!preg_match($regx, $idcard)) {
@@ -422,3 +422,4 @@ function checkIdcard($idcard) {
         }
     }
 }
+
