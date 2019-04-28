@@ -87,10 +87,16 @@ class Cart extends CommonIndex {
             } else {
                 $oldcart['track'][$track_id] = $buy_num;
             }
+            if ($oldcart['track'][$track_id] < 1) {
+                unset($oldcart['track'][$track_id]);
+            }
             $oldcart = json_encode($oldcart);
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $oldcart);
 
         } else {
+            if ($buy_num <1) {
+                return ['code' => '3004'];
+            }
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $hash_cart);
         }
         $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);

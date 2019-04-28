@@ -268,9 +268,10 @@ class Order extends MyController {
         if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        if (!is_numeric($num) || $num <= 0) {
+        if (!is_numeric($num) || $num < 1) {
             $num = 1;
         }
+        $num = intval($num);
         if (!in_array($payType, $payTypeArr)) {
             return ['code' => '3008'];
         }
