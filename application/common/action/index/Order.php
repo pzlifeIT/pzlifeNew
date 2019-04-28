@@ -372,6 +372,9 @@ class Order extends CommonIndex {
             }
             $freightSupplierPrice[$freightList['supid']] = $totalFreightPrice;
         }
+        if ($totalGoodsPrice <= 0) {
+            return ['code' => '3009'];
+        }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice];
     }
@@ -764,6 +767,9 @@ class Order extends CommonIndex {
                 $totalFreightPrice                  = bcadd($totalFreightPrice, $price, 2);
             }
             /* 运费模版 end */
+        }
+        if ($totalGoodsPrice <= 0) {
+            return ['code' => '3009'];
         }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
         return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice];
