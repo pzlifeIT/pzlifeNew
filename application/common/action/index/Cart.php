@@ -88,7 +88,7 @@ class Cart extends CommonIndex {
                 $oldcart['track'][$track_id] = $buy_num;
             }
             if ($oldcart['track'][$track_id] < 1) {
-                return ['code' => '3004'];
+                unset($oldcart['track'][$track_id]);
             }
             $oldcart = json_encode($oldcart);
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $oldcart);
