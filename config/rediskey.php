@@ -32,4 +32,7 @@ return [
     'manage' => [
         'redisManageInvoice' => 'cms:manage:invoice', //后台CMS提现比率key
     ],
+    'weixin' => [
+        'redisAccessToken' => 'weixin:accesstoken', //微信access_token
+    ],
 ];
