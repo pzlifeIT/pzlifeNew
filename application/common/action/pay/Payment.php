@@ -211,6 +211,7 @@ class Payment {
                     }
                     Db::commit();
                     /* 发送模板消息开始 2019/04/28 */
+                    $access_token = $this->getWeiXinAccessToken();
                     if (!empty($orderData)) { //普通订单信息推送
                         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
                         $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['order_no']], '*');
@@ -239,7 +240,6 @@ class Payment {
                         $send_data['form_id']     = $logPayRes['prepay_id'];
                         $send_data['data']        = $data;
                         // print_r(json_encode($send_data,true));die;
-                        $access_token = $this->getWeiXinAccessToken();
                         // echo $access_token;die;
                         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
                         // print_r(json_encode($send_data,true));die;
@@ -247,6 +247,7 @@ class Payment {
                         // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $result]);
                     }
                     if (!empty($memOrderData)) {//钻石订单购买
+
                     }
                     /* 发送模板消息代码结束 2019/04/28 */
                 } catch (\Exception $e) {

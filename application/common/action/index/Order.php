@@ -1300,7 +1300,7 @@ class Order extends CommonIndex {
         // 商品名称
         foreach ($order as $key => $value) {
             //    echo $value['sku_json'];die;
-            $data['keyword3']['value'] = $keyword3.$value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
+            $data['keyword3']['value'] = $keyword3.$value['goods_name'] . $value['goods_price'] . ' X ' . $value['goods_num'] . ' 【' . json_decode($value['sku_json'])[0] . '】 ';
         }
         
         $data['keyword3']['color'] = '#333';
@@ -1348,8 +1348,8 @@ class Order extends CommonIndex {
         $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $orderNo;
         $send_data['form_id']     = $logPayRes['prepay_id'];
         $send_data['data']        = $data;
-        $send_data['emphasis_keyword']        = 'keyword2.DATA';
-        print_r(json_encode($send_data,true));die;
+        // $send_data['emphasis_keyword']        = 'keyword2.DATA';
+        // print_r(json_encode($send_data,true));die;
         $access_token = $this->getWeiXinAccessToken();
         if (empty($access_token)) {
             return ['code' => ''];
