@@ -203,7 +203,7 @@ class Payment {
                         $this->redis->rPush($redisListKey, $orderRes['id']);
 
                         /* 发送模板消息开始 2019/04/28 */
-                     /*    $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
+                        $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
                         $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['orderNo']], '*');
                         $data['keyword1'][] = $orderRes['create_time'];
                         $data['keyword2'][] = $orderRes['orderNo'];
@@ -228,7 +228,7 @@ class Payment {
                         // echo $access_token;die;
                         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
                         // print_r(json_encode($send_data,true));die;
-                        $this->sendRequest2($requestUrl, $send_data); */
+                        $this->sendRequest2($requestUrl, $send_data);
                         /* 发送模板消息代码结束 2019/04/28 */
         
                     }
@@ -240,6 +240,7 @@ class Payment {
                     Db::commit();
                 } catch (\Exception $e) {
                     Db::rollback();
+                    Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                 }
             } else {//写错误日志(待支付订单不存在)
                 echo 'error order';
