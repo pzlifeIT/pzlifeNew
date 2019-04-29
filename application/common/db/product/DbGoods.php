@@ -155,9 +155,9 @@ class DbGoods {
         return $obj->select()->toArray();
     }
 
-//    public function getGoodsList2($where,$field){
-//        return Goods::field($field)->where($where)->select()->toArray();
-//    }
+    public function getGoodsList2($where,$field){
+        return Goods::field($field)->where($where)->select()->toArray();
+    }
 
     /**
      * 获取商品条数
