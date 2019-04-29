@@ -306,4 +306,29 @@ class Payment {
         curl_close($curl);
         return $res;
     }
+    
+    /**
+     * 获取微信access_token
+     * @return array
+     * @author rzc
+     */
+    private function getWeiXinAccessToken() {
+        $access_token = $this->redis->get($this->redisAccessToken);
+        if (empty($access_token)) {
+            $appid = Config::get('conf.weixin_miniprogram_appid');
+            // $appid         = 'wx1771b2e93c87e22c';
+            $secret = Config::get('conf.weixin_miniprogram_appsecret');
+            // $secret        = '1566dc764f46b71b33085ba098f58317';
+            $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+            $requsest_subject = json_decode(sendRequest($requestUrl), true);
+            $access_token     = $requsest_subject['access_token'];
+            if (!$access_token) {
+                return false;
+            }
+            $this->redis->set($this->redisAccessToken,$access_token);
+            $this->redis->expire($this->redisAccessToken, 6600);
+        }
+        
+        return $access_token;
+    }
 }
