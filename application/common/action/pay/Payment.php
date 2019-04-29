@@ -8,6 +8,7 @@ use pay\wxpay\WxMiniprogramPay;
 use cache\Phpredis;
 use Config;
 use think\Db;
+use function Qiniu\json_decode;
 
 /**
  * 支付
@@ -178,7 +179,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getOrder('id,uid,create_time,pay_time,order_status,orderNo', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id,uid,create_time,pay_time,order_status,order_no', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -206,7 +207,7 @@ class Payment {
                         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
                         $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['orderNo']], '*');
                         $data['keyword1'][] = $orderRes['create_time'];
-                        $data['keyword2'][] = $orderRes['orderNo'];
+                        $data['keyword2'][] = $orderRes['order_no'];
                         $data['keyword3'][] = '';
                         // $goo
                         // 商品名称
@@ -243,11 +244,9 @@ class Payment {
                     Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                 }
             } else {//写错误日志(待支付订单不存在)
-                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => 'error order']);
                 echo 'error order';
             }
         } else {//写错误日志(签名错误)
-            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => 'error sign']);
             echo 'error sign';
         }
 
