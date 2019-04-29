@@ -221,7 +221,7 @@ class Payment {
                         $send_data                = [];
                         $send_data['touser']      = $user_wxinfo['openid'];
                         $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
-                        $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderRes['orderNo'];
+                        $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderRes['order_no'];
                         $send_data['form_id']     = $logPayRes['prepay_id'];
                         $send_data['data']        = $data;
                         // print_r(json_encode($send_data,true));die;
