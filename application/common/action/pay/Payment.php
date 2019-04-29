@@ -202,8 +202,15 @@ class Payment {
                         DbOrder::updataOrder($orderData, $orderRes['id']);
                         $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
-
-                        /* 发送模板消息开始 2019/04/28 */
+                    }
+                    if (!empty($memOrderData)) {
+                        DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes['id']]);
+                        $redisListKey = Config::get('rediskey.order.redisMemberOrder');
+                        $this->redis->rPush($redisListKey, $memOrderRes['id']);
+                    }
+                    Db::commit();
+                     /* 发送模板消息开始 2019/04/28 */
+                    if (!empty($orderData)) {//普通订单信息推送
                         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
                         $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['order_no']], '*');
                         $data['keyword1'][] = $orderRes['create_time'];
@@ -230,15 +237,8 @@ class Payment {
                         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
                         // print_r(json_encode($send_data,true));die;
                         $this->sendRequest2($requestUrl, $send_data);
-                        /* 发送模板消息代码结束 2019/04/28 */
-        
                     }
-                    if (!empty($memOrderData)) {
-                        DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes['id']]);
-                        $redisListKey = Config::get('rediskey.order.redisMemberOrder');
-                        $this->redis->rPush($redisListKey, $memOrderRes['id']);
-                    }
-                    Db::commit();
+                    /* 发送模板消息代码结束 2019/04/28 */
                 } catch (\Exception $e) {
                     Db::rollback();
                     Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
