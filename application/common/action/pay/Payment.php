@@ -237,7 +237,8 @@ class Payment {
                         // echo $access_token;die;
                         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
                         // print_r(json_encode($send_data,true));die;
-                        $this->sendRequest2($requestUrl, $send_data);
+                        $result = $this->sendRequest2($requestUrl, $send_data);
+                        Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $result]);
                     }
                     /* 发送模板消息代码结束 2019/04/28 */
                 } catch (\Exception $e) {
