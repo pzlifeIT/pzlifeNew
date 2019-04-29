@@ -165,7 +165,6 @@ class Payment {
         $notifyData = $wxReturn;
         $sign       = $wxReturn['sign'];//微信返回的签名
         unset($wxReturn['sign']);
-        Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($notifyData)]);
         $makeSign = $this->makeSign($wxReturn, Config::get('conf.wx_pay_key'));
         if ($makeSign == $sign) {//验证签名
             $logPayRes    = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment,prepay_id', true);
@@ -244,9 +243,11 @@ class Payment {
                     Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                 }
             } else {//写错误日志(待支付订单不存在)
+                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => 'error order']);
                 echo 'error order';
             }
         } else {//写错误日志(签名错误)
+            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => 'error sign']);
             echo 'error sign';
         }
 
