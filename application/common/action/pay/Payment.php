@@ -205,7 +205,7 @@ class Payment {
 
                         /* 发送模板消息开始 2019/04/28 */
                         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
-                        $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['orderNo']], '*');
+                        $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['order_no']], '*');
                         $data['keyword1'][] = $orderRes['create_time'];
                         $data['keyword2'][] = $orderRes['order_no'];
                         $data['keyword3'][] = '';
