@@ -19,6 +19,7 @@ class Payment {
 
     public function __construct() {
         $this->redis = Phpredis::getConn();
+        $this->redisAccessToken = Config::get('redisKey.weixin.redisAccessToken');
     }
 
     public function payment($orderNo, int $payment, int $platform) {
