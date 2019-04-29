@@ -155,7 +155,7 @@ class DbGoods {
         return $obj->select()->toArray();
     }
 
-    public function getGoodsList2($where,$field){
+    public function getGoodsList2($where, $field) {
         return Goods::field($field)->where($where)->select()->toArray();
     }
 
