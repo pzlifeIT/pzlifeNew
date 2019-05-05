@@ -62,6 +62,13 @@ class CommonIndex {
     }
 
     /**
+     * 权限验证
+     */
+    protected function checkPermissions($admin_id) {
+//        return true;
+    }
+
+    /**
      * 通过cms_con_id获取admin_id
      * @param $cmsConId
      * @return int
