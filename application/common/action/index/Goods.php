@@ -386,6 +386,111 @@ class Goods extends CommonIndex {
         return ['code' => '200', 'data' => $this->labelProcess($result)];
     }
 
+    /**
+     * 商品推荐
+     * @param $goodsId
+     * @param $goodsNum
+     * @return array
+     * @author zyr
+     */
+    public function goodsRecommend($goodsId, $goodsNum) {
+        $goods = DbGoods::getOneGoods([
+            ['id', '=', $goodsId],
+            ['status', '=', 1],
+        ], 'id,supplier_id');
+        if (empty($goods)) {
+            return ['code' => '3002'];
+        }
+        $goodsLabel = DbLabel::getLabelGoodsRelation([
+            ['goods_id', '=', $goodsId],
+        ], 'label_lib_id');
+        $goodsLabel = array_unique(array_column($goodsLabel, 'label_lib_id'));//当前商品的标签id列表
+
+        $goodsList  = DbGoods::getGoodsList2([
+            ['id', '<>', $goodsId],
+            ['status', '=', 1],
+            ['supplier_id', '=', $goods['supplier_id']],
+        ], 'id');
+        $supGoodsId = array_column($goodsList, 'id');
+
+        $goodsIdRes = [];
+        if (!empty($goodsList)) {
+            $goodsLabelRelation = DbLabel::getLabelGoodsRelationByGoods([
+                ['gr.goods_id', 'in', $supGoodsId],
+                ['gr.label_lib_id', 'in', $goodsLabel],
+                ['g.status', '=', 1],
+            ], 'gr.goods_id,gr.label_lib_id');
+            $goodsHeat          = [];
+            foreach ($goodsLabelRelation as $glr) {
+                $heat                        = $this->redis->zScore($this->labelLibraryHeatRedisKey, $glr['label_lib_id']);
+                $goodsHeat[$glr['goods_id']] = isset($goodsHeat[$glr['goods_id']]) ? bcadd($goodsHeat[$glr['goods_id']], $heat, 0) : $heat;
+            }
+            $hasLabel = array_unique(array_column($goodsLabelRelation, 'goods_id'));
+            foreach ($supGoodsId as $sgi) {
+                if (!in_array($sgi, $hasLabel)) {
+                    $goodsHeat[$sgi] = 1;
+                }
+            }
+            ksort($goodsHeat);
+            asort($goodsHeat);
+            $goodsIdRes = array_keys($goodsHeat);
+            $goodsIdRes = array_slice($goodsIdRes, 0, 6);
+        }
+        if (count($goodsIdRes) < $goodsNum) {//供应商下不够就查相同标签的
+            $goodsLabelRelation2 = DbLabel::getLabelGoodsRelationByGoods([
+                ['gr.label_lib_id', 'in', $goodsLabel],
+                ['gr.goods_id', 'not in', $supGoodsId],
+                ['gr.goods_id', '<>', $goodsId],
+                ['g.status', '=', 1],
+            ], 'gr.goods_id,gr.label_lib_id');
+//            print_r($goodsLabelRelation2); die;
+            $goodsHeat2 = [];
+            foreach ($goodsLabelRelation2 as $glr2) {
+                $heat2                         = $this->redis->zScore($this->labelLibraryHeatRedisKey, $glr2['label_lib_id']);
+                $goodsHeat2[$glr2['goods_id']] = isset($goodsHeat2[$glr2['goods_id']]) ? bcadd($goodsHeat2[$glr2['goods_id']], $heat2, 0) : $heat2;
+            }
+            krsort($goodsHeat2);
+            arsort($goodsHeat2);
+            $goodsIdRes2 = array_keys($goodsHeat2);
+            $goodsIdRes2 = array_slice($goodsIdRes2, 0, bcsub($goodsNum, count($goodsIdRes), 0));
+            $goodsIdRes  = array_merge($goodsIdRes, $goodsIdRes2);
+        }
+        if (empty($goodsIdRes)) {
+            return ['code' => 200, 'data' => []];
+        }
+        $field  = 'id,goods_name,subtitle,image';
+        $where  = [['status', '=', 1], ['id', 'IN', $goodsIdRes]];
+        $result = DbGoods::getGoodsList2($where, $field);
+        if (empty($result)) {
+            return ['code' => 200, 'data' => []];
+        }
+        foreach ($result as $key => $value) {
+            $result[$key]['goods_name']       = htmlspecialchars_decode($value['goods_name']);
+            $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
+            $field                            = 'market_price';
+            $field                            = 'retail_price';
+            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+            if ($goods_sku) {
+                $retail_price    = [];
+                $brokerage       = [];
+                $integral_active = [];
+                foreach ($goods_sku as $goods => $sku) {
+
+                    $retail_price[$sku['id']]    = $sku['retail_price'];
+                    $brokerage[$sku['id']]       = $sku['brokerage'];
+                    $integral_active[$sku['id']] = $sku['integral_active'];
+                }
+                $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
+            } else {
+                $result[$key]['min_brokerage']       = 0;
+                $result[$key]['min_integral_active'] = 0;
+            }
+        }
+        array_multisort($goodsIdRes, SORT_ASC, $result);
+        return ['code' => '200', 'data' => $result];
+    }
+
     private function labelProcess($result) {
         $data = [];
         foreach ($result as $k => $v) {

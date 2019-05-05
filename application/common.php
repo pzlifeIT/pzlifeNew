@@ -81,7 +81,7 @@ function checkCmsPassword($password) {
  * @author zyr
  */
 function getVercodeContent($code) {
-    return '【品质生活广场】您的验证码是:' . $code . '，在10分钟内有效。如非本人操作请忽略本短信。';
+    return '您的验证码是:' . $code . '，在10分钟内有效。如非本人操作请忽略本短信。';
 }
 
 /**

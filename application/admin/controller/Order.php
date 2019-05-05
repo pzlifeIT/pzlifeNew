@@ -2,14 +2,14 @@
 
 namespace app\admin\controller;
 
-use think\Controller;
 use app\admin\AdminController;
+use think\Controller;
 
 class Order extends AdminController {
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -251,6 +251,48 @@ class Order extends AdminController {
         }
         $express_name = $ExpressList[$express_key];
         $result       = $this->app->order->updateDeliverOrderGoods($order_goods_id, $express_no, $express_key, $express_name);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询已支付权益订单
+     * @apiGroup         admin_Orders
+     * @apiName          getMemberOrders
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码
+     * @apiSuccess (返回) {String} totle 总结果条数
+     * @apiSuccess (data) {object_array} memberOrderList 结果
+     * @apiSuccess (memberOrderList) {String} order_no 订单号
+     * @apiSuccess (memberOrderList) {String} from_uid 分享用户ID
+     * @apiSuccess (memberOrderList) {String} uid 购买用户ID
+     * @apiSuccess (memberOrderList) {String} actype 活动类型：1.无活动 2兼职网推
+     * @apiSuccess (memberOrderList) {String} user_type 用户订单类型 1.钻石会员 2.boss
+     * @apiSuccess (memberOrderList) {String} pay_money 支付金额
+     * @apiSuccess (memberOrderList) {String} pay_type 支付类型 1.支付宝 2.微信 3.银联
+     * @apiSuccess (memberOrderList) {String} pay_time 支付时间
+     * @apiSuccess (memberOrderList) {String} create_time 生成订单时间
+     * @apiSuccess (memberOrderList[user]) {String} id 购买用户ID
+     * @apiSuccess (memberOrderList[user]) {String} nick_name 购买用户昵称
+     * @apiSuccess (memberOrderList[user]) {String} avatar 购买用户头像
+     * @apiSuccess (memberOrderList[user]) {String} user_identity 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSuccess (memberOrderList[fromuser]) {String} id 购买用户ID
+     * @apiSuccess (memberOrderList[fromuser]) {String} nick_name 购买用户昵称
+     * @apiSuccess (memberOrderList[fromuser]) {String} avatar 购买用户头像
+     * @apiSuccess (memberOrderList[fromuser]) {String} user_identity 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSampleRequest /admin/Order/getMemberOrders
+     * @author rzc
+     */
+    public function getMemberOrders() {
+        $pagenum = trim($this->request->post('pagenum'));
+        $page    = trim($this->request->post('page'));
+
+        $page    = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
+
+        if (!is_numeric($page) || !is_numeric($pagenum)) {
+            return ['code' => 3002];
+        }
+        $result = $this->app->order->getMemberOrders(intval($page), intval($pagenum));
         return $result;
     }
 
