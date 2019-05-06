@@ -1270,18 +1270,14 @@ class Admin extends CommonIndex {
                     ['group_id', '=', $groupId],
                     ['menu_id', '=', $ch['id']],
                 ], 'api_id');
-//                if($ch['id']==26){
-//                    print_r($useMenu);die;
-//                }
                 $child   = [];
                 $useMenu = array_column($useMenu, 'api_id');
-                $c       = ['cn_name' => '查看', 'content' => '', 'status' => '0'];
+                $ch['status'] = 0;
                 if (in_array(0, $useMenu)) {
-                    $c['status'] = '1';
+                    $ch['status'] = '1';
                 }
-                array_push($child, $c);
                 foreach ($apiRes as $ar) {
-                    $c = ['cn_name' => $ar['cn_name'], 'content' => $ar['content']];
+                    $c = ['id' => $ar['id'], 'cn_name' => $ar['cn_name'], 'content' => $ar['content']];
                     if (in_array($ar['id'], $useMenu)) {
                         $c['status'] = 1;
                     } else {
