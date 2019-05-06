@@ -973,6 +973,10 @@ class Admin extends CommonIndex {
         if ($adminId != '1') {
             return ['code' => '3002'];
         }
+        $group = DbAdmin::getPermissionsGroup(['group_name' => $groupName], 'id', true);
+        if (!empty($group)) {
+            return ['code' => '3001'];
+        }
         $data = [
             'group_name' => $groupName,
             'content'    => $content,
@@ -1222,19 +1226,72 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'data' => $admin];
     }
 
+    /**
+     * 获取用户或所有的权限组列表
+     * @param $cmsConId
+     * @param $getAdminId
+     * @return array
+     * @author zyr
+     */
     public function getAdminGroup($cmsConId, $getAdminId) {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId != '1') {
             return ['code' => '3002'];
         }
-        $adminGroup = DbAdmin::getAdminPermissionsGroup([['admin_id', '=', $getAdminId]], 'group_id');
-        if (empty($adminGroup)) {
-            return ['code' => '3000'];
+        if (empty($getAdminId)) {
+            $group = DbAdmin::getPermissionsGroup([], 'id,group_name,content');
+        } else {
+            $adminGroup = DbAdmin::getAdminPermissionsGroup([['admin_id', '=', $getAdminId]], 'group_id');
+            if (empty($adminGroup)) {
+                return ['code' => '3000'];
+            }
+            $adminGroupId = array_column($adminGroup, 'group_id');
+            $group        = DbAdmin::getPermissionsGroup([
+                ['id', 'in', $adminGroupId]
+            ], 'id,group_name,content');
         }
-        $adminGroupId = array_column($adminGroup, 'group_id');
-        $group        = DbAdmin::getPermissionsGroup([
-            ['id', 'in', $adminGroupId]
-        ], 'id,group_name,content');
         return ['code' => '200', 'data' => $group];
+    }
+
+    public function getPermissionsList($cmsConId, $groupId) {
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId != '1') {
+            return ['code' => '3002'];
+        }
+        $data = DbAdmin::getMenuList([], 'id,pid,name');
+        $tree = new PHPTree($data);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        foreach ($cate_tree as &$ct) {
+            foreach ($ct['_child'] as &$ch) {
+                $apiRes  = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
+                $useMenu = DbAdmin::getAdminPermissionsRelation([
+                    ['group_id', '=', $groupId],
+                    ['menu_id', '=', $ch['id']],
+                ], 'api_id');
+//                if($ch['id']==26){
+//                    print_r($useMenu);die;
+//                }
+                $child   = [];
+                $useMenu = array_column($useMenu, 'api_id');
+                $c       = ['cn_name' => '查看', 'content' => '', 'status' => '0'];
+                if (in_array(0, $useMenu)) {
+                    $c['status'] = '1';
+                }
+                array_push($child, $c);
+                foreach ($apiRes as $ar) {
+                    $c = ['cn_name' => $ar['cn_name'], 'content' => $ar['content']];
+                    if (in_array($ar['id'], $useMenu)) {
+                        $c['status'] = 1;
+                    } else {
+                        $c['status'] = 0;
+                    }
+                    array_push($child, $c);
+                }
+                $ch['child'] = $child;
+            }
+        }
+        return ['code' => '200', 'data' => $cate_tree];
     }
 }

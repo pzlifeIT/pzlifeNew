@@ -1047,7 +1047,7 @@ class Admin extends AdminController {
     }
 
     /**
-     * @api              {post} / 获取用户所属的权限组
+     * @api              {post} / 获取用户或所有的权限组列表
      * @apiDescription   getAdminGroup
      * @apiGroup         admin_admin
      * @apiName          getAdminGroup
@@ -1061,11 +1061,34 @@ class Admin extends AdminController {
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $getAdminId = trim($this->request->post('get_admin_id'));
         if (!is_numeric($getAdminId) || $getAdminId < 2) {
-            return ['code' => '3001'];
+            $getAdminId = 0;
         }
         $getAdminId = intval($getAdminId);
         $result     = $this->app->admin->getAdminGroup($cmsConId, $getAdminId);
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $getAdminId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取权限列表
+     * @apiDescription   getPermissionsList
+     * @apiGroup         admin_admin
+     * @apiName          getPermissionsList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} group_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:分组id错误 / 3002:没有权限
+     * @apiSampleRequest /admin/admin/getpermissionslist
+     * @author zyr
+     */
+    public function getPermissionsList() {
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $groupId  = trim($this->request->post('group_id'));
+        if (!is_numeric($groupId) || $groupId < 1) {
+            return ['code' => '3001'];
+        }
+        $groupId = intval($groupId);
+        $result  = $this->app->admin->getPermissionsList($cmsConId, $groupId);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId], $result['code'], $cmsConId);
         return $result;
     }
 }
