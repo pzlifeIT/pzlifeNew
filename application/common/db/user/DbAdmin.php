@@ -3,9 +3,13 @@
 namespace app\common\db\user;
 
 use app\common\model\Admin;
+use app\common\model\AdminPermissionsGroup;
+use app\common\model\AdminPermissionsRelation;
 use app\common\model\AdminRemittance;
 use app\common\model\AdminBank;
 use app\common\model\Menu;
+use app\common\model\PermissionsApi;
+use app\common\model\PermissionsGroup;
 use app\common\model\User;
 
 class DbAdmin {
@@ -161,8 +165,65 @@ class DbAdmin {
         return $AdminBank->save($data,['id'=>$id]);
     }
 
-    public function getMenu() {
-        $obj = Menu::select()->toArray();
+    public function getMenu($where) {
+        $obj = Menu::where($where)->select()->toArray();
         return $obj;
+    }
+
+    public function getMenuList($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = Menu::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getAdminPermissionsGroup($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = AdminPermissionsGroup::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getPermissionsGroup($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = PermissionsGroup::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getAdminPermissionsRelation($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = AdminPermissionsRelation::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getPermissionsApi($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = PermissionsApi::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addPermissionsGroup($data) {
+        $permissionsGroup = new PermissionsGroup();
+        $permissionsGroup->save($data);
+        return $permissionsGroup->id;
+    }
+
+    public function editPermissionsGroup($data, $id) {
+        $permissionsGroup = new PermissionsGroup();
+        return $permissionsGroup->save($data,['id' => $id]);
+    }
+
+    public function addAdminPermissionsGroup($data) {
+        $adminPermissionsGroup = new AdminPermissionsGroup();
+        $adminPermissionsGroup->save($data);
+        return $adminPermissionsGroup->id;
+    }
+
+    public function addAdminPermissionsRelation($data){
+        $adminPermissionsRelation = new AdminPermissionsRelation();
+        return $adminPermissionsRelation->saveAll($data);
+    }
+
+    public function addPermissionsApi($data) {
+        $permissionsApi = new PermissionsApi();
+        $permissionsApi->save($data);
+        return $permissionsApi->id;
+    }
+
+    public function deleteAdminPermissionsRelation($ids){
+        return AdminPermissionsRelation::destroy($ids);
     }
 }

@@ -62,6 +62,34 @@ class CommonIndex {
     }
 
     /**
+     * 权限验证
+     * @param $adminId
+     * @param $apiName
+     * @return bool
+     * @author zyr
+     */
+    protected function checkPermissions($adminId, $apiName) {
+        if ($adminId == '1') {
+            return true;
+        }
+        $checkApiId = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
+        $checkApiId = $checkApiId['id'];
+        $groupId    = DbAdmin::getAdminPermissionsGroup([
+            ['admin_id', '=', $adminId],
+        ], 'group_id');
+        $groupId    = array_column($groupId, 'group_id');
+        $apiId      = DbAdmin::getAdminPermissionsRelation([
+            ['group_id', 'in', $groupId],
+            ['api_id', '<>', 0],
+        ], 'api_id');
+        $apiId      = array_column($apiId, 'api_id');
+        if (in_array($checkApiId, $apiId)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 通过cms_con_id获取admin_id
      * @param $cmsConId
      * @return int
