@@ -166,13 +166,13 @@ class Admin extends CommonIndex {
                 array_push($userRelationData, $url);
             }
         }
-        $shopData = [
+        $shopData        = [
             'uid'         => $user['id'],
             'shop_right'  => 'all',
             'status'      => 1,
             'create_time' => time(),
         ];
-        $tradingDate = [
+        $tradingDate     = [
             'uid'          => $user['id'],
             'trading_type' => 2,
             'change_type'  => 9,
@@ -189,8 +189,8 @@ class Admin extends CommonIndex {
             'status'   => 1,
             'message'  => $message,
         ];
-        $pid        = $bossId == 1 ? 0 : $bossId;
-        $relationId = $this->getRelation($user['id'])['id'];
+        $pid             = $bossId == 1 ? 0 : $bossId;
+        $relationId      = $this->getRelation($user['id'])['id'];
         Db::startTrans();
         try {
             if (!empty($userRelationData)) {
@@ -609,6 +609,7 @@ class Admin extends CommonIndex {
             return ['code' => '3011']; //添加失败
         }
     }
+
     /**
      * 获取支持银行信息
      * @param $page
@@ -728,9 +729,9 @@ class Admin extends CommonIndex {
         }
         foreach ($result as $key => $value) {
             if ($value['stype'] == 1) {
-                $result[$key]['real_money'] = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
+                $result[$key]['real_money']   = bcmul(bcdiv(bcsub(100, $value['proportion'], 2), 100, 2), $value['money'], 2);
                 $result[$key]['deduct_money'] = bcmul(bcdiv($value['proportion'], 100, 2), $value['money'], 2);
-            } 
+            }
         }
         $total = DbUser::countLogTransfer($where);
         return ['code' => '200', 'total' => $total, 'log_transfer' => $result];
@@ -1052,7 +1053,7 @@ class Admin extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005']; //添加失败
+            return ['code' => '3006']; //添加失败
         }
     }
 
@@ -1067,7 +1068,7 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content){
+    public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content) {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId != '1') {
             return ['code' => '3002'];
@@ -1081,11 +1082,11 @@ class Admin extends CommonIndex {
             return ['code' => '3006'];//菜单不存在
         }
         $data = [
-            'menu_id'=>$menuId,
-            'api_name'=>$apiName,
-            'stype'=>$stype,
-            'cn_name'=>$cnName,
-            'content'=>$content,
+            'menu_id'  => $menuId,
+            'api_name' => $apiName,
+            'stype'    => $stype,
+            'cn_name'  => $cnName,
+            'content'  => $content,
         ];
         Db::startTrans();
         try {
@@ -1100,15 +1101,16 @@ class Admin extends CommonIndex {
 
     /**
      * 为权限组添加菜单接口
+     * @param $apiName
      * @param $cmsConId
      * @param $groupId
      * @param $permissions
      * @return array
      * @author zyr
      */
-    public function addPermissionsGroupPower($cmsConId, $groupId, $permissions) {
+    public function addPermissionsGroupPower($apiName, $cmsConId, $groupId, $permissions) {
         $adminId = $this->getUidByConId($cmsConId);
-        if ($adminId != '1') {
+        if (!$this->checkPermissions($adminId, $apiName)) {
             return ['code' => '3002'];
         }
         $group = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
@@ -1119,9 +1121,9 @@ class Admin extends CommonIndex {
         if (!is_array($permissions) || empty($permissions)) {
             return ['code' => '3005'];
         }
-        $menuIdList    = array_keys($permissions);
-        $menuList = DbAdmin::getMenuList([['id','in',$menuIdList],['level','=',2]],'id');
-        if(empty($menuList) || !empty(array_diff($menuIdList,array_column($menuList,'id')))){
+        $menuIdList = array_keys($permissions);
+        $menuList   = DbAdmin::getMenuList([['id', 'in', $menuIdList], ['level', '=', 2]], 'id');
+        if (empty($menuList) || !empty(array_diff($menuIdList, array_column($menuList, 'id')))) {
             return ['code' => '3006'];//菜单不存在
         }
         $useMenu       = DbAdmin::getAdminPermissionsRelation(['group_id' => $groupId], 'id,menu_id,api_id');
@@ -1133,11 +1135,11 @@ class Admin extends CommonIndex {
             $apiIdList     = array_column($useMenu, 'id', 'api_id');
             $relMenuIdList = array_column($useMenu, 'id', 'menu_id');
         }
-        $delMenu       = array_diff($useMenuList, $menuIdList);
-        $addMenu       = array_diff($menuIdList, $useMenuList);
-        $updateMenu    = array_intersect($useMenuList, $menuIdList);
-        $perApi        = DbAdmin::getPermissionsApi([['menu_id', 'in', $menuIdList]], 'id,menu_id');
-        $apiList       = array_column($perApi, 'menu_id', 'id');
+        $delMenu    = array_diff($useMenuList, $menuIdList);
+        $addMenu    = array_diff($menuIdList, $useMenuList);
+        $updateMenu = array_intersect($useMenuList, $menuIdList);
+        $perApi     = DbAdmin::getPermissionsApi([['menu_id', 'in', $menuIdList]], 'id,menu_id');
+        $apiList    = array_column($perApi, 'menu_id', 'id');
         foreach ($permissions as $k => $p) {
             if (!is_array($p)) {
                 return ['code' => '3005'];//permissions参数有误,接口权限不属于菜单
@@ -1181,10 +1183,10 @@ class Admin extends CommonIndex {
         }
         Db::startTrans();
         try {
-            if(!empty($delId)){
+            if (!empty($delId)) {
                 DbAdmin::deleteAdminPermissionsRelation($delId);
             }
-            if(!empty($addData)){
+            if (!empty($addData)) {
                 DbAdmin::addAdminPermissionsRelation($addData);
             }
             Db::commit();
@@ -1193,5 +1195,46 @@ class Admin extends CommonIndex {
             Db::rollback();
             return ['code' => '3007']; //添加失败
         }
+    }
+
+    /**
+     * 获取权限组下的管理员
+     * @param $cmsConId
+     * @param $groupId
+     * @return array
+     * @author zyr
+     */
+    public function getPermissionsGroupAdmin($cmsConId, $groupId) {
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId != '1') {
+            return ['code' => '3002'];
+        }
+        $groupAdmin = DbAdmin::getAdminPermissionsGroup([['group_id', '=', $groupId]], 'admin_id');
+        if (empty($groupAdmin)) {
+            return ['code' => '3000'];
+        }
+        $groupAdminId = array_column($groupAdmin, 'admin_id');
+        $admin        = DbAdmin::getAdminInfo([
+            ['id', 'in', $groupAdminId],
+            ['status', '=', '1'],
+            ['id', '<>', '1'],
+        ], 'admin_name');
+        return ['code' => '200', 'data' => $admin];
+    }
+
+    public function getAdminGroup($cmsConId, $getAdminId) {
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId != '1') {
+            return ['code' => '3002'];
+        }
+        $adminGroup = DbAdmin::getAdminPermissionsGroup([['admin_id', '=', $getAdminId]], 'group_id');
+        if (empty($adminGroup)) {
+            return ['code' => '3000'];
+        }
+        $adminGroupId = array_column($adminGroup, 'group_id');
+        $group        = DbAdmin::getPermissionsGroup([
+            ['id', 'in', $adminGroupId]
+        ], 'id,group_name,content');
+        return ['code' => '200', 'data' => $group];
     }
 }
