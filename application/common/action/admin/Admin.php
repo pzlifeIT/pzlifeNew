@@ -61,7 +61,7 @@ class Admin extends CommonIndex {
      * @author rzc
      */
     public function getAdminUsers() {
-        $adminInfo = DbAdmin::getAdminInfo([], 'admin_name,department,stype,status');
+        $adminInfo = DbAdmin::getAdminInfo([['id','<>',1]], 'id,admin_name,department,stype,status');
         return ['code' => '200', 'data' => $adminInfo];
     }
 
@@ -1122,22 +1122,33 @@ class Admin extends CommonIndex {
             return ['code' => '3003'];
         }
         $permissions = json_decode(htmlspecialchars_decode($permissions), true);
-        if (!is_array($permissions) || empty($permissions)) {
+        if (!is_array($permissions)) {
             return ['code' => '3005'];
         }
-        $menuIdList = array_keys($permissions);
+        $menuIdList = array_keys($permissions);//修改后的菜单权限
         $menuList   = DbAdmin::getMenuList([['id', 'in', $menuIdList], ['level', '=', 2]], 'id');
-        if (empty($menuList) || !empty(array_diff($menuIdList, array_column($menuList, 'id')))) {
+        if (!empty(array_diff($menuIdList, array_column($menuList, 'id')))) {
             return ['code' => '3006'];//菜单不存在
         }
-        $useMenu       = DbAdmin::getAdminPermissionsRelation(['group_id' => $groupId], 'id,menu_id,api_id');
+        $useMenu       = DbAdmin::getAdminPermissionsRelation(['group_id' => $groupId], 'id,menu_id,api_id');//正在使用的权限
         $useMenuList   = [];
         $apiIdList     = [];
         $relMenuIdList = [];
         if (!empty($useMenu)) {
-            $useMenuList   = array_column($useMenu, 'menu_id');
-            $apiIdList     = array_column($useMenu, 'id', 'api_id');
-            $relMenuIdList = array_column($useMenu, 'id', 'menu_id');
+            $useMenuList = array_unique(array_column($useMenu, 'menu_id'));
+            foreach ($useMenu as $um1) {
+                if (!isset($relMenuIdList[$um1['menu_id']])) {
+                    $relMenuIdList[$um1['menu_id']] = [$um1['id']];
+                }else{
+                    array_push($relMenuIdList[$um1['menu_id']], $um1['id']);
+                }
+                if (!isset($apiIdList[$um1['api_id']])) {
+                    $apiIdList[$um1['api_id']]     = [$um1['id']];
+                    continue;
+                }else{
+                    array_push($apiIdList[$um1['api_id']], $um1['id']);
+                }
+            }
         }
         $delMenu    = array_diff($useMenuList, $menuIdList);
         $addMenu    = array_diff($menuIdList, $useMenuList);
@@ -1156,10 +1167,8 @@ class Admin extends CommonIndex {
             }
         }
         $delId = [];
-        foreach ($useMenu as $um) {
-            if (in_array($um['menu_id'], $delMenu)) {
-                array_push($delId, $relMenuIdList[$um['menu_id']]);
-            }
+        foreach ($delMenu as $dm) {
+            $delId = array_merge($delId, $relMenuIdList[$dm]);
         }
         $addData = [];
         foreach ($permissions as $k => $p) {
@@ -1175,7 +1184,7 @@ class Admin extends CommonIndex {
                 foreach ($p as $kp => $pp) {
                     if (key_exists($kp, $apiIdList)) {
                         if ($pp == 0) {//删除
-                            array_push($delId, $apiIdList[$kp]);
+                            $delId = array_merge($delId, $apiIdList[$kp]);
                         }
                     } else {
                         if ($pp == 1) {//添加
@@ -1265,13 +1274,13 @@ class Admin extends CommonIndex {
         $cate_tree = $tree->listTree();
         foreach ($cate_tree as &$ct) {
             foreach ($ct['_child'] as &$ch) {
-                $apiRes  = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
-                $useMenu = DbAdmin::getAdminPermissionsRelation([
+                $apiRes       = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
+                $useMenu      = DbAdmin::getAdminPermissionsRelation([
                     ['group_id', '=', $groupId],
                     ['menu_id', '=', $ch['id']],
                 ], 'api_id');
-                $child   = [];
-                $useMenu = array_column($useMenu, 'api_id');
+                $child        = [];
+                $useMenu      = array_column($useMenu, 'api_id');
                 $ch['status'] = 0;
                 if (in_array(0, $useMenu)) {
                     $ch['status'] = '1';
