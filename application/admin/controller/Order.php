@@ -205,6 +205,11 @@ class Order extends AdminController {
      * @author rzc
      */
     public function deliverOrderGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $order_goods_id = trim($this->request->post('order_goods_id'));
         $express_no     = trim($this->request->post('express_no'));
         $express_key    = trim($this->request->post('express_key'));
@@ -219,6 +224,7 @@ class Order extends AdminController {
         }
         $express_name = $ExpressList[$express_key];
         $result       = $this->app->order->deliverOrderGoods($order_goods_id, $express_no, $express_key, $express_name);
+        $this->apiLog($apiName, [$cmsConId, $order_goods_id, $express_no, $express_key], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -237,6 +243,11 @@ class Order extends AdminController {
      * @author rzc
      */
     public function updateDeliverOrderGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $order_goods_id = trim($this->request->post('order_goods_id'));
         $express_no     = trim($this->request->post('express_no'));
         $express_key    = trim($this->request->post('express_key'));
@@ -251,6 +262,7 @@ class Order extends AdminController {
         }
         $express_name = $ExpressList[$express_key];
         $result       = $this->app->order->updateDeliverOrderGoods($order_goods_id, $express_no, $express_key, $express_name);
+        $this->apiLog($apiName, [$cmsConId, $order_goods_id, $express_no, $express_key], $result['code'], $cmsConId);
         return $result;
     }
 

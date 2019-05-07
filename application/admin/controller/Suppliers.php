@@ -125,6 +125,11 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function addSupplier() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         /* 获取提交参数 */
         $tel   = trim($this->request->post('tel'));
         $name  = trim($this->request->post('name'));
@@ -143,6 +148,7 @@ class Suppliers extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->suppliers->addSupplier($tel, $name, $title, $desc, $image);
+        $this->apiLog($apiName, [$cmsConId, $tel, $name, $title, $desc, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -164,6 +170,11 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function updateSupplier() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id    = trim($this->request->post('id'));
         $tel   = trim($this->request->post('tel'));
         $name  = trim($this->request->post('name'));
@@ -180,7 +191,9 @@ class Suppliers extends AdminController {
         if (!$name || !$title || !$desc) {
             return ['code' => '3002'];
         }
-        return $this->app->suppliers->editSupplier(intval($id), $tel, $name, $title, $desc, $image);
+        $result = $this->app->suppliers->editSupplier(intval($id), $tel, $name, $title, $desc, $image);
+        $this->apiLog($apiName, [$cmsConId, $id, $tel, $name, $title, $desc, $image], $result['code'], $cmsConId);
+        return $result;
     }
 
     /*
@@ -332,6 +345,11 @@ class Suppliers extends AdminController {
      */
 
     public function addSupplierFreight() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $stypeArr   = [1, 2, 3,];
         $supplierId = trim($this->request->post('supplierId'));
         $stype      = trim($this->request->post('stype'));
@@ -347,6 +365,7 @@ class Suppliers extends AdminController {
             return ['code' => '3003']; /* 标题和详情不能为空 */
         }
         $result = $this->app->suppliers->addSupplierFreight(intval($supplierId), intval($stype), $title, $desc);
+        $this->apiLog($apiName, [$cmsConId, $supplierId, $stype, $title, $desc], $result['code'], $cmsConId);
         return $result;
 
     }
@@ -367,6 +386,11 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function updateSupplierFreight() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $stypeArr            = [1, 2, 3,];
         $supplier_freight_Id = trim($this->request->post('supplier_freight_Id'));
         $stype               = trim($this->request->post('stype'));
@@ -382,6 +406,7 @@ class Suppliers extends AdminController {
             return ['code' => '3003']; /* 标题和详情不能为空 */
         }
         $result = $this->app->suppliers->updateSupplierFreight(intval($supplier_freight_Id), intval($stype), $title, $desc);
+        $this->apiLog($apiName, [$cmsConId, $supplier_freight_Id, $stype, $title, $desc], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -428,6 +453,11 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function addSupplierFreightdetail() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $freight_id  = trim($this->request->post('freight_id'));
         $price       = trim($this->request->post('price'));
         $after_price = trim($this->request->post('after_price'));
@@ -444,6 +474,7 @@ class Suppliers extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->suppliers->addSupplierFreightdetail(intval($freight_id), floatval($price), floatval($after_price), floatval($total_price), floatval($unit_price));
+        $this->apiLog($apiName, [$cmsConId, $freight_id, $price, $after_price, $total_price, $unit_price], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -464,6 +495,11 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function editSupplierFreightdetail() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $freight_detail_id = trim($this->request->post('freight_detail_id'));
         $price             = trim($this->request->post('price'));
         $after_price       = trim($this->request->post('after_price'));
@@ -480,6 +516,7 @@ class Suppliers extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->suppliers->editSupplierFreightdetail(intval($freight_detail_id), floatval($price), floatval($after_price), floatval($total_price), floatval($unit_price));
+        $this->apiLog($apiName, [$cmsConId, $freight_detail_id, $price, $after_price, $total_price, $unit_price], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -500,6 +537,11 @@ class Suppliers extends AdminController {
      * @author zyr
      */
     public function updateSupplierFreightArea() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $cityIdStr       = trim($this->request->post('city_id_str'));
         $freightDetailId = trim($this->request->post('freight_detail_id'));
         if (empty($cityIdStr)) {
@@ -509,7 +551,7 @@ class Suppliers extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->suppliers->updateSupplierFreightArea($cityIdStr, intval($freightDetailId));
+        $this->apiLog($apiName, [$cmsConId, $cityIdStr, $freightDetailId], $result['code'], $cmsConId);
         return $result;
     }
-
 }
