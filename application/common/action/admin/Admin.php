@@ -955,7 +955,9 @@ class Admin extends CommonIndex {
             if (empty($meum)) {
                 return ['code' => '3000'];
             }
-            $data = DbAdmin::getMenu([['id', 'in', $meum]]);
+            $pidMenu = DbAdmin::getMenuList([['id', 'in', $meum]], 'pid');
+            $pidMenu = array_column($pidMenu, 'pid');
+            $data    = DbAdmin::getMenu([['id', 'in', array_merge($meum, $pidMenu)]]);
         }
         $tree = new PHPTree($data);
         $tree->setParam("pk", "id");
