@@ -61,7 +61,7 @@ class Admin extends CommonIndex {
      * @author rzc
      */
     public function getAdminUsers() {
-        $adminInfo = DbAdmin::getAdminInfo([['id','<>',1]], 'id,admin_name,department,stype,status');
+        $adminInfo = DbAdmin::getAdminInfo([['id', '<>', 1]], 'id,admin_name,department,stype,status');
         return ['code' => '200', 'data' => $adminInfo];
     }
 
@@ -1042,14 +1042,18 @@ class Admin extends CommonIndex {
         if (empty($group)) {//权限分组不存在
             return ['code' => '3003'];
         }
-        $addAdmin = DbAdmin::getAdminInfo(['id' => $addAdminId], 'id');
+        $addAdmin = DbAdmin::getAdminInfo(['id' => $addAdminId, 'status' => 1], 'id');
         if (empty($addAdmin)) {
             return ['code' => '3004'];
         }
-        $data = [
+        $data       = [
             'admin_id' => $addAdminId,
             'group_id' => $groupId,
         ];
+        $adminGroup = DbAdmin::getAdminPermissionsGroup($data, 'id', true);
+        if (!empty($adminGroup)) {
+            return ['code' => '3006'];
+        }
         Db::startTrans();
         try {
             DbAdmin::addAdminPermissionsGroup($data);
@@ -1057,7 +1061,7 @@ class Admin extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3006']; //添加失败
+            return ['code' => '3007']; //添加失败
         }
     }
 
@@ -1139,13 +1143,13 @@ class Admin extends CommonIndex {
             foreach ($useMenu as $um1) {
                 if (!isset($relMenuIdList[$um1['menu_id']])) {
                     $relMenuIdList[$um1['menu_id']] = [$um1['id']];
-                }else{
+                } else {
                     array_push($relMenuIdList[$um1['menu_id']], $um1['id']);
                 }
                 if (!isset($apiIdList[$um1['api_id']])) {
-                    $apiIdList[$um1['api_id']]     = [$um1['id']];
+                    $apiIdList[$um1['api_id']] = [$um1['id']];
                     continue;
-                }else{
+                } else {
                     array_push($apiIdList[$um1['api_id']], $um1['id']);
                 }
             }
@@ -1211,6 +1215,47 @@ class Admin extends CommonIndex {
     }
 
     /**
+     * 删除权限组的成员
+     * @param $cmsConId
+     * @param $groupId
+     * @param $delAdminId
+     * @return array
+     * @author zyr
+     */
+    public function delAdminPermissions($cmsConId, $groupId, $delAdminId) {
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId != '1') {
+            return ['code' => '3002'];
+        }
+        $group = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
+        if (empty($group)) {//权限分组不存在
+            return ['code' => '3003'];
+        }
+        $delAdmin = DbAdmin::getAdminInfo(['id' => $delAdminId, 'status' => 1], 'id');
+        if (empty($delAdmin)) {
+            return ['code' => '3004'];
+        }
+        $where      = [
+            'admin_id' => $delAdminId,
+            'group_id' => $groupId,
+        ];
+        $adminGroup = DbAdmin::getAdminPermissionsGroup($where, 'id', true);
+        if (empty($adminGroup)) {//删除的管理员不存在
+            return ['code' => '3006'];
+        }
+        $delId = $adminGroup['id'];
+        Db::startTrans();
+        try {
+            DbAdmin::deleteAdminPermissionsGroup($delId);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //删除失败
+        }
+    }
+
+    /**
      * 获取权限组下的管理员
      * @param $cmsConId
      * @param $groupId
@@ -1262,6 +1307,13 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'data' => $group];
     }
 
+    /**
+     * 获取权限列表
+     * @param $cmsConId
+     * @param $groupId
+     * @return array
+     * @author zyr
+     */
     public function getPermissionsList($cmsConId, $groupId) {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId != '1') {

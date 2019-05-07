@@ -928,7 +928,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
      * @apiParam (入参) {Int} add_admin_id 添加管理员id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3002:没有权限 / 3003:权限分组不存在 /3004:添加用户不存在 / 3005:管理员id有误 / 3006:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3002:没有权限 / 3003:权限分组不存在 /3004:添加用户不存在 / 3005:管理员id有误 / / 3006:该成员已存在 / 3007:添加失败
      * @apiSampleRequest /admin/admin/addadminpermissions
      * @author zyr
      */
@@ -1019,6 +1019,35 @@ class Admin extends AdminController {
         $apiName = classBasename($this) . '/' . __function__;
         $result  = $this->app->admin->addPermissionsGroupPower($apiName, $cmsConId, $groupId, $permissions);
         $this->apiLog($apiName, [$cmsConId, $groupId, $permissions], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 删除权限组的成员
+     * @apiDescription   delAdminPermissions
+     * @apiGroup         admin_admin
+     * @apiName          delAdminPermissions
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} group_id 分组id
+     * @apiParam (入参) {Int} del_admin_id 要删除的admin_id
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:分组id错误 / 3002:没有权限 / 3003:权限分组不存在 /3004:删除用户不存在 / 3005:管理员id有误 /3006:删除的管理员不存在 / 3007:删除失败
+     * @apiSampleRequest /admin/admin/deladminpermissions
+     * @author zyr
+     */
+    public function delAdminPermissions() {
+        $cmsConId    = trim($this->request->post('cms_con_id'));
+        $groupId     = trim($this->request->post('group_id'));
+        $delAdminId = trim(($this->request->post('del_admin_id')));
+        if (!is_numeric($groupId) || $groupId < 1) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($delAdminId) || $delAdminId < 2) {
+            return ['code' => '3005'];
+        }
+        $groupId    = intval($groupId);
+        $delAdminId = intval($delAdminId);
+        $result     = $this->app->admin->delAdminPermissions($cmsConId, $groupId, $delAdminId);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId, $delAdminId], $result['code'], $cmsConId);
         return $result;
     }
 

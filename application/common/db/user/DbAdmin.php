@@ -226,4 +226,8 @@ class DbAdmin {
     public function deleteAdminPermissionsRelation($ids){
         return AdminPermissionsRelation::destroy($ids);
     }
+
+    public function deleteAdminPermissionsGroup($id) {
+        return AdminPermissionsGroup::destroy($id);
+    }
 }
