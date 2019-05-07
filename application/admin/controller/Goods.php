@@ -100,6 +100,11 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function saveAddGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $supplierId   = trim($this->request->post('supplier_id'));//供应商id
         $cateId       = trim($this->request->post('cate_id'));//分类id
         $goodsName    = trim($this->request->post('goods_name'));//商品名称
@@ -137,8 +142,9 @@ class Goods extends AdminController {
             $data['subtitle'] = $subtitle;
         }
         //调用方法存商品表
-        $res = $this->app->goods->saveGoods($data);
-        return $res;
+        $result = $this->app->goods->saveGoods($data);
+        $this->apiLog($apiName, [$cmsConId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
@@ -447,6 +453,11 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function uploadGoodsImages() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $imageTypeArr = [1, 2];//1.详情图 2.轮播图
         $goodsId      = trim($this->request->post('goods_id'));
         $imageType    = trim($this->request->post('image_type'));
@@ -461,6 +472,7 @@ class Goods extends AdminController {
             return ['code' => '3003'];//图片不能空
         }
         $result = $this->app->goods->uploadGoodsImages($goodsId, $imageType, $images);
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $imageType, $images], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -478,11 +490,17 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function delGoodsImage() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $imagePath = trim($this->request->post('image_path'));
         if (empty($imagePath)) {
             return ['code' => '3001'];//图片不能为空
         }
         $result = $this->app->goods->delGoodsImage($imagePath);
+        $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -526,12 +544,18 @@ class Goods extends AdminController {
      * 2019/1/8-10:13
      */
     public function upDownGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));
         if (!is_numeric($id) || !is_numeric($type)) {
             return ["code" => '3002'];
         }
-        $res = $this->app->goods->upDown(intval($id), intval($type));
-        return $res;
+        $result = $this->app->goods->upDown(intval($id), intval($type));
+        $this->apiLog($apiName, [$cmsConId, $id, $type], $result['code'], $cmsConId);
+        return $result;
     }
 }

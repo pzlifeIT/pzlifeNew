@@ -1115,18 +1115,14 @@ class Admin extends CommonIndex {
 
     /**
      * 为权限组添加菜单接口
-     * @param $apiName
      * @param $cmsConId
      * @param $groupId
      * @param $permissions
      * @return array
      * @author zyr
      */
-    public function addPermissionsGroupPower($apiName, $cmsConId, $groupId, $permissions) {
+    public function addPermissionsGroupPower($cmsConId, $groupId, $permissions) {
         $adminId = $this->getUidByConId($cmsConId);
-        if (!$this->checkPermissions($adminId, $apiName)) {
-            return ['code' => '3002'];
-        }
         $group = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($group)) {//权限分组不存在
             return ['code' => '3003'];
@@ -1356,5 +1352,35 @@ class Admin extends CommonIndex {
             }
         }
         return ['code' => '200', 'data' => $cate_tree];
+    }
+
+
+    /**
+     * 权限验证
+     * @param $cmsConId
+     * @param $apiName
+     * @return bool
+     * @author zyr
+     */
+    public function checkPermissions($cmsConId, $apiName) {
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId == '1') {
+            return true;
+        }
+        $checkApiId = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
+        $checkApiId = $checkApiId['id'];
+        $groupId    = DbAdmin::getAdminPermissionsGroup([
+            ['admin_id', '=', $adminId],
+        ], 'group_id');
+        $groupId    = array_column($groupId, 'group_id');
+        $apiId      = DbAdmin::getAdminPermissionsRelation([
+            ['group_id', 'in', $groupId],
+            ['api_id', '<>', 0],
+        ], 'api_id');
+        $apiId      = array_column($apiId, 'api_id');
+        if (in_array($checkApiId, $apiId)) {
+            return true;
+        }
+        return false;
     }
 }

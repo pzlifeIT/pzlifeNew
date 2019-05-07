@@ -122,6 +122,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function subjectGoodsAssoc() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId   = trim($this->request->post('goods_id'));
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($goodsId)) {
@@ -131,6 +136,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->subjectGoodsAssoc(intval($goodsId), intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -218,6 +224,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function delGoodsSubjectAssoc() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId   = trim($this->request->post('goods_id'));
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($goodsId)) {
@@ -227,6 +238,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->delGoodsSubjectAssoc(intval($goodsId), intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 }
