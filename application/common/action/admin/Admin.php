@@ -941,18 +941,22 @@ class Admin extends CommonIndex {
     }
 
     public function cmsMenu($cmsConId) {
-        $adminId   = $this->getUidByConId($cmsConId);
-        $group     = DbAdmin::getAdminPermissionsGroup(['admin_id' => $adminId], 'group_id');
-        $groupList = array_column($group, 'group_id');
-        if (empty($groupList)) {
-            return ['code' => '3000'];
+        $adminId = $this->getUidByConId($cmsConId);
+        if ($adminId == 1) {
+            $data = DbAdmin::getMenu([]);
+        } else {
+            $group     = DbAdmin::getAdminPermissionsGroup(['admin_id' => $adminId], 'group_id');
+            $groupList = array_column($group, 'group_id');
+            if (empty($groupList)) {
+                return ['code' => '3000'];
+            }
+            $permissionsGroup = DbAdmin::getAdminPermissionsRelation([['group_id', 'in', $groupList]], 'menu_id');
+            $meum             = array_unique(array_column($permissionsGroup, 'menu_id'));
+            if (empty($meum)) {
+                return ['code' => '3000'];
+            }
+            $data = DbAdmin::getMenu([['id', 'in', $meum]]);
         }
-        $permissionsGroup = DbAdmin::getAdminPermissionsRelation([['group_id', 'in', $groupList]], 'menu_id');
-        $meum             = array_unique(array_column($permissionsGroup, 'menu_id'));
-        if (empty($meum)) {
-            return ['code' => '3000'];
-        }
-        $data = DbAdmin::getMenu([['id', 'in', $meum]]);
         $tree = new PHPTree($data);
         $tree->setParam("pk", "id");
         $tree->setParam("pid", "pid");
