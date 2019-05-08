@@ -1390,6 +1390,9 @@ class Admin extends CommonIndex {
             return true;
         }
         $checkApiId = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
+        if (empty($checkApiId)) {
+            return false;
+        }
         $checkApiId = $checkApiId['id'];
         $groupId    = DbAdmin::getAdminPermissionsGroup([
             ['admin_id', '=', $adminId],
