@@ -51,8 +51,13 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function getAdminInfo($cmsConId) {
-        $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'admin_name,stype', true);
+        $adminId                 = $this->getUidByConId($cmsConId);
+        $adminInfo               = DbAdmin::getAdminInfo(['id' => $adminId], 'admin_name,stype', true);
+        $adminGroup              = DbAdmin::getAdminPermissionsGroup(['admin_id' => $adminId], 'group_id');
+        $adminGroup              = array_column($adminGroup, 'group_id');
+        $group                   = DbAdmin::getPermissionsGroup([['id', 'in', $adminGroup]], 'group_name');
+        $group                   = array_column($group, 'group_name');
+        $adminInfo['group_name'] = $group;
         return ['code' => '200', 'data' => $adminInfo];
     }
 
@@ -61,7 +66,22 @@ class Admin extends CommonIndex {
      * @author rzc
      */
     public function getAdminUsers() {
+        $adminByGroup = DbAdmin::getAdminInfoByGroup([
+            ['a.id', '<>', '1'],
+        ], 'a.id as admin_id,pg.group_name');
+        $adminGroup   = [];
+        foreach ($adminByGroup as $ag) {
+            if (!isset($adminGroup[$ag['admin_id']])) {
+                $adminGroup[$ag['admin_id']] = [$ag['group_name']];
+                continue;
+            }
+            array_push($adminGroup[$ag['admin_id']], $ag['group_name']);
+        }
         $adminInfo = DbAdmin::getAdminInfo([['id', '<>', 1]], 'id,admin_name,department,stype,status');
+        foreach ($adminInfo as &$ai) {
+            $ai['group'] = $adminGroup[$ai['id']] ?? [];
+        }
+        unset($ai);
         return ['code' => '200', 'data' => $adminInfo];
     }
 
@@ -1123,7 +1143,7 @@ class Admin extends CommonIndex {
      */
     public function addPermissionsGroupPower($cmsConId, $groupId, $permissions) {
         $adminId = $this->getUidByConId($cmsConId);
-        $group = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
+        $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($group)) {//权限分组不存在
             return ['code' => '3003'];
         }
@@ -1351,6 +1371,8 @@ class Admin extends CommonIndex {
                 $ch['child'] = $child;
             }
         }
+        unset($ct);
+        unset($ch);
         return ['code' => '200', 'data' => $cate_tree];
     }
 
