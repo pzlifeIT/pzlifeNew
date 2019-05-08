@@ -267,6 +267,11 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function editGoodsSku() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $skuId         = trim($this->request->post('sku_id'));
         $stock         = trim($this->request->post('stock'));//库存
         $freightId     = trim($this->request->post('freight_id'));//运费模版
@@ -306,6 +311,7 @@ class Goods extends AdminController {
             'sku_image'      => $skuImage,
         ];
         $result = $this->app->goods->editGoodsSku($skuId, $data, $weight, $volume);
+        $this->apiLog($apiName, [$cmsConId, $skuId, $stock, $freightId, $marketPrice, $retailPrice, $costPrice, $marginPrice, $integralPrice, $weight, $volume, $skuImage], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -323,6 +329,11 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function addGoodsSpec() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId = trim($this->request->post('goods_id'));//商品id
         $attrId  = trim($this->request->post('attr_id'));//属性id
         if (!is_numeric($goodsId)) {
@@ -331,8 +342,9 @@ class Goods extends AdminController {
         if (!is_numeric($attrId)) {
             return ['code' => '3001'];//属性id必须为数字
         }
-        $restlt = $this->app->goods->addGoodsSpec(intval($attrId), intval($goodsId));
-        return $restlt;
+        $result = $this->app->goods->addGoodsSpec(intval($attrId), intval($goodsId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $attrId], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
@@ -349,6 +361,11 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function delGoodsSpec() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId = trim($this->request->post('goods_id'));//商品id
         $attrId  = trim($this->request->post('attr_id'));//属性id
         if (!is_numeric($goodsId)) {
@@ -357,8 +374,9 @@ class Goods extends AdminController {
         if (!is_numeric($attrId)) {
             return ['code' => '3001'];//属性id必须为数字
         }
-        $restlt = $this->app->goods->delGoodsSpec(intval($attrId), intval($goodsId));
-        return $restlt;
+        $result = $this->app->goods->delGoodsSpec(intval($attrId), intval($goodsId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $attrId], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**

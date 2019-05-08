@@ -62,6 +62,7 @@ class Admin extends AdminController {
      * @apiSuccess (返回) {String} code 200:成功  / 5000:请重新登录 2.5001:账号已停用
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSuccess (返回) {String} admin_name 管理员名
+     * @apiSuccess (返回) {Array} group 所属权限组列表
      * @apiSuccess (返回) {Int} stype 用户类型 1.后台管理员 2.超级管理员
      * @apiSampleRequest /admin/admin/getadmininfo
      * @return array
@@ -1107,6 +1108,8 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3002:没有权限
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (返回) {String} admin_name 名字
      * @apiSampleRequest /admin/admin/getpermissionsgroupadmin
      * @author zyr
      */
@@ -1131,6 +1134,9 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} get_admin_id 管理员id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:管理员id有误 / 3002:没有权限
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (返回) {String} group_name 组名
+     * @apiSuccess (返回) {String} content 描述
      * @apiSampleRequest /admin/admin/getadmingroup
      * @author zyr
      */

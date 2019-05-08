@@ -36,6 +36,11 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function creatBossShareDiamondvip() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $mobile          = trim($this->request->post('mobile'));
         $linkman         = trim($this->request->post('linkman'));
         $stock           = trim($this->request->post('stock'));
@@ -52,6 +57,7 @@ class Rights extends AdminController {
             return ['code' => '3005'];
         }
         $result = $this->app->rights->creatBossShareDiamondvip($mobile, $linkman, intval($stock), intval($redmoney_status), intval($type), $coupon_money);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $linkman, $stock, $coupon_money, $redmoney_status, $type], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -118,12 +124,18 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function passBossShareDiamondvip() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id     = trim($this->request->post('id'));
         $status = trim($this->request->post('status'));
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => 3001];
         }
         $result = $this->app->rights->passBossShareDiamondvip($id, $status);
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -256,9 +268,9 @@ class Rights extends AdminController {
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [status] 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字  
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字
      * @apiSuccess (data) {object_array} diamondvipNetPush 结果
-     * @apiSuccess (diamondvipNetPush) {String} id 
+     * @apiSuccess (diamondvipNetPush) {String} id
      * @apiSuccess (diamondvipNetPush) {String} typeid BOSSid
      * @apiSuccess (diamondvipNetPush) {String} type  统计类型,钻石网推:diamondvipNetPush
      * @apiSuccess (diamondvipNetPush) {String} timekey 关联时间索引
@@ -279,16 +291,16 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function getDiamondvipNetPush() {
-        $page            = trim(input("post.page"));
-        $pageNum         = trim(input("post.page_num"));
-        $status          = trim(input("post.status"));
+        $page    = trim(input("post.page"));
+        $pageNum = trim(input("post.page_num"));
+        $status  = trim(input("post.status"));
         $page    = empty($page) ? 1 : $page;
         $pageNum = empty($pageNum) ? 10 : $pageNum;
-        $status = empty($status) ? 1 : $status;
+        $status  = empty($status) ? 1 : $status;
         if (!is_numeric($page) || !is_numeric($status) || !is_numeric($pageNum)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getDiamondvipNetPush($page,$pageNum,$status);
+        $result = $this->app->rights->getDiamondvipNetPush($page, $pageNum, $status);
         return $result;
     }
 
@@ -311,7 +323,7 @@ class Rights extends AdminController {
      * ]
      * @author rzc
      */
-    public function auditDiamondvipBounty(){
+    public function auditDiamondvipBounty() {
         $cmsConId = trim($this->request->post('cms_con_id'));
         $id       = trim($this->request->post('id'));
         $status   = trim($this->request->post('status'));
@@ -324,7 +336,7 @@ class Rights extends AdminController {
         if (empty($id)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->rights->auditDiamondvipBounty($id,$status);
+        $result = $this->app->rights->auditDiamondvipBounty($id, $status);
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }

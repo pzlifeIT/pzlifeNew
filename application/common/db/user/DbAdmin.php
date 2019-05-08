@@ -11,12 +11,26 @@ use app\common\model\Menu;
 use app\common\model\PermissionsApi;
 use app\common\model\PermissionsGroup;
 use app\common\model\User;
+use think\Db;
 
 class DbAdmin {
 
     public function getAdminInfo($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = Admin::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getAdminInfoByGroup($where, $field) {
+        array_push($where, ['a.delete_time', '=', '0']);
+        array_push($where, ['apg.delete_time', '=', '0']);
+        array_push($where, ['pg.delete_time', '=', '0']);
+        return Db::table('pz_admin')
+            ->alias('a')
+            ->field($field)
+            ->join(['pz_admin_permissions_group' => 'apg'], 'apg.admin_id=a.id')
+            ->join(['pz_permissions_group' => 'pg'], 'apg.group_id=pg.id')
+            ->where($where)
+            ->select();
     }
 
     /**
@@ -64,7 +78,7 @@ class DbAdmin {
      * @return mixed
      * @author rzc
      */
-    public function addAdminRemittance($data){
+    public function addAdminRemittance($data) {
         $AdminRemittance = new AdminRemittance;
         $AdminRemittance->save($data);
         return $AdminRemittance->id;
@@ -77,9 +91,9 @@ class DbAdmin {
      * @return mixed
      * @author rzc
      */
-    public function editRemittance($data,$id){
+    public function editRemittance($data, $id) {
         $AdminRemittance = new AdminRemittance;
-        return $AdminRemittance->save($data,['id' => $id]);
+        return $AdminRemittance->save($data, ['id' => $id]);
     }
 
     /**
@@ -91,13 +105,13 @@ class DbAdmin {
      */
     public function getAdminRemittance($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = AdminRemittance::field($field)->with([
-            'initiateadmin'=>function($query){
+            'initiateadmin' => function ($query) {
                 $query->field('id,admin_name,department,stype,status');
-             },'auditadmin'=>function($query){
+            }, 'auditadmin' => function ($query) {
                 $query->field('id,admin_name,department,stype,status');
-             },'user'=>function($query){
+            }, 'user'       => function ($query) {
                 $query->field('id,nick_name,user_identity,mobile');
-             }
+            }
         ])->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
@@ -108,7 +122,7 @@ class DbAdmin {
      * @return mixed
      * @author rzc
      */
-    public function getCountAdminRemittance($where){
+    public function getCountAdminRemittance($where) {
         return AdminRemittance::where($where)->count();
     }
 
@@ -122,11 +136,11 @@ class DbAdmin {
      * @return mixed
      * @author rzc
      */
-    public function getAdminBank($where, $field, $row = false, $orderBy = '', $limit = '',$whereOr = false) {
+    public function getAdminBank($where, $field, $row = false, $orderBy = '', $limit = '', $whereOr = false) {
         $obj = AdminBank::field($field);
         if ($whereOr === true) {
             $obj = $obj->whereOr($where);
-        }else{
+        } else {
             $obj = $obj->where($where);
         }
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -138,7 +152,7 @@ class DbAdmin {
      * @return number
      * @author rzc
      */
-    public function getAdminBankCount($where){
+    public function getAdminBankCount($where) {
         return AdminBank::where($where)->count();
     }
 
@@ -148,7 +162,7 @@ class DbAdmin {
      * @return id
      * @author rzc
      */
-    public function saveAdminBank($data){
+    public function saveAdminBank($data) {
         $AdminBank = new AdminBank;
         $AdminBank->save($data);
         return $AdminBank->id;
@@ -160,9 +174,9 @@ class DbAdmin {
      * @return id
      * @author rzc
      */
-    public function editAdminBank($data,$id){
+    public function editAdminBank($data, $id) {
         $AdminBank = new AdminBank;
-        return $AdminBank->save($data,['id'=>$id]);
+        return $AdminBank->save($data, ['id' => $id]);
     }
 
     public function getMenu($where) {
@@ -203,7 +217,7 @@ class DbAdmin {
 
     public function editPermissionsGroup($data, $id) {
         $permissionsGroup = new PermissionsGroup();
-        return $permissionsGroup->save($data,['id' => $id]);
+        return $permissionsGroup->save($data, ['id' => $id]);
     }
 
     public function addAdminPermissionsGroup($data) {
@@ -212,7 +226,7 @@ class DbAdmin {
         return $adminPermissionsGroup->id;
     }
 
-    public function addAdminPermissionsRelation($data){
+    public function addAdminPermissionsRelation($data) {
         $adminPermissionsRelation = new AdminPermissionsRelation();
         return $adminPermissionsRelation->saveAll($data);
     }
@@ -223,7 +237,7 @@ class DbAdmin {
         return $permissionsApi->id;
     }
 
-    public function deleteAdminPermissionsRelation($ids){
+    public function deleteAdminPermissionsRelation($ids) {
         return AdminPermissionsRelation::destroy($ids);
     }
 
