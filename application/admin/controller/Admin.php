@@ -728,21 +728,21 @@ class Admin extends AdminController {
     }
 
     /**
-     * @api              {post} / cms 审核用户提现
-     * @apiDescription   checkUserTransfer
+     * @api              {post} / cms 审核用户佣金提现
+     * @apiDescription   checkUserCommissionTransfer
      * @apiGroup         admin_admin
-     * @apiName          checkUserTransfer
+     * @apiName          checkUserCommissionTransfer
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id
      * @apiParam (入参) {String} message 后台管理员处理回馈留言
      * @apiParam (入参) {String} status 状态 2.已完成 3.取消
      * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:已审核的提现记录无法再次审核 / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核 / 3007:审核失败
      * apiSuccess (返回) {String} total 记录条数
-     * @apiSampleRequest /admin/admin/checkUserTransfer
+     * @apiSampleRequest /admin/admin/checkUserCommissionTransfer
      * @return array
      * @author rzc
      */
-    public function checkUserTransfer() {
+    public function checkUserCommissionTransfer() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -760,12 +760,50 @@ class Admin extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message);
-        $this->apiLog($apiName, [$cmsConId, $id, $status, $message], $result['code'], $cmsConId);
+        $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message, 2);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message ,2], $result['code'], $cmsConId);
         return $result;
 
     }
 
+     /**
+     * @api              {post} / cms 审核用户奖励金提现
+     * @apiDescription   checkUserBountyTransfer
+     * @apiGroup         admin_admin
+     * @apiName          checkUserBountyTransfer
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id
+     * @apiParam (入参) {String} message 后台管理员处理回馈留言
+     * @apiParam (入参) {String} status 状态 2.已完成 3.取消
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status或者id必须为数字 / 3002:错误的status  / 3003:id不能为空 / 3004:已审核的提现记录无法再次审核 / 3005 错误的请求error_fields / 3006:已审核的银行卡或者用户停用的银行卡无法再次审核 / 3007:审核失败
+     * apiSuccess (返回) {String} total 记录条数
+     * @apiSampleRequest /admin/admin/checkUserBountyTransfer
+     * @return array
+     * @author rzc
+     */
+    public function checkUserBountyTransfer() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
+        if (empty($id)) {
+            return ['code' => '3003'];
+        }
+        if (empty($status)) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message, 4);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message, 4], $result['code'], $cmsConId);
+        return $result;
+
+    }
     /**
      * @api              {post} / cms 获取用户提交银行卡信息
      * @apiDescription   getUserBank
@@ -814,7 +852,7 @@ class Admin extends AdminController {
         $page        = trim($this->request->post('page'));
         $page_num    = trim($this->request->post('page_num'));
         $page        = empty($page) ? 1 : $page;
-        $pageNum     = empty($pageNum) ? 10 : $pageNum;
+        $pageNum     = empty($pageNum) ? 10 : $page_num;
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }

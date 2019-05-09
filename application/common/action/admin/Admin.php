@@ -770,8 +770,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function checkUserTransfer(int $id, int $status, $message = '') {
-        $transfer     = DbUser::getLogTransfer(['id' => $id], '*', true);
+    public function checkUserTransfer(int $id, int $status, $message = '', $stype) {
+        $transfer     = DbUser::getLogTransfer(['id' => $id,'stype' => $stype], '*', true);
         $userRedisKey = Config::get('rediskey.user.redisKey');
         if (empty($transfer)) {
             return ['code' => '3000'];
