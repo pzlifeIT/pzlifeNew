@@ -993,7 +993,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {Int} group_id 权限分组ID
      * @apiParam (入参) {String} group_name 分组名称
      * @apiParam (入参) {String} content 详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 / 3002:没有权限 / 3003:修改的用户不存在 /3005:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 / 3002:没有权限 / 3003:修改的用户不存在 / 3004:分组id错误 /3005:修改失败
      * @apiSampleRequest /admin/admin/editpermissionsgroup
      * @author zyr
      */
@@ -1006,6 +1006,9 @@ class Admin extends AdminController {
         $groupId   = trim($this->request->post('group_id'));
         $groupName = trim(($this->request->post('group_name')));
         $content   = trim(($this->request->post('content')));
+        if (!is_numeric($groupId) || $groupId < 1) {
+            return ['code' => '3004'];
+        }
         if (empty($groupName)) {
             return ['code' => '3001'];
         }
