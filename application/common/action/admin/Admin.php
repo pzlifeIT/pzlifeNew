@@ -1298,7 +1298,7 @@ class Admin extends CommonIndex {
             ['id', 'in', $groupAdminId],
             ['status', '=', '1'],
             ['id', '<>', '1'],
-        ], 'admin_name');
+        ], 'id,admin_name');
         return ['code' => '200', 'data' => $admin];
     }
 
