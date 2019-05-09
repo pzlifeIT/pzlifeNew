@@ -238,10 +238,14 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function auditShopApply() {
-        $cmsConId = trim($this->request->post('cms_con_id'));
-        $id       = trim($this->request->post('id'));
-        $status   = trim($this->request->post('status'));
-        $message  = trim($this->request->post('message'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
         if (empty($id)) {
             return ['code' => '3002'];
         }
@@ -251,11 +255,11 @@ class Rights extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        if (!in_array($status, [2,  4])) {
+        if (!in_array($status, [2, 4])) {
             return ['code' => '3004'];
         }
         $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message], $result['code'], $cmsConId);
         return $result;
 
     }
@@ -280,10 +284,14 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function auditManagerShopApply() {
-        $cmsConId = trim($this->request->post('cms_con_id'));
-        $id       = trim($this->request->post('id'));
-        $status   = trim($this->request->post('status'));
-        $message  = trim($this->request->post('message'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
         if (empty($id)) {
             return ['code' => '3002'];
         }
@@ -293,11 +301,11 @@ class Rights extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        if (!in_array($status, [ 3, 4])) {
+        if (!in_array($status, [3, 4])) {
             return ['code' => '3004'];
         }
         $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message], $result['code'], $cmsConId);
         return $result;
 
     }
