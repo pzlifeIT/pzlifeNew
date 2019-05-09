@@ -964,7 +964,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} group_name 分组名称
      * @apiParam (入参) {String} content 详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 / 3002:没有权限 /3005:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 /3005:添加失败
      * @apiSampleRequest /admin/admin/addpermissionsgroup
      * @author zyr
      */
@@ -993,7 +993,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {Int} group_id 权限分组ID
      * @apiParam (入参) {String} group_name 分组名称
      * @apiParam (入参) {String} content 详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 / 3002:没有权限 / 3003:修改的用户不存在 / 3004:分组id错误 /3005:修改失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组名称错误 / 3003:修改的用户不存在 / 3004:分组id错误 /3005:修改失败
      * @apiSampleRequest /admin/admin/editpermissionsgroup
      * @author zyr
      */
@@ -1012,7 +1012,8 @@ class Admin extends AdminController {
         if (empty($groupName)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->admin->editPermissionsGroup($cmsConId, $groupName, $content);
+        $groupId = intval($groupId);
+        $result  = $this->app->admin->editPermissionsGroup($cmsConId, $groupId, $groupName, $content);
         $this->apiLog($apiName, [$cmsConId, $groupId, $groupName, $content], $result['code'], $cmsConId);
         return $result;
     }
@@ -1025,7 +1026,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
      * @apiParam (入参) {Int} add_admin_id 添加管理员id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3002:没有权限 / 3003:权限分组不存在 /3004:添加用户不存在 / 3005:管理员id有误 / / 3006:该成员已存在 / 3007:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3003:权限分组不存在 /3004:添加用户不存在 / 3005:管理员id有误 / / 3006:该成员已存在 / 3007:添加失败
      * @apiSampleRequest /admin/admin/addadminpermissions
      * @author zyr
      */
@@ -1137,7 +1138,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
      * @apiParam (入参) {Int} del_admin_id 要删除的admin_id
-     * @apiSuccess (返回) {String} code 200:成功  / 3001:分组id错误 / 3002:没有权限 / 3003:权限分组不存在 /3004:删除用户不存在 / 3005:管理员id有误 /3006:删除的管理员不存在 / 3007:删除失败
+     * @apiSuccess (返回) {String} code 200:成功  / 3001:分组id错误 / 3003:权限分组不存在 /3004:删除用户不存在 / 3005:管理员id有误 /3006:删除的管理员不存在 / 3007:删除失败
      * @apiSampleRequest /admin/admin/deladminpermissions
      * @author zyr
      */
@@ -1169,7 +1170,7 @@ class Admin extends AdminController {
      * @apiName          getPermissionsGroupAdmin
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3002:没有权限
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (返回) {String} admin_name 名字
      * @apiSampleRequest /admin/admin/getpermissionsgroupadmin
@@ -1195,7 +1196,7 @@ class Admin extends AdminController {
      * @apiName          getAdminGroup
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} get_admin_id 管理员id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:管理员id有误 / 3002:没有权限
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:管理员id有误
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (返回) {String} group_name 组名
      * @apiSuccess (返回) {String} content 描述
@@ -1215,13 +1216,39 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取权限组信息
+     * @apiDescription   getGroupInfo
+     * @apiGroup         admin_admin
+     * @apiName          getGroupInfo
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} group_id 管理员id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (返回) {String} group_name 组名
+     * @apiSuccess (返回) {String} content 描述
+     * @apiSampleRequest /admin/admin/getgroupinfo
+     * @author zyr
+     */
+    public function getGroupInfo() {
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $groupId  = trim($this->request->post('group_id'));
+        if (!is_numeric($groupId) || $groupId < 1) {
+            return ['code' => '3001'];
+        }
+        $groupId = intval($groupId);
+        $result  = $this->app->admin->getGroupInfo($cmsConId, $groupId);
+        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取权限列表
      * @apiDescription   getPermissionsList
      * @apiGroup         admin_admin
      * @apiName          getPermissionsList
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:分组id错误 / 3002:没有权限
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:分组id错误
      * @apiSampleRequest /admin/admin/getpermissionslist
      * @author zyr
      */
