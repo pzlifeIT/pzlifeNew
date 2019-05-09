@@ -81,6 +81,11 @@ class Spec extends AdminController {
      * 2018/12/25-11:34
      */
     public function saveSpecAttr() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $top_id = trim(input("post.top_id"));
         $name   = trim(input("post.sa_name"));
         $type   = trim(input("post.type"));
@@ -90,8 +95,9 @@ class Spec extends AdminController {
         if (empty(is_numeric($top_id)) || empty($name) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->saveSpecAttr($type, $top_id, $name);
-        return $res;
+        $result = $this->app->spec->saveSpecAttr($type, $top_id, $name);
+        $this->apiLog($apiName, [$cmsConId, $top_id, $name, $type], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
@@ -139,14 +145,20 @@ class Spec extends AdminController {
      * 2018/12/25-15:47
      */
     public function saveEditSpecAttr() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id      = trim(input("post.id"));
         $sa_name = trim(input("post.sa_name"));
         $type    = trim(input("post.type"));
         if (empty(is_numeric($id)) || empty(is_numeric($type)) || empty($sa_name)) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->spec->saveEditSpecAttr($type, $id, $sa_name);
-        return $res;
+        $result = $this->app->spec->saveEditSpecAttr($type, $id, $sa_name);
+        $this->apiLog($apiName, [$cmsConId, $id, $sa_name, $type], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**

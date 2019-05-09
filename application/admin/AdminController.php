@@ -18,7 +18,8 @@ class AdminController extends Controller {
             exit(json_encode($checkRes));
         }
     }
-    private function headers(){
+
+    private function headers() {
         if (Config::get('app.deploy') == 'development') {
             header('Access-Control-Allow-Origin:*');
             header("Access-Control-Allow-Methods:GET,POST");
@@ -104,9 +105,28 @@ class AdminController extends Controller {
         exit(json_encode(['code' => '5000']));
     }
 
-    protected function apiLog($apiName, $param, $code, $cmsConId){
+    /**
+     * 接口日志
+     * @param $apiName
+     * @param $param
+     * @param $code
+     * @param $cmsConId
+     * @return mixed
+     * @author zyr
+     */
+    protected function apiLog($apiName, $param, $code, $cmsConId) {
         $result = $this->app->adminLog->apiRequestLog($apiName, $param, $code, $cmsConId);
         return $result;
     }
 
+    /**
+     * 权限验证
+     * @param $cmsConId
+     * @param $apiName
+     * @return mixed
+     * @author zyr
+     */
+    protected function checkPermissions($cmsConId, $apiName) {
+        return $this->app->admin->checkPermissions($cmsConId, $apiName);
+    }
 }
