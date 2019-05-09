@@ -87,10 +87,16 @@ class Cart extends CommonIndex {
             } else {
                 $oldcart['track'][$track_id] = $buy_num;
             }
+            if ($oldcart['track'][$track_id] < 1) {
+                unset($oldcart['track'][$track_id]);
+            }
             $oldcart = json_encode($oldcart);
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $oldcart);
 
         } else {
+            if ($buy_num <1) {
+                return ['code' => '3004'];
+            }
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $hash_cart);
         }
         $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);
@@ -244,7 +250,6 @@ class Cart extends CommonIndex {
         }
 
         $cart = json_decode($cart, true);
-
         /* 获取商品基础信息 */
         $where      = [["id", "=", $cart['goods_id']], ["status", "=", 1]];
         $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
@@ -255,8 +260,13 @@ class Cart extends CommonIndex {
         }
         $key = 'skuid:' . $goods_skuid;
         /* 如果数量为0则视为删除此店此规格 */
-        if ($buy_num == 0) {
-            unset($cart['track'][$track_id]);
+        if ($buy_num < 1) {//减
+        // print_r($cart);die;
+            if ($cart['track'][$track_id] + $buy_num < 1) {
+                unset($cart['track'][$track_id]);
+            }else{
+                $cart['track'][$track_id] += $buy_num;
+            }
             if ($cart['track']) {
                 $new_cart = json_encode($cart);
                 $thecart  = $this->redis->hset($this->redisCartUserKey . $uid, $key, $new_cart);
@@ -264,7 +274,8 @@ class Cart extends CommonIndex {
                 $thecart = $this->redis->hdel($this->redisCartUserKey . $uid, $key);
             }
 
-        } else {
+        } else {//加
+            
             if ($buy_num > $goods_sku['stock']) {
                 return ['code' => '3009', 'msg' => '库存不足', 'stock' => $goods_sku['stock']];
             }

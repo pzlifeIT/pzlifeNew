@@ -136,7 +136,7 @@ class Payment {
      * @author zyr
      */
     private function memberDiamond($orderNo) {
-        $memberOrderRow = DbOrder::getMemberOrder(['order_no' => $orderNo], 'id,uid,pay_money,pay_status,pay_type,create_time', true);
+        $memberOrderRow = DbOrder::getMemberOrder(['order_no' => $orderNo], 'id,uid,pay_money,pay_status,pay_type,create_time,from_uid', true);
         return $memberOrderRow;
     }
 

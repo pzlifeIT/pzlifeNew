@@ -312,6 +312,9 @@ class Order extends CommonIndex {
 
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        if(empty($goodsSku)){
+            return ['code' => '3004'];//商品下架
+        }
         $goodsSku = $goodsSku[0];
         if ($goodsSku['stock'] < $num) {
             return ['code' => '3007'];//库存不足商品
@@ -368,6 +371,9 @@ class Order extends CommonIndex {
                 }
             }
             $freightSupplierPrice[$freightList['supid']] = $totalFreightPrice;
+        }
+        if ($totalGoodsPrice <= 0) {
+            return ['code' => '3009'];
         }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice];
@@ -764,6 +770,9 @@ class Order extends CommonIndex {
             }
             /* 运费模版 end */
         }
+        if ($totalGoodsPrice <= 0) {
+            return ['code' => '3009'];
+        }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
         return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice];
     }
@@ -1043,7 +1052,8 @@ class Order extends CommonIndex {
             $pay_money = 15000;
         } elseif ($user_type == 3) {
             $user_type = 1;
-            $pay_money = 500;
+            $pay_money = 120;
+            $actype    = 1;
         }
 
         /* 判断会员身份，低于当前层级可购买升级 */

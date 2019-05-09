@@ -229,9 +229,30 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $limit = '') {
+    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '',$limit = '') {
         $obj = MemberOrder::field($field)->where($where);
-        return $this->getResult($obj, $row, $orderBy, $limit);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    public function getMemberOrders($where, $field, $row = false, $orderBy = '', $sc = '',$limit = '') {
+        $obj = MemberOrder::field($field)->with([
+            'user' => function ($query){
+                $query->field('id,nick_name,avatar,user_identity');
+            },
+            'fromuser' => function ($query){
+                $query->field('id,nick_name,avatar,user_identity');
+            },
+        ])->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
+    /**
+     * @param $where
+     * @return mixed
+     * @author zyr
+     */
+    public function countMemberOrder($where){
+        return MemberOrder::where($where)->count();
     }
 
     /**
