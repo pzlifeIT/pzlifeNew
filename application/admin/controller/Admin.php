@@ -773,7 +773,7 @@ class Admin extends AdminController {
         $page        = trim($this->request->post('page'));
         $page_num    = trim($this->request->post('page_num'));
         $page        = empty($page) ? 1 : $page;
-        $pageNum     = empty($pageNum) ? 10 : $pageNum;
+        $pageNum     = empty($pageNum) ? 10 : $page_num;
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
