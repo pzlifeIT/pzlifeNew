@@ -94,7 +94,7 @@ class DbModelMessage {
      */
     public function editMessageTemplate($data, $id) {
         $MessageTemplate = new MessageTemplate;
-        return $MessageTemplate->save($data,['id' => $id]);
+        return $MessageTemplate->save($data, ['id' => $id]);
     }
 
     /**
@@ -113,11 +113,60 @@ class DbModelMessage {
     }
 
     /**
+     * 消息模板计数
      * @param array $where
      * @return mixed
      * @author rzc
      */
     public function countMessageTemplate($where) {
         return MessageTemplate::where($where)->count();
+    }
+
+    /**
+     * 添加消息任务
+     * @param array $data
+     * @author rzc
+     */
+    public function saveMessageTask($data) {
+        $MessageTask = new MessageTask;
+        $MessageTask->save($data);
+        return $MessageTask->id;
+    }
+
+    /**
+     * 修改消息任务
+     * @param array $data
+     * @param number $id
+     * @author rzc
+     */
+    public function editMessageTask($data, $id) {
+        $MessageTask = new MessageTask;
+        $MessageTask->save($data, ['id' => $id]);
+        return $MessageTask->id;
+    }
+
+    /**
+     * 获取消息任务
+     * @param array $where
+     * @param bool $field
+     * @param string $row
+     * @param array $orderBy
+     * @param string $limit
+     * @return mixed
+     * @author rzc
+     */
+    public function getMessageTask($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = MessageTask::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 消息任务计数
+     * @param array $where
+     * @return mixed
+     * @author rzc
+     */
+    public function countMessageTask($where) {
+        return MessageTask::where($where)->count();
     }
 }

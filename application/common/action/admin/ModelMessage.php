@@ -114,13 +114,38 @@ class ModelMessage extends CommonIndex {
     }
 
     /**
+     * 修改模板消息
+     * @param number $type
+     * @param string $title
+     * @param string $template
+     * @return array
+     * @author rzc
+     */
+    public function editMessageTemplate($title, $type, $template, $id) {
+        $result = DbModelMessage::getMessageTemplate(['id' => $id], 'status', true);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        if ($result['status'] == 2) {
+            return ['code' => '3003'];
+        }
+        $data             = [];
+        $data['type']     = $type;
+        $data['title']    = $title;
+        $data['template'] = $template;
+        $data['status']   = 1;
+        $result           = DbModelMessage::editMessageTemplate($data, $id);
+        return ['code' => '200', 'tem_id' => $result];
+    }
+
+    /**
      * 审核模板消息
      * @param number $id
      * @param number $status
      * @return array
      * @author rzc
      */
-    public function auditMessageTemplate($id,$status){
+    public function auditMessageTemplate($id, $status) {
         $result = DbModelMessage::getMessageTemplate(['id' => $id], 'status', true);
         if (empty($result)) {
             return ['code' => '3000'];
@@ -140,7 +165,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getMessageTemplate($page, $pageNum, $id){
+    public function getMessageTemplate($page, $pageNum, $id) {
         $offset = ($page - 1) * $pageNum;
         if (!empty($id)) {
             $result = DbModelMessage::getMessageTemplate(['id' => $id], '*', true);
@@ -156,5 +181,35 @@ class ModelMessage extends CommonIndex {
         }
         $total = DbModelMessage::getMessageTemplate([]);
         return ['code' => '200', 'total' => $total, 'MessageTemplate' => $result];
+    }
+
+    /**
+     * 添加消息任务
+     * @param string $title
+     * @param number $type
+     * @param number $wtype
+     * @param number $mt_id
+     * @param number $trigger_id
+     * @return array
+     * @author rzc
+     */
+    public function saveMessageTask($title, $type, $wtype, $mt_id, $trigger_id) {
+        $message_template = DbModelMessage::getMessageTemplate(['id' => $mt_id, 'status' => 2], '*', true);
+        if (empty($message_template)) {
+            return ['code' => '3004'];
+        }
+        $trigger = DbModelMessage::getMessageTemplate(['id' => $trigger_id, 'status' => 2], '*', true);
+        if (empty($trigger)) {
+            return ['code' => '3005'];
+        }
+        $data               = [];
+        $data['title']      = $title;
+        $data['type']       = $type;
+        $data['wtype']      = $wtype;
+        $data['mt_id']      = $mt_id;
+        $data['trigger_id'] = $trigger_id;
+        $data['status']     = 1;
+        $result             = DbModelMessage::saveMessageTask($data);
+        return ['code' => '200', 'mtask_id' => $result];
     }
 }

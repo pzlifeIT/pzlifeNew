@@ -300,7 +300,7 @@ class ModelMessage extends AdminController {
      * ]
      * @author rzc
      */
-    public function getMessageTemplate(){
+    public function getMessageTemplate() {
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         $id      = trim($this->request->post('id'));
@@ -318,6 +318,88 @@ class ModelMessage extends AdminController {
             }
         }
         $result = $this->app->modelmessage->getMessageTemplate($page, $pageNum, $id);
+        return $result;
+    }
+    /**
+     * @api              {post} / 修改消息模板信息
+     * @apiDescription   editMessageTemplate
+     * @apiGroup         admin_ModelMessage
+     * @apiName          editMessageTemplate
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {Number} type 类型  1:短短信 2:长短信 3:彩信
+     * @apiParam (入参) {String} template 发送内容模板
+     * @apiParam (入参) {Number} id 需修改模板的ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:type参数错误 / 3003:template为空 / 3004:结束时间不能小于开始时间
+     * @apiSampleRequest /admin/ModelMessage/editMessageTemplate
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function editMessageTemplate() {
+        $title    = trim($this->request->post('title'));
+        $type     = trim($this->request->post('type'));
+        $template = trim($this->request->post('template'));
+        $id       = trim($this->request->post('id'));
+        $type     = empty($type) ? 1 : $type;
+        if (empty($title)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($id) || strpos($id, ".") !== false) {
+            return ['code' => '3002'];
+        }
+
+        if (!in_array($type, [1, 2, 3])) {
+            return ['code' => '3002'];
+        }
+        if (empty($template)) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->modelmessage->editMessageTemplate($title, $type, $template, $id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加消息任务
+     * @apiDescription   saveMessageTask
+     * @apiGroup         admin_ModelMessage
+     * @apiName          saveMessageTask
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {Number} type 发送人群  1:所有会员 2:普通会员 3:钻石会员 4:创业店主 5:合伙人
+     * @apiParam (入参) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账
+     * @apiParam (入参) {Number} mt_id 短信模板id
+     * @apiParam (入参) {Number} trigger_id 触发器id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在
+     * @apiSampleRequest /admin/ModelMessage/saveMessageTask
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function saveMessageTask() {
+        $title      = trim($this->request->post('title'));
+        $type       = trim($this->request->post('type'));
+        $wtype      = trim($this->request->post('wtype'));
+        $mt_id      = trim($this->request->post('mt_id'));
+        $trigger_id = trim($this->request->post('trigger_id'));
+        $type       = empty($type) ? 1 : $type;
+        if (empty($title)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($mt_id) || strpos($mt_id, ".") !== false || !is_numeric($trigger_id) || strpos($trigger_id, ".") !== false) {
+            return ['code' => '3002'];
+        }
+        if (!in_array($type, [1, 2, 3, 4, 5])) {
+            return ['code' => '3002'];
+        }
+        if (!in_array($wtype, [1, 2, 3, 4, 5, 6, 7])) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->modelmessage->saveMessageTask($title,$type,$wtype,$mt_id,$trigger_id);
         return $result;
     }
 }
