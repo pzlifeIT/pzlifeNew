@@ -1294,61 +1294,71 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $order_id = DbOrder::getOrder('id,create_time,pay_time,order_status', ['uid' => $uid, 'order_no' => $orderNo], true);
+        $order_id = DbOrder::getOrder('id,create_time,pay_time,order_status,order_money', ['uid' => $uid, 'order_no' => $orderNo], true);
         if (empty($order_id)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
+        $logPayRes                 = DbOrder::getLogPay(['order_id' => $order_id['id'], 'payment' => 1], 'id,order_id,payment,prepay_id', true);
         $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $uid], 'openid', true);
         $order                     = DbOrder::getOrderDetail(['uid' => $uid, 'order_no' => $orderNo], '*');
-        $data['keyword1'][] = $order_id['create_time'];
-        $data['keyword2'][] = $orderNo;
-        $data['keyword3'][] = '';
+        $data['keyword1']['value'] = $order_id['create_time'];
+        $data['keyword1']['color'] = '#157efb';
+        $data['keyword2']['value'] = $orderNo;
+        $data['keyword2']['color'] = '#333';
+        $keyword3 = '';
         // $goo
         // 商品名称
         foreach ($order as $key => $value) {
             //    echo $value['sku_json'];die;
-            $data['keyword3'][] .= $value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
+            $data['keyword3']['value'] = $keyword3.$value['goods_name'] . $value['goods_price'] . ' X ' . $value['goods_num'] . ' 【' . json_decode($value['sku_json'])[0] . '】 ';
         }
+        
+        $data['keyword3']['color'] = '#333';
         switch ($order_id['order_status']) {
         case '1':
-            $data['keyword4'][] = '待付款';
+            $data['keyword4']['value'] = '待付款';
             break;
         case '2':
-            $data['keyword4'][] = '取消订单';
+            $data['keyword4']['value'] = '取消订单';
             break;
         case '3':
-            $data['keyword4'][] = '已关闭';
+            $data['keyword4']['value'] = '已关闭';
             break;
         case '4':
-            $data['keyword4'][] = '已付款';
+            $data['keyword4']['value'] = '已付款';
             break;
         case '5':
-            $data['keyword4'][] = '已发货';
+            $data['keyword4']['value'] = '已发货';
             break;
         case '6':
-            $data['keyword4'][] = '已收货';
+            $data['keyword4']['value'] = '已收货';
             break;
         case '7':
-            $data['keyword4'][] = '待评价';
+            $data['keyword4']['value'] = '待评价';
             break;
         case '8':
-            $data['keyword4'][] = '退款申请确认';
+            $data['keyword4']['value'] = '退款申请确认';
             break;
         case '9':
-            $data['keyword4'][] = '退款中';
+            $data['keyword4']['value'] = '退款中';
             break;
         case '10':
-            $data['keyword4'][] = '退款成功';
+            $data['keyword4']['value'] = '退款成功';
             break;
         }
-        $data['keyword5'][] = $order_id['pay_time'];
+        $data['keyword4']['color'] = '#333';
+        $data['keyword5']['value'] = $order_id['order_money'];
+        $data['keyword5']['color'] = '#333';
+        $data['keyword6']['value'] = $order_id['pay_time'];
+        $data['keyword6']['color'] = '#333';
 
         $send_data                = [];
         $send_data['touser']      = $user_wxinfo['openid'];
         $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
-        $send_data['page']        = 'order/orderDetail/orderDetail?order_no=' . $orderNo;
-        $send_data['form_id']     = $order_id['id'];
+        $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $orderNo;
+        $send_data['form_id']     = $logPayRes['prepay_id'];
         $send_data['data']        = $data;
+        // $send_data['emphasis_keyword']        = 'keyword2.DATA';
         // print_r(json_encode($send_data,true));die;
         $access_token = $this->getWeiXinAccessToken();
         if (empty($access_token)) {
