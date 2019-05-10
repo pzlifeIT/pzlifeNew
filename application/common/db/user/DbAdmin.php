@@ -209,6 +209,16 @@ class DbAdmin {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getPermissionsApiMenu($where) {
+        array_push($where, ['pa.delete_time', '=', '0']);
+        return Db::table('pz_permissions_api')
+            ->alias('pa')
+            ->field('pa.id,pa.stype,pa.cn_name,pa.content,m.name as menu_name')
+            ->join(['pz_menu' => 'm'], 'pa.menu_id=m.id')
+            ->where($where)
+            ->select();
+    }
+
     public function addPermissionsGroup($data) {
         $permissionsGroup = new PermissionsGroup();
         $permissionsGroup->save($data);

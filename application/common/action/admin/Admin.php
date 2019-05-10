@@ -1095,7 +1095,10 @@ class Admin extends CommonIndex {
      */
     public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content) {
         $adminId = $this->getUidByConId($cmsConId);
-        $apiRes  = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
+        if ($adminId != '1') {
+            return ['code' => '3008'];//只有root可以添加
+        }
+        $apiRes = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
         if (!empty($apiRes)) {
             return ['code' => '3005'];//接口已存在
         }
@@ -1109,6 +1112,36 @@ class Admin extends CommonIndex {
             'stype'    => $stype,
             'cn_name'  => $cnName,
             'content'  => $content,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::addPermissionsApi($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //添加失败
+        }
+    }
+
+    /**
+     * 修改接口权限名称和详情
+     * @param $cmsConId
+     * @param $id
+     * @param $cnName
+     * @param $content
+     * @return array
+     * @author zyr
+     */
+    public function editPermissionsApi($cmsConId, $id, $cnName, $content) {
+        $adminId = $this->getUidByConId($cmsConId);
+        $apiRes  = DbAdmin::getPermissionsApi(['id' => $id], 'id', true);
+        if (empty($apiRes)) {
+            return ['code' => '3005'];//接口不存在
+        }
+        $data = [
+            'cn_name' => $cnName,
+            'content' => $content,
         ];
         Db::startTrans();
         try {
@@ -1388,5 +1421,22 @@ class Admin extends CommonIndex {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 获取接口权限列表
+     * @param $cmsConId
+     * @param $id
+     * @return array
+     * @author zyr
+     */
+    public function getPermissionsApi($cmsConId, $id) {
+        if (!empty($id)) {
+            $data = DbAdmin::getPermissionsApiMenu([['pa.id', '=', $id]], 'id,menu_id,stype,cn_name,content');
+            $data = $data[0];
+        } else {
+            $data = DbAdmin::getPermissionsApiMenu([], 'id,menu_id,stype,cn_name,content');
+        }
+        return ['code' => '200', 'data' => $data];
     }
 }

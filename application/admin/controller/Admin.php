@@ -1062,18 +1062,18 @@ class Admin extends AdminController {
      * @apiParam (入参) {Int} stype 接口curd权限 1.增 2.删 3.改
      * @apiParam (入参) {String} cn_name 权限名称
      * @apiParam (入参) {String} content 权限的详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:菜单id有误 / 3002:接口url不能为空 / 3003:接口权限有误 /3004:权限名称不能为空 / 3005:接口已存在 / 3006:菜单不存在 / 3007:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:菜单id有误 / 3002:接口url不能为空 / 3003:接口权操作类型 /3004:权限名称不能为空 / 3005:接口已存在 / 3006:菜单不存在 / 3007:添加失败
      * @apiSampleRequest /admin/admin/addpermissionsapi
      * @author zyr
      */
     public function addPermissionsApi() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
+//        if ($this->checkPermissions($cmsConId, $apiName) === false) { //该接口只有root可以使用,开发特殊接口
+//            return ['code' => '3100'];
+//        }
         $menuId   = trim($this->request->post('menu_id'));
-        $apiName  = trim($this->request->post('api_name'));
+        $apiUrl   = trim($this->request->post('api_name'));
         $stype    = trim($this->request->post('stype'));
         $cnName   = trim($this->request->post('cn_name'));
         $content  = trim($this->request->post('content'));
@@ -1082,18 +1082,53 @@ class Admin extends AdminController {
             return ['code' => '3001'];//菜单id有误
         }
         $menuId = intval($menuId);
-        if (empty($apiName)) {
+        if (empty($apiUrl)) {
             return ['code' => '3002'];//接口url不能为空
         }
         if (!in_array($stype, $stypeArr)) {
-            return ['code' => '3003'];//接口权限有误
+            return ['code' => '3003'];//接口权操作类型
         }
         if (empty($cnName)) {
             return ['code' => '3004'];//权限名称不能为空
         }
-        $content = $content ?? '1';
-        $result  = $this->app->admin->addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content);
-        $this->apiLog($apiName, [$cmsConId, $menuId, $apiName, $stype, $cnName, $content], $result['code'], $cmsConId);
+        $content = $content ?? '';
+        $result  = $this->app->admin->addPermissionsApi($cmsConId, $menuId, $apiUrl, $stype, $cnName, $content);
+        $this->apiLog($apiName, [$cmsConId, $menuId, $apiUrl, $stype, $cnName, $content], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改接口权限名称和详情
+     * @apiDescription   editPermissionsApi
+     * @apiGroup         admin_admin
+     * @apiName          editPermissionsApi
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id
+     * @apiParam (入参) {String} cn_name 权限名称
+     * @apiParam (入参) {String} content 权限的详细描述
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:接口id有误 /3004:权限名称不能为空 / 3005:接口不存在 / 3007:修改失败
+     * @apiSampleRequest /admin/admin/editpermissionsapi
+     * @author zyr
+     */
+    public function editPermissionsApi() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $cnName  = trim($this->request->post('cn_name'));
+        $content = trim($this->request->post('content'));
+        if (!is_numeric($id) || $id < 1) {
+            return ['code' => '3001'];//接口id有误
+        }
+        $id = intval($id);
+        if (empty($cnName)) {
+            return ['code' => '3004'];//权限名称不能为空
+        }
+        $content = $content ?? '';
+        $result  = $this->app->admin->editPermissionsApi($cmsConId, $id, $cnName, $content);
+        $this->apiLog($apiName, [$cmsConId, $id, $cnName, $content], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -1261,6 +1296,36 @@ class Admin extends AdminController {
         $groupId = intval($groupId);
         $result  = $this->app->admin->getPermissionsList($cmsConId, $groupId);
         $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取接口权限列表
+     * @apiDescription   getPermissionsApi
+     * @apiGroup         admin_admin
+     * @apiName          getPermissionsApi
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} [id]
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:接口id有误
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (返回) {String} group_name 组名
+     * @apiSuccess (返回) {Int} menu_id 所属菜单
+     * @apiSuccess (返回) {String} stype 权限类型 1.增 2.删 3.改
+     * @apiSuccess (返回) {String} cn_name 名称
+     * @apiSuccess (返回) {String} content 描述
+     * @apiSampleRequest /admin/admin/getpermissionsapi
+     * @author zyr
+     */
+    public function getPermissionsApi() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id', 0));
+        if (!is_numeric($id) || $id < 0) {
+            return ['code' => '3001'];//接口id有误
+        }
+        $id     = intval($id);
+        $result = $this->app->admin->getPermissionsApi($cmsConId, $id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 }
