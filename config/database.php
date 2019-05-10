@@ -80,4 +80,24 @@ return [
         // 数据库表前缀
         'prefix'   => 'pre_',
     ],
+    'db_pzlifelog'       => [
+        // 数据库类型
+        'type'            => Env::get('database.type', 'mysql'),
+        // 服务器地址
+        'hostname'        => Env::get('database.hostname', '127.0.0.1'),
+        // 数据库名
+        'database'        => Env::get('database.database2', ''),
+        // 用户名
+        'username'        => Env::get('database.username', ''),
+        // 密码
+        'password'        => Env::get('database.password', ''),
+        // 数据库连接端口
+        'hostport' => '',
+        // 数据库连接参数
+        'params'   => [],
+        // 数据库编码默认采用utf8
+        'charset'  => 'utf8',
+        // 数据库表前缀
+        'prefix'   => 'pz_',
+    ],
 ];
