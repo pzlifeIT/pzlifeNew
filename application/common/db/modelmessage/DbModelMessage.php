@@ -141,8 +141,7 @@ class DbModelMessage {
      */
     public function editMessageTask($data, $id) {
         $MessageTask = new MessageTask;
-        $MessageTask->save($data, ['id' => $id]);
-        return $MessageTask->id;
+        return $MessageTask->save($data, ['id' => $id]);
     }
 
     /**

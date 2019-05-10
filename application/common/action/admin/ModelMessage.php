@@ -32,7 +32,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getTrigger($page, $pageNum, $id = '') {
+    public function getTrigger(int $page, int $pageNum, $id = '') {
         $offset = ($page - 1) * $pageNum;
         if (!empty($id)) {
             $result = DbModelMessage::getTrigger(['id' => $id], '*', true);
@@ -62,7 +62,7 @@ class ModelMessage extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        if ($result['status'] != 1) {
+        if ($result['status'] == $status) {
             return ['code' => '3003'];
         }
         DbModelMessage::editTrigger(['status' => $status], $id);
@@ -150,7 +150,7 @@ class ModelMessage extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        if ($result['status'] != 1) {
+        if ($result['status'] == $status) {
             return ['code' => '3003'];
         }
         DbModelMessage::editMessageTemplate(['status' => $status], $id);
@@ -165,7 +165,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getMessageTemplate($page, $pageNum, $id) {
+    public function getMessageTemplate(int $page, int $pageNum, $id = '') {
         $offset = ($page - 1) * $pageNum;
         if (!empty($id)) {
             $result = DbModelMessage::getMessageTemplate(['id' => $id], '*', true);
@@ -174,12 +174,13 @@ class ModelMessage extends CommonIndex {
             }
             return ['code' => '200', 'Trigger' => $result];
         } else {
+            // echo $pageNum;die;
             $result = DbModelMessage::getMessageTemplate([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
             if (empty($result)) {
                 return ['code' => '3000'];
             }
         }
-        $total = DbModelMessage::getMessageTemplate([]);
+        $total = DbModelMessage::countMessageTemplate([]);
         return ['code' => '200', 'total' => $total, 'MessageTemplate' => $result];
     }
 
@@ -193,7 +194,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function saveMessageTask($title, $type, $wtype, $mt_id, $trigger_id) {
+    public function saveMessageTask($title, int $type, int $wtype, int $mt_id, int $trigger_id) {
         $message_template = DbModelMessage::getMessageTemplate(['id' => $mt_id, 'status' => 2], '*', true);
         if (empty($message_template)) {
             return ['code' => '3004'];
@@ -211,5 +212,82 @@ class ModelMessage extends CommonIndex {
         $data['status']     = 1;
         $result             = DbModelMessage::saveMessageTask($data);
         return ['code' => '200', 'mtask_id' => $result];
+    }
+
+    /**
+     * 修改消息任务
+     * @param string $title
+     * @param number $type
+     * @param number $wtype
+     * @param number $mt_id
+     * @param number $trigger_id
+     * @param number $MessageTask_id
+     * @return array
+     * @author rzc
+     */
+    public function editMessageTask($title, int $type, int $wtype, int $mt_id, int $trigger_id, int $MessageTask_id) {
+        $message_template = DbModelMessage::getMessageTemplate(['id' => $mt_id, 'status' => 2], '*', true);
+        if (empty($message_template)) {
+            return ['code' => '3004'];
+        }
+        $trigger = DbModelMessage::getMessageTemplate(['id' => $trigger_id, 'status' => 2], '*', true);
+        if (empty($trigger)) {
+            return ['code' => '3005'];
+        }
+        $messagetask = DbModelMessage::getMessageTask(['id' => $MessageTask_id], '*', true);
+        if (empty($messagetask)) {
+            return ['code' => '3000'];
+        }
+        if ($messagetask['status'] == 2) {
+            return ['code' => '3007'];
+        }
+        $data               = [];
+        $data['title']      = $title;
+        $data['type']       = $type;
+        $data['wtype']      = $wtype;
+        $data['mt_id']      = $mt_id;
+        $data['trigger_id'] = $trigger_id;
+        $data['status']     = 1;
+        $result             = DbModelMessage::editMessageTask($data, $MessageTask_id);
+        return ['code' => '200', 'mtask_id' => $result];
+    }
+
+    /**
+     * 停启用消息任务
+     * @param number $id
+     * @param number $status
+     * @return array
+     * @author rzc
+     */
+    public function auditMessageTask(int $id, int $status){
+        $result = DbModelMessage::getMessageTask(['id' => $id], 'status', true);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        if ($result['status'] == $status) {
+            return ['code' => '3003'];
+        }
+        DbModelMessage::editMessageTask(['status' => $status], $id);
+        return ['code' => '200'];
+    }
+
+    /**
+     * 获取消息任务
+     * @param number $page
+     * @param number $pageNum
+     * @param number $id
+     * @return array
+     * @author rzc
+     */
+    public function getMessageTask(int $page, int $pageNum, int $id = 0) {
+        $offset = ($page - 1) * $pageNum;
+        if ($id) {
+            $result = DbModelMessage::getMessageTask(['id' => $id], '*', true);
+            return ['code' => '200', 'messagetask' => $result];
+        }
+        $result = DbModelMessage::getMessageTask([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        $total  = DbModelMessage::countMessageTask([]);
+        return ['code' => '200', 'total' => $total, 'messagetask' => $result];
+
     }
 }
