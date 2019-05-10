@@ -111,9 +111,11 @@ class TemporaryScript extends Pzlife {
             // 提交事务
 
             /* 将支改改(13661691673)登录手机号改为(17891936793)  2019/04/23 */
-            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 13661691673 AND delete_time=0 ");
-            Db::table('pz_users')->where('id', $user[0]['id'])->update(['mobile' => '17891936793']);
+            // $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 13661691673 AND delete_time=0 ");
+            // Db::table('pz_users')->where('id', $user[0]['id'])->update(['mobile' => '17891936793']);
 
+            /* 因政策调整，所有合伙人免费钻石卡全部关停作废 */
+            Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
             
             Db::commit();
        } catch (\Exception $e) {
