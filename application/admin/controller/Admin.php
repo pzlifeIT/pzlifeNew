@@ -957,6 +957,30 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / cms菜单详情
+     * @apiDescription   cmsMenuOne
+     * @apiGroup         admin_admin
+     * @apiName          cmsMenuOne
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id 菜单id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.菜单id有误
+     * @apiSuccess (data) {String} type_name 分类名称
+     * @apiSampleRequest /admin/admin/cmsmenuone
+     * @author zyr
+     */
+    public function cmsMenuOne() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        if (!is_numeric($id) || $id < 0) {
+            return ['code' => '3001'];//菜单id有误
+        }
+        $result = $this->app->admin->cmsMenuOne($cmsConId, $id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 添加权限分组
      * @apiDescription   addPermissionsGroup
      * @apiGroup         admin_admin
@@ -1305,8 +1329,7 @@ class Admin extends AdminController {
      * @apiGroup         admin_admin
      * @apiName          getPermissionsApi
      * @apiParam (入参) {String} cms_con_id
-     * @apiParam (入参) {Int} [id]
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:接口id有误
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (返回) {String} group_name 组名
      * @apiSuccess (返回) {Int} menu_id 所属菜单
@@ -1319,12 +1342,37 @@ class Admin extends AdminController {
     public function getPermissionsApi() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
-        $id       = trim($this->request->post('id', 0));
+        $result = $this->app->admin->getPermissionsApi($cmsConId);
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取接口权限详情
+     * @apiDescription   getPermissionsApiOne
+     * @apiGroup         admin_admin
+     * @apiName          getPermissionsApiOne
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:接口id有误
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (返回) {String} group_name 组名
+     * @apiSuccess (返回) {Int} menu_id 所属菜单
+     * @apiSuccess (返回) {String} stype 权限类型 1.增 2.删 3.改
+     * @apiSuccess (返回) {String} cn_name 名称
+     * @apiSuccess (返回) {String} content 描述
+     * @apiSampleRequest /admin/admin/getpermissionsapione
+     * @author zyr
+     */
+    public function getPermissionsApiOne() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
         if (!is_numeric($id) || $id < 0) {
             return ['code' => '3001'];//接口id有误
         }
         $id     = intval($id);
-        $result = $this->app->admin->getPermissionsApi($cmsConId, $id);
+        $result = $this->app->admin->getPermissionsApiOne($cmsConId, $id);
         $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }

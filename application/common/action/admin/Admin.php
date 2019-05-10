@@ -960,6 +960,12 @@ class Admin extends CommonIndex {
         // print_r($invoice);die;
     }
 
+    /**
+     * cms左侧菜单
+     * @param $cmsConId
+     * @return array
+     * @author zyr
+     */
     public function cmsMenu($cmsConId) {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId == 1) {
@@ -984,6 +990,19 @@ class Admin extends CommonIndex {
         $tree->setParam("pid", "pid");
         $cate_tree = $tree->listTree();
         return ["code" => 200, "data" => $cate_tree];
+    }
+
+    /**
+     * cms菜单详情
+     * @param $cmsConId
+     * @param $id
+     * @return array
+     * @author zyr
+     */
+    public function cmsMenuOne($cmsConId, $id) {
+//        $adminId = $this->getUidByConId($cmsConId);
+        $data = DbAdmin::getMenuList([['id', '=', $id]], 'name', true);
+        return ["code" => 200, "data" => $data];
     }
 
     /**
@@ -1424,19 +1443,43 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 获取接口权限列表
+     * 获取菜单接口权限列表
      * @param $cmsConId
      * @param $id
      * @return array
      * @author zyr
      */
-    public function getPermissionsApi($cmsConId, $id) {
-        if (!empty($id)) {
-            $data = DbAdmin::getPermissionsApiMenu([['pa.id', '=', $id]], 'id,menu_id,stype,cn_name,content');
-            $data = $data[0];
-        } else {
-            $data = DbAdmin::getPermissionsApiMenu([], 'id,menu_id,stype,cn_name,content');
+    public function getPermissionsApi($cmsConId) {
+        $data = DbAdmin::getMenuList([], 'id,pid,name');
+        $tree = new PHPTree($data);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        foreach ($cate_tree as &$ct) {
+            foreach ($ct['_child'] as &$ch) {
+                $apiRes = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
+                $child  = [];
+                foreach ($apiRes as $ar) {
+                    $c = ['api_id' => $ar['id'], 'cn_name' => $ar['cn_name'], 'content' => $ar['content']];
+                    array_push($child, $c);
+                }
+                $ch['child'] = $child;
+            }
         }
+        unset($ct);
+        unset($ch);
+        return ['code' => '200', 'data' => $cate_tree];
+    }
+
+    /**
+     * 获取接口权限详情
+     * @param $cmsConId
+     * @param $id
+     * @return array
+     * @author zyr
+     */
+    public function getPermissionsApiOne($cmsConId, $id) {
+        $data = DbAdmin::getPermissionsApi([['id', '=', $id]], 'id,stype,cn_name,content', true);
         return ['code' => '200', 'data' => $data];
     }
 }
