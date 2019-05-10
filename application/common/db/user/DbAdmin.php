@@ -247,11 +247,21 @@ class DbAdmin {
         return $permissionsApi->id;
     }
 
+    public function editPermissionsApi($data, $id) {
+        $permissionsApi = new PermissionsApi();
+        return $permissionsApi->save($data, ['id' => $id]);
+    }
+
     public function deleteAdminPermissionsRelation($ids) {
         return AdminPermissionsRelation::destroy($ids);
     }
 
     public function deleteAdminPermissionsGroup($id) {
         return AdminPermissionsGroup::destroy($id);
+    }
+
+    public function editMenu($data, $id) {
+        $menu = new Menu();
+        return $menu->save($data, ['id' => $id]);
     }
 }

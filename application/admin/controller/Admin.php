@@ -981,6 +981,34 @@ class Admin extends AdminController {
     }
 
     /**
+     * @api              {post} / 修改保存cms菜单
+     * @apiDescription   editMenu
+     * @apiGroup         admin_admin
+     * @apiName          editMenu
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id 菜单id
+     * @apiParam (入参) {String} name 菜单名称
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.菜单id有误 / 3002:菜单id不存在 / 3003:修改失败
+     * @apiSampleRequest /admin/admin/editmenu
+     * @author zyr
+     */
+    public function editMenu() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id   = trim($this->request->post('id'));
+        $name = trim($this->request->post('name'));
+        if (!is_numeric($id) || $id < 0) {
+            return ['code' => '3001'];//菜单id有误
+        }
+        $result = $this->app->admin->editMenu($cmsConId, $id, $name);
+        $this->apiLog($apiName, [$cmsConId, $id, $name], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 添加权限分组
      * @apiDescription   addPermissionsGroup
      * @apiGroup         admin_admin
@@ -1342,7 +1370,7 @@ class Admin extends AdminController {
     public function getPermissionsApi() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
-        $result = $this->app->admin->getPermissionsApi($cmsConId);
+        $result   = $this->app->admin->getPermissionsApi($cmsConId);
         $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
