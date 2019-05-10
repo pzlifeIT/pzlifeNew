@@ -1006,6 +1006,30 @@ class Admin extends CommonIndex {
     }
 
     /**
+     * 修改保存cms菜单
+     * @param $cmsConId
+     * @param $id
+     * @param $name
+     * @return array
+     * @author zyr
+     */
+    public function editMenu($cmsConId, $id, $name) {
+        $menu = DbAdmin::getMenuList([['id', '=', $id]], 'id', true);
+        if (empty($menu)) {
+            return ['code' => '3002'];
+        }
+        Db::startTrans();
+        try {
+            DbAdmin::editMenu(['name' => $name], $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3003']; //修改失败
+        }
+    }
+
+    /**
      * 添加权限分组
      * @param $cmsConId
      * @param $groupName
@@ -1014,8 +1038,8 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function addPermissionsGroup($cmsConId, $groupName, $content) {
-        $adminId = $this->getUidByConId($cmsConId);
-        $group   = DbAdmin::getPermissionsGroup(['group_name' => $groupName], 'id', true);
+//        $adminId = $this->getUidByConId($cmsConId);
+        $group = DbAdmin::getPermissionsGroup(['group_name' => $groupName], 'id', true);
         if (!empty($group)) {
             return ['code' => '3001'];
         }
@@ -1164,7 +1188,7 @@ class Admin extends CommonIndex {
         ];
         Db::startTrans();
         try {
-            DbAdmin::addPermissionsApi($data);
+            DbAdmin::editPermissionsApi($data, $id);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
