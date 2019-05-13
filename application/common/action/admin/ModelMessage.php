@@ -219,7 +219,7 @@ class ModelMessage extends CommonIndex {
      * @author rzc
      */
     public function getMessageTemplateText(){
-        return [
+        $templatetext = [
             '{{[order_no]}}'     => '订单号xxx',
             '{{[delivergoods]}}' => '物流公司XX运单号XXXXX商品XX数量XX',
             '{{[nick_name]}}'    => '昵称xxx',
@@ -227,6 +227,7 @@ class ModelMessage extends CommonIndex {
             '{{[goods_name]}}'   => '商品XXX',
             '{{[goods_num]}}'    => '数量XXX',
         ];
+        return ['code' => '200',$templatetext];
     }
 
     /**
