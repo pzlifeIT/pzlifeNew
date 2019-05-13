@@ -15,4 +15,5 @@ return [
     'areas'           => $commandPath . 'Areas',
     'order'           => $commandPath . 'Order',
     'temporaryscript' => $commandPath . 'Temporaryscript',
+    'localscript'     => $commandPath . 'LocalScript',
 ];
