@@ -172,6 +172,33 @@ class ModelMessage extends CommonIndex {
             if (empty($result)) {
                 return ['code' => '3000'];
             }
+            $template = $result['template'];
+                preg_match_all("/(?<={{)[^}]+/", $template, $matches);
+                if ($matches) {
+                    foreach ($matches[0] as $mkey => $mvalue) {
+                        $mvalue = ltrim($mvalue,'[');
+                        $mvalue = rtrim($mvalue,']');
+                        if ($mvalue == 'order_no') {
+                            $template = str_replace ('{{[order_no]}}','订单号xxx',$template);
+                        }
+                        if ($mvalue == 'delivergoods') {
+                            $template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$template);
+                        }
+                        if ($mvalue == 'nick_name') {
+                            $template = str_replace ('{{[nick_name]}}','昵称xxx',$template);
+                        }
+                        if ($mvalue == 'money') {
+                            $template = str_replace ('{{[money]}}','金额XXX',$template);
+                        }
+                        if ($mvalue == 'goods_name') {
+                            $template = str_replace ('{{[goods_name]}}','商品XXX',$template);
+                        }
+                        if ($mvalue == 'goods_num') {
+                            $template = str_replace ('{{[goods_num]}}','数量XXX',$template);
+                        }
+                    }
+                    $result['template'] = $template;
+                }
             return ['code' => '200', 'Trigger' => $result];
         } else {
             // echo $pageNum;die;
@@ -220,12 +247,30 @@ class ModelMessage extends CommonIndex {
      */
     public function getMessageTemplateText(){
         $templatetext = [
-            '{{[order_no]}}'     => '订单号xxx',
-            '{{[delivergoods]}}' => '物流公司XX运单号XXXXX商品XX数量XX',
-            '{{[nick_name]}}'    => '昵称xxx',
-            '{{[money]}}'        => '金额XXX',
-            '{{[goods_name]}}'   => '商品XXX',
-            '{{[goods_num]}}'    => '数量XXX',
+            [
+                'key'     => '{{[order_no]}}',
+                'value'     => '订单号xxx',
+            ],
+            [
+                'key'     => '{{[delivergoods]}}',
+                'value'     => '物流公司XX运单号XXXXX商品XX数量XX',
+            ],
+            [
+                'key'     => '{{[nick_name]}}',
+                'value'     => '昵称xxx',
+            ],
+            [
+                'key'     => '{{[money]}}',
+                'value'     => '金额XXX',
+            ],
+            [
+                'key'     => '{{[goods_name]}}',
+                'value'     => '商品XXX',
+            ],
+            [
+                'key'     => '{{[goods_num]}}',
+                'value'     => '数量XXX',
+            ],
         ];
         return ['code' => '200', 'templatetext'=> $templatetext];
     }
