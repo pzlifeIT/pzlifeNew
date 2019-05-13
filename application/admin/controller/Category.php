@@ -202,7 +202,7 @@ class Category extends AdminController {
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
      * @apiParam (入参) {String} type_name 分类名称
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误 / 3003:有子分类 / 3004:该分类下有属性关系
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/stopstartcate
      * @author wujunjie
