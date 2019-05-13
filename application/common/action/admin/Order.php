@@ -247,6 +247,32 @@ class Order extends CommonIndex {
                             /* 获取消息模板 */
                             $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
                             if (!empty($message_template)) {
+                                preg_match_all("/(?<={{)[^}]+/", $message_template, $matches);
+                                if ($matches) {
+                                    foreach ($matches[0] as $mkey => $mvalue) {
+                                        $mvalue = ltrim($mvalue,'[');
+                                        $mvalue = rtrim($mvalue,']');
+                                        if ($mvalue == 'order_no') {
+                                            $message_template = str_replace ('{{[order_no]}}','订单号xxx',$message_template);
+                                        }
+                                        if ($mvalue == 'delivergoods') {
+                                            $message_template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$message_template);
+                                        }
+                                        if ($mvalue == 'nick_name') {
+                                            $message_template = str_replace ('{{[nick_name]}}','昵称xxx',$message_template);
+                                        }
+                                        if ($mvalue == 'money') {
+                                            $message_template = str_replace ('{{[money]}}','金额XXX',$message_template);
+                                        }
+                                        if ($mvalue == 'goods_name') {
+                                            $message_template = str_replace ('{{[goods_name]}}','商品XXX',$message_template);
+                                        }
+                                        if ($mvalue == 'goods_num') {
+                                            $message_template = str_replace ('{{[goods_num]}}','数量XXX',$message_template);
+                                        }
+                                    }
+                                    $result[$key]['template'] = $template;
+                                }
                                 print_r($message_template);die;
                             }
                         }

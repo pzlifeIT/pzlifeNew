@@ -538,13 +538,7 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function getMessageTemplateText() {
-        return [
-            '{{[order_no]}}'     => '订单号xxx',
-            '{{[delivergoods]}}' => '物流公司XX运单号XXXXX商品XX数量XX',
-            '{{[nick_name]}}'    => '昵称xxx',
-            '{{[money]}}'        => '金额XXX',
-            '{{[goods_name]}}'   => '商品XXX',
-            '{{[goods_num]}}'    => '数量XXX',
-        ];
+        $result = $this->app->modelmessage->getMessageTemplateText();
+        return $result;
     }
 }
