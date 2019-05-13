@@ -227,7 +227,7 @@ class ModelMessage extends CommonIndex {
             '{{[goods_name]}}'   => '商品XXX',
             '{{[goods_num]}}'    => '数量XXX',
         ];
-        return ['code' => '200',$templatetext];
+        return ['code' => '200', 'templatetext'=> $templatetext];
     }
 
     /**
