@@ -145,7 +145,7 @@ class ModelMessage extends AdminController {
     public function auditTrigger() {
         $status = trim($this->request->post('status'));
         $id     = trim($this->request->post('id'));
-        if (!in_array($status, [1, 2])) {
+        if (!in_array($status, [2, 3])) {
             return ['code' => '3001'];
         }
         if (!is_numeric($id) || strpos($id, ".") !== false) {

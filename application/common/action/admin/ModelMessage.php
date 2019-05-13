@@ -179,6 +179,14 @@ class ModelMessage extends CommonIndex {
             if (empty($result)) {
                 return ['code' => '3000'];
             }
+            // foreach ($result as $key => $value) {
+            //     $template = $value['template'];
+            //     preg_match_all("/({{[order_no]}})/", $template, $matches);
+            //     print_r($matches);die;
+            //     if (preg_match_all('/\{{[order_no]}}\/', $template, $matches)) {
+
+            //     }
+            // }
         }
         $total = DbModelMessage::countMessageTemplate([]);
         return ['code' => '200', 'total' => $total, 'MessageTemplate' => $result];

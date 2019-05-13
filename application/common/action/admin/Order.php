@@ -2,17 +2,18 @@
 
 namespace app\common\action\admin;
 
-use app\facade\DbUser;
-use app\facade\DbShops;
-use Config;
 use app\facade\DbGoods;
+use app\facade\DbModelMessage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
+use app\facade\DbShops;
+use app\facade\DbUser;
 use cache\Phpredis;
+use Config;
 use think\Db;
 
 class Order extends CommonIndex {
-    private $redisDeliverOrderKey = 'cms:order:deliver:express:';
+    private $redisDeliverOrderKey    = 'cms:order:deliver:express:';
     private $redisDeliverExpressList = 'cms:order:deliver:list:';
 
     public function __construct() {
@@ -48,7 +49,6 @@ class Order extends CommonIndex {
         return ['code' => 200, 'totle' => $totle, 'order_list' => $orderList];
     }
 
-
     /**
      * 获取订单详情
      * @param $order_status
@@ -74,10 +74,10 @@ class Order extends CommonIndex {
                 $order_goods_ids[]            = $goods['id'];
             }
             $order_child[$order]['order_goods'] = $order_goods;
-            $express_money                      += $child['express_money'];
+            $express_money += $child['express_money'];
         }
         $order_info['express_money'] = $express_money;
-        $order_pack = [];
+        $order_pack                  = [];
         foreach ($order_child as $order => $child) {
             $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
             $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
@@ -138,46 +138,46 @@ class Order extends CommonIndex {
         if ($order_express_id) {
             return ['code' => '3005', 'msg' => '已添加的订单商品物流分配关系'];
         }
-        $had_express = DbOrder::getOrderExpress('order_goods_id', ['express_key' => $express_key,'express_no' => $express_no]);
+        $had_express = DbOrder::getOrderExpress('order_goods_id', ['express_key' => $express_key, 'express_no' => $express_no]);
         if (!empty($had_express)) {
             $had_order_goods = [];
             foreach ($had_express as $had => $d_express) {
                 $had_order_goods[] = $d_express['order_goods_id'];
             }
-           
-            $had_child = DbOrder::getOrderGoods('order_child_id', [['id' ,'in', $had_order_goods]]);
+
+            $had_child    = DbOrder::getOrderGoods('order_child_id', [['id', 'in', $had_order_goods]]);
             $had_child_id = [];
-           
+
             if (!empty($had_child)) {
                 foreach ($had_child as $had => $child) {
                     $had_child_id[] = $child['order_child_id'];
                 }
-                
+
                 if (!empty($had_child_id)) {
-                    $had_order = DbOrder::getOrderChild('order_id', [['id' ,'in', $had_child_id]]);
+                    $had_order = DbOrder::getOrderChild('order_id', [['id', 'in', $had_child_id]]);
                     // print_r($had_child_id);die;
                     $had_order_id = [];
                     if (!empty($had_order)) {
                         foreach ($had_order as $has => $order) {
-                           $had_order_id[] = $order['order_id'];
+                            $had_order_id[] = $order['order_id'];
                         }
-                        $had_order_user = DbOrder::getOrder('uid', [['id' ,'in', $had_order_id]]);
-                        $had_uid = [];
+                        $had_order_user = DbOrder::getOrder('uid', [['id', 'in', $had_order_id]]);
+                        $had_uid        = [];
                         if ($had_order_user) {
                             foreach ($had_order_user as $key => $user) {
                                 $had_uid[] = $user['uid'];
                             }
                             $had_uid = array_unique($had_uid);
                             if (count($had_uid) > 1) {
-                                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+                                return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
                             }
                         }
                     }
-                   
+
                 }
 
             }
-            
+
         }
         // print_r(array_unique($had_uid));die;
 
@@ -190,11 +190,11 @@ class Order extends CommonIndex {
 
         $thisorder = DbOrder::getOrder('order_status,uid', ['id' => $order_id], true);
         if (!empty($had_uid)) {
-            if (!in_array($thisorder['uid'],$had_uid)) {
-                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
-            } 
+            if (!in_array($thisorder['uid'], $had_uid)) {
+                return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+            }
         }
-        
+
         if ($thisorder['order_status'] != 4) {
             return ['code' => '3004', 'msg' => '非待发货订单无法发货'];
         }
@@ -234,7 +234,25 @@ class Order extends CommonIndex {
             }
             $no_order_goods_id = array_diff($order_goods_ids, $has_order_goods_id);
             if (!$no_order_goods_id) {
-                DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
+                // DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
+
+                /* 短信模板发送短信 */
+                $message_task = DbModelMessage::getMessageTask(['wtype' => 1, 'status' => 2], 'type,mt_id,trigger_id', true);
+                if (!empty($message_task)) {
+                    /* 获取触发器 */
+                    $trigger = DbModelMessage::getTrigger(['id' => $message_task['trigger_id'], 'status' => 2], 'start_time,stop_time', true);
+
+                    if (!empty($trigger)) {
+                        if (strtotime($trigger['start_time']) < time() && strtotime($trigger['stop_time']) > time()) {
+                            /* 获取消息模板 */
+                            $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
+                            if (!empty($message_template)) {
+                                print_r($message_template);die;
+                            }
+                        }
+                    }
+                }
+
                 $no_deliver_goods = [];
             } else {
                 $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json', [['id', 'IN', $no_order_goods_id]]);
@@ -291,8 +309,7 @@ class Order extends CommonIndex {
 
     }
 
-
-    public function getMemberOrders(int $page, int $pagenum){
+    public function getMemberOrders(int $page, int $pagenum) {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
