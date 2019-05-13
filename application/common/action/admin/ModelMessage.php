@@ -179,17 +179,54 @@ class ModelMessage extends CommonIndex {
             if (empty($result)) {
                 return ['code' => '3000'];
             }
-            // foreach ($result as $key => $value) {
-            //     $template = $value['template'];
-            //     preg_match_all("/({{[order_no]}})/", $template, $matches);
-            //     print_r($matches);die;
-            //     if (preg_match_all('/\{{[order_no]}}\/', $template, $matches)) {
-
-            //     }
-            // }
+            foreach ($result as $key => $value) {
+                $template = $value['template'];
+                preg_match_all("/(?<={{)[^}]+/", $template, $matches);
+                if ($matches) {
+                    foreach ($matches[0] as $mkey => $mvalue) {
+                        $mvalue = ltrim($mvalue,'[');
+                        $mvalue = rtrim($mvalue,']');
+                        if ($mvalue == 'order_no') {
+                            $template = str_replace ('{{[order_no]}}','订单号xxx',$template);
+                        }
+                        if ($mvalue == 'delivergoods') {
+                            $template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$template);
+                        }
+                        if ($mvalue == 'nick_name') {
+                            $template = str_replace ('{{[nick_name]}}','昵称xxx',$template);
+                        }
+                        if ($mvalue == 'money') {
+                            $template = str_replace ('{{[money]}}','金额XXX',$template);
+                        }
+                        if ($mvalue == 'goods_name') {
+                            $template = str_replace ('{{[goods_name]}}','商品XXX',$template);
+                        }
+                        if ($mvalue == 'goods_num') {
+                            $template = str_replace ('{{[goods_num]}}','数量XXX',$template);
+                        }
+                    }
+                    $result[$key]['template'] = $template;
+                }
+            }
         }
         $total = DbModelMessage::countMessageTemplate([]);
         return ['code' => '200', 'total' => $total, 'MessageTemplate' => $result];
+    }
+
+    /**
+     * 消息模板对应文本
+     * @return array
+     * @author rzc
+     */
+    public function getMessageTemplateText(){
+        return [
+            '{{[order_no]}}'     => '订单号xxx',
+            '{{[delivergoods]}}' => '物流公司XX运单号XXXXX商品XX数量XX',
+            '{{[nick_name]}}'    => '昵称xxx',
+            '{{[money]}}'        => '金额XXX',
+            '{{[goods_name]}}'   => '商品XXX',
+            '{{[goods_num]}}'    => '数量XXX',
+        ];
     }
 
     /**
