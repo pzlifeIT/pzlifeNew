@@ -24,12 +24,12 @@ class MessageTask extends Model {
         //TODO:初始化内容
     }
 
-    // public function messagetemplate(){
-    //     return $this->belongsTo('message_template', 'mt_id', 'id');
-    // }
+    public function messagetemplate(){
+        return $this->belongsTo('message_template', 'mt_id', 'id');
+    }
 
-    // public function trigger(){
-    //     return $this->belongsTo('trigger', 'trigger_id', 'id');
-    // }
+    public function messagetrigger(){
+        return $this->belongsTo('trigger', 'trigger_id', 'id');
+    }
 
 }

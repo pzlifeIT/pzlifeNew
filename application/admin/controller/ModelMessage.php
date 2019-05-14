@@ -496,10 +496,42 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [id] 查看详情传入详情ID
      * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum或者page参数错误 / 3002:id参数错误 /
+     * @apiSuccess (返回) {Number} total 总记录条数
+     * @apiSuccess (返回) {Array} messagetask 总记录条数
+     * @apiSuccess (messagetask) {String} id id
+     * @apiSuccess (messagetask) {String} title 消息任务任务名称
+     * @apiSuccess (messagetask) {String} type 发送人群  1:所有会员 2:普通会员 3:钻石会员 4:创业店主 5:合伙人
+     * @apiSuccess (messagetask) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账 8.钻石奖励金到账 
+     * @apiSuccess (messagetask) {String} status 状态  1:待审核 2:启用 3:停用
+     * @apiSuccess (messagetask) {String} create_time 创建时间
+     * @apiSuccess (messagetask) {String} delete_time 删除时间
+     * @apiSuccess (messagetask[messagetemplate]) {String} title 消息模板标题
+     * @apiSuccess (messagetask[messagetrigger]) {String} title 触发器标题
      * @apiSampleRequest /admin/ModelMessage/getMessageTask
      * @apiParamExample (data) {Array} 返回用户列表
      * [
      * "code":"200",返回code码
+     * "total": 1,
+     * "messagetask": [
+     *  {
+     *      "id": 1,
+     *      "title": "任务1",
+     *      "type": 1,
+     *      "wtype": 1,
+     *      "mt_id": 1,
+     *      "trigger_id": 1,
+     *      "status": 2,
+     *      "create_time": "2019-05-10 15:51:14",
+     *      "delete_time": null,
+     *      "messagetemplate": {
+     *          "id": 1,
+     *          "title": "发货模板"
+     *      },
+     *      "messagetrigger": {
+     *          "id": 1,
+     *          "title": "触发器1"
+     *      }
+     *  }
      * ]
      * @author rzc
      */
