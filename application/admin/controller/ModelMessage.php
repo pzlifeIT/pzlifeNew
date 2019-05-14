@@ -419,7 +419,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} mt_id 短信模板id
      * @apiParam (入参) {Number} trigger_id 触发器id
      * @apiParam (入参) {Number} MessageTask_id 消息任务id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:MessageTask_id参数错误 / 3007:已启用的消息任务无法修改
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:MessageTask_id参数错误 / 3007:已启用的消息任务无法修改 /
      * @apiSampleRequest /admin/ModelMessage/editMessageTask
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -439,7 +439,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3001'];
         }
         if (!is_numeric($MessageTask_id) || strpos($MessageTask_id, ".") !== false) {
-            return ['code' => ''];
+            return ['code' => '3006'];
         }
         if (!is_numeric($mt_id) || strpos($mt_id, ".") !== false || !is_numeric($trigger_id) || strpos($trigger_id, ".") !== false) {
             return ['code' => '3002'];
