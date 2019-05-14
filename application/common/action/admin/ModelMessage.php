@@ -359,7 +359,7 @@ class ModelMessage extends CommonIndex {
      * @author rzc
      */
     public function auditMessageTask(int $id, int $status) {
-        $result = DbModelMessage::getMessageTask(['id' => $id], 'status', true);
+        $result = DbModelMessage::getMessageTask(['id' => $id], '*', true);
         if (empty($result)) {
             return ['code' => '3000'];
         }
