@@ -71,6 +71,12 @@ class ModelMessage extends CommonIndex {
         if ($result['status'] == $status) {
             return ['code' => '3003'];
         }
+        if ($status == 3) {
+            $messagetask = DbModelMessage::getMessageTask(['trigger_id' => $id, 'status' => 2], '*', true);
+            if (!empty($messagetask)) {
+                return ['code' => '3004', 'msg' => '存在已启用的消息任务，无法停用'];
+            }
+        }
         DbModelMessage::editTrigger(['status' => $status], $id);
         return ['code' => '200'];
     }
@@ -158,6 +164,12 @@ class ModelMessage extends CommonIndex {
         }
         if ($result['status'] == $status) {
             return ['code' => '3003'];
+        }
+        if ($status == 3) {
+            $messagetask = DbModelMessage::getMessageTask(['mt_id' => $id, 'status' => 2], '*', true);
+            if (!empty($messagetask)) {
+                return ['code' => '3004', 'msg' => '存在已启用的消息任务，无法停用'];
+            }
         }
         DbModelMessage::editMessageTemplate(['status' => $status], $id);
         return ['code' => '200'];
@@ -302,6 +314,12 @@ class ModelMessage extends CommonIndex {
         if (empty($trigger)) {
             return ['code' => '3005'];
         }
+        if (!in_array($wtype,[4, 5])) {
+            $has_message_task = DbModelMessage::getMessageTask(['wtype' => $wtype, 'status' => 2], '*', true);
+            if (!empty($has_message_task)) {
+                return ['code' => '3006', 'msg' => '存在已启用的同类模板任务'];
+            }
+        }
         $data               = [];
         $data['title']      = $title;
         $data['type']       = $type;
@@ -339,6 +357,12 @@ class ModelMessage extends CommonIndex {
         }
         if ($messagetask['status'] == 2) {
             return ['code' => '3007'];
+        }
+        if (!in_array($wtype,[4, 5])) {
+            $has_message_task = DbModelMessage::getMessageTask([['wtype','=', $wtype], ['status', '=', 2],['id' ,'<>', $MessageTask_id]], '*', true);
+            if (!empty($has_message_task)) {
+                return ['code' => '3008', 'msg' => '存在已启用的同类模板任务'];
+            }
         }
         $data               = [];
         $data['title']      = $title;
