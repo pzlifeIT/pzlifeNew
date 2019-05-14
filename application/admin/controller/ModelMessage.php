@@ -136,7 +136,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 触发器id
      * @apiParam (入参) {Number} status 审核状态 2:启用 3:停用
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:状态码为空 / 3002:id格式错误 / 3003:该信息已进行过审核
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:状态码为空 / 3002:id格式错误 / 3003:该信息已进行过审核 / 3004:存在已启用的消息任务，无法停用
      * @apiSampleRequest /admin/ModelMessage/auditTrigger
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -261,7 +261,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id
      * @apiParam (入参) {Number} status 审核状态  2:启用 3:停用
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:status参数错误 / 3002:id参数错误 / 3003:template为空 /
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:status参数错误 / 3002:id参数错误 / 3003:template为空 / 3004:存在已启用的消息任务，无法停用
      * @apiSampleRequest /admin/ModelMessage/auditMessageTemplate
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -376,7 +376,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账
      * @apiParam (入参) {Number} mt_id 短信模板id
      * @apiParam (入参) {Number} trigger_id 触发器id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:存在已启用的同类模板任务
      * @apiSampleRequest /admin/ModelMessage/saveMessageTask
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -419,7 +419,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} mt_id 短信模板id
      * @apiParam (入参) {Number} trigger_id 触发器id
      * @apiParam (入参) {Number} MessageTask_id 消息任务id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:MessageTask_id参数错误 / 3007:已启用的消息任务无法修改 /
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:MessageTask_id参数错误 / 3007:已启用的消息任务无法修改 / 3008:存在已启用的同类模板任务
      * @apiSampleRequest /admin/ModelMessage/editMessageTask
      * @apiParamExample (data) {Array} 返回用户列表
      * [

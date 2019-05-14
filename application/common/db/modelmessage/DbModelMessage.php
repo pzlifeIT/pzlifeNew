@@ -157,9 +157,9 @@ class DbModelMessage {
     public function getMessageTask($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = MessageTask::field($field)->with([
             'messagetemplate' => function ($query) {
-                $query->field('id,title');
+                $query->field('id,title,status');
             }, 'messagetrigger' => function ($query) {
-                $query->field('id,title');
+                $query->field('id,title,status');
             },
         ])->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
