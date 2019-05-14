@@ -144,12 +144,12 @@ class Admin extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
         }
+        if ($user['user_identity'] == 4) {
+            return ['code' => '3007']; //该用户已经是boss
+        }
         $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
         if ($this->redis->setNx($redisKey . $user['id'], 1) === false) {
             return ['code' => '3009'];
-        }
-        if ($user['user_identity'] == 4) {
-            return ['code' => '3007']; //该用户已经是boss
         }
         $bossId = $this->getBoss($user['id']);
         if ($bossId == 1) {
@@ -205,6 +205,7 @@ class Admin extends CommonIndex {
             $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
         } catch (\Exception $e) {
+            $this->redis->del($redisKey . $user['id']);
             Db::rollback();
             return ['code' => '3008']; //开通失败
         }
