@@ -95,13 +95,13 @@ class Admin extends CommonIndex {
      */
     public function addAdmin($cmsConId, $adminName, $passwd, $stype) {
         $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
-        if ($adminInfo['stype'] != '2') {
-            return ['code' => '3005']; //没有操作权限
-        }
-        if ($stype == 2 && $adminId != 1) {
-            return ['code' => '3003']; //只有root账户可以添加超级管理员
-        }
+//        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
+//        if ($adminInfo['stype'] != '2') {
+//            return ['code' => '3005']; //没有操作权限
+//        }
+//        if ($stype == 2 && $adminId != 1) {
+//            return ['code' => '3003']; //只有root账户可以添加超级管理员
+//        }
         $newAdminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName], 'id', true);
         if (!empty($newAdminInfo)) {
             return ['code' => '3004']; //该账号已存在
@@ -157,10 +157,10 @@ class Admin extends CommonIndex {
      */
     public function openBoss($cmsConId, $mobile, $nickName, $money, $message) {
         $adminId   = $this->getUidByConId($cmsConId);
-        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
-        if ($adminInfo['stype'] != '2') {
-            return ['code' => '3005']; //没有操作权限
-        }
+//        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
+//        if ($adminInfo['stype'] != '2') {
+//            return ['code' => '3005']; //没有操作权限
+//        }
         $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
@@ -363,10 +363,10 @@ class Admin extends CommonIndex {
     public function auditAdminRemittance($cmsConId, $status, int $id) {
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $adminId      = $this->getUidByConId($cmsConId);
-        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
-        if ($adminInfo['id'] != 1) {
-            return ['code' => '3002'];
-        }
+//        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
+//        if ($adminInfo['id'] != 1) {
+//            return ['code' => '3002'];
+//        }
         $remittance = DbAdmin::getAdminRemittance(['id' => $id], '*', true);
         if (empty($remittance)) {
             return ['code' => '3003'];
