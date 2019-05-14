@@ -77,6 +77,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} [page] 页码 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [id] 查看详情传入详情ID
+     * @apiParam (入参) {Number} [all] 1 查全部，不传根据分页查询
      * @apiSuccess (返回) {String} code 200:成功 / 3000:数据为空空 / 3001:page或者pageNum格式错误 / 3002:id格式错误
      * @apiSuccess (返回) {String} Trigger 数组
      * @apiSuccess (Trigger) {String} id
@@ -109,6 +110,7 @@ class ModelMessage extends AdminController {
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         $id      = trim($this->request->post('id'));
+        $all     = trim($this->request->post('all'));
         $page    = empty($page) ? 1 : $page;
         $pageNum = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page) || strpos($page, ".") !== false || !is_numeric($pageNum) || strpos($pageNum, ".") !== false) {
@@ -122,7 +124,7 @@ class ModelMessage extends AdminController {
                 return ['code' => '3002'];
             }
         }
-        $result = $this->app->modelmessage->getTrigger($page, $pageNum, $id);
+        $result = $this->app->modelmessage->getTrigger($page, $pageNum, $id, $all);
         return $result;
     }
 
@@ -292,6 +294,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} [page] 页码 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [id] 查看详情传入详情ID
+     * @apiParam (入参) {Number} [all] 1查全部 ，不传根据分页查询
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:pageNum或者page参数错误 / 3002:id参数错误 / 3003:template为空 /
      * @apiSampleRequest /admin/ModelMessage/getMessageTemplate
      * @apiParamExample (data) {Array} 返回用户列表
@@ -304,6 +307,7 @@ class ModelMessage extends AdminController {
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         $id      = trim($this->request->post('id'));
+        $all     = trim($this->request->post('all'));
         $page    = empty($page) ? 1 : $page;
         $pageNum = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page) || strpos($page, ".") !== false || !is_numeric($pageNum) || strpos($pageNum, ".") !== false) {
@@ -317,7 +321,7 @@ class ModelMessage extends AdminController {
                 return ['code' => '3002'];
             }
         }
-        $result = $this->app->modelmessage->getMessageTemplate($page, $pageNum, $id);
+        $result = $this->app->modelmessage->getMessageTemplate($page, $pageNum, $id, $all);
         return $result;
     }
     /**

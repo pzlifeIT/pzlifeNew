@@ -29,16 +29,22 @@ class ModelMessage extends CommonIndex {
      * 获取触发器
      * @param number $page
      * @param number $pageNum
+     * @param number $id
+     * @param number $all
      * @return array
      * @author rzc
      */
-    public function getTrigger(int $page, int $pageNum, $id = '') {
+    public function getTrigger(int $page, int $pageNum, $id = '', $all = '') {
         $offset = ($page - 1) * $pageNum;
         if (!empty($id)) {
             $result = DbModelMessage::getTrigger(['id' => $id], '*', true);
             return ['code' => '200', 'Trigger' => $result];
         } else {
-            $result = DbModelMessage::getTrigger([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+            if ($all == 1) {
+                $result = DbModelMessage::getTrigger([], '*', false, ['id' => 'desc']);
+            } else {
+                $result = DbModelMessage::getTrigger([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+            }
             if (empty($result)) {
                 return ['code' => '3000'];
             }
@@ -165,7 +171,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getMessageTemplate(int $page, int $pageNum, $id = '') {
+    public function getMessageTemplate(int $page, int $pageNum, $id = '', $all = '') {
         $offset = ($page - 1) * $pageNum;
         if (!empty($id)) {
             $result = DbModelMessage::getMessageTemplate(['id' => $id], '*', true);
@@ -173,36 +179,40 @@ class ModelMessage extends CommonIndex {
                 return ['code' => '3000'];
             }
             $template = $result['template'];
-                preg_match_all("/(?<={{)[^}]+/", $template, $matches);
-                if ($matches) {
-                    foreach ($matches[0] as $mkey => $mvalue) {
-                        $mvalue = ltrim($mvalue,'[');
-                        $mvalue = rtrim($mvalue,']');
-                        if ($mvalue == 'order_no') {
-                            $template = str_replace ('{{[order_no]}}','订单号xxx',$template);
-                        }
-                        if ($mvalue == 'delivergoods') {
-                            $template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$template);
-                        }
-                        if ($mvalue == 'nick_name') {
-                            $template = str_replace ('{{[nick_name]}}','昵称xxx',$template);
-                        }
-                        if ($mvalue == 'money') {
-                            $template = str_replace ('{{[money]}}','金额XXX',$template);
-                        }
-                        if ($mvalue == 'goods_name') {
-                            $template = str_replace ('{{[goods_name]}}','商品XXX',$template);
-                        }
-                        if ($mvalue == 'goods_num') {
-                            $template = str_replace ('{{[goods_num]}}','数量XXX',$template);
-                        }
+            preg_match_all("/(?<={{)[^}]+/", $template, $matches);
+            if ($matches) {
+                foreach ($matches[0] as $mkey => $mvalue) {
+                    $mvalue = ltrim($mvalue, '[');
+                    $mvalue = rtrim($mvalue, ']');
+                    if ($mvalue == 'order_no') {
+                        $template = str_replace('{{[order_no]}}', '订单号xxx', $template);
                     }
-                    $result['template'] = $template;
+                    if ($mvalue == 'delivergoods') {
+                        $template = str_replace('{{[delivergoods]}}', '物流公司XX运单号XXXXX商品XX数量XX', $template);
+                    }
+                    if ($mvalue == 'nick_name') {
+                        $template = str_replace('{{[nick_name]}}', '昵称xxx', $template);
+                    }
+                    if ($mvalue == 'money') {
+                        $template = str_replace('{{[money]}}', '金额XXX', $template);
+                    }
+                    if ($mvalue == 'goods_name') {
+                        $template = str_replace('{{[goods_name]}}', '商品XXX', $template);
+                    }
+                    if ($mvalue == 'goods_num') {
+                        $template = str_replace('{{[goods_num]}}', '数量XXX', $template);
+                    }
                 }
+                $result['template'] = $template;
+            }
             return ['code' => '200', 'Trigger' => $result];
         } else {
             // echo $pageNum;die;
-            $result = DbModelMessage::getMessageTemplate([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+            if ($all == 1) {
+                $result = DbModelMessage::getMessageTemplate([], '*', false, ['id' => 'desc']);
+            } else {
+                $result = DbModelMessage::getMessageTemplate([], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+            }
             if (empty($result)) {
                 return ['code' => '3000'];
             }
@@ -211,25 +221,23 @@ class ModelMessage extends CommonIndex {
                 preg_match_all("/(?<={{)[^}]+/", $template, $matches);
                 if ($matches) {
                     foreach ($matches[0] as $mkey => $mvalue) {
-                        $mvalue = ltrim($mvalue,'[');
-                        $mvalue = rtrim($mvalue,']');
-                        if ($mvalue == 'order_no') {
-                            $template = str_replace ('{{[order_no]}}','订单号xxx',$template);
+                        if ($mvalue == '[order_no]') {
+                            $template = str_replace('{{[order_no]}}', '订单号xxx', $template);
                         }
-                        if ($mvalue == 'delivergoods') {
-                            $template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$template);
+                        if ($mvalue == '[delivergoods]') {
+                            $template = str_replace('{{[delivergoods]}}', '物流公司XX运单号XXXXX商品XX数量XX', $template);
                         }
-                        if ($mvalue == 'nick_name') {
-                            $template = str_replace ('{{[nick_name]}}','昵称xxx',$template);
+                        if ($mvalue == '[nick_name]') {
+                            $template = str_replace('{{[nick_name]}}', '昵称xxx', $template);
                         }
-                        if ($mvalue == 'money') {
-                            $template = str_replace ('{{[money]}}','金额XXX',$template);
+                        if ($mvalue == '[money]') {
+                            $template = str_replace('{{[money]}}', '金额XXX', $template);
                         }
-                        if ($mvalue == 'goods_name') {
-                            $template = str_replace ('{{[goods_name]}}','商品XXX',$template);
+                        if ($mvalue == '[goods_name]') {
+                            $template = str_replace('{{[goods_name]}}', '商品XXX', $template);
                         }
-                        if ($mvalue == 'goods_num') {
-                            $template = str_replace ('{{[goods_num]}}','数量XXX',$template);
+                        if ($mvalue == '[goods_num]') {
+                            $template = str_replace('{{[goods_num]}}', '数量XXX', $template);
                         }
                     }
                     $result[$key]['template'] = $template;
@@ -245,34 +253,34 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getMessageTemplateText(){
+    public function getMessageTemplateText() {
         $templatetext = [
             [
-                'key'     => '{{[order_no]}}',
-                'value'     => '订单号xxx',
+                'key'   => '{{[order_no]}}',
+                'value' => '订单号xxx',
             ],
             [
-                'key'     => '{{[delivergoods]}}',
-                'value'     => '物流公司XX运单号XXXXX商品XX数量XX',
+                'key'   => '{{[delivergoods]}}',
+                'value' => '物流公司XX运单号XXXXX商品XX数量XX',
             ],
             [
-                'key'     => '{{[nick_name]}}',
-                'value'     => '昵称xxx',
+                'key'   => '{{[nick_name]}}',
+                'value' => '昵称xxx',
             ],
             [
-                'key'     => '{{[money]}}',
-                'value'     => '金额XXX',
+                'key'   => '{{[money]}}',
+                'value' => '金额XXX',
             ],
             [
-                'key'     => '{{[goods_name]}}',
-                'value'     => '商品XXX',
+                'key'   => '{{[goods_name]}}',
+                'value' => '商品XXX',
             ],
             [
-                'key'     => '{{[goods_num]}}',
-                'value'     => '数量XXX',
+                'key'   => '{{[goods_num]}}',
+                'value' => '数量XXX',
             ],
         ];
-        return ['code' => '200', 'templatetext'=> $templatetext];
+        return ['code' => '200', 'templatetext' => $templatetext];
     }
 
     /**
@@ -350,7 +358,7 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function auditMessageTask(int $id, int $status){
+    public function auditMessageTask(int $id, int $status) {
         $result = DbModelMessage::getMessageTask(['id' => $id], 'status', true);
         if (empty($result)) {
             return ['code' => '3000'];
