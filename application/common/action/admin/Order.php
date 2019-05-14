@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\common\action\notify\Note;
 use app\facade\DbGoods;
 use app\facade\DbModelMessage;
 use app\facade\DbOrder;
@@ -188,7 +189,7 @@ class Order extends CommonIndex {
         }
         $order_id = DbOrder::getOrderChild('order_id', ['id' => $order_child_id], true)['order_id'];
 
-        $thisorder = DbOrder::getOrder('order_status,uid', ['id' => $order_id], true);
+        $thisorder = DbOrder::getOrder('order_no,linkphone,order_status,uid', ['id' => $order_id], true);
         if (!empty($had_uid)) {
             if (!in_array($thisorder['uid'], $had_uid)) {
                 return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
@@ -246,34 +247,60 @@ class Order extends CommonIndex {
                         if (strtotime($trigger['start_time']) < time() && strtotime($trigger['stop_time']) > time()) {
                             /* 获取消息模板 */
                             $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
-                            if (!empty($message_template)) {
-                                preg_match_all("/(?<={{)[^}]+/", $message_template, $matches);
-                                if ($matches) {
+                            if (!empty($message_template)) { //模板不为空
+                                preg_match_all("/(?<={{)[^}]+/", $message_template, $matches); //匹配模板中需要查询内容
+                                if ($matches) { //匹配内容不为空
                                     foreach ($matches[0] as $mkey => $mvalue) {
-                                        $mvalue = ltrim($mvalue,'[');
-                                        $mvalue = rtrim($mvalue,']');
-                                        if ($mvalue == 'order_no') {
-                                            $message_template = str_replace ('{{[order_no]}}','订单号xxx',$message_template);
+                                        if ($mvalue == '[order_no]') { //模板中订单号替换
+                                            $tem_orderNo      = '订单号' . $thisorder['order_no'];
+                                            $message_template = str_replace('{{[order_no]}}', $tem_orderNo, $message_template);
                                         }
-                                        if ($mvalue == 'delivergoods') {
-                                            $message_template = str_replace ('{{[delivergoods]}}','物流公司XX运单号XXXXX商品XX数量XX',$message_template);
+                                        if ($mvalue == '[delivergoods]') { //模板中订单商品内容替换
+                                            //查询出不重复的物流流转
+                                            $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
+                                            $tem_delivergoods  = '';
+                                            foreach ($has_order_express as $order => $express) {
+                                                $where = [
+                                                    'express_no'   => $express['express_no'],
+                                                    'express_key'  => $express['express_key'],
+                                                    'express_name' => $express['express_name'],
+                                                ];
+                                                $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
+                                                $skuids              = [];
+                                                $sku_num             = [];
+                                                $sku_name            = [];
+                                                foreach ($has_express_goodsid as $has_express => $goods) {
+                                                    $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
+                                                    // $express_goods['sku_json'] = json_decode($express_goods['sku_json'], true);
+                                                    if (empty($skuids)) {
+                                                        $skuids[]                           = $express_goods['sku_id'];
+                                                        $sku_num[$express_goods['sku_id']]  = 1;
+                                                        $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
+                                                    } else {
+                                                        if (in_array($express_goods['sku_id'], $skuids)) {
+                                                            $sku_num[$express_goods['sku_id']] = $sku_num[$express_goods['sku_id']] + 1;
+                                                        } else {
+                                                            $skuids[]                           = $express_goods['sku_id'];
+                                                            $sku_num[$express_goods['sku_id']]  = 1;
+                                                            $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . '运单号' . $express['express_no'];
+                                            }
+                                            $message_template = str_replace('{{[delivergoods]}}', '物流公司XX运单号XXXXX商品XX数量XX', $message_template);
                                         }
-                                        if ($mvalue == 'nick_name') {
-                                            $message_template = str_replace ('{{[nick_name]}}','昵称xxx',$message_template);
+                                        if ($mvalue == '[nick_name]') {
+                                            $message_template = str_replace('{{[nick_name]}}', '昵称xxx', $message_template);
                                         }
-                                        if ($mvalue == 'money') {
-                                            $message_template = str_replace ('{{[money]}}','金额XXX',$message_template);
-                                        }
-                                        if ($mvalue == 'goods_name') {
-                                            $message_template = str_replace ('{{[goods_name]}}','商品XXX',$message_template);
-                                        }
-                                        if ($mvalue == 'goods_num') {
-                                            $message_template = str_replace ('{{[goods_num]}}','数量XXX',$message_template);
+                                        if ($mvalue == '[money]') {
+                                            $message_template = str_replace('{{[money]}}', '金额XXX', $message_template);
                                         }
                                     }
-                                    $result[$key]['template'] = $template;
                                 }
                                 print_r($message_template);die;
+                                $thisorder['linkphone'];
                             }
                         }
                     }
