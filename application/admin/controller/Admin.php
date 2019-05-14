@@ -83,7 +83,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} admin_name 添加的用户名
      * @apiParam (入参) {String} [passwd] 默认为:123456
      * @apiParam (入参) {Int} [stype] 添加的管理员类型 1.管理员 2超级管理员  默认为:1
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:密码必须为6-16个任意字符 / 3003:只有root账户可以添加超级管理员 / 3004:该账号已存在 / 3005:没有操作权限 / 3006:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:密码必须为6-16个任意字符 / 3003:只有root账户可以添加超级管理员 / 3004:该账号已存在 / 3006:添加失败
      * @apiSampleRequest /admin/admin/addadmin
      * @return array
      * @author zyr
@@ -207,7 +207,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} id
      * @apiParam (入参) {String} status 1通过，2不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3002:该用户没有权限 / 3003:不存在的记录  / 3004:已审核的状态无法再次审核 / 3005:空的status / 3006:错误的审核类型 / 3001:id必须为数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3003:不存在的记录  / 3004:已审核的状态无法再次审核 / 3005:空的status / 3006:错误的审核类型 / 3001:id必须为数字
      * @apiSampleRequest /admin/admin/auditAdminRemittance
      * @return array
      * @author rzc
@@ -247,7 +247,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} nick_name 开通账号昵称
      * @apiParam (入参) {Decimal} money 开通后扣除金额
      * @apiParam (入参) {String} [message] 开通理由
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3005:没有操作权限 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败 / 3009:boss正在申请中
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:账号昵称不能未空 / 3003:金额必须为数字 / 3004:扣除金额不能是负数 / 3006:用户不存在 / 3007:该用户已经是boss / 3008:开通失败 / 3009:boss正在申请中
      * @apiSampleRequest /admin/admin/openboss
      * @return array
      * @author zyr
@@ -336,7 +336,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [end_time] 创建中止时间
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3002:错误的审核类型 / 3002:该用户没有权限 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status必须为数字 / 3002:错误的审核类型 / 3003:start_time时间格式错误  / 3004:end_time时间格式错误 / 3005:收款金额必须为数字
      * apiSuccess (返回) {String} total 记录条数
      * @apiSampleRequest /admin/admin/getAdminRemittance
      * @return array
@@ -1192,7 +1192,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} group_id 分组id
      * @apiParam (入参) {String} permissions 权限分组:{"1":{"2":1,"3":0},"2":{"4":1,"5":0}}
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3003:权限分组不存在 / 3004:权限分组不能为空 / 3005:permissions数据有误 / 3006:菜单不存在 / 3007:更改失败 / 3100:没有权限
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:分组id错误 / 3003:权限分组不存在 / 3004:权限分组不能为空 / 3005:permissions数据有误 / 3006:菜单不存在 / 3007:更改失败
      * @apiSampleRequest /admin/admin/addpermissionsgrouppower
      * @author zyr
      */
