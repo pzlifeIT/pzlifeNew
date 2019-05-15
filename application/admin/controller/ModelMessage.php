@@ -187,9 +187,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3001'];
         }
         $preg = '/^([12]\d\d\d)-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[0-1]) ([0-1]\d|2[0-4]):([0-5]\d)(:[0-5]\d)?$/';
-        if (empty($start_time)) {
-            $start_time = time();
-        } else {
+        if (!empty($start_time)) {
             if (preg_match($preg, $start_time, $parts1)) {
                 if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3002'];
@@ -199,9 +197,7 @@ class ModelMessage extends AdminController {
             }
             $start_time = strtotime($start_time);
         }
-        if (empty($stop_time)) {
-            return ['code' => '3002'];
-        } else {
+        if (!empty($stop_time)) {
             if (preg_match($preg, $stop_time, $parts2)) {
                 if (checkdate($parts2[2], $parts2[3], $parts2[1]) == false) {
                     return ['code' => '3002'];
@@ -210,9 +206,11 @@ class ModelMessage extends AdminController {
                 return ['code' => '3002'];
             }
             $stop_time = strtotime($stop_time);
-        }
-        if ($stop_time < $start_time) {
-            return ['code' => '3004'];
+        } 
+        if (!empty($start_time) && !empty($stop_time)) {
+            if ($stop_time < $start_time) {
+                return ['code' => '3004'];
+            }
         }
         $result = $this->app->modelmessage->editTrigger($title, $start_time, $stop_time, $id);
         return $result;

@@ -187,7 +187,7 @@ class Rights extends AdminController {
         $target_uid = deUid($target_uid);
         $refe_uid   = deUid($refe_uid);
         if (!empty($target_mobile)) {
-            if (checkIdcard($target_mobile) == false) {
+            if (checkMobile($target_mobile) == false) {
                 return ['code' => '3001'];
             }
         }

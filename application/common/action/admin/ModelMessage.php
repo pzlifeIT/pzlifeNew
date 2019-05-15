@@ -90,18 +90,34 @@ class ModelMessage extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function editTrigger($title, $start_time, $stop_time, $id) {
-        $result = DbModelMessage::getTrigger(['id' => $id], 'status', true);
+    public function editTrigger($title = '', $start_time = 0, $stop_time = 0, $id) {
+        $result = DbModelMessage::getTrigger(['id' => $id], '*', true);
         if (empty($result)) {
             return ['code' => '3000'];
         }
         if ($result['status'] == 2) {
             return ['code' => '3003'];
         }
+        if ($start_time) {
+            if ($start_time<strtotime($result['stop_time'])){
+                return ['code' => '3004'];
+            }
+        }
+        if ($stop_time) {
+            if ($stop_time<strtotime($result['start_time'])){
+                return ['code' => '3004'];
+            }
+        }
         $data               = [];
-        $data['title']      = $title;
-        $data['start_time'] = $start_time;
-        $data['stop_time']  = $stop_time;
+        if ($title) {
+            $data['title']      = $title;
+        }
+        if ($start_time) {
+            $data['start_time'] = $start_time;
+        }
+        if ($stop_time) {
+            $data['stop_time']  = $stop_time;
+        }
         $data['status']     = 1;
         $result             = DbModelMessage::editTrigger($data, $id);
         return ['code' => '200', 'saveid' => $result];
