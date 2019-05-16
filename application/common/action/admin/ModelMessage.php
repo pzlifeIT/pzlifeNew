@@ -3,9 +3,16 @@
 namespace app\common\action\admin;
 
 use app\facade\DbModelMessage;
+use cache\Phpredis;
+use Config;
 use think\Db;
 
 class ModelMessage extends CommonIndex {
+
+    private function redisInit() {
+        $this->redis = Phpredis::getConn();
+//        $this->connect = Db::connect(Config::get('database.db_config'));
+    }
 
     /**
      * 添加触发器
@@ -423,6 +430,10 @@ class ModelMessage extends CommonIndex {
         }
         if ($result['status'] == $status) {
             return ['code' => '3003'];
+        }
+        if ($status == 2) {
+            $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
+            $this->redis->rPush($redisListKey, $id);
         }
         DbModelMessage::editMessageTask(['status' => $status], $id);
         return ['code' => '200'];
