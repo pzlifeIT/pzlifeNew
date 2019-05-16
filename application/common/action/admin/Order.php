@@ -249,60 +249,51 @@ class Order extends CommonIndex {
                             $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
                             if (!empty($message_template)) { //模板不为空
                                 $message_template = $message_template['template'];
-                                preg_match_all("/(?<={{)[^}]+/", $message_template, $matches); //匹配模板中需要查询内容
-                                if ($matches) { //匹配内容不为空
-                                    foreach ($matches[0] as $mkey => $mvalue) {
-                                        if ($mvalue == '[order_no]') { //模板中订单号替换
-                                            $tem_orderNo      = '订单号' . $thisorder['order_no'];
-                                            $message_template = str_replace('{{[order_no]}}', $tem_orderNo, $message_template);
-                                        }
-                                        if ($mvalue == '[delivergoods]') { //模板中订单商品内容替换
-                                            //查询出不重复的物流流转
-                                            $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
-                                            $tem_delivergoods  = '';
-                                            foreach ($has_order_express as $order => $express) {
-                                                $where = [
-                                                    'express_no'   => $express['express_no'],
-                                                    'express_key'  => $express['express_key'],
-                                                    'express_name' => $express['express_name'],
-                                                ];
-                                                $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
-                                                $skuids              = [];
-                                                $sku_num             = [];
-                                                $sku_name            = [];
-                                                foreach ($has_express_goodsid as $has_express => $goods) {
-                                                    $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
-                                                    // $express_goods['sku_json'] = json_decode($express_goods['sku_json'], true);
-                                                    if (empty($skuids)) {
-                                                        $skuids[]                           = $express_goods['sku_id'];
-                                                        $sku_num[$express_goods['sku_id']]  = 1;
-                                                        $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
-                                                    } else {
-                                                        if (in_array($express_goods['sku_id'], $skuids)) {
-                                                            $sku_num[$express_goods['sku_id']] = $sku_num[$express_goods['sku_id']] + 1;
-                                                        } else {
-                                                            $skuids[]                           = $express_goods['sku_id'];
-                                                            $sku_num[$express_goods['sku_id']]  = 1;
-                                                            $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
-                                                        }
-                                                    }
-                                                }
-                                                $deliver_goods_text = '';
-                                                foreach ($skuids as $key => $skuid) {
-                                                    $deliver_goods_text = $deliver_goods_text . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
-                                                }
-                                                $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text . ' ';
+
+                                //模板中订单号替换
+                                $tem_orderNo      = '订单号' . $thisorder['order_no'];
+                                $message_template = str_replace('{{[order_no]}}', $tem_orderNo, $message_template);
+
+                                //商品发货信息替换
+                                $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
+                                $tem_delivergoods  = '';
+                                foreach ($has_order_express as $order => $express) {
+                                    $where = [
+                                        'express_no'   => $express['express_no'],
+                                        'express_key'  => $express['express_key'],
+                                        'express_name' => $express['express_name'],
+                                    ];
+                                    $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
+                                    $skuids              = [];
+                                    $sku_num             = [];
+                                    $sku_name            = [];
+                                    foreach ($has_express_goodsid as $has_express => $goods) {
+                                        $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
+                                        // $express_goods['sku_json'] = json_decode($express_goods['sku_json'], true);
+                                        if (empty($skuids)) {
+                                            $skuids[]                           = $express_goods['sku_id'];
+                                            $sku_num[$express_goods['sku_id']]  = 1;
+                                            $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
+                                        } else {
+                                            if (in_array($express_goods['sku_id'], $skuids)) {
+                                                $sku_num[$express_goods['sku_id']] = $sku_num[$express_goods['sku_id']] + 1;
+                                            } else {
+                                                $skuids[]                           = $express_goods['sku_id'];
+                                                $sku_num[$express_goods['sku_id']]  = 1;
+                                                $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
                                             }
-                                            $message_template = str_replace('{{[delivergoods]}}', $tem_delivergoods, $message_template);
-                                        }
-                                        if ($mvalue == '[nick_name]') {
-                                            $message_template = str_replace('{{[nick_name]}}', '昵称xxx', $message_template);
-                                        }
-                                        if ($mvalue == '[money]') {
-                                            $message_template = str_replace('{{[money]}}', '金额XXX', $message_template);
                                         }
                                     }
+                                    $deliver_goods_text = '';
+                                    foreach ($skuids as $key => $skuid) {
+                                        $deliver_goods_text = $deliver_goods_text . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
+                                    }
+                                    $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text . ' ';
                                 }
+                                $message_template = str_replace('{{[delivergoods]}}', $tem_delivergoods, $message_template);
+                                $message_template = str_replace('{{[nick_name]}}', '昵称xxx', $message_template);
+                                $message_template = str_replace('{{[money]}}', '金额XXX', $message_template);
+
                                 $Note = new Note;
                                 $send = $Note->sendSms($thisorder['linkphone'], $message_template);
                                 // print_r($send);die;
