@@ -70,6 +70,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->saveTrigger($title, $start_time, $stop_time);
+        $this->apiLog($apiName, [$cmsConId, $title, $start_time, $stop_time], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -112,12 +113,14 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function getTrigger() {
-        $page    = trim($this->request->post('page'));
-        $pageNum = trim($this->request->post('page_num'));
-        $id      = trim($this->request->post('id'));
-        $all     = trim($this->request->post('all'));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $id       = trim($this->request->post('id'));
+        $all      = trim($this->request->post('all'));
+        $page     = empty($page) ? 1 : $page;
+        $pageNum  = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page) || strpos($page, ".") !== false || !is_numeric($pageNum) || strpos($pageNum, ".") !== false) {
             return ['code' => '3001'];
         }
@@ -130,6 +133,7 @@ class ModelMessage extends AdminController {
             }
         }
         $result = $this->app->modelmessage->getTrigger($page, $pageNum, $id, $all);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $id, $all], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -164,6 +168,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->modelmessage->auditTrigger($id, $status);
+        $this->apiLog($apiName, [$cmsConId, $status, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -225,6 +230,7 @@ class ModelMessage extends AdminController {
             }
         }
         $result = $this->app->modelmessage->editTrigger($title, $start_time, $stop_time, $id);
+        $this->apiLog($apiName, [$cmsConId, $title, $start_time, $stop_time, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -265,6 +271,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->saveMessageTemplate($title, $type, $template);
+        $this->apiLog($apiName, [$cmsConId, $title, $type, $template], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -302,6 +309,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3001'];
         }
         $result = $this->app->modelmessage->auditMessageTemplate($id, $status);
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -324,12 +332,14 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function getMessageTemplate() {
-        $page    = trim($this->request->post('page'));
-        $pageNum = trim($this->request->post('page_num'));
-        $id      = trim($this->request->post('id'));
-        $all     = trim($this->request->post('all'));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $id       = trim($this->request->post('id'));
+        $all      = trim($this->request->post('all'));
+        $page     = empty($page) ? 1 : $page;
+        $pageNum  = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page) || strpos($page, ".") !== false || !is_numeric($pageNum) || strpos($pageNum, ".") !== false) {
             return ['code' => '3001'];
         }
@@ -342,6 +352,7 @@ class ModelMessage extends AdminController {
             }
         }
         $result = $this->app->modelmessage->getMessageTemplate($page, $pageNum, $id, $all);
+        $this->apiLog($apiName, [$cmsConId, $id, $all, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
     /**
@@ -387,6 +398,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->editMessageTemplate($title, $type, $template, $id);
+        $this->apiLog($apiName, [$cmsConId, $id, $title, $type, $template, $id, $type], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -434,6 +446,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->saveMessageTask($title, $type, $wtype, $mt_id, $trigger_id);
+        $this->apiLog($apiName, [$cmsConId, $title, $type, $wtype, $mt_id, $trigger_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -486,6 +499,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->editMessageTask($title, intval($type), intval($wtype), intval($mt_id), intval($trigger_id), intval($MessageTask_id));
+        $this->apiLog($apiName, [$cmsConId, $title, $type, $wtype, $mt_id, $trigger_id, $MessageTask_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -523,6 +537,7 @@ class ModelMessage extends AdminController {
             return ['code' => '3001'];
         }
         $result = $this->app->modelmessage->auditMessageTask(intval($id), intval($status));
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -576,11 +591,13 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function getMessageTask() {
-        $page    = trim($this->request->post('page'));
-        $pageNum = trim($this->request->post('page_num'));
-        $id      = trim($this->request->post('id'));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $id       = trim($this->request->post('id'));
+        $page     = empty($page) ? 1 : $page;
+        $pageNum  = empty($pageNum) ? 10 : $pageNum;
         if (!is_numeric($page) || strpos($page, ".") !== false || !is_numeric($pageNum) || strpos($pageNum, ".") !== false) {
             return ['code' => '3001'];
         }
@@ -596,6 +613,7 @@ class ModelMessage extends AdminController {
             }
         }
         $result = $this->app->modelmessage->getMessageTask(intval($page), intval($pageNum), intval($id));
+        $this->apiLog($apiName, [$cmsConId, $id, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -614,7 +632,10 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function getMessageTemplateText() {
-        $result = $this->app->modelmessage->getMessageTemplateText();
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $result   = $this->app->modelmessage->getMessageTemplateText();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 }
