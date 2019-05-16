@@ -3,9 +3,16 @@
 namespace app\common\action\admin;
 
 use app\facade\DbModelMessage;
+use cache\Phpredis;
+use Config;
 use think\Db;
 
 class ModelMessage extends CommonIndex {
+
+    private function redisInit() {
+        $this->redis = Phpredis::getConn();
+//        $this->connect = Db::connect(Config::get('database.db_config'));
+    }
 
     /**
      * 添加触发器
@@ -99,27 +106,27 @@ class ModelMessage extends CommonIndex {
             return ['code' => '3003'];
         }
         if ($start_time && !$stop_time) {
-            if ($start_time<strtotime($result['stop_time'])){
+            if ( strtotime($result['stop_time']) < $start_time + 900) {
                 return ['code' => '3004'];
             }
         }
         if ($stop_time && !$start_time) {
-            if ($stop_time<strtotime($result['start_time'])){
+            if ($stop_time < strtotime($result['start_time']) + 900) {
                 return ['code' => '3004'];
             }
         }
-        $data               = [];
+        $data = [];
         if ($title) {
-            $data['title']      = $title;
+            $data['title'] = $title;
         }
         if ($start_time) {
             $data['start_time'] = $start_time;
         }
         if ($stop_time) {
-            $data['stop_time']  = $stop_time;
+            $data['stop_time'] = $stop_time;
         }
-        $data['status']     = 1;
-        $result             = DbModelMessage::editTrigger($data, $id);
+        $data['status'] = 1;
+        $result         = DbModelMessage::editTrigger($data, $id);
         return ['code' => '200', 'saveid' => $id];
     }
 
@@ -338,8 +345,13 @@ class ModelMessage extends CommonIndex {
         if (empty($trigger)) {
             return ['code' => '3005'];
         }
-        if (!in_array($wtype,[4, 5])) {
-            $has_message_task = DbModelMessage::getMessageTask(['wtype' => $wtype, 'status' => 2], '*', true);
+        if (!in_array($wtype, [4, 5])) {
+            if ($type == 1) {
+                $has_type = '1,2,3,4,5';
+            }else{
+                $has_type = '1,'.$type;
+            }
+            $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', 1], ['status', '=', 2], ['type', 'in', $has_type]], '*', true);
             if (!empty($has_message_task)) {
                 return ['code' => '3006', 'msg' => '存在已启用的同类模板任务'];
             }
@@ -382,8 +394,13 @@ class ModelMessage extends CommonIndex {
         if ($messagetask['status'] == 2) {
             return ['code' => '3007'];
         }
-        if (!in_array($wtype,[4, 5])) {
-            $has_message_task = DbModelMessage::getMessageTask([['wtype','=', $wtype], ['status', '=', 2],['id' ,'<>', $MessageTask_id]], '*', true);
+        if (!in_array($wtype, [4, 5])) {
+            if ($type == 1) {
+                $has_type = '1,2,3,4,5';
+            }else{
+                $has_type = '1,'.$type;
+            }
+            $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', $has_type], ['id', '<>', $MessageTask_id]], '*', true);
             if (!empty($has_message_task)) {
                 return ['code' => '3008', 'msg' => '存在已启用的同类模板任务'];
             }
@@ -413,6 +430,10 @@ class ModelMessage extends CommonIndex {
         }
         if ($result['status'] == $status) {
             return ['code' => '3003'];
+        }
+        if ($status == 2) {
+            $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
+            $this->redis->rPush($redisListKey, $id);
         }
         DbModelMessage::editMessageTask(['status' => $status], $id);
         return ['code' => '200'];
