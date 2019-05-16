@@ -385,17 +385,6 @@ class ModelMessage extends CommonIndex {
         if ($messagetask['status'] == 2) {
             return ['code' => '3007'];
         }
-        if (!in_array($wtype, [4, 5])) {
-            if ($type == 1) {
-                $has_type = '1,2,3,4,5';
-            } else {
-                $has_type = '1,' . $type;
-            }
-            $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', $has_type], ['id', '<>', $MessageTask_id]], '*', true);
-            if (!empty($has_message_task)) {
-                return ['code' => '3008', 'msg' => '存在已启用的同类模板任务'];
-            }
-        }
         $data               = [];
         $data['title']      = $title;
         $data['type']       = $type;
@@ -423,6 +412,18 @@ class ModelMessage extends CommonIndex {
             return ['code' => '3003'];
         }
         if ($status == 2) {
+            
+            if (!in_array($result['wtype'], [4, 5])) {
+                if ($type == 1) {
+                    $has_type = '1,2,3,4,5';
+                } else {
+                    $has_type = '1,' . $type;
+                }
+                $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', $has_type], ['id', '<>', $MessageTask_id]], '*', true);
+                if (!empty($has_message_task)) {
+                    return ['code' => '3008', 'msg' => '存在已启用的同类模板任务'];
+                }
+            }
             $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
             $this->redis->rPush($redisListKey, $id);
         }
