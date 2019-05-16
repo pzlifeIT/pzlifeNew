@@ -238,7 +238,7 @@ class Order extends CommonIndex {
                 DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
 
                 /* 短信模板发送短信 */
-                $user_identity = DbUser::getUserInfo(['id' => $thisorder['uid'], 'user_identity', true])['user_identity'];
+                $user_identity = DbUser::getUserInfo(['id' => $thisorder['uid']], 'user_identity', true)['user_identity'];
                 $message_task  = DbModelMessage::getMessageTask([['wtype', '=', 1], ['status', '=', 2], ['type', 'in', '1,' . $user_identity + 1]], 'type,mt_id,trigger_id', true);
                 if (!empty($message_task)) {
                     /* 获取触发器 */
