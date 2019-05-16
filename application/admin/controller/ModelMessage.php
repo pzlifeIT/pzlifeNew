@@ -21,7 +21,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} title 标题
      * @apiParam (入参) {Number} [start_time] 开始时间 不传默认为当前时间
      * @apiParam (入参) {Number} stop_time 结束时间
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:title空 / 3002:时间格式错误 / 3003:结束时间不能小于开始时间
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户列表空 / 3001:title空 / 3002:时间格式错误 / 3003:结束时间大于开始时间15分钟
      * @apiSampleRequest /admin/ModelMessage/addTrigger
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -61,7 +61,7 @@ class ModelMessage extends AdminController {
             }
             $stop_time = strtotime($stop_time);
         }
-        if ($stop_time < $start_time) {
+        if ($stop_time < $start_time + 900) {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->saveTrigger($title, $start_time, $stop_time);
@@ -167,7 +167,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {Number} [start_time] 开始时间 不传默认为当前时间
      * @apiParam (入参) {Number} stop_time 结束时间
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:状态码为空 / 3002:id格式错误 / 3003:已启用,无法修改 / 3004:结束时间不能小于开始时间
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:状态码为空 / 3002:id格式错误 / 3003:已启用,无法修改 / 3004:结束时间大于开始时间15分钟
      * @apiSampleRequest /admin/ModelMessage/editTrigger
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -205,7 +205,7 @@ class ModelMessage extends AdminController {
             $stop_time = strtotime($stop_time);
         } 
         if (!empty($start_time) && !empty($stop_time)) {
-            if ($stop_time < $start_time) {
+            if ($stop_time < $start_time + 900) {
                 return ['code' => '3004'];
             }
         }

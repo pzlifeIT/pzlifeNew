@@ -16,4 +16,5 @@ return [
     'order'           => $commandPath . 'Order',
     'temporaryscript' => $commandPath . 'Temporaryscript',
     'localscript'     => $commandPath . 'LocalScript',
+    'modelmessage'    => $commandPath . 'ModelMessage',
 ];

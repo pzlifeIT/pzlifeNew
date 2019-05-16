@@ -238,7 +238,8 @@ class Order extends CommonIndex {
                 DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
 
                 /* 短信模板发送短信 */
-                $message_task = DbModelMessage::getMessageTask(['wtype' => 1, 'status' => 2], 'type,mt_id,trigger_id', true);
+                $user_identity = DbUser::getUserInfo(['id' => $thisorder['uid'], 'user_identity', true])['user_identity'];
+                $message_task  = DbModelMessage::getMessageTask([['wtype', '=', 1], ['status', '=', 2], ['type', 'in', '1,' . $user_identity + 1]], 'type,mt_id,trigger_id', true);
                 if (!empty($message_task)) {
                     /* 获取触发器 */
                     $trigger = DbModelMessage::getTrigger(['id' => $message_task['trigger_id'], 'status' => 2], 'start_time,stop_time', true);
@@ -247,7 +248,7 @@ class Order extends CommonIndex {
                             /* 获取消息模板 */
                             $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
                             if (!empty($message_template)) { //模板不为空
-                                $message_template  = $message_template['template'];
+                                $message_template = $message_template['template'];
                                 preg_match_all("/(?<={{)[^}]+/", $message_template, $matches); //匹配模板中需要查询内容
                                 if ($matches) { //匹配内容不为空
                                     foreach ($matches[0] as $mkey => $mvalue) {
@@ -270,7 +271,7 @@ class Order extends CommonIndex {
                                                 $sku_num             = [];
                                                 $sku_name            = [];
                                                 foreach ($has_express_goodsid as $has_express => $goods) {
-                                                    $express_goods             = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
+                                                    $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
                                                     // $express_goods['sku_json'] = json_decode($express_goods['sku_json'], true);
                                                     if (empty($skuids)) {
                                                         $skuids[]                           = $express_goods['sku_id'];
@@ -288,9 +289,9 @@ class Order extends CommonIndex {
                                                 }
                                                 $deliver_goods_text = '';
                                                 foreach ($skuids as $key => $skuid) {
-                                                    $deliver_goods_text = $deliver_goods_text . '商品'. $sku_name[$skuid] . ' 数量' .$sku_num[$skuid];
+                                                    $deliver_goods_text = $deliver_goods_text . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
                                                 }
-                                                $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text. ' ';
+                                                $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text . ' ';
                                             }
                                             $message_template = str_replace('{{[delivergoods]}}', $tem_delivergoods, $message_template);
                                         }
@@ -303,7 +304,7 @@ class Order extends CommonIndex {
                                     }
                                 }
                                 $Note = new Note;
-                                $send = $Note->sendSms($thisorder['linkphone'],$message_template);
+                                $send = $Note->sendSms($thisorder['linkphone'], $message_template);
                                 // print_r($send);die;
                                 // $thisorder['linkphone'];
                             }
