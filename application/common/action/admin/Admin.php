@@ -847,17 +847,10 @@ class Admin extends CommonIndex {
                                 $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
                                 if (!empty($message_template)) { //模板不为空
                                     $message_template = $message_template['template'];
-                                    preg_match_all("/(?<={{)[^}]+/", $message_template, $matches); //匹配模板中需要查询内容
-                                    if ($matches) { //匹配内容不为空
-                                        foreach ($matches[0] as $mkey => $mvalue) {
-                                            if ($mvalue == '[nick_name]') {
-                                                $message_template = str_replace('{{[nick_name]}}', $indexUser['nick_name'], $message_template);
-                                            }
-                                            if ($mvalue == '[money]') {
-                                                $message_template = str_replace('{{[money]}}', $transfer['money'], $message_template);
-                                            }
-                                        }
-                                    }
+                                    //匹配模板中需要查询内容
+                                    $message_template = str_replace('{{[nick_name]}}', $indexUser['nick_name'], $message_template);
+                                    $message_template = str_replace('{{[money]}}', $transfer['money'], $message_template);
+
                                     $Note = new Note;
                                     $send = $Note->sendSms($indexUser['mobile'], $message_template);
                                     // print_r($send);die;
