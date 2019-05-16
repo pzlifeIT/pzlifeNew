@@ -394,11 +394,11 @@ class ModelMessage extends AdminController {
         if (!in_array($type, [1, 2, 3])) {
             return ['code' => '3002'];
         }
-        if (empty($template)) {
-            return ['code' => '3003'];
-        }
+        // if (empty($template)) {
+        //     return ['code' => '3003'];
+        // }
         $result = $this->app->modelmessage->editMessageTemplate($title, $type, $template, $id);
-        $this->apiLog($apiName, [$cmsConId, $id, $title, $type, $template, $id, $type], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $title, $type, $template], $result['code'], $cmsConId);
         return $result;
     }
 
