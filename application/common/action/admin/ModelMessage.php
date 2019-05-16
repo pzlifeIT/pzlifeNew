@@ -213,7 +213,7 @@ class ModelMessage extends CommonIndex {
             if (empty($result)) {
                 return ['code' => '3000'];
             }
-            $template = $result['template'];
+         /*    $template = $result['template'];
             preg_match_all("/(?<={{)[^}]+/", $template, $matches);
             if ($matches) {
                 foreach ($matches[0] as $mkey => $mvalue) {
@@ -240,7 +240,7 @@ class ModelMessage extends CommonIndex {
                     }
                 }
                 $result['template'] = $template;
-            }
+            } */
             return ['code' => '200', 'Trigger' => $result];
         } else {
             // echo $pageNum;die;
