@@ -365,7 +365,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {Number} type 类型  1:短短信 2:长短信 3:彩信
      * @apiParam (入参) {String} template 发送内容模板
      * @apiParam (入参) {Number} id 需修改模板的ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:type参数错误 / 3003:template为空 / 3004:结束时间不能小于开始时间
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:type参数错误 / 3003:template为空 / 3004:结束时间不能小于开始时间 / 3005:已启用模板无法修改
      * @apiSampleRequest /admin/ModelMessage/editMessageTemplate
      * @apiParamExample (data) {Array} 返回用户列表
      * [
@@ -394,9 +394,9 @@ class ModelMessage extends AdminController {
         if (!in_array($type, [1, 2, 3])) {
             return ['code' => '3002'];
         }
-        // if (empty($template)) {
-        //     return ['code' => '3003'];
-        // }
+        if (empty($template)) {
+            return ['code' => '3003'];
+        }
         $result = $this->app->modelmessage->editMessageTemplate($title, $type, $template, $id);
         $this->apiLog($apiName, [$cmsConId, $id, $title, $type, $template], $result['code'], $cmsConId);
         return $result;
