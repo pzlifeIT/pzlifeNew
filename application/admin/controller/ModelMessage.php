@@ -30,6 +30,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function addTrigger() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title      = trim($this->request->post('title'));
         $start_time = trim($this->request->post('start_time'));
         $stop_time  = trim($this->request->post('stop_time'));
@@ -145,6 +150,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function auditTrigger() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $status = trim($this->request->post('status'));
         $id     = trim($this->request->post('id'));
         if (!in_array($status, [2, 3])) {
@@ -176,6 +186,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function editTrigger() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title      = trim($this->request->post('title'));
         $start_time = trim($this->request->post('start_time'));
         $stop_time  = trim($this->request->post('stop_time'));
@@ -203,7 +218,7 @@ class ModelMessage extends AdminController {
                 return ['code' => '3002'];
             }
             $stop_time = strtotime($stop_time);
-        } 
+        }
         if (!empty($start_time) && !empty($stop_time)) {
             if ($stop_time < $start_time + 900) {
                 return ['code' => '3004'];
@@ -231,6 +246,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function saveMessageTemplate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title    = trim($this->request->post('title'));
         $type     = trim($this->request->post('type'));
         $template = trim($this->request->post('template'));
@@ -265,6 +285,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function auditMessageTemplate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id     = trim($this->request->post('id'));
         $status = trim($this->request->post('status'));
         if (!is_numeric($id) || strpos($id, ".") !== false) {
@@ -338,6 +363,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function editMessageTemplate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title    = trim($this->request->post('title'));
         $type     = trim($this->request->post('type'));
         $template = trim($this->request->post('template'));
@@ -380,6 +410,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function saveMessageTask() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title      = trim($this->request->post('title'));
         $type       = trim($this->request->post('type'));
         $wtype      = trim($this->request->post('wtype'));
@@ -423,6 +458,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function editMessageTask() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title          = trim($this->request->post('title'));
         $type           = trim($this->request->post('type'));
         $wtype          = trim($this->request->post('wtype'));
@@ -466,6 +506,11 @@ class ModelMessage extends AdminController {
      * @author rzc
      */
     public function auditMessageTask() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id     = trim($this->request->post('id'));
         $status = trim($this->request->post('status'));
         if (!is_numeric($id) || strpos($id, ".") !== false) {
@@ -496,7 +541,7 @@ class ModelMessage extends AdminController {
      * @apiSuccess (messagetask) {String} id id
      * @apiSuccess (messagetask) {String} title 消息任务任务名称
      * @apiSuccess (messagetask) {String} type 发送人群  1:所有会员 2:普通会员 3:钻石会员 4:创业店主 5:合伙人
-     * @apiSuccess (messagetask) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账 8.钻石奖励金到账 
+     * @apiSuccess (messagetask) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账 8.钻石奖励金到账
      * @apiSuccess (messagetask) {String} status 状态  1:待审核 2:启用 3:停用
      * @apiSuccess (messagetask) {String} create_time 创建时间
      * @apiSuccess (messagetask) {String} delete_time 删除时间
