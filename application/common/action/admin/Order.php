@@ -236,7 +236,7 @@ class Order extends CommonIndex {
             $no_order_goods_id = array_diff($order_goods_ids, $has_order_goods_id);
             if (!$no_order_goods_id) {
                 DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
-
+                
                 /* 短信模板发送短信 */
                 $user_identity = DbUser::getUserInfo(['id' => $thisorder['uid']], 'user_identity', true);
                 $user_identity = $user_identity['user_identity'] + 1;

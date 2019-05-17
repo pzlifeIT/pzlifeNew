@@ -342,7 +342,7 @@ class ModelMessage extends CommonIndex {
             } else {
                 $has_type = '1,' . $type;
             }
-            $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', 1], ['status', '=', 2], ['type', 'in', $has_type]], '*', true);
+            $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', $has_type]], '*', true);
             if (!empty($has_message_task)) {
                 return ['code' => '3006', 'msg' => '存在已启用的同类模板任务'];
             }
@@ -417,7 +417,7 @@ class ModelMessage extends CommonIndex {
                 if ($result['type'] == 1) {
                     $has_type = '1,2,3,4,5';
                 } else {
-                    $has_type = '1,' . $type;
+                    $has_type = '1,' . $result['type'];
                 }
                 $has_message_task = DbModelMessage::getMessageTask([['wtype', '=', $result['wtype']], ['status', '=', 2], ['type', 'in', $has_type], ['id', '<>', $id]], '*', true);
                 if (!empty($has_message_task)) {
