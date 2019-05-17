@@ -189,7 +189,7 @@ class Order extends CommonIndex {
         }
         $order_id = DbOrder::getOrderChild('order_id', ['id' => $order_child_id], true)['order_id'];
 
-        $thisorder = DbOrder::getOrder('order_no,linkphone,order_status,uid,order_money,third_time', ['id' => $order_id], true);
+        $thisorder = DbOrder::getOrder('order_no,linkphone,linkman,order_status,uid,order_money,third_time', ['id' => $order_id], true);
         if (!empty($had_uid)) {
             if (!in_array($thisorder['uid'], $had_uid)) {
                 return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
@@ -354,8 +354,8 @@ class Order extends CommonIndex {
                                         $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text . ' ';
                                     }
                                     $message_template = str_replace('{{[delivergoods]}}', $tem_delivergoods, $message_template);
-                                    $message_template = str_replace('{{[nick_name]}}', '昵称xxx', $message_template);
-                                    $message_template = str_replace('{{[money]}}', '金额XXX', $message_template);
+                                    $message_template = str_replace('{{[nick_name]}}', $thisorder['linkman'], $message_template);
+                                    $message_template = str_replace('{{[money]}}', '￥'.$thisorder['order_money'], $message_template);
 
                                     $Note = new Note;
                                     $send = $Note->sendSms($thisorder['linkphone'], $message_template);
