@@ -61,6 +61,7 @@ class Recommend extends CommonIndex {
                     return ['code' => '3010'];//图片没有上传过
                 }
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                $data['image_path'] = $image;
             }
 
             $updateRecommends = DbRecommend::updateRecommends($data, $id);
