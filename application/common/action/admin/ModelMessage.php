@@ -412,7 +412,14 @@ class ModelMessage extends CommonIndex {
             return ['code' => '3003'];
         }
         if ($status == 2) {
-            
+            $message_template = DbModelMessage::getMessageTemplate(['id' => $result['mt_id'], 'status' => 2], '*', true);
+            if (empty($message_template)) {
+                return ['code' => '3004'];
+            }
+            $trigger = DbModelMessage::getMessageTemplate(['id' => $result['trigger_id'], 'status' => 2], '*', true);
+            if (empty($trigger)) {
+                return ['code' => '3005'];
+            }
             if (!in_array($result['wtype'], [4, 5])) {
                 if ($result['type'] == 1) {
                     $has_type = '1,2,3,4,5';
