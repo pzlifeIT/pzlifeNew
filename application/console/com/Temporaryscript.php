@@ -196,4 +196,27 @@ class TemporaryScript extends Pzlife {
         ];
         return array_filter(array_unique($data));
     }
+
+    public function imagePath(){
+        $goodsRelation = Db::query('select `id`,`image_path` from pz_recommend where `image_path`<> '."''");
+        // print_r($goodsRelation);
+        Db::startTrans();
+        try {
+            foreach ($goodsRelation as $key => $value) {
+                $image_path = $this->filtraImage($value['image_path']);
+                Db::table('pz_recommend')->where('id',$value['id'])->update(['image_path' => $image_path]);
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            // 回滚事务
+            exception($e);
+            Db::rollback();
+        }
+        exit('ok!!');
+    }
+
+    function filtraImage( $image) {
+        $image = str_replace('https://imagesdev.pzlive.vip' . '/', '', $image);
+        return str_replace('https://images.pzlive.vip' . '/', '', $image);
+    }
 }
