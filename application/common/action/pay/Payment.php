@@ -210,46 +210,7 @@ class Payment {
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
-                    /* 发送模板消息开始 2019/04/28 */
-                    $access_token = $this->getWeiXinAccessToken();
-                    if (!empty($orderData)) { //普通订单信息推送
-                        $user_wxinfo               = DbUser::getUserWxinfo(['uid' => $orderRes['uid']], 'openid', true);
-                        $order                     = DbOrder::getOrderDetail(['uid' => $orderRes['uid'], 'order_no' => $orderRes['order_no']], '*');
-                        $data['keyword1'][]        = $orderRes['create_time'];
-                        $data['keyword1']['color'] = '#157efb';
-                        $data['keyword2'][]        = $orderRes['order_no'];
-                        $data['keyword2']['color'] = '#333';
-                        $keyword3                  = '';
-                        $data['keyword3']['color'] = '#333';
-                        // $goo
-                        // 商品名称
-                        foreach ($order as $key => $value) {
-                            //    echo $value['sku_json'];die;
-                            $data['keyword3'][] = $keyword3 . $value['goods_name'] . $value['goods_price'] . 'X' . $value['goods_num'] . '【' . json_decode($value['sku_json'])[0] . '】 ';
-                        }
-                        $data['keyword4']['color'] = '#333';
-                        $data['keyword4'][]        = '代发货';
-                        $data['keyword5']['color'] = '#333';
-                        $data['keyword5'][]        = $orderRes['pay_time'];
-                        $data['keyword6']['color'] = '#333';
-
-                        $send_data                = [];
-                        $send_data['touser']      = $user_wxinfo['openid'];
-                        $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
-                        $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $orderRes['order_no'];
-                        $send_data['form_id']     = $logPayRes['prepay_id'];
-                        $send_data['data']        = $data;
-                        // print_r(json_encode($send_data,true));die;
-                        // echo $access_token;die;
-                        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
-                        // print_r(json_encode($send_data,true));die;
-                        $result = $this->sendRequest2($requestUrl, $send_data);
-                        // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $result]);
-                    }
-                    if (!empty($memOrderData)) {//钻石订单购买
-
-                    }
-                    /* 发送模板消息代码结束 2019/04/28 */
+                    
                 } catch (\Exception $e) {
                     Db::rollback();
                     // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
