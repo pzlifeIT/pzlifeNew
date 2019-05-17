@@ -189,7 +189,7 @@ class Order extends CommonIndex {
                     'sup_id'       => $goods['supplier_id'],
                     'boss_uid'     => $buid,
                     'goods_price'  => $goods['retail_price'],
-                    'margin_price' => $this->getDistrProfits($goods['retail_price'], $goods['cost_price'], $goods['margin_price']),
+                    'margin_price' => getDistrProfits($goods['retail_price'], $goods['cost_price'], $goods['margin_price']),
                     'integral'     => $goods['integral'],
                     'goods_num'    => 1,
                     'sku_json'     => json_encode($goods['attr']),
@@ -336,8 +336,7 @@ class Order extends CommonIndex {
         $goodsSku['buySum']     = $num;
         $goodsSku['shopBuySum'] = [$shopId => $num];
         $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
-
-        $distrProfits         = $this->getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']); //可分配利润
+        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);//可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);
         $freightPrice         = bcmul($goodsSku['retail_price'], $num, 2); //同一个供应商模版id的商品价格累加
@@ -534,7 +533,7 @@ class Order extends CommonIndex {
                         'sup_id'       => $gList['supplier_id'],
                         'boss_uid'     => $shopList[$kgl] ?: 1,
                         'goods_price'  => $gList['retail_price'],
-                        'margin_price' => $this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
+                        'margin_price' => getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
                         'integral'     => $gList['integral'],
                         'goods_num'    => 1,
                         'sku_json'     => json_encode($gList['attr']),
@@ -715,8 +714,8 @@ class Order extends CommonIndex {
             $fWeight                             = bcmul($value['weight'], $cartSum, 2);
             $freightWeight[$value['freight_id']] = isset($freightWeight[$value['freight_id']]) ? bcadd($freightWeight[$value['freight_id']], $fWeight, 2) : $fWeight; //同一个供应商模版id的商品重量累加
             $fVolume                             = bcmul($value['volume'], $cartSum, 2);
-            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume; //同一个供应商模版id的商品体积累加
-            $distrProfits                        = $this->getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']); //可分配利润
+            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume;//同一个供应商模版id的商品体积累加
+            $distrProfits                        = getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
             $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
             $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2); //钻石返利
@@ -800,21 +799,6 @@ class Order extends CommonIndex {
         $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
-    }
-
-    /**
-     * 获取商品的可分配利润
-     * @param $retailPrice
-     * @param $costPrice
-     * @param $marginPrice
-     * @return string
-     * @author zyr
-     */
-    private function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
-        $otherPrice   = bcmul($retailPrice, 0.006, 4);
-        $profits      = bcsub(bcsub(bcsub($retailPrice, $costPrice, 4), $marginPrice, 4), $otherPrice, 4);//利润(售价-进价-其他成本-售价*0.006)
-        $distrProfits = bcmul($profits, 0.9, 2);//可分配利润
-        return $distrProfits;
     }
 
     /**
