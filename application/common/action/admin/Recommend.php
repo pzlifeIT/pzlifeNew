@@ -449,7 +449,7 @@ class Recommend extends CommonIndex {
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
         foreach ($goods_sku as $goods => $sku) {
-            $goods_sku[$goods]['brokerage']       = bcmul(bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 2), 0.9, 2), 0.75, 2);
+            $goods_sku[$goods]['brokerage']       = bcmul(bcmul(bcsub(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 4),bcmul($sku['retail_price'], 0.006, 4),4), 0.9, 2), 0.75, 2);
             $goods_sku[$goods]['integral_active'] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 2), 2, 0);
             $sku_json                             = DbGoods::getAttrList([['id', 'in', $sku['spec']]], 'attr_name');
             $sku_name                             = [];
