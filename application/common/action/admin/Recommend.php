@@ -489,4 +489,18 @@ class Recommend extends CommonIndex {
         }
         return ['code' => '200'];
     }
+
+    /**
+     * 重置推荐
+     * @param $id
+     * @return array
+     * @author rzc
+     */
+    public function resetRecommend(){
+        $has_recommends = $this->getRecommendOrderBy();
+        if ($has_recommends['recommends']) {
+            $this->SetRedis($has_recommends['recommends']);
+        }
+        return ['code' => '200'];
+    }
 }
