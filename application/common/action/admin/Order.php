@@ -286,7 +286,7 @@ class Order extends CommonIndex {
 
                     $send_data                = [];
                     $send_data['touser']      = $user_wxinfo['openid'];
-                    $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
+                    $send_data['template_id'] = Config::get('conf.deliver_goods_template_id');
                     $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $thisorder['order_no'];
                     $send_data['form_id']     = $logPayRes['prepay_id'];
                     $send_data['data']        = $data;
