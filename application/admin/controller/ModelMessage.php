@@ -511,7 +511,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} status 2:启用 3:停用
      * @apiParam (入参) {Number} id 查看详情传入详情ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum或者page参数错误 / 3002:id参数错误 /
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum或者page参数错误 / 3002:id参数错误 / 3003:该信息已进行过审核 / 3008:存在已启用的同类模板任务    
      * @apiSampleRequest /admin/ModelMessage/auditMessageTask
      * @apiParamExample (data) {Array} 返回用户列表
      * [
