@@ -500,4 +500,24 @@ class Recommend extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 更新推荐
+     * @apiDescription   delRecommend
+     * @apiGroup         admin_Recommend
+     * @apiName          resetRecommend
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 删除内容对应ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空，无法更改 
+     * @apiSampleRequest /admin/Recommend/resetRecommend
+     * @apiParamExample (data) {Array} 返回
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function resetRecommend (){
+        $result = $this->app->recommend->resetRecommend();
+        return $result;
+    }
 }

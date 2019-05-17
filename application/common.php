@@ -278,6 +278,21 @@ function createOrderNo($prefix = 'odr') {
 }
 
 /**
+ * 获取商品的可分配利润
+ * @param $retailPrice 商品售价
+ * @param $costPrice 商品成本价
+ * @param $marginPrice 其他成本
+ * @return decimal
+ * @author zyr
+ */
+function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
+    $otherPrice = bcmul($retailPrice, 0.006, 4);//售价的0.6%
+    $profits    = bcsub(bcsub(bcsub($retailPrice, $costPrice, 4), $marginPrice, 4), $otherPrice, 4);//利润(售价-进价-其他成本-售价*0.006)
+    $distrProfits = bcmul($profits, 0.9, 2);//可分配利润
+    return $distrProfits;
+}
+
+/**
  * 快递编码公司对应物流
  * @return array
  * @author rzc
