@@ -18,6 +18,7 @@ class Order extends CommonIndex {
     private $redisDeliverExpressList = 'cms:order:deliver:list:';
 
     public function __construct() {
+        parent::__construct();
         $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
@@ -245,14 +246,14 @@ class Order extends CommonIndex {
                     $skuids              = [];
                     $sku_num             = [];
                     $sku_name            = [];
-                    $data['keyword1'][]        = $thisorder['order_no'];
+                    $data['keyword1']['value']        = $thisorder['order_no'];
                     $data['keyword1']['color'] = '#157efb';
                     #快递单号
                     $express_word = '';
                     foreach ($has_order_express as $order => $express) {
                         $express_word = $express_word . '【' . $express['express_name'] . '】' . $express['express_no'];
                     }
-                    $data['keyword2'][]        = $express_word;
+                    $data['keyword2']['value']        = $express_word;
                     $data['keyword2']['color'] = '#333';
                     $keyword3                  = '';
                     foreach ($order_goods_data as $key => $value) {
@@ -274,15 +275,15 @@ class Order extends CommonIndex {
                     foreach ($skuids as $key => $skuid) {
                         $keyword3 = $keyword3 . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
                     }
-                    $data['keyword3'][]        = $keyword3;
+                    $data['keyword3']['value']        = $keyword3;
                     $data['keyword3']['color'] = '#333';
                     // $goo
                     // 商品名称
 
                     $data['keyword4']['color'] = '#333';
-                    $data['keyword4'][]        = $thisorder['order_money'];
+                    $data['keyword4']['value']        = $thisorder['order_money'];
                     $data['keyword5']['color'] = '#333';
-                    $data['keyword5'][]        = $thisorder['third_time'];
+                    $data['keyword5']['value']        = $thisorder['third_time'];
 
                     $send_data                = [];
                     $send_data['touser']      = $user_wxinfo['openid'];
