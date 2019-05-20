@@ -11,7 +11,7 @@ class LogApi extends Model {
     // 设置当前模型对应的完整数据表名称
     protected $table = 'pz_log_api';
     // 设置当前模型的数据库连接
-    protected $connection = '';
+    protected $connection = 'db_pzlifelog';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
     protected $autoWriteTimestamp = true;
