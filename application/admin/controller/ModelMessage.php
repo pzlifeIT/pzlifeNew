@@ -495,7 +495,7 @@ class ModelMessage extends AdminController {
         if (!in_array($type, [1, 2, 3, 4, 5])) {
             return ['code' => '3002'];
         }
-        if (!in_array($wtype, [1, 2, 3, 4, 5, 6, 7])) {
+        if (!in_array($wtype, [1, 2, 3, 4, 5, 6, 7, 8])) {
             return ['code' => '3003'];
         }
         $result = $this->app->modelmessage->editMessageTask($title, intval($type), intval($wtype), intval($mt_id), intval($trigger_id), intval($MessageTask_id));
