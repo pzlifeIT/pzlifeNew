@@ -94,6 +94,7 @@ class ModelMessage extends Pzlife {
             $get_identity = '(1,2,3,4)';
         }else{
             $get_identity = $user_identity - 1;
+            $get_identity = '(1,'.$get_identity.')';
         }
         $getUserSql ="select id,user_type,user_identity,mobile from pz_users where delete_time=0 and mobile <> "."''". " and user_identity in ".$get_identity;
         // print_r($getUserSql);die;
