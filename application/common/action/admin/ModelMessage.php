@@ -374,7 +374,7 @@ class ModelMessage extends CommonIndex {
         if (empty($message_template)) {
             return ['code' => '3004'];
         }
-        $trigger = DbModelMessage::getMessageTemplate(['id' => $trigger_id, 'status' => 2], '*', true);
+        $trigger = DbModelMessage::getTrigger(['id' => $trigger_id, 'status' => 2], '*', true);
         if (empty($trigger)) {
             return ['code' => '3005'];
         }
