@@ -410,7 +410,7 @@ class ModelMessage extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} title 标题
      * @apiParam (入参) {Number} type 发送人群  1:所有会员 2:普通会员 3:钻石会员 4:创业店主 5:合伙人
-     * @apiParam (入参) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账
+     * @apiParam (入参) {String} wtype 任务类型 1.订单发货 2.订单退款 3.未付款订单提醒 4.营销类活动 5.定时任务 6.生日祝福 7.提现到账 8.奖励金到账
      * @apiParam (入参) {Number} mt_id 短信模板id
      * @apiParam (入参) {Number} trigger_id 触发器id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未查询到该信息 / 3001:title为空 / 3002:mt_id 或者trigger_id 参数错误 / 3003:wtype错误 / 3004:该短信模板未启用或者不存在 / 3005:该触发器未启用或者不存在 / 3006:存在已启用的同类模板任务
