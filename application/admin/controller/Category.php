@@ -92,6 +92,11 @@ class Category extends AdminController {
      * 2018/12/24-14:32
      */
     public function saveAddCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [1, 2];//1.启用  2.停用
         $pid       = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
@@ -105,6 +110,7 @@ class Category extends AdminController {
             return ["code" => 3002];
         }
         $result = $this->app->category->saveAddCate($pid, $type_name, $status, $image);
+        $this->apiLog($apiName, [$cmsConId, $pid, $type_name, $status, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -156,6 +162,11 @@ class Category extends AdminController {
      * 2018/12/24-16:56
      */
     public function saveEditCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [0, 1, 2];//1.启用  2.停用
         $id        = trim(input("post.id"));
         $type_name = trim(input("post.type_name"));
@@ -169,6 +180,7 @@ class Category extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->category->saveEditCate($id, $type_name, $status, $image);
+        $this->apiLog($apiName, [$cmsConId, $id, $type_name, $status, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -197,13 +209,19 @@ class Category extends AdminController {
      * 2018/12/28-9:32
      */
     public function stopStartCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));//类型 1启用 2停用
         if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->category->stopStart($id, $type);
-        return $res;
+        $result = $this->app->category->stopStart($id, $type);
+        $this->apiLog($apiName, [$cmsConId, $id, $type], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
