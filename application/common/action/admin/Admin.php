@@ -761,8 +761,9 @@ class Admin extends CommonIndex {
         }
         // print_r($transfer);die;
         if ($transfer['wtype'] == 1) { //提现方式 1 银行
+            
+            $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty,nick_name,mobile', true);
             if ($status == 3) { //审核不通过
-                $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty,nick_name,mobile', true);
                 if ($transfer['stype'] == 2) { //2.佣金提现
                     $tradingData = [
                         'uid'          => $transfer['uid'],
@@ -785,7 +786,7 @@ class Admin extends CommonIndex {
                     ];
                 }
 
-                print_r($indexUser);die;
+                // print_r($indexUser);die;
                 Db::startTrans();
                 try {
                     if ($transfer['stype'] == 2) { //2.佣金提现
@@ -834,7 +835,7 @@ class Admin extends CommonIndex {
 
                                     $Note = new Note;
                                     $send = $Note->sendSms($indexUser['mobile'], $message_template);
-                                    print_r($send);die;
+                                    // print_r($send);die;
                                     // $thisorder['linkphone'];
                                 }
                             }
