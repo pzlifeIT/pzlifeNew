@@ -813,7 +813,7 @@ class Admin extends CommonIndex {
                     } elseif ($transfer['stype'] == 4) { //4.奖励金提现
                         $wtype = 8;
                     }
-                    $user_identity = DbUser::getUserInfo(['id' => $transfer['uid'], 'user_identity', true])['user_identity'];
+                    $user_identity = DbUser::getUserInfo(['id' => $transfer['uid']], 'user_identity', true)['user_identity'];
                     $message_task  = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', '1,' . $user_identity + 1]], 'type,mt_id,trigger_id', true);
                     if (!empty($message_task)) {
                         /* 获取触发器 */
