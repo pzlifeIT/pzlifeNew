@@ -855,9 +855,10 @@ class Admin extends CommonIndex {
                                     //匹配模板中需要查询内容
                                     $message_template = str_replace('{{[nick_name]}}', $indexUser['nick_name'], $message_template);
                                     $message_template = str_replace('{{[money]}}', $transfer['money'], $message_template);
-                                    $bankcard = substr($transfer['bank_card'],-1,4);
+                                    $bankcard = substr($transfer['bank_card'],-4,4);
                                     $message_template = str_replace('{{[bank_card]}}', '尾号为'.$bankcard.'账户', $message_template);
                                     $Note = new Note;
+                                    // $send = $Note->sendSms('17091858001', $message_template);
                                     $send = $Note->sendSms($indexUser['mobile'], $message_template);
                                     // print_r($send);die;
                                     // $thisorder['linkphone'];
