@@ -2329,7 +2329,11 @@ class User extends CommonIndex {
             array_push($where, ['invoice', '=', $invoice]);
         }
         if (!empty($status)) {
-            array_push($where, ['status', '=', $status]);
+            if ($status == 4) {
+                array_push($where, ['status', '<>', 3]);
+            } else {
+                array_push($where, ['status', '=', $status]);
+            }
         }
         if (!empty($wtype)) {
             array_push($where, ['wtype', '=', $wtype]);
