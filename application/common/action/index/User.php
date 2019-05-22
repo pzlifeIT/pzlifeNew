@@ -431,21 +431,21 @@ class User extends CommonIndex {
         // $toMonth    = strtotime(date('Y-m-01')); //当月的开始时间
         // $preMonth   = strtotime(date('Y-m-01', strtotime('-1 month'))); //上月的开始时间
         // $threeMonth = strtotime(date('Y-m-01', strtotime('-3 month'))); //近三个月
-        $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商票余额
+        $balance    = $user['balance_freeze'] == '1' ? 0 : $user['balance']; //商券余额
         $commission = $user['commission_freeze'] == '1' ? 0 : $user['commission']; //佣金余额
         $integral   = $user['integral']; //积分余额
         $balanceUse = abs(DbUser::getLogTradingSum([
-            ['trading_type', '=', '1'], //商票交易
-            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['trading_type', '=', '1'], //商券交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商券
             ['uid', '=', $uid],
             // ['create_time', '>=', $threeMonth], //近三个月
-        ], 'money')); //已用商票总额
+        ], 'money')); //已用商券总额
         $balanceAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '1'],
             ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
-        ], 'money'); //商票总额
+        ], 'money'); //商券总额
         $noBbonus = DbUser::getLogBonusSum([
             'to_uid'        => $uid,
             'user_identity' => 4, //boss身份获得的收益
@@ -474,14 +474,14 @@ class User extends CommonIndex {
             ['change_type', 'in', [3, 4, 5, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
-        ], 'money'); //商票总额
+        ], 'money'); //商券总额
         $data = [
-            'balance_all'    => $balanceAll, //商票总额
-            'balance'        => $balance, //商票余额
+            'balance_all'    => $balanceAll, //商券总额
+            'balance'        => $balance, //商券余额
             'commission'     => $commission, //佣金余额
             'commission_all' => $commissionAll, //佣金总额
             'integral'       => $integral, //积分余额
-            'balance_use'    => $balanceUse, //已使用商票
+            'balance_use'    => $balanceUse, //已使用商券
             'no_bonus'       => $noBbonus, //未到账
             'bonus'          => $bonus, //已到账返利
             'bonus_all'      => bcadd($noBbonus, $bonus, 2),
@@ -620,7 +620,7 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         $where  = [
             ['trading_type', '=', '2'], //佣金交易
-            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
             ['uid', '=', $uid],
         ];
         $field  = 'change_type,money,create_time,message';
@@ -642,7 +642,7 @@ class User extends CommonIndex {
                 $ctype = '提现';
                 break;
             case 7:
-                $ctype = '转商票';
+                $ctype = '转商券';
                 break;
             case 8:
                 $ctype = '后台充值操作';
@@ -698,12 +698,12 @@ class User extends CommonIndex {
             ['trading_type', '=', '2'],
             ['change_type', '=', 7],
             ['uid', '=', $uid],
-        ], 'money'); //佣金转商票
+        ], 'money'); //佣金转商券
         return ['code' => '200', 'commission' => $commission, 'commission_all' => $commissionAll, 'commission_extract' => abs($commissionExtract), 'commission_to_balance' => abs($commissionToBalance)];
     }
 
     /**
-     * 获取店铺商票明细
+     * 获取店铺商券明细
      * @param $conId
      * @param $stype
      * @param $page
@@ -728,8 +728,8 @@ class User extends CommonIndex {
         $data = [];
         if ($stype == 1) { //已使用
             $where = [
-                ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票
+                ['trading_type', '=', '1'], //商券交易
+                ['change_type', 'in', [1, 2]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
             ];
@@ -738,26 +738,26 @@ class User extends CommonIndex {
         }
         if ($stype == 3) { //余额明细
             $where = [
-                ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['trading_type', '=', '1'], //商券交易
+                ['change_type', 'in', [1, 2, 3, 4, 5, 7, 8, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
             ];
             $field = 'change_type,order_no,money,create_time,message';
             $data  = DbUser::getLogTrading($where, $field, false, 'id desc', $offset . ',' . $pageNum);
         }
-        if ($stype == 2) { //未结算商票
+        if ($stype == 2) { //未结算商券
             $data = DbUser::getLogBonus([
-                ['user_identity', '=', 2], //只查商票
+                ['user_identity', '=', 2], //只查商券
                 ['status', '=', '1'], //待结算(未到账的)
                 ['to_uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
-            ], 'order_no,result_price as money,create_time', false, 'id desc', $offset . ',' . $pageNum); //未结算商票
+            ], 'order_no,result_price as money,create_time', false, 'id desc', $offset . ',' . $pageNum); //未结算商券
         }
         if ($stype == 4) { //总额明细
             $where = [
-                ['trading_type', '=', '1'], //商票交易
-                ['change_type', 'in', [3, 4, 5, 8, 7, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作
+                ['trading_type', '=', '1'], //商券交易
+                ['change_type', 'in', [3, 4, 5, 8, 7, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作
                 ['money', '>', 0],
                 ['uid', '=', $uid],
                 // ['create_time', '>=', $threeMonth], //近三个月
@@ -771,10 +771,10 @@ class User extends CommonIndex {
             $trType = $d['change_type'] ?? 4;
             switch ($trType) {
             case 1:
-                $ctype = '已使用商票';
+                $ctype = '已使用商券';
                 break;
             case 2:
-                $ctype = '订单取消商票退回';
+                $ctype = '订单取消商券退回';
                 break;
             case 4:
                 $ctype = '钻石再让利';
@@ -795,11 +795,11 @@ class User extends CommonIndex {
         }
         // print_r($data);die;
         return ['code' => '200', 'data' => $result];
-        //商票退款  已使用商票   钻石会员邀请奖励  钻石返利
+        //商券退款  已使用商券   钻石会员邀请奖励  钻石返利
     }
 
     /**
-     * 个人中心我的商票
+     * 个人中心我的商券
      * @param {type}
      * @return array
      * @author zyr
@@ -813,27 +813,27 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        $balance = $user['balance']; //商票余额
-        if ($user['balance_freeze'] == 1) { //商票冻结
+        $balance = $user['balance']; //商券余额
+        if ($user['balance_freeze'] == 1) { //商券冻结
             $balance = 0;
         }
         $balanceUse = abs(DbUser::getLogTradingSum([
-            ['trading_type', '=', '1'], //商票交易
-            ['change_type', 'in', [1, 2]], //消费和取消订单退还商票
+            ['trading_type', '=', '1'], //商券交易
+            ['change_type', 'in', [1, 2]], //消费和取消订单退还商券
             ['uid', '=', $uid],
-        ], 'money')); //已用商票
+        ], 'money')); //已用商券
         $noBbonus = DbUser::getLogBonusSum([
             'to_uid'     => $uid,
             'bonus_type' => 1, //返利
             'status'     => 1, //待结算的
             // 'bonus_type'    => 2, //经营性收益
-        ], 'result_price'); //待到账商票
+        ], 'result_price'); //待到账商券
         $balanceAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '1'],
             ['change_type', 'in', [3, 4, 5, 7, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
-        ], 'money'); //商票总额
+        ], 'money'); //商券总额
         return ['code' => '200', 'balance' => $balance, 'balanceUse' => $balanceUse, 'balanceAll' => $balanceAll, 'noBbonus' => $noBbonus];
     }
 
@@ -1048,10 +1048,10 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         // $memberUse = DbUser::getLogTrading([
         //     ['trading_type', '=', '2'], //佣金交易
-        //     ['change_type', '=', 5], //消费和取消订单退还商票
+        //     ['change_type', '=', 5], //消费和取消订单退还商券
         //     ['uid', '=', $uid],
         //     // ['create_time', '>=', $threeMonth], //近三个月
-        // ], 'money,order_no,create_time', false, 'id desc', $offset . ',' . $pageNum); //已用商票总额
+        // ], 'money,order_no,create_time', false, 'id desc', $offset . ',' . $pageNum); //已用商券总额
         $memberUse = DbUser::getLogInvest([
             ['uid', '=', $uid],
             ['status', '=', '3'],
@@ -1099,7 +1099,7 @@ class User extends CommonIndex {
         }
         $where = [
             ['trading_type', '=', '1'], //佣金交易
-            ['change_type', 'in', [3, 6, 7, 8, 9]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+            ['change_type', 'in', [3, 6, 7, 8, 9]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
             ['uid', '=', $uid],
         ];
         $field  = 'change_type,money,create_time,message';
@@ -1116,7 +1116,7 @@ class User extends CommonIndex {
                 $ctype = '提现';
                 break;
             case 7:
-                $ctype = '转商票';
+                $ctype = '转商券';
                 break;
             case 8:
                 $ctype = '后台充值操作';
@@ -1787,10 +1787,10 @@ class User extends CommonIndex {
     }
 
     /**
-     * 用户转商票
+     * 用户转商券
      * @param $conId
      * @param $money
-     * @param $type 1.佣金转商票,2.奖励金转商票
+     * @param $type 1.佣金转商券,2.奖励金转商券
      * @return string
      * @author rzc
      */
@@ -1804,14 +1804,14 @@ class User extends CommonIndex {
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        if ($type == 1) { //1.佣金转商票
+        if ($type == 1) { //1.佣金转商券
             if ($userInfo['commission'] <= 0) {
                 return ['code' => '3005'];
             }
             if ($userInfo['commission'] - $money < 0) {
                 return ['code' => '3005'];
             }
-        } elseif ($type == 2) { //2.奖励金转商票
+        } elseif ($type == 2) { //2.奖励金转商券
             if ($userInfo['bounty'] <= 0) {
                 return ['code' => '3005'];
             }
@@ -1823,9 +1823,9 @@ class User extends CommonIndex {
         $transfer           = [];
         $transfer['uid']    = $uid;
         $transfer['status'] = 2;
-        if ($type == 1) { //1.佣金转商票
+        if ($type == 1) { //1.佣金转商券
             $transfer['stype'] = 1;
-        } elseif ($type == 2) { //2.奖励金转商票
+        } elseif ($type == 2) { //2.奖励金转商券
             $transfer['stype'] = 3;
         }
         $transfer['wtype']      = 4;
@@ -1833,7 +1833,7 @@ class User extends CommonIndex {
         $transfer['proportion'] = 0;
         $transfer['invoice']    = 2;
         //扣除佣金
-        if ($type == 1) { //1.佣金转商票
+        if ($type == 1) { //1.佣金转商券
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 2,
@@ -1843,7 +1843,7 @@ class User extends CommonIndex {
                 'after_money'  => bcsub($userInfo['commission'], $money, 2),
                 // 'message'      => $remittance['message'],
             ];
-        } elseif ($type == 2) { //2.奖励金转商票
+        } elseif ($type == 2) { //2.奖励金转商券
             $tradingData = [
                 'uid'          => $uid,
                 'trading_type' => 3,
@@ -1855,7 +1855,7 @@ class User extends CommonIndex {
             ];
         }
 
-        //增加商票日志
+        //增加商券日志
         if ($type == 2) {
             // $money = bcmul($money, 1.25, 2);
             $addtrading = [
@@ -1886,9 +1886,9 @@ class User extends CommonIndex {
         Db::startTrans();
         try {
             DbUser::addLogTransfer($transfer);
-            if ($type == 1) { //1.佣金转商票
+            if ($type == 1) { //1.佣金转商券
                 DbUser::modifyCommission($uid, $money);
-            } elseif ($type == 2) { //2.奖励金转商票
+            } elseif ($type == 2) { //2.奖励金转商券
                 // $money = bcdiv($money, 1.25, 2);
                 DbUser::modifyBounty($uid, $money);
             }

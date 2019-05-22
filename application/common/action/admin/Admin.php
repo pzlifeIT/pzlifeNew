@@ -313,7 +313,7 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 商票,佣金,积分手动充值
+     * 商券,佣金,积分手动充值
      * @param $cmsConId 加密的内容
      * @param $passwd
      * @param $stype
@@ -357,7 +357,7 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 商票,佣金,积分手动充值
+     * 商券,佣金,积分手动充值
      * @param $cmsConId 加密的内容
      * @param $status
      * @return string
@@ -384,7 +384,7 @@ class Admin extends CommonIndex {
         }
         if ($remittance['stype'] != 3) {
 
-            if ($remittance['stype'] == 1) { //商票
+            if ($remittance['stype'] == 1) { //商券
                 $tradingData = [
                     'uid'          => $remittance['uid'],
                     'trading_type' => 1,
@@ -412,7 +412,7 @@ class Admin extends CommonIndex {
                     DbOrder::addLogTrading($tradingData);
                 }
 
-                if ($remittance['stype'] == 1) { //商票
+                if ($remittance['stype'] == 1) { //商券
                     DbUser::modifyBalance($remittance['uid'], $remittance['credit'], 'inc');
                 } elseif ($remittance['stype'] == 2) { //佣金
                     DbUser::modifyCommission($remittance['uid'], $remittance['credit'], 'inc');

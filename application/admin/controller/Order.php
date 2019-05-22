@@ -30,11 +30,11 @@ class Order extends AdminController {
      * @apiSuccess (data) {String} uid 用户id
      * @apiSuccess (data) {String} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
      * @apiSuccess (data) {String} order_money 订单金额(优惠金额+实际支付的金额)
-     * @apiSuccess (data) {String} deduction_money 商票抵扣金额
-     * @apiSuccess (data) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (data) {String} deduction_money 商券抵扣金额
+     * @apiSuccess (data) {String} pay_money 实际支付(第三方支付金额+商券抵扣金额)
      * @apiSuccess (data) {String} goods_money 商品金额
      * @apiSuccess (data) {String} discount_money 优惠金额
-     * @apiSuccess (data) {String} pay_type 支付类型 1.所有第三方支付 2.商票
+     * @apiSuccess (data) {String} pay_type 支付类型 1.所有第三方支付 2.商券
      * @apiSuccess (data) {String} third_money 第三方支付金额
      * @apiSuccess (data) {String} third_pay_type 第三方支付类型1.支付宝 2.微信 3.银联
      * @apiSampleRequest /admin/Order/getOrders
@@ -94,11 +94,11 @@ class Order extends AdminController {
      * @apiSuccess (order_info) {String} uid 用户id
      * @apiSuccess (order_info) {String} order_status 订单状态   1:待付款 2:取消订单 3:已关闭 4:已付款 5:已发货 6:已收货 7:待评价 8:退款申请确认 9:退款中 10:退款成功
      * @apiSuccess (order_info) {String} order_money 订单金额(优惠金额+实际支付的金额)
-     * @apiSuccess (order_info) {String} deduction_money 商票抵扣金额
-     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_info) {String} deduction_money 商券抵扣金额
+     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商券抵扣金额)
      * @apiSuccess (order_info) {String} goods_money 商品金额
      * @apiSuccess (order_info) {String} discount_money 优惠金额
-     * @apiSuccess (order_info) {String} pay_type 支付类型 1.所有第三方支付 2.商票
+     * @apiSuccess (order_info) {String} pay_type 支付类型 1.所有第三方支付 2.商券
      * @apiSuccess (order_info) {String} third_money 第三方支付金额
      * @apiSuccess (order_info) {String} linkman 订单联系人
      * @apiSuccess (order_info) {String} linkphone 联系人电话

@@ -21,8 +21,8 @@ class Rights extends AdminController {
      * @apiParam (入参) {Number} mobile 会员手机号
      * @apiParam (入参) {String} linkman 会员姓名
      * @apiParam (入参) {Number} stock 库存
-     * @apiParam (入参) {Numeric} coupon_money 被分享用户将获得活动商票
-     * @apiParam (入参) {Number} redmoney_status 商票状态 1:直接领取 2:分享激活后获得
+     * @apiParam (入参) {Numeric} coupon_money 被分享用户将获得活动商券
+     * @apiParam (入参) {Number} redmoney_status 商券状态 1:直接领取 2:分享激活后获得
      * @apiParam (入参) {Number} type 使用类型 1:分享使用 2:绑定二维码链接
      * @apiSuccess (返回) {String} code 200:成功 / 3001:手机号格式错误 / 3002:stock或者coupon_money或者redmoney_status或者type必须是数字 / 3005:超出金额设置范围
      * @apiSuccess (data) {object_array} data 结果

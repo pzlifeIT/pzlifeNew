@@ -60,7 +60,7 @@ class Order extends CommonIndex {
             }
             DbOrder::updataOrder($data, $order['id']); //改订单状态
             if ($order['deduction_money'] != 0) {
-                DbUser::modifyBalance($uid, $order['deduction_money'], 'inc'); //退还用户商票
+                DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商券
             }
 //            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
             //            DbOrder::updateLogIntegral(['status' => 3], ['order_no' => $orderNo]);//待结算积分取消结算(待付款取消的订单还未结算分利和积分不需要取消)
@@ -218,20 +218,20 @@ class Order extends CommonIndex {
          * 子订单内容
          */
 
-        $orderNo        = createOrderNo(); //创建订单号
-        $deductionMoney = 0; //商票抵扣金额
-        $thirdMoney     = 0; //第三方支付金额
-        $discountMoney  = 0; //优惠金额
+        $orderNo        = createOrderNo();//创建订单号
+        $deductionMoney = 0;//商券抵扣金额
+        $thirdMoney     = 0;//第三方支付金额
+        $discountMoney  = 0;//优惠金额
         $isPay          = false;
-        $tradingData    = []; //交易日志
-        if ($payType == 2) { //商票支付
+        $tradingData    = [];//交易日志
+        if ($payType == 2) {//商券支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
-            if ($userInfo['balance_freeze'] == '2') { //商票未冻结
+            if ($userInfo['balance_freeze'] == '2') {//商券未冻结
                 if ($summary['total_price'] > $userInfo['balance']) {
-                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0; //可支付的商票
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商券
                     $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
                 } else {
-                    $isPay          = true; //可以直接商票支付完成
+                    $isPay          = true;//可以直接商券支付完成
                     $deductionMoney = $summary['total_price'];
                 }
             } else {
@@ -255,12 +255,12 @@ class Order extends CommonIndex {
             'third_order_id'  => 0,
             'uid'             => $uid,
             'order_status'    => $isPay ? 4 : 1,
-            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2), //订单金额(优惠金额+实际支付的金额)
-            'deduction_money' => $deductionMoney, //商票抵扣金额
-            'pay_money'       => $summary['total_price'], //实际支付(第三方支付金额+商票抵扣金额)
-            'goods_money'     => $summary['total_goods_price'], //商品金额
-            'third_money'     => $thirdMoney, //第三方支付金额
-            'discount_money'  => $discountMoney, //优惠金额
+            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney,//商券抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商券抵扣金额)
+            'goods_money'     => $summary['total_goods_price'],//商品金额
+            'third_money'     => $thirdMoney,//第三方支付金额
+            'discount_money'  => $discountMoney,//优惠金额
             'pay_type'        => $payType,
             'third_pay_type'  => 2, //第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
             'linkman'         => $userAddress['name'],
@@ -483,7 +483,7 @@ class Order extends CommonIndex {
      * @param $conId
      * @param $skuIdList 1,2,3
      * @param $userAddressId 1 收货地址id
-     * @param $payType 2 支付方式1:所有第三方支付2:商票支付
+     * @param $payType 2 支付方式1:所有第三方支付2:商券支付
      * @return array
      * @author zyr
      */
@@ -564,20 +564,20 @@ class Order extends CommonIndex {
         /*
          * 子订单内容
          */
-        $orderNo        = createOrderNo(); //创建订单号
-        $deductionMoney = 0; //商票抵扣金额
-        $thirdMoney     = 0; //第三方支付金额
-        $discountMoney  = 0; //优惠金额
+        $orderNo        = createOrderNo();//创建订单号
+        $deductionMoney = 0;//商券抵扣金额
+        $thirdMoney     = 0;//第三方支付金额
+        $discountMoney  = 0;//优惠金额
         $isPay          = false;
-        $tradingData    = []; //交易日志
-        if ($payType == 2) { //商票支付
+        $tradingData    = [];//交易日志
+        if ($payType == 2) {//商券支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
-            if ($userInfo['balance_freeze'] == '2') { //商票未冻结
+            if ($userInfo['balance_freeze'] == '2') {//商券未冻结
                 if ($summary['total_price'] > $userInfo['balance']) {
-                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0; //可支付的商票
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商券
                     $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
                 } else {
-                    $isPay          = true; //可以直接商票支付完成
+                    $isPay          = true;//可以直接商券支付完成
                     $deductionMoney = $summary['total_price'];
                 }
             } else {
@@ -601,12 +601,12 @@ class Order extends CommonIndex {
             'third_order_id'  => 0,
             'uid'             => $uid,
             'order_status'    => $isPay ? 4 : 1,
-            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2), //订单金额(优惠金额+实际支付的金额)
-            'deduction_money' => $deductionMoney, //商票抵扣金额
-            'pay_money'       => $summary['total_price'], //实际支付(第三方支付金额+商票抵扣金额)
-            'goods_money'     => $summary['total_goods_price'], //商品金额
-            'third_money'     => $thirdMoney, //第三方支付金额
-            'discount_money'  => $discountMoney, //优惠金额
+            'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney,//商券抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商券抵扣金额)
+            'goods_money'     => $summary['total_goods_price'],//商品金额
+            'third_money'     => $thirdMoney,//第三方支付金额
+            'discount_money'  => $discountMoney,//优惠金额
             'pay_type'        => $payType,
             'third_pay_type'  => 2, //第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
             'linkman'         => $userAddress['name'],

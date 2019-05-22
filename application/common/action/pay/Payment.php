@@ -23,9 +23,9 @@ class Payment {
     }
 
     public function payment($orderNo, int $payment, int $platform) {
-        $orderOutTime = Config::get('conf.order_out_time'); //订单过期时间
-        if ($payment == 2) { //购买会员订单
-            $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商票
+        $orderOutTime = Config::get('conf.order_out_time');//订单过期时间
+        if ($payment == 2) {//购买会员订单
+            $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商券
             $memberOrderRow = $this->memberDiamond($orderNo);
             if (empty($memberOrderRow)) {
                 return ['code' => '3000']; //订单号不存在
@@ -72,9 +72,9 @@ class Payment {
             }
             $orderId      = $nomalOrder['id'];
             $uid          = $nomalOrder['uid'];
-            $payType      = $nomalOrder['pay_type']; //支付类型 1.所有第三方支付 2.商票
-            $thirdPayType = $nomalOrder['third_pay_type']; //第三方支付类型1.支付宝 2.微信 3.银联
-            $thirdMoney   = $nomalOrder['third_money']; //第三方支付金额
+            $payType      = $nomalOrder['pay_type'];//支付类型 1.所有第三方支付 2.商券
+            $thirdPayType = $nomalOrder['third_pay_type'];//第三方支付类型1.支付宝 2.微信 3.银联
+            $thirdMoney   = $nomalOrder['third_money'];//第三方支付金额
             $logTypeRow   = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
             if (!empty($logTypeRow)) {
                 return ['code' => '3008']; //第三方支付已付款

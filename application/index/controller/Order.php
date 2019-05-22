@@ -27,8 +27,8 @@ class Order extends MyController {
      * @apiSuccess (order_list) {String} third_order_id 三方订单号
      * @apiSuccess (order_list) {String} order_status 订单状态
      * @apiSuccess (order_list) {String} order_money 订单金额(优惠金额+实际支付的金额)
-     * @apiSuccess (order_list) {String} deduction_money 商票抵扣金额
-     * @apiSuccess (order_list) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_list) {String} deduction_money 商券抵扣金额
+     * @apiSuccess (order_list) {String} pay_money 实际支付(第三方支付金额+商券抵扣金额)
      * @apiSuccess (order_list) {String} goods_money 商品金额
      * @apiSuccess (order_list) {String} discount_money 优惠金额
      * @apiSuccess (order_list) {String} third_money 第三方支付金额
@@ -105,8 +105,8 @@ class Order extends MyController {
      * @apiSuccess (order_info) {String} third_order_id 三方订单号
      * @apiSuccess (order_info) {String} order_status 订单状态
      * @apiSuccess (order_info) {String} order_money 订单金额(优惠金额+实际支付的金额)
-     * @apiSuccess (order_info) {String} deduction_money 商票抵扣金额
-     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商票抵扣金额)
+     * @apiSuccess (order_info) {String} deduction_money 商券抵扣金额
+     * @apiSuccess (order_info) {String} pay_money 实际支付(第三方支付金额+商券抵扣金额)
      * @apiSuccess (order_info) {String} goods_money 商品金额
      * @apiSuccess (order_info) {String} discount_money 优惠金额
      * @apiSuccess (order_info) {String} third_money 第三方支付金额
@@ -174,7 +174,7 @@ class Order extends MyController {
      * @apiSuccess (返回) {Float} total_price 价格总计
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
-     * @apiSuccess (返回) {Float} balance 账户的商票余额
+     * @apiSuccess (返回) {Float} balance 账户的商券余额
      * @apiSuccess (supplier_list) {Int} id 供应商id
      * @apiSuccess (supplier_list) {String} name 供应商name
      * @apiSuccess (supplier_list) {String} image 供应商image
@@ -239,11 +239,11 @@ class Order extends MyController {
      * @apiParam (入参) {String} buid 推荐人
      * @apiParam (入参) {Number} sku_id 购买的skuid
      * @apiParam (入参) {Number} user_address_id 用户选择的地址
-     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商票支付
+     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
      * @apiParam (入参) {Number} [num] 购买数量
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败
      * @apiSuccess (返回) {String} order_no 订单号
-     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商票) 2.需要发起第三方支付
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/quickcreateorder
      * @author zyr
      */
@@ -297,7 +297,7 @@ class Order extends MyController {
      * @apiSuccess (返回) {Float} total_price 价格总计
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
-     * @apiSuccess (返回) {Float} balance 账户的商票余额
+     * @apiSuccess (返回) {Float} balance 账户的商券余额
      * @apiSuccess (返回) {Int} default_address_id 默认地址(0表示没有地址)
      * @apiSuccess (supplier_list) {Int} id 供应商id
      * @apiSuccess (supplier_list) {String} name 供应商name
@@ -358,10 +358,10 @@ class Order extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
-     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商票支付
+     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败
      * @apiSuccess (返回) {String} order_no 订单号
-     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商票) 2.需要发起第三方支付
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/createorder
      * @author zyr
      */
