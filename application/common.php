@@ -286,9 +286,10 @@ function createOrderNo($prefix = 'odr') {
  * @author zyr
  */
 function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
-    $otherPrice = bcmul($retailPrice, 0.006, 4);//售价的0.6%
-    $profits    = bcsub(bcsub(bcsub($retailPrice, $costPrice, 4), $marginPrice, 4), $otherPrice, 4);//利润(售价-进价-其他成本-售价*0.006)
+    $otherPrice   = bcmul($retailPrice, 0.006, 4);//售价的0.6%
+    $profits      = bcsub(bcsub(bcsub($retailPrice, $costPrice, 4), $marginPrice, 4), $otherPrice, 4);//利润(售价-进价-其他成本-售价*0.006)
     $distrProfits = bcmul($profits, 0.9, 2);//可分配利润
+    $distrProfits = $distrProfits < 0 ? 0 : $distrProfits;
     return $distrProfits;
 }
 
