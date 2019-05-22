@@ -90,7 +90,7 @@ class TemporaryScript extends Pzlife {
 //                            ]
 //                        );
 //                    }
-//                    //商票
+//                    //商券
 //                    if ($member_count[0]['redmoney'] > 0) {
 //                        Db::table('pz_log_trading')->insert(
 //                            [
