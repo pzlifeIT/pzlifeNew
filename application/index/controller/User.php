@@ -1265,7 +1265,7 @@ class User extends MyController {
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
      * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
      * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
+     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消 4.查询为不取消的信息
      * @apiParam (入参) {String} [start_time] 开始时间
      * @apiParam (入参) {String} [end_time] 结束时间
      * @apiParam (入参) {String} [id] 查询ID（查看详情时返回单条数据）
@@ -1377,7 +1377,7 @@ class User extends MyController {
             }
         }
         if (!empty($status)) {
-            if (!in_array($status, [1, 2, 3])) {
+            if (!in_array($status, [1, 2, 3, 4])) {
                 return ['code' => '3012'];
             }
         }
