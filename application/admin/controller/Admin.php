@@ -146,18 +146,18 @@ class Admin extends AdminController {
     }
 
     /**
-     * @api              {post} / cms 商票,佣金,积分手动充值
+     * @api              {post} / cms 商券,佣金,积分手动充值
      * @apiDescription   adminRemittance
      * @apiGroup         admin_admin
      * @apiName          adminRemittance
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} passwd 用户密码
-     * @apiParam (入参) {String} stype 添加类型 1.商票 2.佣金 3.积分
+     * @apiParam (入参) {String} stype 添加类型 1.商券 2.佣金 3.积分
      * @apiParam (入参) {String} nick_name 前台用户昵称
      * @apiParam (入参) {String} mobile 前台用户昵称
      * @apiParam (入参) {String} credit 收款金额(充值金额)
      * @apiParam (入参) {String} message 详细描述
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:请输入转入类型 / 3003:错误的转账类型 / 3004:充值用户不存在  / 3005:credit必须为数字 / 3006:扣款金额不能大于用户余额(商票) / 3007:充值用户昵称不能为空 / 3008:手机号格式错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:请输入转入类型 / 3003:错误的转账类型 / 3004:充值用户不存在  / 3005:credit必须为数字 / 3006:扣款金额不能大于用户余额(商券) / 3007:充值用户昵称不能为空 / 3008:手机号格式错误
      * @apiSampleRequest /admin/admin/adminRemittance
      * @return array
      * @author rzc
@@ -200,7 +200,7 @@ class Admin extends AdminController {
     }
 
     /**
-     * @api              {post} / cms 审核商票,佣金,积分手动充值
+     * @api              {post} / cms 审核商券,佣金,积分手动充值
      * @apiDescription   auditAdminRemittance
      * @apiGroup         admin_admin
      * @apiName          auditAdminRemittance
@@ -331,7 +331,7 @@ class Admin extends AdminController {
      * @apiParam (入参) {String} [min_credit] 最小收款金额
      * @apiParam (入参) {String} [max_credit] 最大收款金额
      * @apiParam (入参) {String} [uid] 收款账户id 前台用户加密ID
-     * @apiParam (入参) {String} [stype] 添加类型 1.商票 2.佣金 3.积分
+     * @apiParam (入参) {String} [stype] 添加类型 1.商券 2.佣金 3.积分
      * @apiParam (入参) {String} [start_time] 创建起始时间
      * @apiParam (入参) {String} [end_time] 创建中止时间
      * @apiParam (入参) {Number} [page] 当前页 默认1
@@ -600,8 +600,8 @@ class Admin extends AdminController {
      * @apiParam (入参) {Number} [bank_card] 银行卡号
      * @apiParam (入参) {String} [bank_mobile] 银行开户手机号
      * @apiParam (入参) {String} [user_name] 银行开户人
-     * @apiParam (入参) {String} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiParam (入参) {String} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiParam (入参) {String} [stype] 类型 1.佣金转商券 2.佣金提现 3.奖励金转商券 4. 奖励金提现
+     * @apiParam (入参) {String} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商券
      * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
      * @apiParam (入参) {Number} [min_money] 用户转出最小金额
@@ -622,8 +622,8 @@ class Admin extends AdminController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现
-     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商券 2.佣金提现
+     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商券
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
      * @apiSuccess (log_transfer) {String} invoice 是否提供发票 1:提供 2:不提供

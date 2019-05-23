@@ -244,7 +244,7 @@ class DbUser {
     }
 
     /**
-     * 改商票余额
+     * 改商券余额
      * @param $uid
      * @param $balance
      * @param string $modify 增加/减少 inc/dec
