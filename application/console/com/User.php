@@ -315,10 +315,11 @@ class User extends Pzlife {
 
     /**
      * 定时清理redis无效的cms_con_id
+     * 每天凌晨2点执行,查过24小时未登录过就过期
      */
     public function clearCmsConId() {
         $this->redis       = Phpredis::getConn();
-        $lastTime          = time() - 172800;//2天前
+        $lastTime          = time() - 86400;//2天前
         $redisCmsConIdTime = Config::get('rediskey.user.redisCmsConIdTime');
         $redisCmsConIdUid  = Config::get('rediskey.user.redisCmsConIdUid');
         $res               = $this->redis->zRangeByScore($redisCmsConIdTime, 0, $lastTime);
