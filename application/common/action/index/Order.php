@@ -929,6 +929,11 @@ class Order extends CommonIndex {
             }
             $result[$key]['express_money'] = $express_money;
             $result[$key]['integral']      = $integral;
+            if ($commission) {
+                $user_identity = DbUser::getLogBonus(['order_no'=>$value['order_no'],'to_uid' => $uid],'user_identity',true);
+                $commission = empty($user_identity) ? 0: $commission ;
+
+            }
             $result[$key]['commission']    = $commission;
             $result[$key]['order_child']   = $order_child;
             unset($result[$key]['id']);
@@ -985,6 +990,10 @@ class Order extends CommonIndex {
         }
         $result['express_money'] = $express_money;
         $result['integral']      = $integral;
+        if ($commission) {
+            $user_identity = DbUser::getLogBonus(['order_no'=>$result['order_no'],'to_uid' => $uid],'user_identity',true);
+            $commission = empty($user_identity) ? 0: $commission ;
+        }
         $result['commission']    = $commission;
         $result['order_child']   = $order_child;
         $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
