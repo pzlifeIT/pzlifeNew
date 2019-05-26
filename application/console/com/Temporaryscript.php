@@ -115,8 +115,55 @@ class TemporaryScript extends Pzlife {
             // Db::table('pz_users')->where('id', $user[0]['id'])->update(['mobile' => '17891936793']);
 
             /* 因政策调整，所有合伙人免费钻石卡全部关停作废 */
-            Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
-            
+            // Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
+
+            /* 2019/05/25 挂人关系调整 活动用户挂在王金  23926 下面*/
+            $user    = Db::query("SELECT * FROM pz_users WHERE `create_time` > '1558713600' AND `create_time` < '1558780200' AND delete_time=0 ");
+            foreach ($user as $key => $value) {
+                $relation = Db::query("SELECT * FROM pz_user_relation WHERE `uid` = ".$value['id']);
+                if ($relation) {
+                    $pid = $relation[0]['pid'] ? 1 : 23926;
+                    $user_relation = '23926,'.$relation[0]['relation'];
+                    Db::table('pz_user_relation')->where('id', $value['id'])->update(['pid' => $pid,'relation' => $user_relation]);
+                }
+            }
+            /* 老商城未注册会员变成以阅读数量*/
+
+            $mysql_connect = Db::connect(Config::get('database.db_config'));
+            ini_set('memory_limit', '1024M');
+            $password   = hash_hmac('sha1', '123456', 'userpass');
+            $member     = "SELECT * FROM pre_member  ";
+            $memberdata = $mysql_connect->query($member);
+            foreach ($memberdata as $key => $value) {
+                $member_relationship = $mysql_connect->query('SELECT * FROM pre_member_relationship WHERE `uid` = ' . $value['uid']);
+                if (!$member_relationship) {
+                        continue;
+                }
+                $user_union = $mysql_connect->query("SELECT * FROM pre_member_wxunion WHERE `uid` = ".$value['uid']);
+                $user_openid = $mysql_connect->query("SELECT * FROM pre_member_weixin WHERE `uid` = ".$value['uid']);
+                $hierarchy = json_decode($member_relationship[0]['hierarchy']);
+                if (empty($user_openid)) {
+                    continue;
+                }
+                if ($user_union) {
+                    $new_database = Db::query('SELECT * FROM pz_users WHERE `unionid` = '.$user_union[0]['unionid']);
+                    if ($new_database) {//已注册
+                        continue;   
+                    }
+                }
+                if ($hierarchy) {
+                    foreach ($hierarchy as $hie => $chy) {
+                        if (!Db::query("SELECT * FROM pz_user_read WHERE `view_uid` = ".$chy. " `openid` = ".$user_openid[0]['wx_openid'])) {
+                            $view_user = Db::query("SELECT `user_identity` FROM  pz_users WHERE `id` = ".$chy);
+                            if (empty($view_user)) {
+                                continue;
+                            }
+                            Db::table("pz_user_read")->insert(['openid' => $user_openid[0]['wx_openid'],'view_uid' => $chy,'view_identity' => $view_user[0]['user_identity']]);
+                        }
+                    }
+                }
+            }
+
             Db::commit();
        } catch (\Exception $e) {
            // 回滚事务
