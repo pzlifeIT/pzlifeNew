@@ -246,6 +246,9 @@ class User extends CommonIndex {
             $uid = $user['id'];
         }
         $cipherPassword = $this->getPassword($password, $this->cipherUserKey); //加密后的password
+        if (empty($wxInfo['nickname'])) {
+            return ['code' => 3005];
+        }
         $data           = [
             'mobile'    => $mobile,
             'passwd'    => $cipherPassword,
