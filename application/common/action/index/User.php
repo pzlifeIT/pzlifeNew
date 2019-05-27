@@ -36,7 +36,7 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3002'];
         }
-        $uid  = $user['id'];
+        $uid = $user['id'];
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -130,6 +130,9 @@ class User extends CommonIndex {
                     'mobile' => $mobile,
                 ];
             } else { //新用户
+                if (empty($wxInfo['nickname'])) {
+                    return ['code' => 3005];
+                }
                 $addData = [
                     'mobile'    => $mobile,
                     'unionid'   => $wxInfo['unionid'],
@@ -446,7 +449,7 @@ class User extends CommonIndex {
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商券总额
-        $noBbonus = DbUser::getLogBonusSum([
+        $noBbonus   = DbUser::getLogBonusSum([
             'to_uid'        => $uid,
             'user_identity' => 4, //boss身份获得的收益
             'status'        => 1, //待结算的
@@ -465,7 +468,7 @@ class User extends CommonIndex {
         //     ['uid', '=', $uid],
         //     // ['create_time', '>=', $threeMonth], //近三个月
         // ], 'money'); //招商加盟收益
-        $merchants = DbUser::getLogInvestSum([
+        $merchants     = DbUser::getLogInvestSum([
             ['uid', '=', $uid],
             ['status', '=', 3],
         ], 'cost'); //招商加盟收益
@@ -475,7 +478,7 @@ class User extends CommonIndex {
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商券总额
-        $data = [
+        $data          = [
             'balance_all'    => $balanceAll, //商券总额
             'balance'        => $balance, //商券余额
             'commission'     => $commission, //佣金余额
@@ -525,18 +528,18 @@ class User extends CommonIndex {
         $en = '=';
         $bn = '2';
         switch ($stype) {
-        case 1:
-            $en = '=';
-            break;
-        case 2:
-            $en = '<>';
-            break;
-        case 3:
-            $en = '<>';
-            $bn = '3';
-            break;
+            case 1:
+                $en = '=';
+                break;
+            case 2:
+                $en = '<>';
+                break;
+            case 3:
+                $en = '<>';
+                $bn = '3';
+                break;
         }
-        $where = [
+        $where  = [
             ['to_uid', '=', $uid],
             ['status', '=', $status],
             ['user_identity', '=', 4], //只查boss身份时的分利
@@ -629,33 +632,33 @@ class User extends CommonIndex {
         foreach ($data as $d) {
             $trType = $d['change_type'];
             switch ($trType) {
-            case 3:
-                $ctype = '充值';
-                break;
-            case 4:
-                $ctype = '订单收益';
-                break;
-            case 5:
-                $ctype = '招商代理收益';
-                break;
-            case 6:
-                $ctype = '提现';
-                break;
-            case 7:
-                $ctype = '转商券';
-                break;
-            case 8:
-                $ctype = '后台充值操作';
-                break;
-            case 9:
-                $ctype = '开通boss预扣款';
-                break;
-            case 10:
-                $ctype = '提现审核不通过退回';
-                break;
-            case 11:
-                $ctype = '老商城转入';
-                break;
+                case 3:
+                    $ctype = '充值';
+                    break;
+                case 4:
+                    $ctype = '订单收益';
+                    break;
+                case 5:
+                    $ctype = '招商代理收益';
+                    break;
+                case 6:
+                    $ctype = '提现';
+                    break;
+                case 7:
+                    $ctype = '转商券';
+                    break;
+                case 8:
+                    $ctype = '后台充值操作';
+                    break;
+                case 9:
+                    $ctype = '开通boss预扣款';
+                    break;
+                case 10:
+                    $ctype = '提现审核不通过退回';
+                    break;
+                case 11:
+                    $ctype = '老商城转入';
+                    break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['message']);
@@ -683,13 +686,13 @@ class User extends CommonIndex {
         if ($user['commission_freeze'] == 1) { //佣金冻结
             $commission = 0;
         }
-        $commissionAll = DbUser::getLogTradingSum([
+        $commissionAll       = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
             ['change_type', 'in', [3, 4, 5, 8, 11]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //佣金总额
-        $commissionExtract = DbUser::getLogTradingSum([
+        $commissionExtract   = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
             ['change_type', 'in', [6, 10]],
             ['uid', '=', $uid],
@@ -770,24 +773,24 @@ class User extends CommonIndex {
         foreach ($data as $d) {
             $trType = $d['change_type'] ?? 4;
             switch ($trType) {
-            case 1:
-                $ctype = '已使用商券';
-                break;
-            case 2:
-                $ctype = '订单取消商券退回';
-                break;
-            case 4:
-                $ctype = '钻石再让利';
-                break;
-            case 5:
-                $ctype = '钻石会员邀请奖励';
-                break;
-            case 7:
-                $ctype = '佣金转入';
-                break;
-            case 8:
-                $ctype = '后台充值操作';
-                break;
+                case 1:
+                    $ctype = '已使用商券';
+                    break;
+                case 2:
+                    $ctype = '订单取消商券退回';
+                    break;
+                case 4:
+                    $ctype = '钻石再让利';
+                    break;
+                case 5:
+                    $ctype = '钻石会员邀请奖励';
+                    break;
+                case 7:
+                    $ctype = '佣金转入';
+                    break;
+                case 8:
+                    $ctype = '后台充值操作';
+                    break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['change_type']);
@@ -822,7 +825,7 @@ class User extends CommonIndex {
             ['change_type', 'in', [1, 2]], //消费和取消订单退还商券
             ['uid', '=', $uid],
         ], 'money')); //已用商券
-        $noBbonus = DbUser::getLogBonusSum([
+        $noBbonus   = DbUser::getLogBonusSum([
             'to_uid'     => $uid,
             'bonus_type' => 1, //返利
             'status'     => 1, //待结算的
@@ -911,7 +914,7 @@ class User extends CommonIndex {
                 break;
             }
             $count += count($uList);
-            $uids = array_column($uList, 'uid');
+            $uids  = array_column($uList, 'uid');
         }
         return $count;
     }
@@ -1097,7 +1100,7 @@ class User extends CommonIndex {
         if ($user['user_identity'] != '4') {
             return ['code' => '3000']; //boss才有权限查看
         }
-        $where = [
+        $where  = [
             ['trading_type', '=', '1'], //佣金交易
             ['change_type', 'in', [3, 6, 7, 8, 9]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
             ['uid', '=', $uid],
@@ -1109,18 +1112,18 @@ class User extends CommonIndex {
         foreach ($data as $d) {
             $trType = $d['change_type'];
             switch ($trType) {
-            case 3:
-                $ctype = '充值';
-                break;
-            case 6:
-                $ctype = '提现';
-                break;
-            case 7:
-                $ctype = '转商券';
-                break;
-            case 8:
-                $ctype = '后台充值操作';
-                break;
+                case 3:
+                    $ctype = '充值';
+                    break;
+                case 6:
+                    $ctype = '提现';
+                    break;
+                case 7:
+                    $ctype = '转商券';
+                    break;
+                case 8:
+                    $ctype = '后台充值操作';
+                    break;
             }
             $d['message'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['change_type']);
@@ -1155,15 +1158,15 @@ class User extends CommonIndex {
         foreach ($result as $d) {
             $trType = $d['stype'] ?? 1;
             switch ($trType) {
-            case 1:
-                $ctype = '购物积分';
-                break;
-            case 2:
-                $ctype = '后台充值';
-                break;
-            case 3:
-                $ctype = '老商城转入积分';
-                break;
+                case 1:
+                    $ctype = '购物积分';
+                    break;
+                case 2:
+                    $ctype = '后台充值';
+                    break;
+                case 3:
+                    $ctype = '老商城转入积分';
+                    break;
             }
             $d['ctype'] = $ctype;
             unset($d['stype']);
@@ -1876,7 +1879,7 @@ class User extends CommonIndex {
                 'after_money'  => bcadd($userInfo['balance'], bcmul($money, 1.25, 2), 2),
                 // 'message'      => $remittance['message'],
             ];
-        }else{
+        } else {
             $addtrading = [
                 'uid'          => $uid,
                 'trading_type' => 1,
@@ -1887,7 +1890,7 @@ class User extends CommonIndex {
                 // 'message'      => $remittance['message'],
             ];
         }
-        
+
         if ($type == 2) {
             $addtrading['change_type'] = 12;
         }
@@ -1905,10 +1908,10 @@ class User extends CommonIndex {
             DbUser::saveLogTrading($addtrading);
             if ($type == 2) {
                 DbUser::modifyBalance($uid, bcmul($money, 1.25, 2), 'inc');
-            }else{
+            } else {
                 DbUser::modifyBalance($uid, $money, 'inc');
             }
-            
+
             Db::commit();
             $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             return ['code' => '200'];
@@ -2201,7 +2204,7 @@ class User extends CommonIndex {
             } elseif ($invoice == 2) {
                 $proportion = $invoice_data['no_invoice'];
             }
-    
+
         } elseif ($stype == 4) { //2.奖励金提现
             if ($userInfo['bounty'] <= 0) {
                 return ['code' => '3005'];
@@ -2513,16 +2516,16 @@ class User extends CommonIndex {
         if ($user['bounty_freeze'] == 1) { //奖励金冻结
             $bounty = 0;
         }
-        $bountyAll = DbUser::getLogTradingSum([
+        $bountyAll  = DbUser::getLogTradingSum([
             ['trading_type', '=', '3'],
             ['change_type', 'in', [5]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //奖励金总额
-        $diamondvip = DbRights::getDiamondvip(['uid' => $uid],'uid,id,share_num',true);
+        $diamondvip = DbRights::getDiamondvip(['uid' => $uid], 'uid,id,share_num', true);
         if (!$diamondvip) {
             $share_num = 0;
-        }else{
+        } else {
             $share_num = $diamondvip['share_num'];
         }
         $bountyDetail = DbRights::getDiamondvip(['share_uid' => $uid, 'source' => 2], 'id,uid,create_time,bounty_status', false, 'id', 'desc', $offset . ',' . $pageNum);
