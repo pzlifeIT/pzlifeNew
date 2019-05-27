@@ -132,8 +132,7 @@ class TemporaryScript extends Pzlife {
                         Db::table('pz_diamondvip_get')->where('id', $diamondvip_get[0]['id'])->update(['share_uid' => 23926]);
                         // print_r($diamondvip_get);die;
                         /* 查询订单号 */
-                        $diamond_member_order = Db::query("SELECT `order_no` FROM pz_member_order WHERE `uid` = ".$value['id'] . " AND `from_uid` = ".$from_diamonduid. " AND `pay_status` = 4 ");
-                        
+                        $diamond_member_order = Db::query("SELECT `id`,`order_no` FROM pz_member_order WHERE `uid` = ".$value['id'] . " AND `from_uid` = ".$from_diamonduid. " AND `pay_status` = 4 ");
                         $log_trading = Db::query("SELECT * FROM pz_log_trading WHERE `trading_type` = 3 AND `order_no` = '".$diamond_member_order[0]['order_no']."'");
 
                         $this_user = Db::query("SELECT `bounty` FROM pz_users WHERE  `id` = 23926 AND delete_time=0 ");
@@ -146,7 +145,7 @@ class TemporaryScript extends Pzlife {
                         $subbounty = $from_user[0]['bounty'] - $log_trading[0]['money'];
                         Db::table('pz_users')->where('id', $from_diamonduid)->update(['bounty' => $subbounty]);
                         Db::table('pz_log_trading')->where('id', $log_trading[0]['id'])->update(['uid' => 23926]);
-                        
+                        Db::table('pz_member_order')->where('id', $diamond_member_order[0]['id'])->update(['from_uid' => 23926]);
                         $olduser_relation[0] = 23926; 
                         $user_relation = implode(',',$olduser_relation);
                         $pid = 23926;
