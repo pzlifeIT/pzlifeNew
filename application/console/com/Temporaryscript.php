@@ -122,16 +122,55 @@ class TemporaryScript extends Pzlife {
             foreach ($user as $key => $value) {
                 $relation = Db::query("SELECT * FROM pz_user_relation WHERE `uid` = ".$value['id']);
                 if ($relation) {
-                    $pid = $relation[0]['pid'] ? 1 : 23926;
-                    $user_relation = '23926,'.$relation[0]['relation'];
-                    Db::table('pz_user_relation')->where('id', $value['id'])->update(['pid' => $pid,'relation' => $user_relation]);
+                    $pid = $relation[0]['pid']== 1  ? 23926 : $relation[0]['pid'];
+                    $olduser_relation = explode(',',$relation[0]['relation']);
+                    if ($value['user_identity'] == 2) {
+                        
+                        $from_diamonduid = $olduser_relation[0];
+                        /* 查询钻石领取记录 */
+                        $diamondvip_get = Db::query("SELECT * FROM pz_diamondvip_get WHERE `uid` = ".$value['id'] . " AND `share_uid` = ".$from_diamonduid);
+                        Db::table('pz_diamondvip_get')->where('id', $diamondvip_get[0]['id'])->update(['share_uid' => 23926]);
+                        // print_r($diamondvip_get);die;
+                        /* 查询订单号 */
+                        $diamond_member_order = Db::query("SELECT `order_no` FROM pz_member_order WHERE `uid` = ".$value['id'] . " AND `from_uid` = ".$from_diamonduid. " AND `pay_status` = 4 ");
+                        
+                        $log_trading = Db::query("SELECT * FROM pz_log_trading WHERE `trading_type` = 3 AND `order_no` = '".$diamond_member_order[0]['order_no']."'");
+
+                        $this_user = Db::query("SELECT `bounty` FROM pz_users WHERE  `id` = 23926 AND delete_time=0 ");
+                        
+                        $bounty = $this_user[0]['bounty'] + $log_trading[0]['money'];
+
+                        Db::table('pz_users')->where('id', 23926)->update(['bounty' => $bounty]);
+                        // print_r($this_user);die;
+                        $from_user = Db::query("SELECT `bounty` FROM pz_users WHERE  `id` = ".$from_diamonduid." AND delete_time=0 ");
+                        $subbounty = $from_user[0]['bounty'] - $log_trading[0]['money'];
+                        Db::table('pz_users')->where('id', $from_diamonduid)->update(['bounty' => $subbounty]);
+                        Db::table('pz_log_trading')->where('id', $log_trading[0]['id'])->update(['uid' => 23926]);
+                        
+                        $olduser_relation[0] = 23926; 
+                        $user_relation = implode(',',$olduser_relation);
+                        $pid = 23926;
+                    }else {
+                        $user_relation = '23926,'.$relation[0]['relation'];
+                    }
+                    // 
+                    // 
+                    // print_r($user_relation);die;
+                    if ($pid == 2) {
+                        continue;
+                        $olduser_relation[0] = 23926; 
+                        $user_relation = implode(',',$olduser_relation);
+                        $pid = 23926;
+                    }
+                    Db::table('pz_user_relation')->where('id', $relation[0]['id'])->update(['pid' => $pid,'relation' => $user_relation]);
+                   
                 }
+               
             }
             /* 老商城未注册会员变成以阅读数量*/
 
             $mysql_connect = Db::connect(Config::get('database.db_config'));
             ini_set('memory_limit', '1024M');
-            $password   = hash_hmac('sha1', '123456', 'userpass');
             $member     = "SELECT * FROM pre_member  ";
             $memberdata = $mysql_connect->query($member);
             foreach ($memberdata as $key => $value) {
@@ -146,14 +185,19 @@ class TemporaryScript extends Pzlife {
                     continue;
                 }
                 if ($user_union) {
-                    $new_database = Db::query('SELECT * FROM pz_users WHERE `unionid` = '.$user_union[0]['unionid']);
+                    // print_r($user_union);die;
+                    $user_unionid = $user_union[0]['unionid'];
+                    // print_r($user_unionid);die;
+                    $new_database = Db::query("SELECT * FROM pz_users WHERE `unionid` = '".$user_unionid."'");
                     if ($new_database) {//已注册
                         continue;   
                     }
                 }
                 if ($hierarchy) {
+                   
                     foreach ($hierarchy as $hie => $chy) {
-                        if (!Db::query("SELECT * FROM pz_user_read WHERE `view_uid` = ".$chy. " `openid` = ".$user_openid[0]['wx_openid'])) {
+                        // print_r($hierarchy);die;
+                        if (!Db::query("SELECT * FROM pz_user_read WHERE `view_uid` = ".$chy. " AND `openid` = '".$user_openid[0]['wx_openid']."'")) {
                             $view_user = Db::query("SELECT `user_identity` FROM  pz_users WHERE `id` = ".$chy);
                             if (empty($view_user)) {
                                 continue;
