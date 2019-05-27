@@ -29,6 +29,7 @@ class Cart extends MyController {
      * @apiSuccess (valid) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
      * @apiSuccess (valid) {String} title 主标题
      * @apiSuccess (valid) {String} subtitle 副标题
+     * @apiSuccess (valid) {String} goods_sku_name 规格
      * @apiSuccess (valid) {String} image 商品标题图
      * @apiSuccess (返回) {Array} failure 失效效商品
      * @apiSuccess (failure) {String} id 商品ID
@@ -38,6 +39,7 @@ class Cart extends MyController {
      * @apiSuccess (failure) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
      * @apiSuccess (failure) {String} title 主标题
      * @apiSuccess (failure) {String} subtitle 副标题
+     * @apiSuccess (failure) {String} goods_sku_name 规格
      * @apiSuccess (failure) {String} image 商品标题图
      * @apiSampleRequest /index/cart/getUserCart
      * @author rzc
