@@ -76,7 +76,7 @@ class User extends MyController {
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误 / 3009:该微信号已绑定手机号
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3005:新用户需授权 / 3006:验证码错误 / 3009:该微信号已绑定手机号
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
      * @return array
