@@ -169,7 +169,7 @@ class Payment {
         unset($wxReturn['sign']);
         $makeSign = $this->makeSign($wxReturn, Config::get('conf.wx_pay_key'));
         if ($makeSign == $sign) { //验证签名
-            $logPayRes = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment,prepay_id', true);
+            $logPayRes = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment', true);
             $data      = [
                 'notifydata' => json_encode($notifyData),
                 'status'     => 1,
