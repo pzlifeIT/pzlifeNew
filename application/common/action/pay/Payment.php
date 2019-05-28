@@ -165,7 +165,6 @@ class Payment {
      */
     public function wxPayCallback($res) {
         $wxReturn = $this->xmlToArray($res);
-        $this->apiLog('pay/pay/wxPayCallback', json_encode($wxReturn));
         $notifyData = $wxReturn;
         $sign       = $wxReturn['sign'];//微信返回的签名
         unset($wxReturn['sign']);
@@ -196,7 +195,6 @@ class Payment {
                     'pay_status' => 4,
                 ];
             }
-            $this->apiLog('pay/pay/wxPayCallback', json_encode($orderData));
             if (!empty($orderRes) || !empty($memOrderRes)) {
                 Db::startTrans();
                 try {
