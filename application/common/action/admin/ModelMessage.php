@@ -432,7 +432,11 @@ class ModelMessage extends CommonIndex {
                 }
             }
             $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
-            $this->redis->rPush($redisListKey, $id);
+            if ($result['wtype'] == 4) {
+                $this->redis->rPush($redisListKey, $id);
+            }else {
+                $this->redis->del($redisListKey, $id);
+            }
         }
         DbModelMessage::editMessageTask(['status' => $status], $id);
         return ['code' => '200'];
