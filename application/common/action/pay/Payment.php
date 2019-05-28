@@ -2,6 +2,7 @@
 
 namespace app\common\action\pay;
 
+use app\common\model\LogApi;
 use app\facade\DbOrder;
 use app\facade\DbUser;
 use cache\Phpredis;
@@ -168,7 +169,8 @@ class Payment {
      * @author zyr
      */
     public function wxPayCallback($res) {
-        $wxReturn   = $this->xmlToArray($res);
+        $wxReturn = $this->xmlToArray($res);
+        $this->apiLog('pay/pay/wxPayCallback', json_encode($wxReturn));
         $notifyData = $wxReturn;
         $sign       = $wxReturn['sign']; //微信返回的签名
         unset($wxReturn['sign']);
@@ -199,6 +201,7 @@ class Payment {
                     'pay_status' => 4,
                 ];
             }
+            $this->apiLog('pay/pay/wxPayCallback', json_encode($orderData));
             if (!empty($orderRes) || !empty($memOrderRes)) {
 
                 Db::startTrans();
@@ -217,6 +220,7 @@ class Payment {
                     Db::commit();
 
                 } catch (\Exception $e) {
+                    $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::rollback();
                     // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                 }
@@ -306,5 +310,17 @@ class Payment {
         }
 
         return $access_token;
+    }
+
+
+    private function apiLog($apiName, $param) {
+        $user = new LogApi();
+        $user->save([
+            'api_name' => $apiName,
+            'param'    => json_encode($param),
+            'stype'    => 1,
+//            'code'     => $code,
+//            'admin_id' => $adminId,
+        ]);
     }
 }
