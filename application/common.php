@@ -294,6 +294,39 @@ function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
 }
 
 /**
+ * 获取微信信息
+ * @param $code
+ * @param string $encrypteddata
+ * @param string $iv
+ * @return array|bool|mixed
+ * @author zyr
+ */
+function getOpenid($code, $encrypteddata = '', $iv = '') {
+    $appid         = Env::get('weixin.weixin_miniprogram_appid');
+    $secret        = Env::get('weixin.weixin_miniprogram_appsecret');
+    $get_token_url = 'https://api.weixin.qq.com/sns/jscode2session?appid=' . $appid . '&secret=' . $secret . '&js_code=' . $code . '&grant_type=authorization_code';
+    $res           = sendRequest($get_token_url);
+    $result        = json_decode($res, true);
+    // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
+    if (empty($result['session_key'])) {
+        return false;
+    }
+    $sessionKey = $result['session_key'];
+    unset($result['session_key']);
+    if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
+        $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
+    }
+    if (is_array($result)) {
+        $result = array_change_key_case($result, CASE_LOWER); //CASE_UPPER,CASE_LOWER
+        return $result;
+    }
+    return false;
+    //[openId] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[nickName] => 榮,[gender] => 1,[language] => zh_CN,[city] =>,[province] => Shanghai,[country] => China,
+    //[avatarUrl] => https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJiaWQI7tUfDVrvuSrDDcfFiaJriaibibBiaYabWL5h6HlDgMMvkyFul9JRicr0ZMULxs66t5NBdyuhEokhA/132
+    //[unionId] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk
+}
+
+/**
  * 快递编码公司对应物流
  * @return array
  * @author rzc

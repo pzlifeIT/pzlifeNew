@@ -20,7 +20,7 @@ class Payment {
         $this->redis = Phpredis::getConn();
     }
 
-    public function payment($orderNo, int $payment, int $platform) {
+    public function payment($orderNo, int $payment, int $platform, $code) {
         $orderOutTime = Config::get('conf.order_out_time');//订单过期时间
         if ($payment == 2) {//购买会员订单
             $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商券
@@ -47,7 +47,7 @@ class Payment {
                 return ['code' => '3008'];//第三方支付已付款
             }
             if ($payType == 2) {//微信支付
-                $parameters = $this->wxpay($uid, $platform, $payment, $payMoney, $orderId);
+                $parameters = $this->wxpay($uid, $platform, $payment, $payMoney, $orderId, $code);
                 if ($parameters === false) {
                     return ['code' => '3010'];//创建支付订单失败
                 }
@@ -80,7 +80,7 @@ class Payment {
             Db::startTrans();
             try {
                 if ($thirdPayType == 2) {//微信支付
-                    $parameters = $this->wxpay($uid, $platform, $payment, $thirdMoney, $orderId);
+                    $parameters = $this->wxpay($uid, $platform, $payment, $thirdMoney, $orderId, $code);
                     if ($parameters === false) {
                         Db::rollback();
                         return ['code' => '3010'];//创建支付订单失败
@@ -103,16 +103,21 @@ class Payment {
      * @param $payment
      * @param $payMoney
      * @param $orderId
+     * @param $code
      * @return array
      * @author zyr
      */
-    private function wxpay($uid, $platform, $payment, $payMoney, $orderId) {
+    private function wxpay($uid, $platform, $payment, $payMoney, $orderId, $code) {
         //获取openid
-        $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
-        $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
-        $openid     = $userWxinfo['openid'];
-        $payNo      = createOrderNo('wpy');
-        $data       = [
+//        $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
+//        $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
+        $userWxinfo = getOpenid($code);
+        if (empty($userWxinfo['openid'])) {
+            return false;
+        }
+        $openid = $userWxinfo['openid'];
+        $payNo  = createOrderNo('wpy');
+        $data   = [
             'pay_no'   => $payNo,
             'uid'      => $uid,
             'payment'  => $payment,
@@ -120,7 +125,7 @@ class Payment {
             'order_id' => $orderId,
             'money'    => bcmul($payMoney, 100, 0),
         ];
-        $addRes     = DbOrder::addLogPay($data);
+        $addRes = DbOrder::addLogPay($data);
         if (!empty($addRes)) {
             $wxPay  = new WxMiniprogramPay($openid, $data['pay_no'], $data['money']);
             $result = $wxPay->pay();
