@@ -2,7 +2,6 @@
 
 namespace app\console\com;
 
-use app\common\action\notify\Note;
 use app\console\Pzlife;
 use cache\Phpredis;
 use Config;
@@ -30,8 +29,8 @@ class ModelMessage extends Pzlife {
     public function MarketingActivity() {
         $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
         $new_marketingactivityList = [];
-        $Note = new Note;
         while (true) {
+            // $this->redis->rPush($redisListKey, 7);
             $marketingactivityId = $this->redis->lPop($redisListKey); //购买会员的订单id
             if (empty($marketingactivityId)) {
                 break;
@@ -56,11 +55,18 @@ class ModelMessage extends Pzlife {
                 $t = ',';
             }
            
-            $Note = new Note;
-            $send = $Note->sendContent($phones,$getMessageTask['template']);
-            if ($send['code'] == 200) {
-                Db::table('pz_message_task')->where('id',$getMessageTask['id'])->update(['status' => 4]) ;
+            // print_r(Env::get('host.notifyHost'));die;
+            // $send = $Note->sendContent($phones,$getMessageTask['template']);
+            
+            $send = sendRequest(Env::get('host.notifyHost').'/note/sendcontent','post',['phones'=> $phones,'content' => $getMessageTask['template']]);
+            // print_r($send);die;
+            if ($send) {
+                $send = json_decode($send);die;
+                if ($send['code'] == 200) {
+                    Db::table('pz_message_task')->where('id',$getMessageTask['id'])->update(['status' => 4]) ;
+                }
             }
+            
 
         }
         foreach ($new_marketingactivityList as $key => $value) {
