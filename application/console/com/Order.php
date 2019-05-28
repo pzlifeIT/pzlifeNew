@@ -377,7 +377,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 40);
+        // $this->redis->rPush($redisListKey, 90);
         $memberOrderId = $this->redis->lPop($redisListKey); //购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -608,7 +608,13 @@ class Order extends Pzlife {
                     $diamondvip_get['source']      = 1;
                     $diamondvip_get['share_uid']   = $from_uid;
                     $diamondvip_get['create_time'] = time();
-                    Db::name('diamondvip_get')->insert($diamondvip_get);
+                    $this_user_diamond = Db::query('SELECT `id` FROM pz_diamondvip_get WHERE `uid` = '.$uid . ' AND `share_uid` ='.$from_uid );
+                    // print_r( $this_user_diamond);die;
+                    if ($this_user_diamond) {
+                        Db::name('diamondvip_get')->where('id',$this_user_diamond[0]['id'])->update(['source'=>1]);
+                    } else {
+                        Db::name('diamondvip_get')->insert($diamondvip_get);
+                    }
                     Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
                     $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 } elseif ($payMoney == 100) {
