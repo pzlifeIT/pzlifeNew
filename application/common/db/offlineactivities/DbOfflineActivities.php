@@ -41,6 +41,18 @@ class DbOfflineActivities {
         return OfflineActivities::where($where)->count();
     }
 
+    public function addOfflineActivities($data){
+        $OfflineActivities = new OfflineActivities;
+        $OfflineActivities->save($data);
+        return $OfflineActivities->id;
+    }
+
+    public function updateOfflineActivities($data,$id){
+        $OfflineActivities = new OfflineActivities;
+        return $OfflineActivities->save($data,['id' => $id]);
+    }
+
+
     public function getOfflineActivitiesGoods($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = OfflineActivitiesGoods::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
@@ -48,5 +60,16 @@ class DbOfflineActivities {
 
     public function countOfflineActivitiesGoods($where){
         return OfflineActivitiesGoods::where($where)->count();
+    }
+
+    public function addOfflineActivitiesGoods($data){
+        $OfflineActivitiesGoods = new OfflineActivitiesGoods;
+        $OfflineActivitiesGoods->save($data);
+        return $OfflineActivitiesGoods->id;
+    }
+
+    public function updateOfflineActivitiesGoods($data,$id){
+        $OfflineActivitiesGoods = new OfflineActivitiesGoods;
+        return $OfflineActivitiesGoods->save($data,$id);
     }
 }
