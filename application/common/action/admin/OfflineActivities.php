@@ -209,6 +209,65 @@ class OfflineActivities extends CommonIndex {
         return $goods_data;
     }
 
+    /**
+     * 获取商品SKU及规格名称等
+     * @param $goods_id
+     * @param $source
+     * @return array
+     * @author rzc
+     */
+    public function getGoodsSku($goods_id) {
+        $field            = 'goods_id,spec_id';
+        $where            = [["goods_id", "=", $goods_id]];
+        $goods_first_spec = DbGoods::getOneGoodsSpec($where, $field, 1);
+        $goods_spec       = [];
+        if ($goods_first_spec) {
+            $field = 'id,spe_name';
+            foreach ($goods_first_spec as $key => $value) {
+                $where  = ['id' => $value['spec_id']];
+                $result = DbGoods::getOneSpec($where, $field);
+
+                $goods_attr_field = 'attr_id';
+                $goods_attr_where = ['goods_id' => $goods_id, 'spec_id' => $value['spec_id']];
+                $goods_first_attr = DbGoods::getOneGoodsSpec($goods_attr_where, $goods_attr_field);
+                $attr_where       = [];
+                foreach ($goods_first_attr as $goods => $attr) {
+                    $attr_where[] = $attr['attr_id'];
+                }
+
+                $attr_field = 'id,spec_id,attr_name';
+                $attr_where = [['id', 'in', $attr_where], ['spec_id', '=', $value['spec_id']]];
+
+                $result['list'] = DbGoods::getAttrList($attr_where, $attr_field);
+
+                $goods_spec[] = $result;
+            }
+
+        }
+
+
+        $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
+        // $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
+        $where     = [["goods_id", "=", $goods_id], ["status", "=", 1]];
+        $goods_sku = DbGoods::getOneGoodsSku($where, $field);
+        /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
+        /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
+        foreach ($goods_sku as $goods => $sku) {
+            $goods_sku[$goods]['brokerage']       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], $sku['margin_price']), 0.75, 2);
+            $goods_sku[$goods]['integral_active'] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 2), 2, 0);
+            $sku_json                             = DbGoods::getAttrList([['id', 'in', $sku['spec']]], 'attr_name');
+            $sku_name                             = [];
+            if ($sku_json) {
+                foreach ($sku_json as $sj => $json) {
+                    $sku_name[] = $json['attr_name'];
+                }
+            }
+            $goods_sku[$goods]['sku_name'] = $sku_name;
+
+        }
+        return [$goods_spec, $goods_sku];
+    }
+
     public function addOfflineActivitiesGoods($active_id, $goods_id) {
         $offlineactivities = DbOfflineActivities::getOfflineActivities(['id' => $active_id], '*', true);
         if (empty($offlineactivities)) {
