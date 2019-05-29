@@ -11,14 +11,15 @@
 
 // 应用容器绑定定义
 return [
-    'user'     => app\common\action\index\User::class,
-    'category' => \app\common\action\index\Category::class,
-    'goods' => \app\common\action\index\Goods::class,
-    'cart' => \app\common\action\index\Cart::class,
+    'user'              => app\common\action\index\User::class,
+    'category'          => \app\common\action\index\Category::class,
+    'goods'             => \app\common\action\index\Goods::class,
+    'cart'              => \app\common\action\index\Cart::class,
 //    'collect'  => \app\common\action\index\Collect::class,
-    'order'     => app\common\action\index\Order::class,
-    'rights'     => app\common\action\index\Rights::class,
-    'recommend'     => app\common\action\index\Recommend::class,
-    'upload'     => app\common\action\index\Upload::class,
-    'shopmanage' => app\common\action\index\Shopmanage::class,
+    'order'             => app\common\action\index\Order::class,
+    'rights'            => app\common\action\index\Rights::class,
+    'recommend'         => app\common\action\index\Recommend::class,
+    'upload'            => app\common\action\index\Upload::class,
+    'shopmanage'        => app\common\action\index\Shopmanage::class,
+    'offlineactivities' => app\common\action\admin\OfflineActivities::class,
 ];

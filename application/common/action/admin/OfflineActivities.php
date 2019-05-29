@@ -6,6 +6,7 @@ use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbOfflineActivities;
 use think\Db;
+use Config;
 
 class OfflineActivities extends CommonIndex {
     /**
@@ -237,7 +238,7 @@ class OfflineActivities extends CommonIndex {
         $data              = [];
         $data['active_id'] = $active_id;
         $data['goods_id']  = $goods_id;
-        DbOfflineActivities::addOfflineActivitiesGoods($data,$id);
+        DbOfflineActivities::updateOfflineActivitiesGoods($data,$id);
         return ['code' => '200'];
     }
 }
