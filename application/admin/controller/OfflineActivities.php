@@ -20,6 +20,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
+     * @apiParam (入参) {Number} id 查询ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:线下活动列表空 / 3001:手机号格式错误 / 3002:页码和查询条数只能是数字
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (data) {object_array} data 结果
@@ -35,7 +36,8 @@ class OfflineActivities extends AdminController {
     public function getOfflineActivities() {
         $page    = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pagenum'));
-        $result  = $this->app->offlineactivities->getOfflineActivities($page, $pagenum);
+        $id      = trim($this->request->post('id'));
+        $result  = $this->app->offlineactivities->getOfflineActivities($page, $pagenum, $id);
         return $result;
     }
 
@@ -167,6 +169,7 @@ class OfflineActivities extends AdminController {
      * @apiName          getOfflineActivitiesGoods
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} active_id 线下活动ID
+     * @apiParam (入参) {String} id ID
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} pagenum 查询条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:商品列表空 / 3001:手机号格式错误 / 3002:页码和查询条数只能是数字
@@ -191,9 +194,10 @@ class OfflineActivities extends AdminController {
         $active_id = trim($this->request->post('active_id'));
         $page      = trim($this->request->post('page'));
         $pagenum   = trim($this->request->post('pagenum'));
+        $id        = trim($this->request->post('id'));
         $page      = is_numeric($page) ? $page : 1;
         $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
-        $result    = $this->app->offlineactivities->getOfflineActivitiesGoods($page, $pagenum, $active_id);
+        $result    = $this->app->offlineactivities->getOfflineActivitiesGoods($page, $pagenum, $active_id, $id);
         return $result;
     }
 
@@ -250,7 +254,7 @@ class OfflineActivities extends AdminController {
         if (!is_numeric($active_id) || !is_numeric($goods_id) || !is_numeric($id)) {
             return ['code' => '3003'];
         }
-        $result    = $this->app->offlineactivities->updateOfflineActivitiesGoods($active_id, $goods_id, $id);
+        $result = $this->app->offlineactivities->updateOfflineActivitiesGoods($active_id, $goods_id, $id);
         return $result;
     }
 }
