@@ -30,7 +30,7 @@ class ModelMessage extends Pzlife {
         $redisListKey = Config::get('redisKey.modelmessage.redisMarketingActivity');
         $new_marketingactivityList = [];
         while (true) {
-            // $this->redis->rPush($redisListKey, 7);
+            // $this->redis->rPush($redisListKey, 18);
             $marketingactivityId = $this->redis->lPop($redisListKey); //购买会员的订单id
             if (empty($marketingactivityId)) {
                 break;
@@ -55,13 +55,13 @@ class ModelMessage extends Pzlife {
                 $t = ',';
             }
            
-            // print_r(Env::get('host.notifyHost'));die;
+            // print_r($getMessageTask['template']);die;
             // $send = $Note->sendContent($phones,$getMessageTask['template']);
             
             $send = sendRequest(Env::get('host.notifyHost').'/note/sendcontent','post',['phones'=> $phones,'content' => $getMessageTask['template']]);
-            // print_r($send);die;
             if ($send) {
-                $send = json_decode($send);die;
+                $send = json_decode($send,true);
+                // print_r($send);die;
                 if ($send['code'] == 200) {
                     Db::table('pz_message_task')->where('id',$getMessageTask['id'])->update(['status' => 4]) ;
                 }
