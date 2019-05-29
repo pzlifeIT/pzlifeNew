@@ -26,4 +26,5 @@ return [
     'order'     => app\common\action\admin\Order::class,
     'recommend' => app\common\action\admin\Recommend::class,
     'label'     => app\common\action\admin\Label::class,
+    'offlineactivities'     => app\common\action\admin\OfflineActivities::class,
 ];
