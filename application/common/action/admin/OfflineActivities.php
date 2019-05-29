@@ -16,7 +16,7 @@ class OfflineActivities extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOfflineActivities($page, $pagenum) {
+    public function getOfflineActivities($page, $pagenum, $id = 0) {
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
 
@@ -27,8 +27,13 @@ class OfflineActivities extends CommonIndex {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-
-        $result = DbOfflineActivities::getOfflineActivities([], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
+        if ($id) {
+            $result = DbOfflineActivities::getOfflineActivities(['id' => $id], '*', true);
+            return ['code' => '200', 'result' => $result];
+        }else {
+            $result = DbOfflineActivities::getOfflineActivities([], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
+        }
+        
         if (empty($result)) {
             return ['code' => 3000];
         }
@@ -155,12 +160,18 @@ class OfflineActivities extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOfflineActivitiesGoods($page, $pagenum, $active_id) {
+    public function getOfflineActivitiesGoods($page, $pagenum, $active_id , $id) {
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $result = DbOfflineActivities::getOfflineActivitiesGoods(['active_id' => $active_id], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
+        if ($id) {
+            $result = DbOfflineActivities::getOfflineActivitiesGoods(['id' => $id], '*', true);
+            return ['code' => '200', 'result' => $result];
+        } else {
+            $result = DbOfflineActivities::getOfflineActivitiesGoods(['active_id' => $active_id], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
+        }
+        
         if (empty($result)) {
             return ['code' => '3000'];
         }
