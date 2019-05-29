@@ -5,7 +5,7 @@ use app\index\MyController;
 //
 class OfflineActivities extends MyController{
     /**
-     * @api              {post} / 分类商品列表
+     * @api              {post} / 线下活动
      * @apiDescription   getOfflineActivities
      * @apiGroup         index_OfflineActivities
      * @apiName          getOfflineActivities
