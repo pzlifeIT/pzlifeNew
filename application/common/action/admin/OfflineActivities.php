@@ -147,10 +147,10 @@ class OfflineActivities extends CommonIndex {
             DbOfflineActivities::updateOfflineActivities($data, $id);
 
             Db::commit();
-            return ['code' => '200', 'add_id' => $add];
+            return ['code' => '200'];
 
         } catch (\Exception $e) {
-            exception($e);
+            // exception($e);
             Db::rollback();
             return ['code' => '3011']; //添加失败
         }
