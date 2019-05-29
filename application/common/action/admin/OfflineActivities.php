@@ -210,7 +210,7 @@ class OfflineActivities extends CommonIndex {
     }
 
     public function addOfflineActivitiesGoods($active_id, $goods_id) {
-        $offlineactivities = DbOfflineActivities::getOfflineActivities(['id' => $id], '*', true);
+        $offlineactivities = DbOfflineActivities::getOfflineActivities(['id' => $active_id], '*', true);
         if (empty($offlineactivities)) {
             return ['code' => '3000'];
         }
