@@ -70,6 +70,6 @@ class DbOfflineActivities {
 
     public function updateOfflineActivitiesGoods($data,$id){
         $OfflineActivitiesGoods = new OfflineActivitiesGoods;
-        return $OfflineActivitiesGoods->save($data,$id);
+        return $OfflineActivitiesGoods->save($data,['id' => $id]);
     }
 }
