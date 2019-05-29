@@ -176,7 +176,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3000'];
         }
         foreach ($result as $key => $value) {
-            $result['goods'] = $this->getGoods($value['goods_id']);
+            $result[$key]['goods'] = $this->getGoods($value['goods_id']);
         }
         $total = DbOfflineActivities::countOfflineActivitiesGoods(['active_id' => $active_id]);
         return ['code' => '200', 'total' => $total, 'result' => $result];
