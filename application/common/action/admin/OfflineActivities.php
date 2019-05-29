@@ -94,15 +94,18 @@ class OfflineActivities extends CommonIndex {
         if (empty($result)) {
             return ['code' => 3000];
         }
-        if ($start_time) {
-            if ($start_time > $result['stop_time']) {
+        if ($start_time && !$stop_time) {
+            if ($start_time > strtotime($result['stop_time'])) {
                 return ['code' => '3003'];
             }
         }
-        if ($stop_time) {
-            if ($stop_time < $result['start_time']) {
+        if ($stop_time && !$start_time) {
+            if ($stop_time < strtotime($result['start_time'])) {
                 return ['code' => '3003'];
             }
+        }
+        if ($stop_time < $start_time) {
+            return ['code' => '3003'];
         }
         $data = [];
         if ($title) {
@@ -310,5 +313,45 @@ class OfflineActivities extends CommonIndex {
         $data['goods_id']  = $goods_id;
         DbOfflineActivities::updateOfflineActivitiesGoods($data,$id);
         return ['code' => '200'];
+    }
+
+    public function createQrcode($scene, $page) {
+        $appid = Config::get('conf.weixin_miniprogram_appid');
+        // $appid         = 'wx1771b2e93c87e22c';
+        $secret = Config::get('conf.weixin_miniprogram_appsecret');
+        // $secret        = '1566dc764f46b71b33085ba098f58317';
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+        if (!$requestUrl) {
+            return ['code' => '3004'];
+        }
+        $requsest_subject = json_decode(sendRequest($requestUrl), true);
+        $access_token     = $requsest_subject['access_token'];
+        if (!$access_token) {
+            return ['code' => '3005'];
+        }
+        $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $access_token;
+        // print_r($link);die;
+        $result = $this->sendRequest2($requestUrl, ['scene' => $scene, 'page' => $page]);
+        if (strlen($result) > 100){
+               return $result;
+        } else {
+            return ['code' => 3009];
+        }
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
     }
 }

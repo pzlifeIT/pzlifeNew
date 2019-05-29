@@ -36,4 +36,6 @@ class OfflineActivities extends MyController{
         $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
         return $result;
     }
+
+    
 }
