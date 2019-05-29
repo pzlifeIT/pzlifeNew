@@ -40,4 +40,13 @@ class DbOfflineActivities {
     public function countOfflineActivities($where){
         return OfflineActivities::where($where)->count();
     }
+
+    public function getOfflineActivitiesGoods($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = OfflineActivitiesGoods::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function countOfflineActivitiesGoods($where){
+        return OfflineActivitiesGoods::where($where)->count();
+    }
 }
