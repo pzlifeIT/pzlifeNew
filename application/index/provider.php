@@ -21,5 +21,5 @@ return [
     'recommend'         => app\common\action\index\Recommend::class,
     'upload'            => app\common\action\index\Upload::class,
     'shopmanage'        => app\common\action\index\Shopmanage::class,
-    'offlineactivities' => app\common\action\admin\OfflineActivities::class,
+    'offlineactivities' => app\common\action\index\OfflineActivities::class,
 ];

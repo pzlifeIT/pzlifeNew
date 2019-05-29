@@ -214,7 +214,7 @@ class OfflineActivities extends CommonIndex {
         if (empty($offlineactivities)) {
             return ['code' => '3000'];
         }
-        if ($offlineactivities['stop_time'] < time()) {
+        if (strtotime($offlineactivities['stop_time']) < time()) {
             return ['code' => '3001'];
         }
         $goods = DbGoods::getOneGoods([["id", "=", $goodsid], ["status", "=", 1]], 'id');
@@ -236,7 +236,7 @@ class OfflineActivities extends CommonIndex {
         if (empty($offlineactivities)) {
             return ['code' => '3000'];
         }
-        if ($offlineactivities['stop_time'] < time()) {
+        if (strtotime($offlineactivities['stop_time']) < time()) {
             return ['code' => '3001'];
         }
         $goods = DbGoods::getOneGoods([["id", "=", $goodsid], ["status", "=", 1]], 'id');

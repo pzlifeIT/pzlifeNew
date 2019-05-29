@@ -33,5 +33,7 @@ class OfflineActivities extends MyController{
         if (!is_numeric($id)) {
             return ['code' => '3001'];
         } 
+        $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
+        return $result;
     }
 }
