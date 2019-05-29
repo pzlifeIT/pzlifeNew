@@ -812,7 +812,7 @@ class Order extends Pzlife {
                 }
                 $this_user_diamond = Db::query('SELECT `id` FROM pz_diamondvip_get WHERE `uid` = '.$uid);
                 if (!empty($this_user_diamond)) {
-                    Db::name('diamondvip_get')->where('id',$this_user_diamond[0]['id'])->update(['source'=>2,'bounty_status' => 2,'status' => 2]);
+                    Db::name('diamondvip_get')->where('id',$this_user_diamond[0]['id'])->update(['source'=>2,'bounty_status' => 2,'status' => 2,'share_uid' => $from_uid]);
                 } else {
                     $diamondvip_get                = [];
                     $diamondvip_get['uid']         = $uid;
