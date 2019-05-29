@@ -150,6 +150,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '200', 'add_id' => $add];
 
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3011']; //添加失败
         }
