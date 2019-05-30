@@ -280,10 +280,11 @@ class OfflineActivities extends AdminController {
     public function resetOfflineActivitiesQrcode(){
         $id  = trim($this->request->get('id'));
         $uid  = trim($this->request->get('uid'));
-        if (!empty($id)) {
-           if (!is_numeric($id)) {
-               return ['code' => 2];
-           }
+        if (empty($id)) {
+           return ['code' => 3002];
+        }
+        if (empty($uid)) {
+            return ['code' =>3012];
         }
         $result = $this->app->offlineactivities->resetOfflineActivitiesQrcode( $id, $uid);
         return $result;

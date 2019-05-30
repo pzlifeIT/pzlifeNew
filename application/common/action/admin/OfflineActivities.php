@@ -343,9 +343,12 @@ class OfflineActivities extends CommonIndex {
         return ['code' => '200'];
     }
 
-    public function resetOfflineActivitiesQrcode($id, $uid = '') {
+    public function resetOfflineActivitiesQrcode($id, $uid) {
         $Qrcode = DbOfflineActivities::getOfflineActivities(['id' => $id], 'qrcode_path', true);
-        if (empty($Qrcode)) { //重新生成
+        if (empty($Qrcode)) {
+            return ['code' => '3000'];
+        }
+        if (empty($Qrcode['qrcode_path'])) { //重新生成
             if ($uid) {
                 $user = DbUser::getUserOne(['id' => $uid], 'id,passwd');
                 if (empty($user)) {
@@ -353,8 +356,6 @@ class OfflineActivities extends CommonIndex {
                 }
                 $uid   = enUid($uid);
                 $scene = 'id=' . $id . 'pid=' . $uid;
-            }else {
-                $scene = 'id=' . $id;
             }
             $Upload = new Upload;
             $result = $this->createQrcode('pages/events/events', $scene);
@@ -369,15 +370,17 @@ class OfflineActivities extends CommonIndex {
                     if (empty($logImage)) { //图片不存在
                         return ['code' => '3010']; //图片没有上传过
                     }
+                    
                     Db::startTrans();
                     try {
-                        $save = DbOfflineActivities::updateOfflineActivitiesGoods(['qrcode_path' => $logImage], $id);
+                        $save = DbOfflineActivities::updateOfflineActivitiesGoods(['qrcode_path' => $upload['image_path']], $id);
+                        // print_r($save);die;
                         if (!$save) {
                             return ['code' => '3011'];
                         }
                         DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
-                        $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
                         Db::commit();
+                        $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
                         return ['code' => '200', 'Qrcode' => $new_Qrcode];
                     } catch (\Exception $e) {
                         print_r($e);
