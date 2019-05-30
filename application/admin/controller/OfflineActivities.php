@@ -118,7 +118,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} start_time 开始时间
      * @apiParam (入参) {String} stop_time 结束时间
      * @apiParam (入参) {String} id id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:活动不存在 / 3001:title为空 / 3002:时间格式错误 / 3003:结束时间不能小于开始时间 / 3004:未接收到图片上传信息
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:活动不存在 / 3001:title为空 / 3002:时间格式错误 / 3003:结束时间不能小于开始时间 / 3004:图片没有上传过
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (data) {object_array} data 结果
      * @apiSampleRequest /admin/OfflineActivities/updateOfflineActivities
