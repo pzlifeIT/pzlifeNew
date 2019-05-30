@@ -7,6 +7,7 @@ use app\facade\DbImage;
 use app\facade\DbOfflineActivities;
 use think\Db;
 use Config;
+use function Qiniu\json_decode;
 
 class OfflineActivities extends CommonIndex {
     /**
@@ -336,7 +337,7 @@ class OfflineActivities extends CommonIndex {
         if (strlen($result) > 100){
                return $result;
         } else {
-            return ['code' => 3009];
+            return ['code' => 3009,'error_data' => json_decode($result,true)];
         }
     }
 

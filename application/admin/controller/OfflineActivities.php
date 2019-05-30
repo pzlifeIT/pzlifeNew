@@ -266,7 +266,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} page 跳转页面
      * @apiParam (入参) {String} scene 参数
-     * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空
+     * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (data) {object_array} data 结果
      * @apiSampleRequest /admin/OfflineActivities/createQrcode
