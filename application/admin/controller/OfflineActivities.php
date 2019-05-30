@@ -64,6 +64,11 @@ class OfflineActivities extends AdminController {
      * @author rzc
      */
     public function addOfflineActivities() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title      = trim($this->request->post('title'));
         $image_path = trim($this->request->post('image_path'));
         $start_time = trim($this->request->post('start_time'));
@@ -104,6 +109,7 @@ class OfflineActivities extends AdminController {
             return ['code' => '3003'];
         }
         $result = $this->app->offlineactivities->addOfflineActivities($title, $image_path, $start_time, $stop_time);
+        $this->apiLog($apiName, [$cmsConId, $title, $image_path, $start_time, $stop_time], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -131,6 +137,11 @@ class OfflineActivities extends AdminController {
      * @author rzc
      */
     public function updateOfflineActivities() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $title      = trim($this->request->post('title'));
         $image_path = trim($this->request->post('image_path'));
         $start_time = trim($this->request->post('start_time'));
@@ -160,6 +171,7 @@ class OfflineActivities extends AdminController {
         }
 
         $result = $this->app->offlineactivities->updateOfflineActivities($title, $image_path, $start_time, $stop_time, $id);
+        $this->apiLog($apiName, [$cmsConId, $title, $image_path, $start_time, $stop_time, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -222,9 +234,15 @@ class OfflineActivities extends AdminController {
      * @author rzc
      */
     public function addOfflineActivitiesGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $active_id = trim($this->request->post('active_id'));
         $goods_id  = trim($this->request->post('goods_id'));
         $result    = $this->app->offlineactivities->addOfflineActivitiesGoods($active_id, $goods_id);
+        $this->apiLog($apiName, [$cmsConId, $active_id, $goods_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -249,6 +267,11 @@ class OfflineActivities extends AdminController {
      * @author rzc
      */
     public function updateOfflineActivitiesGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $active_id = trim($this->request->post('active_id'));
         $goods_id  = trim($this->request->post('goods_id'));
         $id        = trim($this->request->post('id'));
@@ -256,6 +279,7 @@ class OfflineActivities extends AdminController {
             return ['code' => '3004'];
         }
         $result = $this->app->offlineactivities->updateOfflineActivitiesGoods($active_id, $goods_id, $id);
+        $this->apiLog($apiName, [$cmsConId, $active_id, $goods_id, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -278,16 +302,22 @@ class OfflineActivities extends AdminController {
      * ]
      * @author rzc
      */
-    public function resetOfflineActivitiesQrcode(){
+    public function resetOfflineActivitiesQrcode() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id  = trim($this->request->get('id'));
-        $uid  = trim($this->request->get('uid'));
+        $uid = trim($this->request->get('uid'));
         if (empty($id)) {
-           return ['code' => 3002];
+            return ['code' => 3002];
         }
         if (empty($uid)) {
-            return ['code' =>3012];
+            return ['code' => 3012];
         }
-        $result = $this->app->offlineactivities->resetOfflineActivitiesQrcode( $id, $uid);
+        $result = $this->app->offlineactivities->resetOfflineActivitiesQrcode($id, $uid);
+        $this->apiLog($apiName, [$cmsConId, $id, $uid], $result['code'], $cmsConId);
         return $result;
     }
 }
