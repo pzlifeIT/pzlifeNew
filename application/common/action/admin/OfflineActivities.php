@@ -5,9 +5,9 @@ namespace app\common\action\admin;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbOfflineActivities;
-use think\Db;
 use Config;
 use function Qiniu\json_decode;
+use think\Db;
 
 class OfflineActivities extends CommonIndex {
     /**
@@ -31,10 +31,10 @@ class OfflineActivities extends CommonIndex {
         if ($id) {
             $result = DbOfflineActivities::getOfflineActivities(['id' => $id], '*', true);
             return ['code' => '200', 'result' => $result];
-        }else {
+        } else {
             $result = DbOfflineActivities::getOfflineActivities([], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
         }
-        
+
         if (empty($result)) {
             return ['code' => 3000];
         }
@@ -70,10 +70,36 @@ class OfflineActivities extends CommonIndex {
 
             if ($add) {
                 Db::commit();
+                Db::startTrans();
+                try {
+                    $Upload = new Upload;
+                    $result = $this->createQrcode('pages/events/events', $add);
+
+                    if (strlen($result) > 100) {
+                        $file = fopen(Config::get('conf.image_path') . 'offlineactivities' . date('Ymd') . $add . '.png', "w"); //打开文件准备写入
+                        fwrite($file, $result); //写入
+                        fclose($file); //关闭
+                        $upload = $Upload->uploadUserImage('offlineactivities' . date('Ymd') . $add . '.png');
+                           
+                        if ($upload['code'] == 200) {
+                            $logImage = DbImage::getLogImage($upload, 2); //判断时候有未完成的图片
+                            if ($logImage) { //图片不存在
+                                $save = DbOfflineActivities::updateOfflineActivitiesGoods(['qrcode_path' => $logImage], $add);
+                                if ($save) {
+                                    DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+                                    Db::commit();
+                                }
+                            }
+
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Db::rollback();
+
+                }
+
                 return ['code' => '200', 'add_id' => $add];
             }
-            Db::rollback();
-            return ['code' => '3011']; //添加失败
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3011']; //添加失败
@@ -165,7 +191,7 @@ class OfflineActivities extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOfflineActivitiesGoods($page, $pagenum, $active_id , $id) {
+    public function getOfflineActivitiesGoods($page, $pagenum, $active_id, $id) {
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -176,7 +202,7 @@ class OfflineActivities extends CommonIndex {
         } else {
             $result = DbOfflineActivities::getOfflineActivitiesGoods(['active_id' => $active_id], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
         }
-        
+
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -250,7 +276,6 @@ class OfflineActivities extends CommonIndex {
 
         }
 
-
         $field = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,cost_price,integral_price,spec,sku_image';
         // $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
         $where     = [["goods_id", "=", $goods_id], ["status", "=", 1]];
@@ -285,7 +310,7 @@ class OfflineActivities extends CommonIndex {
         if (empty($goods)) {
             return ['code' => '3002'];
         }
-        if (DbOfflineActivities::getOfflineActivitiesGoods(['active_id' => $active_id, 'goods_id' => $goods_id],'id')) {
+        if (DbOfflineActivities::getOfflineActivitiesGoods(['active_id' => $active_id, 'goods_id' => $goods_id], 'id')) {
             return ['code' => '3003'];
         }
         $data              = [];
@@ -307,17 +332,59 @@ class OfflineActivities extends CommonIndex {
         if (empty($goods)) {
             return ['code' => '3002'];
         }
-        if (DbOfflineActivities::getOfflineActivitiesGoods([['active_id' , '=', $active_id], ['goods_id' , '=', $goods_id], ['id' ,'<>', $id]],'id')) {
+        if (DbOfflineActivities::getOfflineActivitiesGoods([['active_id', '=', $active_id], ['goods_id', '=', $goods_id], ['id', '<>', $id]], 'id')) {
             return ['code' => '3003'];
         }
         $data              = [];
         $data['active_id'] = $active_id;
         $data['goods_id']  = $goods_id;
-        DbOfflineActivities::updateOfflineActivitiesGoods($data,$id);
+        DbOfflineActivities::updateOfflineActivitiesGoods($data, $id);
         return ['code' => '200'];
     }
 
-    public function createQrcode($scene, $page) {
+    public function resetOfflineActivitiesQrcode($id) {
+        $Qrcode = DbOfflineActivities::getOfflineActivities(['id' => $id], 'qrcode_path', true);
+        if (empty($Qrcode)) { //重新生成
+            $Upload = new Upload;
+            $result = $this->createQrcode('pages/events/events', $id);
+            if (strlen($result) > 100) {
+                $file = fopen(Config::get('conf.image_path') . 'offlineactivities' . date('Ymd') . $id . '.png', "w"); //打开文件准备写入
+                fwrite($file, $result); //写入
+                fclose($file); //关闭
+                $upload = $Upload->uploadUserImage('offlineactivities' . date('Ymd') . $id . '.png');
+                if ($upload['code'] == 200) {
+                    $logImage = DbImage::getLogImage($upload, 2); //判断时候有未完成的图片
+                    // print_r($logImage);die;
+                    if (empty($logImage)) { //图片不存在
+                        return ['code' => '3010']; //图片没有上传过
+                    }
+                    Db::startTrans();
+                    try {
+                        $save = DbOfflineActivities::updateOfflineActivitiesGoods(['qrcode_path' => $logImage], $id);
+                        if (!$save) {
+                            return ['code' => '3011'];
+                        }
+                        DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+                        $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
+                        Db::commit();
+                        return ['code' => '200', 'Qrcode' => $new_Qrcode];
+                    } catch (\Exception $e) {
+                        print_r($e);
+                        Db::rollback();
+                        return ['code' => '3011']; //添加失败
+                    }
+                } else {
+                    return ['code' => 3011];
+                }
+            } else {
+                return ['code' => 3009, 'error_data' => json_decode($result, true)];
+            }
+        } else {
+            return ['code' => '200', 'Qrcode' => $Qrcode['qrcode_path']];
+        }
+    }
+
+    public function createQrcode($page, $scene) {
         $appid = Config::get('conf.weixin_miniprogram_appid');
         // $appid         = 'wx1771b2e93c87e22c';
         $secret = Config::get('conf.weixin_miniprogram_appsecret');
@@ -334,11 +401,8 @@ class OfflineActivities extends CommonIndex {
         $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $access_token;
         // print_r($link);die;
         $result = $this->sendRequest2($requestUrl, ['scene' => $scene, 'page' => $page]);
-        if (strlen($result) > 100){
-               return $result;
-        } else {
-            return ['code' => 3009,'error_data' => json_decode($result,true)];
-        }
+        return $result;
+
     }
 
     function sendRequest2($requestUrl, $data = []) {
