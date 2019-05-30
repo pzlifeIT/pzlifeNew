@@ -132,22 +132,26 @@ class OfflineActivities extends CommonIndex {
                 return ['code' => '3003'];
             }
         }
-        if ($stop_time < $start_time) {
-            return ['code' => '3003'];
+        if ($start_time && $stop_time) {
+            if ($stop_time < $start_time) {
+                return ['code' => '3003'];
+            }
         }
+        
         $data = [];
         if ($title) {
-            array_push($data, ['title' => $title]);
+            $data['title'] = $title;
         }
         if ($image_path) {
-            array_push($data, ['image_path' => $image_path]);
+            $data['image_path'] = $image_path;
         }
         if ($stop_time) {
-            array_push($data, ['stop_time' => $stop_time]);
+            $data['stop_time'] = $stop_time;
         }
         if ($start_time) {
-            array_push($data, ['start_time' => $start_time]);
+            $data['start_time'] = $start_time;
         }
+        // print_r($data);die;
         Db::startTrans();
         try {
 
