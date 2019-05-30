@@ -2,11 +2,11 @@
 
 namespace app\common\action\index;
 
-use app\facade\DbUser;
 use app\facade\DbGoods;
 use app\facade\DbOfflineActivities;
-use app\facade\DbShops;
 use app\facade\DbOrder;
+use app\facade\DbShops;
+use app\facade\DbUser;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -129,6 +129,7 @@ class OfflineActivities extends CommonIndex {
         $orderData = [
             'order_no'        => $orderNo,
             'third_order_id'  => 0,
+            'order_type'      => 2,
             'uid'             => $uid,
             'order_status'    => $isPay ? 4 : 1,
             'order_money'     => bcadd($summary['total_price'], $discountMoney, 2), //订单金额(优惠金额+实际支付的金额)

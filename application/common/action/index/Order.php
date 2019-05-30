@@ -957,7 +957,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $field  = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
+        $field  = 'id,order_no,third_order_id,order_type,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
         $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
@@ -999,9 +999,16 @@ class Order extends CommonIndex {
         }
         $result['commission']    = $commission;
         $result['order_child']   = $order_child;
-        $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
-        $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
-        $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        if ($result['province_id']) {
+            $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+        }
+        if ($result['city_id']) {
+            $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
+        }
+        if ($result['area_id']) {
+            $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        }
+        
         return ['code' => '200', 'order_info' => $result];
     }
 
