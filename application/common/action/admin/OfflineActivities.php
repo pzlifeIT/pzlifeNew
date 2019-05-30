@@ -5,6 +5,7 @@ namespace app\common\action\admin;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbOfflineActivities;
+use app\facade\DbUser;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -80,7 +81,7 @@ class OfflineActivities extends CommonIndex {
                         fwrite($file, $result); //写入
                         fclose($file); //关闭
                         $upload = $Upload->uploadUserImage('offlineactivities' . date('Ymd') . $add . '.png');
-                           
+
                         if ($upload['code'] == 200) {
                             $logImage = DbImage::getLogImage($upload, 2); //判断时候有未完成的图片
                             if ($logImage) { //图片不存在
@@ -342,16 +343,26 @@ class OfflineActivities extends CommonIndex {
         return ['code' => '200'];
     }
 
-    public function resetOfflineActivitiesQrcode($id) {
+    public function resetOfflineActivitiesQrcode($id, $uid = '') {
         $Qrcode = DbOfflineActivities::getOfflineActivities(['id' => $id], 'qrcode_path', true);
         if (empty($Qrcode)) { //重新生成
+            if ($uid) {
+                $user = DbUser::getUserOne(['id' => $uid], 'id,passwd');
+                if (empty($user)) {
+                    return ['code' => '30012'];
+                }
+                $uid   = enUid($uid);
+                $scene = 'id=' . $id . 'pid=' . $uid;
+            }else {
+                $scene = 'id=' . $id;
+            }
             $Upload = new Upload;
-            $result = $this->createQrcode('pages/events/events', $id);
+            $result = $this->createQrcode('pages/events/events', $scene);
             if (strlen($result) > 100) {
-                $file = fopen(Config::get('conf.image_path') . 'offlineactivities' . date('Ymd') . $id . '.png', "w"); //打开文件准备写入
+                $file = fopen(Config::get('conf.image_path') . 'offlineactivities' . date('Ymd') . $scene . '.png', "w"); //打开文件准备写入
                 fwrite($file, $result); //写入
                 fclose($file); //关闭
-                $upload = $Upload->uploadUserImage('offlineactivities' . date('Ymd') . $id . '.png');
+                $upload = $Upload->uploadUserImage('offlineactivities' . date('Ymd') . $scene . '.png');
                 if ($upload['code'] == 200) {
                     $logImage = DbImage::getLogImage($upload, 2); //判断时候有未完成的图片
                     // print_r($logImage);die;
