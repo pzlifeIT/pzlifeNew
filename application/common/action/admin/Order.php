@@ -61,9 +61,17 @@ class Order extends CommonIndex {
         if (!$order_info) {
             return ['code' => 3001, 'msg' => '该订单不存在'];
         }
-        $order_info['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['province_id']])['area_name'];
-        $order_info['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
-        $order_info['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
+        if ($order_info['province_id']) {
+            $order_info['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['province_id']])['area_name'];
+        }
+        if ($order_info['city_id']) {
+            $order_info['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
+        }
+        if ($order_info['area_id']) {
+            $order_info['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
+        }
+        
+       
         $order_child                 = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
         $express_money               = 0;
         $order_goods_ids             = [];
