@@ -355,8 +355,9 @@ class OfflineActivities extends CommonIndex {
                     return ['code' => '30012'];
                 }
                 $uid   = enUid($uid);
-                $scene = 'id=' . $id . 'pid=' . $uid;
+                $scene = 'id=' . $id . '&pid=' . $uid;
             }
+           
             $Upload = new Upload;
             $result = $this->createQrcode('pages/events/events', $scene);
             if (strlen($result) > 100) {
@@ -373,7 +374,7 @@ class OfflineActivities extends CommonIndex {
                     
                     Db::startTrans();
                     try {
-                        $save = DbOfflineActivities::updateOfflineActivitiesGoods(['qrcode_path' => $upload['image_path']], $id);
+                        $save = DbOfflineActivities::updateOfflineActivities(['qrcode_path' => $upload['image_path']], $id);
                         // print_r($save);die;
                         if (!$save) {
                             return ['code' => '3011'];
@@ -394,7 +395,7 @@ class OfflineActivities extends CommonIndex {
                 return ['code' => 3009, 'error_data' => json_decode($result, true)];
             }
         } else {
-            return ['code' => '200', 'Qrcode' => $Qrcode['qrcode_path']];
+            return ['code' => '200', 'Qrcode' => Config::get('qiniu.domain') . '/'.$Qrcode['qrcode_path']];
         }
     }
 
