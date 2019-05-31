@@ -73,9 +73,9 @@ class Payment {
             }
             $orderId      = $nomalOrder['id'];
             $uid          = $nomalOrder['uid'];
-            $payType      = $nomalOrder['pay_type'];//支付类型 1.所有第三方支付 2.商券
-            $thirdPayType = $nomalOrder['third_pay_type'];//第三方支付类型1.支付宝 2.微信 3.银联
-            $thirdMoney   = $nomalOrder['third_money'];//第三方支付金额
+            $payType      = $nomalOrder['pay_type']; //支付类型 1.所有第三方支付 2.商券
+            $thirdPayType = $nomalOrder['third_pay_type']; //第三方支付类型1.支付宝 2.微信 3.银联
+            $thirdMoney   = $nomalOrder['third_money']; //第三方支付金额
             $logTypeRow   = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
             if (!empty($logTypeRow)) {
                 return ['code' => '3008']; //第三方支付已付款
@@ -185,8 +185,8 @@ class Payment {
             $memOrderRes  = [];
             $orderData    = [];
             $memOrderData = [];
-            if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getOrder('id,order_type,order_no', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+            if ($logPayRes['payment'] == 1) { //1.普通订单
+                $orderRes  = DbOrder::getOrder('id,order_type,order_no,uid', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -216,12 +216,43 @@ class Payment {
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
-                  /*   if (!$orderData) {//活动订单发送取货码
-                        if ($orderRes['order_type'] == 2) {//线下取货发送取货码
+                    if (!$orderData) { //活动订单发送取货码
+                        if ($orderRes['order_type'] == 2) { //线下取货发送取货码
                             $order_list = DbOrder::getOrderDetail(['id' => $orderRes['id']]);
+                            $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
+                            $skus       = [];
+                            $sku_goods  = [];
+                            $goods_name = [];
+                            foreach ($order_list as $order => $list) {
+                                if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
 
+                                    if (in_array($list['sku_id'], $skus)) {
+                                        $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
+                                    } else {
+                                        $skus[]                     = $list['sku_id'];
+                                        $sku_goods[$list['sku_id']] = 1;
+                                        $sku_json                   = json_decode($list['sku_json'], true);
+                                        // print_r($sku_json);die;
+                                        $goods_name[$list['sku_id']] = $list['goods_name'] . '规格【' . join(',', $sku_json) . '】';
+                                    }
+
+                                }
+                                // print_r($goods_name);die;
+                            }
+                            $message       = '您购买的商品：{';
+                            $admin_message = '订单号:' . $orderRes['order_no'] . '商品:{';
+                            foreach ($goods_name as $goods => $name) {
+                                $message .= $name . '数量【' . $sku_goods[$goods] . '】';
+                                $admin_message .= $name . '数量【' . $sku_goods[$goods] . '】';
+                            }
+                            $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
+                            $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
+                            $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile');
+                            $Note          = new Note;
+                            $send1         = $Note->sendSms($user_phone['mobile'], $message);
+                            $send2         = $Note->sendSms('17091858983', $admin_message);
                         }
-                    } */
+                    }
                 } catch (\Exception $e) {
                     $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::rollback();
@@ -274,7 +305,6 @@ class Payment {
         return $string;
     }
 
-<<<<<<< HEAD
     function sendRequest2($requestUrl, $data = []) {
         $curl = curl_init();
         $data = json_encode($data);
@@ -291,8 +321,6 @@ class Payment {
         return $res;
     }
 
-=======
->>>>>>> offline_activities
     /**
      * 获取微信access_token
      * @return array
@@ -317,7 +345,6 @@ class Payment {
 
         return $access_token;
     }
-<<<<<<< HEAD
 
 
     private function apiLog($apiName, $param) {
@@ -330,6 +357,4 @@ class Payment {
 //            'admin_id' => $adminId,
         ]);
     }
-=======
->>>>>>> offline_activities
 }
