@@ -175,7 +175,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getOrder('id', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id,order_type,order_no', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -204,6 +204,12 @@ class Payment {
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
+                  /*   if (!$orderData) {//活动订单发送取货码
+                        if ($orderRes['order_type'] == 2) {//线下取货发送取货码
+                            $order_list = DbOrder::getOrderDetail(['id' => $orderRes['id']]);
+
+                        }
+                    } */
                 } catch (\Exception $e) {
                     Db::rollback();
                 }
