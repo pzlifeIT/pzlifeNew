@@ -204,8 +204,8 @@ class Payment {
                         $redisListKey = Config::get('rediskey.order.redisMemberOrder');
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
-                    // Db::commit();
-                    if (!$orderData) { //活动订单发送取货码
+                    Db::commit();
+                    if (!empty($orderData)) { //活动订单发送取货码
                         $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['id' => $logPayRes['order_id']], true);
                         if ($orderRes['order_type'] == 2) { //线下取货发送取货码
                             $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
@@ -248,7 +248,7 @@ class Payment {
                         }
                        
                     }
-                    Db::commit();
+                   
                 } catch (\Exception $e) {
 
                     Db::rollback();
