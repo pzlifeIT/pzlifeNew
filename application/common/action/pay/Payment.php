@@ -207,7 +207,6 @@ class Payment {
                     Db::commit();
                     if (!$orderData) { //活动订单发送取货码
                         if ($orderRes['order_type'] == 2) { //线下取货发送取货码
-                            $order_list = DbOrder::getOrderDetail(['id' => $orderRes['id']]);
                             $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
                             $skus       = [];
                             $sku_goods  = [];
@@ -222,7 +221,7 @@ class Payment {
                                         $sku_goods[$list['sku_id']] = 1;
                                         $sku_json                   = json_decode($list['sku_json'], true);
                                         // print_r($sku_json);die;
-                                        $goods_name[$list['sku_id']] = $list['goods_name'] . '规格【' . join(',', $sku_json) . '】';
+                                        $goods_name[$list['sku_id']] = $list['goods_name'] . '规格[' . join(',', $sku_json) . ']';
                                     }
 
                                 }
@@ -231,8 +230,8 @@ class Payment {
                             $message       = '您购买的商品：{';
                             $admin_message = '订单号:' . $orderRes['order_no'] . '商品:{';
                             foreach ($goods_name as $goods => $name) {
-                                $message .= $name . '数量【' . $sku_goods[$goods] . '】';
-                                $admin_message .= $name . '数量【' . $sku_goods[$goods] . '】';
+                                $message .= $name . '数量[' . $sku_goods[$goods] . ']';
+                                $admin_message .= $name . '数量[' . $sku_goods[$goods] . ']';
                             }
                             $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
