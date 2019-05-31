@@ -248,9 +248,9 @@ class Payment {
                             }
                             $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
-                            $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile');
+                            $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile',true);
                             $Note          = new Note;
-                            $send1         = $Note->sendSms($user_phone['mobile'], $message,true);
+                            $send1         = $Note->sendSms($user_phone['mobile'], $message);
                             $send2         = $Note->sendSms('17091858983', $admin_message);
                         }
                     }
