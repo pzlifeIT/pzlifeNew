@@ -418,7 +418,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3005'];
         }
         $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $access_token;
-        // print_r($link);die;
+        // print_r(['scene' => $scene, 'page' => $page]);die;
         $result = $this->sendRequest2($requestUrl, ['scene' => $scene, 'page' => $page]);
         return $result;
 
