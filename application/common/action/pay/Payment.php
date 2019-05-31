@@ -206,6 +206,7 @@ class Payment {
                     }
                     Db::commit();
                     if (!$orderData) { //活动订单发送取货码
+                        $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['id' => $logPayRes['order_id']], true);
                         if ($orderRes['order_type'] == 2) { //线下取货发送取货码
                             $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
                             $skus       = [];
@@ -213,7 +214,7 @@ class Payment {
                             $goods_name = [];
                             foreach ($order_list as $order => $list) {
                                 if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
-
+            
                                     if (in_array($list['sku_id'], $skus)) {
                                         $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
                                     } else {
@@ -223,7 +224,7 @@ class Payment {
                                         // print_r($sku_json);die;
                                         $goods_name[$list['sku_id']] = $list['goods_name'] . '规格[' . join(',', $sku_json) . ']';
                                     }
-
+            
                                 }
                                 // print_r($goods_name);die;
                             }
@@ -235,10 +236,12 @@ class Payment {
                             }
                             $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
+                            
                             $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile',true);
                             $Note          = new Note;
                             $send1         = $Note->sendSms($user_phone['mobile'], $message);
                             $send2         = $Note->sendSms('17091858983', $admin_message);
+                           
                         }
                     }
                 } catch (\Exception $e) {
