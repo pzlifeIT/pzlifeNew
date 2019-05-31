@@ -175,7 +175,7 @@ class OfflineActivities extends CommonIndex {
             $this->resetUserInfo($uid);
             Db::commit();
 /* 发送提货码 */
-            $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo, 'order_status' => 1], true);
+            $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo], true);
             if ($orderRes['order_status'] == 4) {
                 $skus       = [];
                 $sku_goods  = [];
