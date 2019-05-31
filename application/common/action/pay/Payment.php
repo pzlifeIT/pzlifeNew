@@ -250,12 +250,14 @@ class Payment {
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
 
                             $user_phone = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile', true);
-                            $Note       = new Note;
-                            $send1      = $Note->sendSms($user_phone['mobile'], $message);
-                            $send2      = $Note->sendSms('17091858983', $admin_message);
+
+                            /* 取消发送取货码 */
+                            // $Note       = new Note;
+                            // $send1      = $Note->sendSms($user_phone['mobile'], $message);
+                            // $send2      = $Note->sendSms('17091858983', $admin_message);
                            
-                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
-                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
+                            // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
+                            // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
                                
                         }
                        
