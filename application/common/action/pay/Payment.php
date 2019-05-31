@@ -243,6 +243,7 @@ class Payment {
                         }
                     }
                 } catch (\Exception $e) {
+                    Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                     Db::rollback();
                 }
             } else { //写错误日志(待支付订单不存在)
