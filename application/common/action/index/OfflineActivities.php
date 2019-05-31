@@ -207,6 +207,9 @@ class OfflineActivities extends CommonIndex {
 
                 $send1 = $Note->sendSms($user_phone['mobile'], $message);
                 $send2 = $Note->sendSms('17091858983', $admin_message);
+                // print_r($send1);
+                // print_r($send2);
+                // die;
             }
 
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
