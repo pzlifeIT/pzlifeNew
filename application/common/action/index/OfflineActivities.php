@@ -177,44 +177,6 @@ class OfflineActivities extends CommonIndex {
 /* 发送提货码 */
             // $orderNo = 'odr19053115334899101549';
             $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo], true);
-            if ($orderRes['order_type'] == 2) { //线下取货发送取货码
-                $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
-                $skus       = [];
-                $sku_goods  = [];
-                $goods_name = [];
-                foreach ($order_list as $order => $list) {
-                    if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
-
-                        if (in_array($list['sku_id'], $skus)) {
-                            $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
-                        } else {
-                            $skus[]                     = $list['sku_id'];
-                            $sku_goods[$list['sku_id']] = 1;
-                            $sku_json                   = json_decode($list['sku_json'], true);
-                            // print_r($sku_json);die;
-                            $goods_name[$list['sku_id']] = $list['goods_name'] . '规格[' . join(',', $sku_json) . ']';
-                        }
-
-                    }
-                    // print_r($goods_name);die;
-                }
-                $message       = '您购买的商品：{';
-                $admin_message = '订单号:' . $orderRes['order_no'] . '商品:{';
-                foreach ($goods_name as $goods => $name) {
-                    $message .= $name . '数量[' . $sku_goods[$goods] . ']';
-                    $admin_message .= $name . '数量[' . $sku_goods[$goods] . ']';
-                }
-                $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
-                $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
-                
-                $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile',true);
-                $Note          = new Note;
-                $send1         = $Note->sendSms($user_phone['mobile'], $message);
-                $send2         = $Note->sendSms('17091858983', $admin_message);
-                print_r($send1);
-                print_r($send2);
-                die;
-            }
             if ($orderRes['order_status'] == 4) {
                 $skus       = [];
                 $sku_goods  = [];
