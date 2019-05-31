@@ -1,14 +1,4 @@
 <?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: 流年 <liu21st@gmail.com>
-// +----------------------------------------------------------------------
-
 // 应用公共文件
 
 /**
@@ -295,11 +285,11 @@ function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
 }
 
 /**
- * 获取微信信息
+ * 获取微信的openid unionid 及详细信息
  * @param $code
  * @param string $encrypteddata
  * @param string $iv
- * @return array|bool|mixed
+ * @return array|bool|int
  * @author zyr
  */
 function getOpenid($code, $encrypteddata = '', $iv = '') {
@@ -315,7 +305,7 @@ function getOpenid($code, $encrypteddata = '', $iv = '') {
     $sessionKey = $result['session_key'];
     unset($result['session_key']);
     if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
-        $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
+        $result = decryptData($encrypteddata, $iv, $sessionKey);
     }
     if (is_array($result)) {
         $result = array_change_key_case($result, CASE_LOWER); //CASE_UPPER,CASE_LOWER
@@ -325,6 +315,49 @@ function getOpenid($code, $encrypteddata = '', $iv = '') {
     //[openId] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[nickName] => 榮,[gender] => 1,[language] => zh_CN,[city] =>,[province] => Shanghai,[country] => China,
     //[avatarUrl] => https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJiaWQI7tUfDVrvuSrDDcfFiaJriaibibBiaYabWL5h6HlDgMMvkyFul9JRicr0ZMULxs66t5NBdyuhEokhA/132
     //[unionId] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk
+}
+
+/**
+ * 解密微信信息
+ * @param $encryptedData
+ * @param $iv
+ * @param $sessionKey
+ * @return int|array
+ * @author zyr
+ * -40001: 签名验证错误
+ * -40002: xml解析失败
+ * -40003: sha加密生成签名失败
+ * -40004: encodingAesKey 非法
+ * -40005: appid 校验错误
+ * -40006: aes 加密失败
+ * -40007: aes 解密失败
+ * -40008: 解密后得到的buffer非法
+ * -40009: base64加密失败
+ * -40010: base64解密失败
+ * -40011: 生成xml失败
+ */
+function decryptData($encryptedData, $iv, $sessionKey) {
+    $appid = Env::get('weixin.weixin_miniprogram_appid');
+    if (strlen($sessionKey) != 24) {
+        return -41001;
+    }
+    $aesKey = base64_decode($sessionKey);
+    if (strlen($iv) != 24) {
+        return -41002;
+    }
+    $aesIV     = base64_decode($iv);
+    $aesCipher = base64_decode($encryptedData);
+    $result    = openssl_decrypt($aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
+    $dataObj   = json_decode($result);
+    if ($dataObj == null) {
+        return -41003;
+    }
+    if ($dataObj->watermark->appid != $appid) {
+        return -41003;
+    }
+    $data = json_decode($result, true);
+    unset($data['watermark']);
+    return $data;
 }
 
 /**

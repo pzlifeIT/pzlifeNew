@@ -170,14 +170,14 @@ class Payment {
      * @author zyr
      */
     public function wxPayCallback($res) {
-        $wxReturn = $this->xmlToArray($res);
+        $wxReturn   = $this->xmlToArray($res);
         $notifyData = $wxReturn;
         $sign       = $wxReturn['sign']; //微信返回的签名
         unset($wxReturn['sign']);
         $makeSign = $this->makeSign($wxReturn, Config::get('conf.wx_pay_key'));
         if ($makeSign == $sign) { //验证签名
-            $logPayRes = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment', true);
-            $data      = [
+            $logPayRes    = DbOrder::getLogPay(['pay_no' => $wxReturn['out_trade_no'], 'status' => 2], 'id,order_id,payment', true);
+            $data         = [
                 'notifydata' => json_encode($notifyData),
                 'status'     => 1,
                 'pay_time'   => time(),
@@ -243,7 +243,7 @@ class Payment {
                             $message       = '您购买的商品：{';
                             $admin_message = '订单号:' . $orderRes['order_no'] . '商品:{';
                             foreach ($goods_name as $goods => $name) {
-                                $message .= $name . '数量[' . $sku_goods[$goods] . ']';
+                                $message       .= $name . '数量[' . $sku_goods[$goods] . ']';
                                 $admin_message .= $name . '数量[' . $sku_goods[$goods] . ']';
                             }
                             $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
@@ -255,16 +255,15 @@ class Payment {
                             // $Note       = new Note;
                             // $send1      = $Note->sendSms($user_phone['mobile'], $message);
                             // $send2      = $Note->sendSms('17091858983', $admin_message);
-                           
+
                             // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
                             // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
-                               
-                        }
-                       
-                    }
-                   
-                } catch (\Exception $e) {
 
+                        }
+
+                    }
+                } catch (\Exception $e) {
+                    $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::rollback();
                     // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                     exception($e);
@@ -333,6 +332,16 @@ class Payment {
         curl_close($curl);
         return $res;
     }
+    private function apiLog($apiName, $param) {
+        $user = new LogApi();
+        $user->save([
+            'api_name' => $apiName,
+            'param'    => json_encode($param),
+            'stype'    => 1,
+//            'code'     => $code,
+//            'admin_id' => $adminId,
+        ]);
+    }
 
     /**
      * 获取微信access_token
@@ -357,17 +366,5 @@ class Payment {
         }
 
         return $access_token;
-    }
-
-
-    private function apiLog($apiName, $param) {
-        $user = new LogApi();
-        $user->save([
-            'api_name' => $apiName,
-            'param'    => json_encode($param),
-            'stype'    => 1,
-//            'code'     => $code,
-//            'admin_id' => $adminId,
-        ]);
     }
 }

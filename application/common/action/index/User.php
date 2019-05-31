@@ -109,7 +109,7 @@ class User extends CommonIndex {
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006']; //验证码错误
         }
-        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        $wxInfo = getOpenid($code, $encrypteddata, $iv);
         if ($wxInfo === false) {
             return ['code' => '3002'];
         }
@@ -230,7 +230,7 @@ class User extends CommonIndex {
         if (!empty($this->checkAccount($mobile))) {
             return ['code' => '3008'];
         }
-        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        $wxInfo = getOpenid($code, $encrypteddata, $iv);
         if ($wxInfo === false) {
             return ['code' => '3002'];
         }
@@ -347,7 +347,7 @@ class User extends CommonIndex {
      * @author zyr
      */
     public function loginUserByWx($code, $platform, $buid) {
-        $wxInfo = $this->getOpenid($code);
+        $wxInfo = getOpenid($code);
         if ($wxInfo === false) {
             return ['code' => '3001'];
         }
@@ -1399,82 +1399,6 @@ class User extends CommonIndex {
     }
 
     /**
-     * 获取用的openid unionid 及详细信息
-     * @param $code
-     * @param $encrypteddata
-     * @param $iv
-     * @return array|bool|int
-     * @author zyr
-     */
-    private function getOpenid($code, $encrypteddata = '', $iv = '') {
-        $appid         = Config::get('conf.weixin_miniprogram_appid');
-        $secret        = Config::get('conf.weixin_miniprogram_appsecret');
-        $get_token_url = 'https://api.weixin.qq.com/sns/jscode2session?appid=' . $appid . '&secret=' . $secret . '&js_code=' . $code . '&grant_type=authorization_code';
-        $res           = sendRequest($get_token_url);
-        $result        = json_decode($res, true);
-        // Array([session_key] => N/G/1C4QKntLTDB9Mk0kPA==,[openid] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[unionid] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk)
-        if (empty($result['session_key'])) {
-            return false;
-        }
-        $sessionKey = $result['session_key'];
-        unset($result['session_key']);
-        if (!empty($encrypteddata) && !empty($iv) && empty($result['unionId'])) {
-            $result = $this->decryptData($encrypteddata, $iv, $sessionKey);
-        }
-        if (is_array($result)) {
-            $result = array_change_key_case($result, CASE_LOWER); //CASE_UPPER,CASE_LOWER
-            return $result;
-        }
-        return false;
-        //[openId] => oAuSK5VaBgJRWjZTD3MDkTSEGwE8,[nickName] => 榮,[gender] => 1,[language] => zh_CN,[city] =>,[province] => Shanghai,[country] => China,
-        //[avatarUrl] => https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJiaWQI7tUfDVrvuSrDDcfFiaJriaibibBiaYabWL5h6HlDgMMvkyFul9JRicr0ZMULxs66t5NBdyuhEokhA/132
-        //[unionId] => o4Xj757Ljftj2Z6EUBdBGZD0qHhk
-    }
-
-    /**
-     * 解密微信信息
-     * @param $encryptedData
-     * @param $iv
-     * @param $sessionKey
-     * @return int|array
-     * @author zyr
-     * -40001: 签名验证错误
-     * -40002: xml解析失败
-     * -40003: sha加密生成签名失败
-     * -40004: encodingAesKey 非法
-     * -40005: appid 校验错误
-     * -40006: aes 加密失败
-     * -40007: aes 解密失败
-     * -40008: 解密后得到的buffer非法
-     * -40009: base64加密失败
-     * -40010: base64解密失败
-     * -40011: 生成xml失败
-     */
-    private function decryptData($encryptedData, $iv, $sessionKey) {
-        $appid = Config::get('conf.weixin_miniprogram_appid');
-        if (strlen($sessionKey) != 24) {
-            return -41001;
-        }
-        $aesKey = base64_decode($sessionKey);
-        if (strlen($iv) != 24) {
-            return -41002;
-        }
-        $aesIV     = base64_decode($iv);
-        $aesCipher = base64_decode($encryptedData);
-        $result    = openssl_decrypt($aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
-        $dataObj   = json_decode($result);
-        if ($dataObj == null) {
-            return -41003;
-        }
-        if ($dataObj->watermark->appid != $appid) {
-            return -41003;
-        }
-        $data = json_decode($result, true);
-        unset($data['watermark']);
-        return $data;
-    }
-
-    /**
      * 添加新地址
      * @param $conId
      * @param $province_name
@@ -2371,7 +2295,7 @@ class User extends CommonIndex {
      * @author rzc
      */
     public function userRead($code, $encrypteddata = '', $iv = '', $view_uid = '') {
-        $wxInfo = $this->getOpenid($code, $encrypteddata, $iv);
+        $wxInfo = getOpenid($code, $encrypteddata, $iv);
         if ($wxInfo === false) {
             return ['code' => '3002'];
         }

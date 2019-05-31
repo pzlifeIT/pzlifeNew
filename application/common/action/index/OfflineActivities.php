@@ -33,7 +33,7 @@ class OfflineActivities extends CommonIndex {
                     /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
                     $result[$key]['spec'] = $goods_spec;
                     $result[$key]['goods_sku'] = $goods_sku; */
-                    $where                             = ['goods_id' => $list['id']];
+                    $where                             = ['goods_id' => $list['id'],'status' =>1];
                     $field                             = 'market_price';
                     $goodslist[$l]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
                     $field                             = 'retail_price';
