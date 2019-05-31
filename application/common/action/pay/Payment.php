@@ -257,7 +257,7 @@ class Payment {
                     
                     Db::rollback();
                     // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
-                    
+                    exception($e);
                     $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                 }
