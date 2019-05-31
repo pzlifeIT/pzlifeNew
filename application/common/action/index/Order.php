@@ -60,7 +60,7 @@ class Order extends CommonIndex {
             }
             DbOrder::updataOrder($data, $order['id']);//改订单状态
             if ($order['deduction_money'] != 0) {
-                DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商票
+                DbUser::modifyBalance($uid, $order['deduction_money'], 'inc');//退还用户商券
             }
 //            DbOrder::updateLogBonus(['status' => 3], ['order_no' => $orderNo]);//待结算分利取消结算
 //            DbOrder::updateLogIntegral(['status' => 3], ['order_no' => $orderNo]);//待结算积分取消结算(待付款取消的订单还未结算分利和积分不需要取消)
@@ -189,7 +189,7 @@ class Order extends CommonIndex {
                     'sup_id'       => $goods['supplier_id'],
                     'boss_uid'     => $buid,
                     'goods_price'  => $goods['retail_price'],
-                    'margin_price' => $this->getDistrProfits($goods['retail_price'], $goods['cost_price'], $goods['margin_price']),
+                    'margin_price' => getDistrProfits($goods['retail_price'], $goods['cost_price'], $goods['margin_price']),
                     'integral'     => $goods['integral'],
                     'goods_num'    => 1,
                     'sku_json'     => json_encode($goods['attr']),
@@ -219,19 +219,19 @@ class Order extends CommonIndex {
          */
 
         $orderNo        = createOrderNo();//创建订单号
-        $deductionMoney = 0;//商票抵扣金额
+        $deductionMoney = 0;//商券抵扣金额
         $thirdMoney     = 0;//第三方支付金额
         $discountMoney  = 0;//优惠金额
         $isPay          = false;
         $tradingData    = [];//交易日志
-        if ($payType == 2) {//商票支付
+        if ($payType == 2) {//商券支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
-            if ($userInfo['balance_freeze'] == '2') {//商票未冻结
+            if ($userInfo['balance_freeze'] == '2') {//商券未冻结
                 if ($summary['total_price'] > $userInfo['balance']) {
-                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商票
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商券
                     $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
                 } else {
-                    $isPay          = true;//可以直接商票支付完成
+                    $isPay          = true;//可以直接商券支付完成
                     $deductionMoney = $summary['total_price'];
                 }
             } else {
@@ -256,8 +256,8 @@ class Order extends CommonIndex {
             'uid'             => $uid,
             'order_status'    => $isPay ? 4 : 1,
             'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
-            'deduction_money' => $deductionMoney,//商票抵扣金额
-            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商票抵扣金额)
+            'deduction_money' => $deductionMoney,//商券抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商券抵扣金额)
             'goods_money'     => $summary['total_goods_price'],//商品金额
             'third_money'     => $thirdMoney,//第三方支付金额
             'discount_money'  => $discountMoney,//优惠金额
@@ -312,7 +312,7 @@ class Order extends CommonIndex {
 
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
-        if(empty($goodsSku)){
+        if (empty($goodsSku)) {
             return ['code' => '3004'];//商品下架
         }
         $goodsSku = $goodsSku[0];
@@ -337,7 +337,7 @@ class Order extends CommonIndex {
         $goodsSku['shopBuySum'] = [$shopId => $num];
         $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2);//商品总价
 
-        $distrProfits         = $this->getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);//可分配利润
+        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);//可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);
         $freightPrice         = bcmul($goodsSku['retail_price'], $num, 2);//同一个供应商模版id的商品价格累加
@@ -485,7 +485,7 @@ class Order extends CommonIndex {
      * @param $conId
      * @param $skuIdList 1,2,3
      * @param $userAddressId 1 收货地址id
-     * @param $payType 2 支付方式1:所有第三方支付2:商票支付
+     * @param $payType 2 支付方式1:所有第三方支付2:商券支付
      * @return array
      * @author zyr
      */
@@ -535,7 +535,7 @@ class Order extends CommonIndex {
                         'sup_id'       => $gList['supplier_id'],
                         'boss_uid'     => $shopList[$kgl] ?: 1,
                         'goods_price'  => $gList['retail_price'],
-                        'margin_price' => $this->getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
+                        'margin_price' => getDistrProfits($gList['retail_price'], $gList['cost_price'], $gList['margin_price']),
                         'integral'     => $gList['integral'],
                         'goods_num'    => 1,
                         'sku_json'     => json_encode($gList['attr']),
@@ -567,19 +567,19 @@ class Order extends CommonIndex {
          * 子订单内容
          */
         $orderNo        = createOrderNo();//创建订单号
-        $deductionMoney = 0;//商票抵扣金额
+        $deductionMoney = 0;//商券抵扣金额
         $thirdMoney     = 0;//第三方支付金额
         $discountMoney  = 0;//优惠金额
         $isPay          = false;
         $tradingData    = [];//交易日志
-        if ($payType == 2) {//商票支付
+        if ($payType == 2) {//商券支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
-            if ($userInfo['balance_freeze'] == '2') {//商票未冻结
+            if ($userInfo['balance_freeze'] == '2') {//商券未冻结
                 if ($summary['total_price'] > $userInfo['balance']) {
-                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商票
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0;//可支付的商券
                     $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
                 } else {
-                    $isPay          = true;//可以直接商票支付完成
+                    $isPay          = true;//可以直接商券支付完成
                     $deductionMoney = $summary['total_price'];
                 }
             } else {
@@ -604,8 +604,8 @@ class Order extends CommonIndex {
             'uid'             => $uid,
             'order_status'    => $isPay ? 4 : 1,
             'order_money'     => bcadd($summary['total_price'], $discountMoney, 2),//订单金额(优惠金额+实际支付的金额)
-            'deduction_money' => $deductionMoney,//商票抵扣金额
-            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商票抵扣金额)
+            'deduction_money' => $deductionMoney,//商券抵扣金额
+            'pay_money'       => $summary['total_price'],//实际支付(第三方支付金额+商券抵扣金额)
             'goods_money'     => $summary['total_goods_price'],//商品金额
             'third_money'     => $thirdMoney,//第三方支付金额
             'discount_money'  => $discountMoney,//优惠金额
@@ -718,7 +718,7 @@ class Order extends CommonIndex {
             $freightWeight[$value['freight_id']] = isset($freightWeight[$value['freight_id']]) ? bcadd($freightWeight[$value['freight_id']], $fWeight, 2) : $fWeight;//同一个供应商模版id的商品重量累加
             $fVolume                             = bcmul($value['volume'], $cartSum, 2);
             $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume;//同一个供应商模版id的商品体积累加
-            $distrProfits                        = $this->getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
+            $distrProfits                        = getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
             $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
             $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2);//钻石返利
@@ -802,20 +802,6 @@ class Order extends CommonIndex {
         $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
-    }
-
-    /**
-     * 获取商品的可分配利润
-     * @param $retailPrice
-     * @param $costPrice
-     * @param $marginPrice
-     * @return string
-     * @author zyr
-     */
-    private function getDistrProfits($retailPrice, $costPrice, $marginPrice) {
-        $profits      = bcsub(bcsub($retailPrice, $costPrice, 2), $marginPrice, 2);//利润(售价-进价-其他成本)
-        $distrProfits = bcmul($profits, 0.9, 2);//可分配利润
-        return $distrProfits;
     }
 
     /**
@@ -934,7 +920,7 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
-                            $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
+                            $commission                    = bcadd($commission,bcmul(bcmul($goods['margin_price'], 0.75, 4), $goods_num['goods_num'], 2),2) ;
                         }
                     }
                 }
@@ -946,6 +932,11 @@ class Order extends CommonIndex {
             }
             $result[$key]['express_money'] = $express_money;
             $result[$key]['integral']      = $integral;
+            if ($commission) {
+                $user_identity = DbUser::getLogBonus(['order_no'=>$value['order_no'],'to_uid' => $uid],'user_identity',true);
+                $commission = empty($user_identity) ? 0: $commission ;
+
+            }
             $result[$key]['commission']    = $commission;
             $result[$key]['order_child']   = $order_child;
             unset($result[$key]['id']);
@@ -966,12 +957,43 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $field  = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
+
+        
+        /* 取货码短信 */
+ /*        $field  = 'id,order_no,third_order_id,order_type,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
         $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
+        if ($result['order_type'] == 2) {//线下取货发送取货码
+            $order_list = DbOrder::getOrderDetail(['o.id' => $result['id']],'*');
+            $skus = [];
+            $sku_goods = [];
+            $goods_name = [];
+            foreach ($order_list as $order => $list) {
+                if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
+                   
+                        if (in_array($list['sku_id'],$skus)) {
+                            $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']]+ 1;
+                        } else {
+                            $skus[] = $list['sku_id'];
+                            $sku_goods[$list['sku_id']] = 1;
+                            $sku_json = json_decode($list['sku_json'],true);
+                            // print_r($sku_json);die;
+                            $goods_name[$list['sku_id']] = $list['goods_name'].',规格：'.join(',',$sku_json);
+                        }
+                    
+                }
+                print_r($goods_name);die;
+            }
+            $message = '';
+            foreach ($goods_name as $goods => $name) {
+                $message .= $name.'数量:'.$sku_goods[$goods];
+            }
+
+        } */
+
         $order_child   = DbOrder::getOrderChild('*', ['order_id' => $result['id']]);
         $integral      = 0;
         $express_money = 0;
@@ -984,12 +1006,12 @@ class Order extends CommonIndex {
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        if (empty($goods['sku_image'])){
+                        if (empty($goods['sku_image'])) {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                         }
-                        $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
-                        $integral                      += $goods['integral'] * $goods_num['goods_num'];
-                        $commission                    += bcmul(bcmul($goods['margin_price'],0.75,4),$goods_num['goods_num'],2);
+                        $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'], true);
+                        $integral                     += $goods['integral'] * $goods_num['goods_num'];
+                        $commission                   = bcadd($commission,bcmul(bcmul($goods['margin_price'], 0.75, 4), $goods_num['goods_num'], 2),2) ;
                     }
                 }
             }
@@ -1002,11 +1024,22 @@ class Order extends CommonIndex {
         }
         $result['express_money'] = $express_money;
         $result['integral']      = $integral;
+        if ($commission) {
+            $user_identity = DbUser::getLogBonus(['order_no'=>$result['order_no'],'to_uid' => $uid],'user_identity',true);
+            $commission = empty($user_identity) ? 0: $commission ;
+        }
         $result['commission']    = $commission;
         $result['order_child']   = $order_child;
-        $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
-        $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
-        $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        if ($result['province_id']) {
+            $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+        }
+        if ($result['city_id']) {
+            $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
+        }
+        if ($result['area_id']) {
+            $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        }
+        
         return ['code' => '200', 'order_info' => $result];
     }
 
@@ -1017,7 +1050,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false, $old_parent_id = '' , int $actype) {
+    public function createMemberOrder($conId, $user_type, $pay_type, $parent_id = false, $old_parent_id = '', int $actype) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -1025,25 +1058,25 @@ class Order extends CommonIndex {
         if (!$parent_id) {
             $parent_id = 1;
         } else {
-                $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
-                if (empty($parent_info)) {
-                    $parent_id = 1;
-                } else {
-                    if ($actype != 2) {
-                        if ($parent_info['user_identity'] < 2) {
-                            $parent_id = 1;
-                        }
-                        if ($user_type == 2 && $parent_info['user_identity'] < 3) {
-                            $parent_id = 1;
-                        }
+            $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity', true);
+            if (empty($parent_info)) {
+                $parent_id = 1;
+            } else {
+                if ($actype != 2) {
+                    if ($parent_info['user_identity'] < 2) {
+                        $parent_id = 1;
+                    }
+                    if ($user_type == 2 && $parent_info['user_identity'] < 3) {
+                        $parent_id = 1;
+                    }
                 }
             }
-            
+
         }
         if ($uid == $parent_id) {
             $parent_id = 1;
         }
-        
+
         /* 计算支付金额 */
         if ($user_type == 1) {
             $pay_money = 100;
@@ -1182,7 +1215,7 @@ class Order extends CommonIndex {
                 $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_image,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
                 // print_r($express_goods);die;
                 if (empty($express_goods['sku_image'])) {
-                    $express_goods['sku_image'] =  DbGoods::getOneGoodsSku(['id' => $express_goods['sku_id']], 'sku_image', true)['sku_image'];
+                    $express_goods['sku_image'] = DbGoods::getOneGoodsSku(['id' => $express_goods['sku_id']], 'sku_image', true)['sku_image'];
                 }
                 $express_goods['sku_json']  = json_decode($express_goods['sku_json'], true);
                 $express['express_goods'][] = $express_goods;

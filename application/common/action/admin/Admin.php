@@ -165,12 +165,12 @@ class Admin extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
         }
+        if ($user['user_identity'] == 4) {
+            return ['code' => '3007']; //该用户已经是boss
+        }
         $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
         if ($this->redis->setNx($redisKey . $user['id'], 1) === false) {
             return ['code' => '3009'];
-        }
-        if ($user['user_identity'] == 4) {
-            return ['code' => '3007']; //该用户已经是boss
         }
         $bossId = $this->getBoss($user['id']);
         if ($bossId == 1) {
@@ -226,6 +226,7 @@ class Admin extends CommonIndex {
             $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
         } catch (\Exception $e) {
+            $this->redis->del($redisKey . $user['id']);
             Db::rollback();
             return ['code' => '3008']; //开通失败
         }
@@ -310,7 +311,7 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 商票,佣金,积分手动充值
+     * 商券,佣金,积分手动充值
      * @param $cmsConId 加密的内容
      * @param $passwd
      * @param $stype
@@ -354,7 +355,7 @@ class Admin extends CommonIndex {
     }
 
     /**
-     * 商票,佣金,积分手动充值
+     * 商券,佣金,积分手动充值
      * @param $cmsConId 加密的内容
      * @param $status
      * @return string
@@ -381,7 +382,7 @@ class Admin extends CommonIndex {
         }
         if ($remittance['stype'] != 3) {
 
-            if ($remittance['stype'] == 1) { //商票
+            if ($remittance['stype'] == 1) { //商券
                 $tradingData = [
                     'uid'          => $remittance['uid'],
                     'trading_type' => 1,
@@ -409,7 +410,7 @@ class Admin extends CommonIndex {
                     DbOrder::addLogTrading($tradingData);
                 }
 
-                if ($remittance['stype'] == 1) { //商票
+                if ($remittance['stype'] == 1) { //商券
                     DbUser::modifyBalance($remittance['uid'], $remittance['credit'], 'inc');
                 } elseif ($remittance['stype'] == 2) { //佣金
                     DbUser::modifyCommission($remittance['uid'], $remittance['credit'], 'inc');

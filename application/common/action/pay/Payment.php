@@ -2,6 +2,7 @@
 
 namespace app\common\action\pay;
 
+use app\common\model\LogApi;
 use app\facade\DbOrder;
 use app\facade\DbUser;
 use pay\wxpay\WxMiniprogramPay;
@@ -20,10 +21,10 @@ class Payment {
         $this->redis = Phpredis::getConn();
     }
 
-    public function payment($orderNo, int $payment, int $platform) {
+    public function payment($orderNo, int $payment, int $platform, $code) {
         $orderOutTime = Config::get('conf.order_out_time');//订单过期时间
         if ($payment == 2) {//购买会员订单
-            $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商票
+            $payType        = 2; //支付类型 1.支付宝 2.微信 3.银联 4.商券
             $memberOrderRow = $this->memberDiamond($orderNo);
             if (empty($memberOrderRow)) {
                 return ['code' => '3000'];//订单号不存在
@@ -47,7 +48,7 @@ class Payment {
                 return ['code' => '3008'];//第三方支付已付款
             }
             if ($payType == 2) {//微信支付
-                $parameters = $this->wxpay($uid, $platform, $payment, $payMoney, $orderId);
+                $parameters = $this->wxpay($uid, $platform, $payment, $payMoney, $orderId, $code);
                 if ($parameters === false) {
                     return ['code' => '3010'];//创建支付订单失败
                 }
@@ -70,7 +71,7 @@ class Payment {
             }
             $orderId      = $nomalOrder['id'];
             $uid          = $nomalOrder['uid'];
-            $payType      = $nomalOrder['pay_type'];//支付类型 1.所有第三方支付 2.商票
+            $payType      = $nomalOrder['pay_type'];//支付类型 1.所有第三方支付 2.商券
             $thirdPayType = $nomalOrder['third_pay_type'];//第三方支付类型1.支付宝 2.微信 3.银联
             $thirdMoney   = $nomalOrder['third_money'];//第三方支付金额
             $logTypeRow   = DbOrder::getLogPay(['order_id' => $orderId, 'payment' => $payment, 'status' => 1], 'pay_no', true);
@@ -80,7 +81,7 @@ class Payment {
             Db::startTrans();
             try {
                 if ($thirdPayType == 2) {//微信支付
-                    $parameters = $this->wxpay($uid, $platform, $payment, $thirdMoney, $orderId);
+                    $parameters = $this->wxpay($uid, $platform, $payment, $thirdMoney, $orderId, $code);
                     if ($parameters === false) {
                         Db::rollback();
                         return ['code' => '3010'];//创建支付订单失败
@@ -103,16 +104,21 @@ class Payment {
      * @param $payment
      * @param $payMoney
      * @param $orderId
+     * @param $code
      * @return array
      * @author zyr
      */
-    private function wxpay($uid, $platform, $payment, $payMoney, $orderId) {
+    private function wxpay($uid, $platform, $payment, $payMoney, $orderId, $code) {
         //获取openid
-        $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
-        $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
-        $openid     = $userWxinfo['openid'];
-        $payNo      = createOrderNo('wpy');
-        $data       = [
+//        $openType   = Config::get('conf.platform_conf')[Config::get('app.deploy')];
+//        $userWxinfo = DbUser::getUserWxinfo(['uid' => $uid, 'platform' => $platform, 'openid_type' => $openType], 'openid', true);
+        $userWxinfo = getOpenid($code);
+        if (empty($userWxinfo['openid'])) {
+            return false;
+        }
+        $openid = $userWxinfo['openid'];
+        $payNo  = createOrderNo('wpy');
+        $data   = [
             'pay_no'   => $payNo,
             'uid'      => $uid,
             'payment'  => $payment,
@@ -120,7 +126,7 @@ class Payment {
             'order_id' => $orderId,
             'money'    => bcmul($payMoney, 100, 0),
         ];
-        $addRes     = DbOrder::addLogPay($data);
+        $addRes = DbOrder::addLogPay($data);
         if (!empty($addRes)) {
             $wxPay  = new WxMiniprogramPay($openid, $data['pay_no'], $data['money']);
             $result = $wxPay->pay();
@@ -158,7 +164,7 @@ class Payment {
      * @author zyr
      */
     public function wxPayCallback($res) {
-        $wxReturn   = $this->xmlToArray($res);
+        $wxReturn = $this->xmlToArray($res);
         $notifyData = $wxReturn;
         $sign       = $wxReturn['sign'];//微信返回的签名
         unset($wxReturn['sign']);
@@ -175,7 +181,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) {//1.普通订单
-                $orderRes  = DbOrder::getOrder('id', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id,order_type,order_no', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -204,7 +210,14 @@ class Payment {
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
+                  /*   if (!$orderData) {//活动订单发送取货码
+                        if ($orderRes['order_type'] == 2) {//线下取货发送取货码
+                            $order_list = DbOrder::getOrderDetail(['id' => $orderRes['id']]);
+
+                        }
+                    } */
                 } catch (\Exception $e) {
+                    $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::rollback();
                 }
             } else {//写错误日志(待支付订单不存在)
@@ -253,5 +266,41 @@ class Payment {
             $string = implode("&", $array);
         }
         return $string;
+    }
+
+    private function apiLog($apiName, $param) {
+        $user = new LogApi();
+        $user->save([
+            'api_name' => $apiName,
+            'param'    => json_encode($param),
+            'stype'    => 1,
+//            'code'     => $code,
+//            'admin_id' => $adminId,
+        ]);
+    }
+
+    /**
+     * 获取微信access_token
+     * @return array
+     * @author rzc
+     */
+    private function getWeiXinAccessToken() {
+        $access_token = $this->redis->get($this->redisAccessToken);
+        if (empty($access_token)) {
+            $appid = Config::get('conf.weixin_miniprogram_appid');
+            // $appid         = 'wx1771b2e93c87e22c';
+            $secret = Config::get('conf.weixin_miniprogram_appsecret');
+            // $secret        = '1566dc764f46b71b33085ba098f58317';
+            $requestUrl       = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+            $requsest_subject = json_decode(sendRequest($requestUrl), true);
+            $access_token     = $requsest_subject['access_token'];
+            if (!$access_token) {
+                return false;
+            }
+            $this->redis->set($this->redisAccessToken, $access_token);
+            $this->redis->expire($this->redisAccessToken, 6600);
+        }
+
+        return $access_token;
     }
 }

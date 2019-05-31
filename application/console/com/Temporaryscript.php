@@ -90,7 +90,7 @@ class TemporaryScript extends Pzlife {
 //                            ]
 //                        );
 //                    }
-//                    //商票
+//                    //商券
 //                    if ($member_count[0]['redmoney'] > 0) {
 //                        Db::table('pz_log_trading')->insert(
 //                            [
@@ -115,8 +115,98 @@ class TemporaryScript extends Pzlife {
             // Db::table('pz_users')->where('id', $user[0]['id'])->update(['mobile' => '17891936793']);
 
             /* 因政策调整，所有合伙人免费钻石卡全部关停作废 */
-            Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
-            
+            // Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
+
+            /* 2019/05/25 挂人关系调整 活动用户挂在王金  23926 下面*/
+            $user    = Db::query("SELECT * FROM pz_users WHERE `create_time` > '1558713600' AND `create_time` < '1558780200' AND delete_time=0 ");
+            foreach ($user as $key => $value) {
+                $relation = Db::query("SELECT * FROM pz_user_relation WHERE `uid` = ".$value['id']);
+                if ($relation) {
+                    $pid = $relation[0]['pid']== 1  ? 23926 : $relation[0]['pid'];
+                    $olduser_relation = explode(',',$relation[0]['relation']);
+                    if ($value['user_identity'] == 2) {
+                        
+                        $from_diamonduid = $olduser_relation[0];
+                        /* 查询钻石领取记录 */
+                        $diamondvip_get = Db::query("SELECT * FROM pz_diamondvip_get WHERE `uid` = ".$value['id'] . " AND `share_uid` = ".$from_diamonduid);
+                        Db::table('pz_diamondvip_get')->where('id', $diamondvip_get[0]['id'])->update(['share_uid' => 23926]);
+                        // print_r($diamondvip_get);die;
+                        /* 查询订单号 */
+                        $diamond_member_order = Db::query("SELECT `id`,`order_no` FROM pz_member_order WHERE `uid` = ".$value['id'] . " AND `from_uid` = ".$from_diamonduid. " AND `pay_status` = 4 ");
+                        $log_trading = Db::query("SELECT * FROM pz_log_trading WHERE `trading_type` = 3 AND `order_no` = '".$diamond_member_order[0]['order_no']."'");
+
+                        $this_user = Db::query("SELECT `bounty` FROM pz_users WHERE  `id` = 23926 AND delete_time=0 ");
+                        
+                        $bounty = $this_user[0]['bounty'] + $log_trading[0]['money'];
+
+                        Db::table('pz_users')->where('id', 23926)->update(['bounty' => $bounty]);
+                        // print_r($this_user);die;
+                        $from_user = Db::query("SELECT `bounty` FROM pz_users WHERE  `id` = ".$from_diamonduid." AND delete_time=0 ");
+                        $subbounty = $from_user[0]['bounty'] - $log_trading[0]['money'];
+                        Db::table('pz_users')->where('id', $from_diamonduid)->update(['bounty' => $subbounty]);
+                        Db::table('pz_log_trading')->where('id', $log_trading[0]['id'])->update(['uid' => 23926]);
+                        Db::table('pz_member_order')->where('id', $diamond_member_order[0]['id'])->update(['from_uid' => 23926]);
+                        $olduser_relation[0] = 23926; 
+                        $user_relation = implode(',',$olduser_relation);
+                        $pid = 23926;
+                    }else {
+                        $user_relation = '23926,'.$relation[0]['relation'];
+                    }
+                    // 
+                    // 
+                    // print_r($user_relation);die;
+                    if ($pid == 2) {
+                        continue;
+                        $olduser_relation[0] = 23926; 
+                        $user_relation = implode(',',$olduser_relation);
+                        $pid = 23926;
+                    }
+                    Db::table('pz_user_relation')->where('id', $relation[0]['id'])->update(['pid' => $pid,'relation' => $user_relation]);
+                   
+                }
+               
+            }
+            /* 老商城未注册会员变成以阅读数量*/
+
+            $mysql_connect = Db::connect(Config::get('database.db_config'));
+            ini_set('memory_limit', '1024M');
+            $member     = "SELECT * FROM pre_member  ";
+            $memberdata = $mysql_connect->query($member);
+            foreach ($memberdata as $key => $value) {
+                $member_relationship = $mysql_connect->query('SELECT * FROM pre_member_relationship WHERE `uid` = ' . $value['uid']);
+                if (!$member_relationship) {
+                        continue;
+                }
+                $user_union = $mysql_connect->query("SELECT * FROM pre_member_wxunion WHERE `uid` = ".$value['uid']);
+                $user_openid = $mysql_connect->query("SELECT * FROM pre_member_weixin WHERE `uid` = ".$value['uid']);
+                $hierarchy = json_decode($member_relationship[0]['hierarchy']);
+                if (empty($user_openid)) {
+                    continue;
+                }
+                if ($user_union) {
+                    // print_r($user_union);die;
+                    $user_unionid = $user_union[0]['unionid'];
+                    // print_r($user_unionid);die;
+                    $new_database = Db::query("SELECT * FROM pz_users WHERE `unionid` = '".$user_unionid."'");
+                    if ($new_database) {//已注册
+                        continue;   
+                    }
+                }
+                if ($hierarchy) {
+                   
+                    foreach ($hierarchy as $hie => $chy) {
+                        // print_r($hierarchy);die;
+                        if (!Db::query("SELECT * FROM pz_user_read WHERE `view_uid` = ".$chy. " AND `openid` = '".$user_openid[0]['wx_openid']."'")) {
+                            $view_user = Db::query("SELECT `user_identity` FROM  pz_users WHERE `id` = ".$chy);
+                            if (empty($view_user)) {
+                                continue;
+                            }
+                            Db::table("pz_user_read")->insert(['openid' => $user_openid[0]['wx_openid'],'view_uid' => $chy,'view_identity' => $view_user[0]['user_identity']]);
+                        }
+                    }
+                }
+            }
+
             Db::commit();
        } catch (\Exception $e) {
            // 回滚事务
@@ -195,5 +285,28 @@ class TemporaryScript extends Pzlife {
             strtolower($ucWord), //拼音首字母,不包含非汉字内容
         ];
         return array_filter(array_unique($data));
+    }
+
+    public function imagePath(){
+        $goodsRelation = Db::query('select `id`,`image_path` from pz_recommend where `image_path`<> '."''");
+        // print_r($goodsRelation);
+        Db::startTrans();
+        try {
+            foreach ($goodsRelation as $key => $value) {
+                $image_path = $this->filtraImage($value['image_path']);
+                Db::table('pz_recommend')->where('id',$value['id'])->update(['image_path' => $image_path]);
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            // 回滚事务
+            exception($e);
+            Db::rollback();
+        }
+        exit('ok!!');
+    }
+
+    function filtraImage( $image) {
+        $image = str_replace('https://imagesdev.pzlive.vip' . '/', '', $image);
+        return str_replace('https://images.pzlive.vip' . '/', '', $image);
     }
 }

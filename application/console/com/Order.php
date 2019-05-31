@@ -238,6 +238,9 @@ class Order extends Pzlife {
             $user    = Db::query($userSql);
             $user    = $user[0];
             foreach ($orderGoods as $ogVal) {
+                if ($ogVal['margin_price'] <= 0) {
+                    continue;
+                }
                 $o = [
                     'order_no'     => $orderNo,
                     'from_uid'     => $uid,

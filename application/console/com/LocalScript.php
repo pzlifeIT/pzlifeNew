@@ -9,7 +9,7 @@ use function Qiniu\json_decode;
 use think\Db;
 use cache\Phpredis;
 
-class User extends Pzlife {
+class LocalScript extends Pzlife {
     private $redis;
 
     /**
@@ -315,11 +315,10 @@ class User extends Pzlife {
 
     /**
      * 定时清理redis无效的cms_con_id
-     * 每天凌晨2点执行,查过24小时未登录过就过期
      */
     public function clearCmsConId() {
         $this->redis       = Phpredis::getConn();
-        $lastTime          = time() - 86400;//2天前
+        $lastTime          = time() - 172800;//2天前
         $redisCmsConIdTime = Config::get('rediskey.user.redisCmsConIdTime');
         $redisCmsConIdUid  = Config::get('rediskey.user.redisCmsConIdUid');
         $res               = $this->redis->zRangeByScore($redisCmsConIdTime, 0, $lastTime);
@@ -385,6 +384,62 @@ class User extends Pzlife {
         }
     }
 
+    public function getCommissionShopRel(){
+        Db::startTrans();
+        try {
+           
+            $mysql_connect = Db::connect(Config::get('database.db_config'));
+
+            $commission     = "SELECT * FROM pre_commission_order ";
+            $commissiondata = $mysql_connect->query($commission);
+            foreach($commissiondata as $key => $value){
+                //已发放
+                if ($value['status'] == 1) {
+                    if ( $value['type']== 'boss') {
+                        $member_relationship = $mysql_connect->query('SELECT * FROM pre_shop_relshop WHERE `target_uid` = ' . $value['uid']);
+                        $target_nickname = $mysql_connect->query('SELECT `nickname` FROM pre_member WHERE `uid` = ' . $value['uid'])[0]['nickname'];
+                        if ($member_relationship) {
+                            $shop_rel_uid = $member_relationship[0]['uid'];
+                            $shop_rel_user = $mysql_connect->query('SELECT `nickname` FROM pre_member WHERE `uid` = ' . $shop_rel_uid);
+                            if ($shop_rel_user) {
+                                $nickname = $shop_rel_user[0]['nickname'];
+                            }
+                        }else{
+                            $shop_rel_uid = 1;
+                            $nickname = '公司总店';
+                        }
+                        $month =  date('Ym',strtotime($value['datetime']));
+                        $shop_real = Db::connect(Config::get('database.db_pzlifelog'))->query('SELECT * FROM pz_commission_relshop where `target_uid` = '.$value['uid']. ' AND timekey = '.$month);
+                        if ($shop_real) {
+                            $cost = $shop_real[0]['cost'] + bcmul($value['cost'],0.15,2);
+                            Db::connect(Config::get('database.db_pzlifelog'))->table('pz_commission_relshop')->where('id', $shop_real[0]['id'])->update(['cost' => $cost]);
+                        }else{
+                            Db::connect(Config::get('database.db_pzlifelog'))->table('pz_commission_relshop')->insert(
+                                [
+                                    'target_uid' => $value['uid'],
+                                    'target_nickname' => $target_nickname,
+                                    'uid' => $shop_rel_uid,
+                                    'nickname' => $nickname,
+                                    'cost' => bcmul($value['cost'],0.15,2),
+                                    'timekey' => $month,
+                                    'datetime' => date('Y-m-d H:i:s',time()),
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+            // 提交事务
+            Db::commit();
+        } catch (\Exception $e) {
+            // 回滚事务
+            exception($e);
+            Db::rollback();
+            
+            die;
+        }
+       
+    }
 
     function getArea($name, $level) {
         $areaSql  = "select * from pz_areas where delete_time=0 and area_name = '" . $name . "' and level =  " . $level;

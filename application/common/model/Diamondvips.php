@@ -14,7 +14,7 @@ class Diamondvips extends Model {
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
         'delete_time' => 'timestamp:Y-m-d H:i:s',//更新时间
-        'redmoney_overtime' => 'timestamp:Y-m-d H:i:s',//商票到期时间
+        'redmoney_overtime' => 'timestamp:Y-m-d H:i:s',//商券到期时间
     ];
 
     protected static function init() {

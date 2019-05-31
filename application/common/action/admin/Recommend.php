@@ -61,6 +61,7 @@ class Recommend extends CommonIndex {
                     return ['code' => '3010'];//图片没有上传过
                 }
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                $data['image_path'] = $image;
             }
 
             $updateRecommends = DbRecommend::updateRecommends($data, $id);
@@ -150,6 +151,7 @@ class Recommend extends CommonIndex {
                     return ['code' => '3010'];//图片没有上传过
                 }
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                $data['image_path'] = $image;
             }
             $add            = DbRecommend::addRecommends($data);
             $has_recommends = $this->getRecommendOrderBy();
@@ -449,7 +451,7 @@ class Recommend extends CommonIndex {
         /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本)*0.9*(钻石返利：0.75) */
         /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
         foreach ($goods_sku as $goods => $sku) {
-            $goods_sku[$goods]['brokerage']       = bcmul(bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 2), 0.9, 2), 0.75, 2);
+            $goods_sku[$goods]['brokerage']       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], $sku['margin_price']), 0.75, 2);
             $goods_sku[$goods]['integral_active'] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), $sku['margin_price'], 2), 2, 0);
             $sku_json                             = DbGoods::getAttrList([['id', 'in', $sku['spec']]], 'attr_name');
             $sku_name                             = [];
@@ -481,6 +483,20 @@ class Recommend extends CommonIndex {
             return ['code' => '3002'];
         }
         DbRecommend::delRecommend($id);
+        $has_recommends = $this->getRecommendOrderBy();
+        if ($has_recommends['recommends']) {
+            $this->SetRedis($has_recommends['recommends']);
+        }
+        return ['code' => '200'];
+    }
+
+    /**
+     * 重置推荐
+     * @param $id
+     * @return array
+     * @author rzc
+     */
+    public function resetRecommend(){
         $has_recommends = $this->getRecommendOrderBy();
         if ($has_recommends['recommends']) {
             $this->SetRedis($has_recommends['recommends']);

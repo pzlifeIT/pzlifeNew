@@ -76,7 +76,7 @@ class User extends MyController {
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误 / 3009:该微信号已绑定手机号
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3005:新用户需授权 / 3006:验证码错误 / 3009:该微信号已绑定手机号
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
      * @return array
@@ -121,7 +121,7 @@ class User extends MyController {
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册 / 3009:新用户需授权
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/register
      * @return array
@@ -236,7 +236,7 @@ class User extends MyController {
      * @apiSuccess (data) {String} email 邮箱
      * @apiSuccess (data) {Date} last_time 最后登录时间
      * @apiSuccess (data) {Date} create_time 注册时间
-     * @apiSuccess (data) {Double} balance 商票
+     * @apiSuccess (data) {Double} balance 商券
      * @apiSuccess (data) {Double} commission 佣金
      * @apiSuccess (data) {Number} integral 剩余积分
      * @apiSuccess (data) {Double} bounty 奖励金
@@ -293,10 +293,10 @@ class User extends MyController {
      * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:用户不存在 / 3004:用户不是boss
      * @apiSuccess (返回) {Array} data 店铺首页信息
      * @apiSuccess (返回) {Decimal} balance_all 实际得到分利
-     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} balance 商券余额
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} integral 积分余额
-     * @apiSuccess (返回) {Decimal} balance_use 已使用商票
+     * @apiSuccess (返回) {Decimal} balance_use 已使用商券
      * @apiSuccess (返回) {Decimal} no_bonus 未到账
      * @apiSuccess (返回) {Decimal} bonus 已到账
      * @apiSuccess (返回) {Decimal} bonus_all 总收益
@@ -384,7 +384,7 @@ class User extends MyController {
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (data) {Decimal} money 金额
      * @apiSuccess (data) {Date} create_time 到账时间
-     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
      * @apiSuccess (data) {String} ctype 描述
      * @apiSampleRequest /index/user/getshopcommission
      * @return array
@@ -416,7 +416,7 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} commission_all 佣金总额
      * @apiSuccess (返回) {Decimal} commission_extract 提现
-     * @apiSuccess (返回) {Decimal} commission_to_balance 转商票
+     * @apiSuccess (返回) {Decimal} commission_to_balance 转商券
      * @apiSampleRequest /index/user/getshopcommissionsum
      * @return array
      * @author zyr
@@ -434,7 +434,7 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 获取店铺商票明细
+     * @api              {post} / 获取店铺商券明细
      * @apiDescription   getShopBalance
      * @apiGroup         index_user
      * @apiName          getShopBalance
@@ -444,7 +444,7 @@ class User extends MyController {
      * @apiParam (入参) {Int} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} money 商票金额
+     * @apiSuccess (返回) {Decimal} money 商券金额
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {String} ctype 类型
      * @apiSuccess (返回) {json} create_time 明细生成时间
@@ -474,16 +474,16 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 个人中心我的商票
+     * @api              {post} / 个人中心我的商券
      * @apiDescription   getShopBalanceSum
      * @apiGroup         index_user
      * @apiName          getShopBalanceSum
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
-     * @apiSuccess (返回) {Decimal} balance 商票余额
-     * @apiSuccess (返回) {Decimal} balanceUse 已用商票
-     * @apiSuccess (返回) {Decimal} balanceAll 商票总额
-     * @apiSuccess (返回) {Decimal} noBbonus 待到账商票
+     * @apiSuccess (返回) {Decimal} balance 商券余额
+     * @apiSuccess (返回) {Decimal} balanceUse 已用商券
+     * @apiSuccess (返回) {Decimal} balanceAll 商券总额
+     * @apiSuccess (返回) {Decimal} noBbonus 待到账商券
      * @apiSampleRequest /index/user/getshopbalancesum
      * @return array
      * @author zyr
@@ -1263,9 +1263,9 @@ class User extends MyController {
      * @apiParam (入参) {Number} [min_money] 用户转出最小金额
      * @apiParam (入参) {Number} [max_money] 用户转出最大金额
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
-     * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
-     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
+     * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商券
+     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商券 2.佣金提现 3.奖励金转商券 4. 奖励金提现
+     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消 4.查询为不取消的信息
      * @apiParam (入参) {String} [start_time] 开始时间
      * @apiParam (入参) {String} [end_time] 结束时间
      * @apiParam (入参) {String} [id] 查询ID（查看详情时返回单条数据）
@@ -1282,8 +1282,8 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商券 2.佣金提现 3.奖励金转商券 4. 奖励金提现
+     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商券
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
      * @apiSuccess (log_transfer) {String} invoice 是否提供发票 1:提供 2:不提供
@@ -1377,7 +1377,7 @@ class User extends MyController {
             }
         }
         if (!empty($status)) {
-            if (!in_array($status, [1, 2, 3])) {
+            if (!in_array($status, [1, 2, 3, 4])) {
                 return ['code' => '3012'];
             }
         }
@@ -1416,13 +1416,13 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 佣金转商票
+     * @api              {post} / 佣金转商券
      * @apiDescription   commissionTransferBalance
      * @apiGroup         index_user
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商券 / 3006:转商券失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
      * @author rzc
@@ -1447,13 +1447,13 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 奖励金转商票
+     * @api              {post} / 奖励金转商券
      * @apiDescription   bountyTransferBalance
      * @apiGroup         index_user
      * @apiName          bountyTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商券 / 3006:转商券失败
      * @apiSampleRequest /index/user/bountyTransferBalance
      * @return array
      * @author rzc
