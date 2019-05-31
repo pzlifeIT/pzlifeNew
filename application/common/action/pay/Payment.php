@@ -226,7 +226,7 @@ class Payment {
                             $goods_name = [];
                             foreach ($order_list as $order => $list) {
                                 if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
-            
+
                                     if (in_array($list['sku_id'], $skus)) {
                                         $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
                                     } else {
@@ -236,7 +236,7 @@ class Payment {
                                         // print_r($sku_json);die;
                                         $goods_name[$list['sku_id']] = $list['goods_name'] . '规格[' . join(',', $sku_json) . ']';
                                     }
-            
+
                                 }
                                 // print_r($goods_name);die;
                             }
@@ -248,18 +248,25 @@ class Payment {
                             }
                             $message       = $message . '}订单号为' . $orderRes['order_no'] . '取货码为：Off' . $orderRes['id'];
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
-                            
-                            $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile',true);
-                            $Note          = new Note;
-                            $send1         = $Note->sendSms($user_phone['mobile'], $message);
-                            $send2         = $Note->sendSms('17091858983', $admin_message);
-                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
-                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
-                            Db::commit();
+
+                            $user_phone = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile', true);
+                            $Note       = new Note;
+                            $send1      = $Note->sendSms($user_phone['mobile'], $message);
+                            $send2      = $Note->sendSms('17091858983', $admin_message);
+                            Db::startTrans();
+                            try {
+                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
+                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
+                                Db::commit();
+                            } catch (\Exception $e) {
+
+                                Db::rollback();
+                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
+                            }
                         }
                     }
                 } catch (\Exception $e) {
-                    
+
                     Db::rollback();
                     // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
                     exception($e);
