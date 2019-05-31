@@ -253,7 +253,9 @@ class Payment {
                             $Note          = new Note;
                             $send1         = $Note->sendSms($user_phone['mobile'], $message);
                             $send2         = $Note->sendSms('17091858983', $admin_message);
-                           
+                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
+                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
+                            Db::commit();
                         }
                     }
                 } catch (\Exception $e) {
