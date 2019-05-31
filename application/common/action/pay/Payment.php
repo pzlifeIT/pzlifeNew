@@ -216,7 +216,7 @@ class Payment {
                         $redisListKey = Config::get('rediskey.order.redisMemberOrder');
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
-                    Db::commit();
+                    // Db::commit();
                     if (!$orderData) { //活动订单发送取货码
                         $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['id' => $logPayRes['order_id']], true);
                         if ($orderRes['order_type'] == 2) { //线下取货发送取货码
@@ -253,18 +253,14 @@ class Payment {
                             $Note       = new Note;
                             $send1      = $Note->sendSms($user_phone['mobile'], $message);
                             $send2      = $Note->sendSms('17091858983', $admin_message);
-                            Db::startTrans();
-                            try {
-                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
-                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
-                                Db::commit();
-                            } catch (\Exception $e) {
-
-                                Db::rollback();
-                                Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $e]);
-                            }
+                           
+                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send1)]);
+                            Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => json_encode($send2)]);
+                               
                         }
+                       
                     }
+                    Db::commit();
                 } catch (\Exception $e) {
 
                     Db::rollback();
