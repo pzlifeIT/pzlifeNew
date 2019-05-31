@@ -137,7 +137,7 @@ class OfflineActivities extends CommonIndex {
                 return ['code' => '3003'];
             }
         }
-        
+
         $data = [];
         if ($title) {
             $data['title'] = $title;
@@ -361,7 +361,7 @@ class OfflineActivities extends CommonIndex {
                 $uid   = enUid($uid);
                 $scene = 'id=' . $id . '&pid=' . $uid;
             }
-           
+
             $Upload = new Upload;
             $result = $this->createQrcode('pages/events/events', $scene);
             if (strlen($result) > 100) {
@@ -375,7 +375,7 @@ class OfflineActivities extends CommonIndex {
                     if (empty($logImage)) { //图片不存在
                         return ['code' => '3010']; //图片没有上传过
                     }
-                    
+
                     Db::startTrans();
                     try {
                         $save = DbOfflineActivities::updateOfflineActivities(['qrcode_path' => $upload['image_path']], $id);
@@ -399,7 +399,7 @@ class OfflineActivities extends CommonIndex {
                 return ['code' => 3009, 'error_data' => json_decode($result, true)];
             }
         } else {
-            return ['code' => '200', 'Qrcode' => Config::get('qiniu.domain') . '/'.$Qrcode['qrcode_path']];
+            return ['code' => '200', 'Qrcode' => Config::get('qiniu.domain') . '/' . $Qrcode['qrcode_path']];
         }
     }
 
@@ -418,7 +418,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3005'];
         }
         $requestUrl = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' . $access_token;
-        // print_r($link);die;
+        // print_r(['scene' => $scene, 'page' => $page]);die;
         $result = $this->sendRequest2($requestUrl, ['scene' => $scene, 'page' => $page]);
         return $result;
 
@@ -438,5 +438,40 @@ class OfflineActivities extends CommonIndex {
         $res = curl_exec($curl);
         curl_close($curl);
         return $res;
+    }
+
+    public function getQrcode($page, $scene) {
+        $Upload = new Upload;
+        $result = $this->createQrcode($page, $scene);
+        if (strlen($result) > 100) {
+            $file = fopen(Config::get('conf.image_path') . date('Ymd') . $scene . '.png', "w"); //打开文件准备写入
+            fwrite($file, $result); //写入
+            fclose($file); //关闭
+            $upload = $Upload->uploadUserImage(date('Ymd') . $scene . '.png');
+            if ($upload['code'] == 200) {
+                $logImage = DbImage::getLogImage($upload, 2); //判断时候有未完成的图片
+                // print_r($logImage);die;
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+
+                Db::startTrans();
+                try {
+
+                    DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+                    Db::commit();
+                    $new_Qrcode = Config::get('qiniu.domain') . '/' . $upload['image_path'];
+                    return ['code' => '200', 'Qrcode' => $new_Qrcode];
+                } catch (\Exception $e) {
+                    print_r($e);
+                    Db::rollback();
+                    return ['code' => '3011']; //添加失败
+                }
+            } else {
+                return ['code' => 3011];
+            }
+        } else {
+            return ['code' => 3009, 'error_data' => json_decode($result, true)];
+        }
     }
 }
