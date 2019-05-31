@@ -2,6 +2,7 @@
 
 namespace app\common\action\index;
 
+use app\common\action\notify\Note;
 use app\facade\DbGoods;
 use app\facade\DbOfflineActivities;
 use app\facade\DbOrder;
@@ -32,7 +33,7 @@ class OfflineActivities extends CommonIndex {
                     /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
                     $result[$key]['spec'] = $goods_spec;
                     $result[$key]['goods_sku'] = $goods_sku; */
-                    $where                             = ['goods_id' => $list['id']];
+                    $where                             = ['goods_id' => $list['id'],'status' =>1];
                     $field                             = 'market_price';
                     $goodslist[$l]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
                     $field                             = 'retail_price';
@@ -173,9 +174,53 @@ class OfflineActivities extends CommonIndex {
             }
             $this->resetUserInfo($uid);
             Db::commit();
+/* 发送提货码 */
+            // $orderNo = 'odr19053116375854519810';
+            $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo], true);
+            if ($orderRes['order_status'] == 4) {
+                $skus       = [];
+                $sku_goods  = [];
+                $goods_name = [];
+                
+                
+                foreach ($orderGoodsData as $order => $list) {
+                    if (in_array($list['sku_id'], $skus)) {
+                        $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
+                    } else {
+                        $skus[]                     = $list['sku_id'];
+                        $sku_goods[$list['sku_id']] = 1;
+                        $sku_json                   = json_decode($list['sku_json'], true);
+                        // print_r($sku_json);die;
+                        $goods_name[$list['sku_id']] = $list['goods_name'] . '规格[' . join(',', $sku_json) . ']';
+                    }
+
+                    // print_r($goods_name);die;
+                }
+                $message       = '您购买的商品：{';
+                $admin_message = '订单号:' . $orderNo . '商品:{';
+                foreach ($goods_name as $goods => $name) {
+                    $message .= $name . '数量[' . $sku_goods[$goods] . ']';
+                    $admin_message .= $name . '数量[' . $sku_goods[$goods] . ']';
+                }
+                $message       = $message . '}订单号为' . $orderNo . '取货码为：Off' .$orderRes['id'];
+                $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
+                $user_phone    = DbUser::getUserInfo(['id' => $uid], 'mobile', true);
+                $Note          = new Note;
+                // print_r($message);
+                // print_r($admin_message);
+                // die;
+                /* 取消发送取货码 */
+                // $send1 = $Note->sendSms($user_phone['mobile'], $message);
+                // $send2 = $Note->sendSms('17091858983', $admin_message);
+                // print_r($send1);
+                // print_r($send2);
+                // die;
+            }
+
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
             Db::rollback();
+            exception($e);
             return ['code' => '3009'];
         }
     }
