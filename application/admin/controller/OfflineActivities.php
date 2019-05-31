@@ -304,7 +304,7 @@ class OfflineActivities extends AdminController {
      */
     public function resetOfflineActivitiesQrcode() {
         $apiName  = classBasename($this) . '/' . __function__;
-        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $cmsConId = trim($this->request->get('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
