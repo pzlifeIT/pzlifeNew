@@ -176,15 +176,15 @@ class OfflineActivities extends CommonIndex {
             Db::commit();
 /* 发送提货码 */
             $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo], true);
-            
             if ($orderRes['order_status'] == 4) {
                 $skus       = [];
                 $sku_goods  = [];
                 $goods_name = [];
+                
+                
                 foreach ($orderGoodsData as $order => $list) {
-
                     if (in_array($list['sku_id'], $skus)) {
-                        $sku_goods[$list['sku_id']] = $orderGoodsData[$list['sku_id']] + 1;
+                        $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
                     } else {
                         $skus[]                     = $list['sku_id'];
                         $sku_goods[$list['sku_id']] = 1;
@@ -205,7 +205,6 @@ class OfflineActivities extends CommonIndex {
                 $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
                 $user_phone    = DbUser::getUserInfo(['id' => $uid], 'mobile', true);
                 $Note          = new Note;
-
                 $send1 = $Note->sendSms($user_phone['mobile'], $message);
                 $send2 = $Note->sendSms('17091858983', $admin_message);
                 // print_r($send1);
