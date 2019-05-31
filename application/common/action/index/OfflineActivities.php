@@ -175,7 +175,7 @@ class OfflineActivities extends CommonIndex {
             $this->resetUserInfo($uid);
             Db::commit();
 /* 发送提货码 */
-            // $orderNo = 'odr19053115334899101549';
+            // $orderNo = 'odr19053116375854519810';
             $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['order_no' => $orderNo], true);
             if ($orderRes['order_status'] == 4) {
                 $skus       = [];
@@ -206,6 +206,9 @@ class OfflineActivities extends CommonIndex {
                 $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
                 $user_phone    = DbUser::getUserInfo(['id' => $uid], 'mobile', true);
                 $Note          = new Note;
+                // print_r($message);
+                // print_r($admin_message);
+                // die;
                 $send1 = $Note->sendSms($user_phone['mobile'], $message);
                 $send2 = $Note->sendSms('17091858983', $admin_message);
                 // print_r($send1);
