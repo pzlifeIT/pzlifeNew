@@ -2,6 +2,7 @@
 
 namespace app\common\action\pay;
 
+use app\common\action\notify\Note;
 use app\facade\DbOrder;
 use app\facade\DbUser;
 use cache\Phpredis;
@@ -237,7 +238,7 @@ class Payment {
                             $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
                             $user_phone    = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile');
                             $Note          = new Note;
-                            $send1         = $Note->sendSms($user_phone['mobile'], $message);
+                            $send1         = $Note->sendSms($user_phone['mobile'], $message,true);
                             $send2         = $Note->sendSms('17091858983', $admin_message);
                         }
                     }
