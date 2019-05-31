@@ -957,12 +957,43 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3005'];
         }
-        $field  = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
+
+        
+        /* 取货码短信 */
+ /*        $field  = 'id,order_no,third_order_id,order_type,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money,third_pay_type,linkman,linkphone,province_id,city_id,area_id,address,message,create_time';
         $where  = ['uid' => $uid, 'order_no' => $order_no];
         $result = DbOrder::getOrder($field, $where, true);
         if (empty($result)) {
             return ['code' => '3004', 'msg' => '订单不存在'];
         }
+        if ($result['order_type'] == 2) {//线下取货发送取货码
+            $order_list = DbOrder::getOrderDetail(['o.id' => $result['id']],'*');
+            $skus = [];
+            $sku_goods = [];
+            $goods_name = [];
+            foreach ($order_list as $order => $list) {
+                if (!$list['province_id'] && !$list['city_id'] && !$list['area_id']) {
+                   
+                        if (in_array($list['sku_id'],$skus)) {
+                            $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']]+ 1;
+                        } else {
+                            $skus[] = $list['sku_id'];
+                            $sku_goods[$list['sku_id']] = 1;
+                            $sku_json = json_decode($list['sku_json'],true);
+                            // print_r($sku_json);die;
+                            $goods_name[$list['sku_id']] = $list['goods_name'].',规格：'.join(',',$sku_json);
+                        }
+                    
+                }
+                print_r($goods_name);die;
+            }
+            $message = '';
+            foreach ($goods_name as $goods => $name) {
+                $message .= $name.'数量:'.$sku_goods[$goods];
+            }
+
+        } */
+
         $order_child   = DbOrder::getOrderChild('*', ['order_id' => $result['id']]);
         $integral      = 0;
         $express_money = 0;
@@ -999,9 +1030,16 @@ class Order extends CommonIndex {
         }
         $result['commission']    = $commission;
         $result['order_child']   = $order_child;
-        $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
-        $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
-        $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        if ($result['province_id']) {
+            $result['province_name'] = DbProvinces::getAreaOne('*', ['id' => $result['province_id']])['area_name'];
+        }
+        if ($result['city_id']) {
+            $result['city_name']     = DbProvinces::getAreaOne('*', ['id' => $result['city_id'], 'level' => 2])['area_name'];
+        }
+        if ($result['area_id']) {
+            $result['area_name']     = DbProvinces::getAreaOne('*', ['id' => $result['area_id']])['area_name'];
+        }
+        
         return ['code' => '200', 'order_info' => $result];
     }
 
