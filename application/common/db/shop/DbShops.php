@@ -99,6 +99,33 @@ class DbShops {
     }
 
     /**
+     * 降级处理记录
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc
+     * @param string $limit
+     * @return array
+     * @author zyr
+     */
+    public function getLogDemotion($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = LogDemotion::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    /**
      * 添加店铺商品
      * @param $data 
      * @return array

@@ -97,4 +97,34 @@ class User extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $mobile, $userIdentity, $content], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / boss降级处理列表
+     * @apiDescription   userDemotionList
+     * @apiGroup         admin_Users
+     * @apiName          userDemotionList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page
+     * @apiParam (入参) {Int} page_num
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSuccess (返回) {Int} uid 降级的uid
+     * @apiSuccess (返回) {Int} after_identity 降级后的身份
+     * @apiSuccess (返回) {Int} boss_uid 降级后的上级boss
+     * @apiSuccess (返回) {Int} content 降级原因描述
+     * @apiSuccess (返回) {Array} uid_list 降级前可获取收益的会员列表
+     * @apiSuccess (返回) {Array} order_list 降级后未处理订单列表
+     * @apiSampleRequest /admin/user/userdemotionlist
+     * @author zyr
+     */
+    public function userDemotionList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $page     = is_numeric($page) ? $page : 1;
+        $pageNum  = is_numeric($pageNum) ? $pageNum : 10;
+        $result   = $this->app->user->userDemotionList($page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
 }

@@ -49,11 +49,6 @@ class User extends CommonIndex {
         if ($userInfo['user_identity'] != 4) {
             return ['code' => '3003'];//只有boss可以降级
         }
-        $bonus     = DbUser::getLogBonus(['to_uid' => $userInfo['id'], 'status' => 1], 'order_no');
-        $orderList = array_values(array_unique(array_column($bonus, 'order_no')));
-        if (count($orderList) > 0) {
-            return ['code' => '3004', 'order_list' => $orderList];//有未完成订单
-        }
         $relation = DbUser::getUserRelation(['uid' => $userInfo['id']], 'relation', true);
         $bossUid  = explode(',', $relation['relation'])[0];
         $bossInfo = DbUser::getUserInfo(['id' => $bossUid,], 'user_identity', true);
@@ -69,10 +64,11 @@ class User extends CommonIndex {
         $shopGoodsList   = DbShops::getShopGoods(['shop_id' => $shopId], 'id');
         $shopGoodsListId = array_column($shopGoodsList, 'id');
         $logDemotionData = [
-            'uid'      => $userInfo['id'],
-            'boss_uid' => $bossUid,
-            'content'  => $content,
-            'uid_list' => json_encode(array_column($relationList, 'uid')),
+            'uid'            => $userInfo['id'],
+            'after_identity' => $userIdentity,
+            'boss_uid'       => $bossUid,
+            'content'        => $content,
+            'uid_list'       => json_encode(array_column($relationList, 'uid')),
         ];
         Db::startTrans();
         try {
@@ -87,6 +83,36 @@ class User extends CommonIndex {
             Db::rollback();
             return ['code' => '3006']; //修改失败
         }
+    }
+
+    /**
+     * boss降级处理列表
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function userDemotionList($page, $pageNum) {
+        $offset = ($page - 1) * $pageNum;
+        $list   = DbShops::getLogDemotion([], 'uid,after_identity,boss_uid,content,uid_list', false, 'id', 'asc', $offset . ',' . $pageNum);
+        $bonus  = DbUser::getLogBonus([
+            ['to_uid', 'in', array_column($list, 'uid')],
+            ['status', '=', 1]
+        ], 'to_uid,order_no');
+        $result = [];
+        foreach ($list as $l) {
+            $l['uid_list'] = json_decode($l['uid_list'], true);
+            $orderList     = [];
+            foreach ($bonus as $b) {
+                if ($b['to_uid'] == $l['uid']) {
+                    array_push($orderList, $b['order_no']);
+                }
+            }
+            $orderList       = array_values(array_unique($orderList));
+            $l['order_list'] = $orderList;
+            array_push($result, $l);
+        }
+        return ['code' => '200', 'data' => $result];
     }
 
 }
