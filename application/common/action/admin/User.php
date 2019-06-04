@@ -40,10 +40,11 @@ class User extends CommonIndex {
      * boss降级处理
      * @param $mobile
      * @param $userIdentity
+     * @param $content
      * @return array
      * @author zyr
      */
-    public function userDemotion($mobile, $userIdentity) {
+    public function userDemotion($mobile, $userIdentity, $content) {
         $userInfo = DbUser::getUserInfo(['mobile' => $mobile], 'id,user_identity', true);
         if ($userInfo['user_identity'] != 4) {
             return ['code' => '3003'];//只有boss可以降级
@@ -70,6 +71,7 @@ class User extends CommonIndex {
         $logDemotionData = [
             'uid'      => $userInfo['id'],
             'boss_uid' => $bossUid,
+            'content'  => $content,
             'uid_list' => json_encode(array_column($relationList, 'uid')),
         ];
         Db::startTrans();
