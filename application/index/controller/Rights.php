@@ -25,16 +25,18 @@ class Rights extends MyController {
      * @author rzc
      */
     public function receiveDiamondvip() {
-        $con_id    = $this->request->post('con_id');
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         $parent_id = $this->request->post('parent_id');
         $parent_id = deUid($parent_id);
-        if (empty($con_id)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->receiveDiamondvip($con_id, $parent_id);
+        $result = $this->app->rights->receiveDiamondvip($conId, $parent_id);
+        $this->apiLog($apiName, [$conId, $parent_id], $result['code'], $conId);
         return $result;
     }
 
@@ -51,6 +53,7 @@ class Rights extends MyController {
      * @author rzc
      */
     public function IsGetDominos() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $parent_id = $this->request->post('parent_id');
         if (strlen($parent_id) < 1) {
             return ['code' => '3001'];
@@ -60,8 +63,8 @@ class Rights extends MyController {
             return ['code' => '3002'];
         }
         $result = $this->app->rights->IsGetDominos($parent_id);
+        $this->apiLog($apiName, [$parent_id], $result['code'], '');
         return $result;
-
     }
 
     /**
@@ -77,14 +80,16 @@ class Rights extends MyController {
      * @author rzc
      */
     public function IsBossDominos() {
-        $con_id = $this->request->post('con_id');
-        if (empty($con_id)) {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->IsBossDominos($con_id);
+        $result = $this->app->rights->IsBossDominos($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -101,14 +106,16 @@ class Rights extends MyController {
      * @author rzc
      */
     public function getDominosBalanceHint() {
-        $con_id = $this->request->post('con_id');
-        if (empty($con_id)) {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getDominosBalanceHint($con_id);
+        $result = $this->app->rights->getDominosBalanceHint($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -132,14 +139,16 @@ class Rights extends MyController {
      * @author rzc
      */
     public function getDominosChance() {
-        $con_id = $this->request->post('con_id');
-        if (empty($con_id)) {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getDominosChance($con_id);
+        $result = $this->app->rights->getDominosChance($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -159,12 +168,13 @@ class Rights extends MyController {
      * @author rzc
      */
     public function getDominosReceive() {
-        $con_id         = trim($this->request->post('con_id'));
+        $apiName        = classBasename($this) . '/' . __function__;
+        $conId          = trim($this->request->post('con_id'));
         $diamondvips_id = trim($this->request->post('diamondvips_id'));
-        if (empty($con_id)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         if ($diamondvips_id) {
@@ -172,8 +182,8 @@ class Rights extends MyController {
                 return ['code' => '3003'];
             }
         }
-
-        $result = $this->app->rights->getDominosReceive($con_id, $diamondvips_id);
+        $result = $this->app->rights->getDominosReceive($conId, $diamondvips_id);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -198,7 +208,8 @@ class Rights extends MyController {
      * @author rzc
      */
     public function shopApplyBoss() {
-        $con_id          = $this->request->post('con_id');
+        $apiName         = classBasename($this) . '/' . __function__;
+        $conId           = trim($this->request->post('con_id'));
         $target_nickname = $this->request->post('target_nickname');
         $target_sex      = $this->request->post('target_sex');
         $target_mobile   = $this->request->post('target_mobile');
@@ -208,10 +219,10 @@ class Rights extends MyController {
         $parent_id       = deUid($parent_id);
         $target_sex      = $target_sex ? 1 : 2;
         $refe_type       = $refe_type ? 1 : 2;
-        if (empty($con_id)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
-        if (strlen($con_id) != 32) {
+        if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         if (empty($parent_id)) {
@@ -236,7 +247,8 @@ class Rights extends MyController {
         if (!is_numeric($refe_type)) {
             return ['code' => '3008'];
         }
-        $result = $this->app->rights->shopApplyBoss($con_id,$target_nickname,$target_sex,$target_mobile,$target_idcard,$refe_type,$parent_id);
+        $result = $this->app->rights->shopApplyBoss($conId, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id);
+        $this->apiLog($apiName, [$conId, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id], $result['code'], $conId);
         return $result;
     }
 }

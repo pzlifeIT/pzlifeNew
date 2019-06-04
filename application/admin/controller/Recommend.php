@@ -91,7 +91,10 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $result = $this->app->recommend->getRecommend();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -262,12 +265,15 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommendId() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $model_id = trim($this->request->post('model_id'));
         $tier     = trim($this->request->post('tier'));
         if (!is_numeric($tier) || !is_numeric($model_id)) {
             return ['code' => '3001'];
         }
         $result = $this->app->recommend->getRecommendId($model_id, $tier);
+        $this->apiLog($apiName, [$cmsConId, $model_id, $tier], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -317,11 +323,14 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommendInfo() {
-        $id = trim($this->request->post('id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim($this->request->post('id'));
         if (!$id || !is_numeric($id)) {
             return ['code' => 3001];
         }
         $result = $this->app->recommend->getRecommendInfo($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -516,8 +525,11 @@ class Recommend extends AdminController {
      * ]
      * @author rzc
      */
-    public function resetRecommend (){
-        $result = $this->app->recommend->resetRecommend();
+    public function resetRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $result   = $this->app->recommend->resetRecommend();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 }

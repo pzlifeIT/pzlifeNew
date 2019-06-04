@@ -44,6 +44,8 @@ class Goods extends AdminController {
      * 2018/12/26-18:04
      */
     public function getGoodsList() {
+        $apiName       = classBasename($this) . '/' . __function__;
+        $cmsConId      = trim($this->request->post('cms_con_id'));
         $page          = trim(input("post.page"));
         $pageNum       = trim(input("post.page_num"));
         $cateName      = trim(input("post.cate_name"));
@@ -77,6 +79,7 @@ class Goods extends AdminController {
             return ['code' => '3005'];
         }
         $res = $this->app->goods->goodsList(intval($page), intval($pageNum), $goodsId, $status, $goodsType, $cateName, $goodsName, $supplierName, $supplierTitle);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $cateName, $goodsName, $goodsType, $supplierName, $supplierTitle, $status, $goodsId], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -167,6 +170,8 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function saveUpdateGoods() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
         $goodsId      = trim($this->request->post('goods_id'));//商品id
         $supplierId   = trim($this->request->post('supplier_id'));//供应商id
         $cateId       = trim($this->request->post('cate_id'));//分类id
@@ -203,6 +208,7 @@ class Goods extends AdminController {
         }
         //调用方法存商品表
         $res = $this->app->goods->saveGoods($data, $goodsId);
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -235,11 +241,14 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function getGoodsSku() {
-        $skuId = trim($this->request->post('sku_id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $skuId    = trim($this->request->post('sku_id'));
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
         $result = $this->app->goods->getGoodsSku(intval($skuId));
+        $this->apiLog($apiName, [$cmsConId, $skuId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -426,6 +435,8 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function getOneGoods() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id')); //操作管理员
         $getTypeArr = [1, 2, 3, 4];
         $id         = trim(input("post.id"));
         $getType    = trim($this->request->post('get_type'));
@@ -440,6 +451,7 @@ class Goods extends AdminController {
             }
         }
         $res = $this->app->goods->getOneGoods($id, $getType);
+        $this->apiLog($apiName, [$cmsConId, $id, $getType], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -536,6 +548,8 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function sortImageDetail() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $imagePath = trim($this->request->post('image_path'));
         $orderBy   = trim($this->request->post('order_by'));
         if (empty($imagePath)) {
@@ -545,6 +559,7 @@ class Goods extends AdminController {
             return ['code' => '3003'];//排序字段只能为数字
         }
         $result = $this->app->goods->sortImageDetail($imagePath, intval($orderBy));
+        $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
         return $result;
     }
 

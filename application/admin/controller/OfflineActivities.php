@@ -34,10 +34,13 @@ class OfflineActivities extends AdminController {
      * @author rzc
      */
     public function getOfflineActivities() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
-        $id      = trim($this->request->post('id'));
-        $result  = $this->app->offlineactivities->getOfflineActivities($page, $pagenum, $id);
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pagenum  = trim($this->request->post('pagenum'));
+        $id       = trim($this->request->post('id'));
+        $result   = $this->app->offlineactivities->getOfflineActivities($page, $pagenum, $id);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -204,6 +207,8 @@ class OfflineActivities extends AdminController {
      */
 
     public function getOfflineActivitiesGoods() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $active_id = trim($this->request->post('active_id'));
         $page      = trim($this->request->post('page'));
         $pagenum   = trim($this->request->post('pagenum'));
@@ -211,6 +216,7 @@ class OfflineActivities extends AdminController {
         $page      = is_numeric($page) ? $page : 1;
         $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
         $result    = $this->app->offlineactivities->getOfflineActivitiesGoods($page, $pagenum, $active_id, $id);
+        $this->apiLog($apiName, [$cmsConId, $active_id, $page, $pagenum, $id], $result['code'], $cmsConId);
         return $result;
     }
 

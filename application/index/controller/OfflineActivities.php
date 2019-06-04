@@ -4,6 +4,11 @@ namespace app\index\controller;
 use app\index\MyController;
 //
 class OfflineActivities extends MyController{
+    protected $beforeActionList = [
+        'isLogin',//所有方法的前置操作
+//        'isLogin' => ['except' => 'getFirstCate,getGoodsSubject'],//除去getFirstCate其他方法都进行isLogin前置操作
+//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
     /**
      * @api              {post} / 分类商品列表
      * @apiDescription   getOfflineActivities
@@ -28,12 +33,15 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/getOfflineActivities
      * @author rzc
      */
-    public function getOfflineActivities(){
-        $id = trim($this->request->post('active_id'));
+    public function getOfflineActivities() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $id      = trim($this->request->post('active_id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];
-        } 
+        }
         $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
+        $this->apiLog($apiName, [$conId, $id], $result['code'], $conId);
         return $result;
     }
 
@@ -53,13 +61,14 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/createOfflineActivitiesOrder
      * @author rzc
      */
-    public function createOfflineActivitiesOrder(){
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('buy_num'));
-        $payType       = trim($this->request->post('pay_type'));
-        $payTypeArr    = [1, 2];
+    public function createOfflineActivitiesOrder() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $buid       = trim($this->request->post('buid'));
+        $skuId      = trim($this->request->post('sku_id'));
+        $num        = trim($this->request->post('buy_num'));
+        $payType    = trim($this->request->post('pay_type'));
+        $payTypeArr = [1, 2];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -78,7 +87,8 @@ class OfflineActivities extends MyController{
         }
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId,$buid,$skuId,$num,$payType);
+        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId, $buid, $skuId, $num, $payType);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $payType], $result['code'], $conId);
         return $result;
     }
 }

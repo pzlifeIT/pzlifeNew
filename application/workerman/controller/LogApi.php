@@ -4,9 +4,8 @@ namespace app\workerman\controller;
 
 use think\worker\Server;
 use \Workerman\Connection\AsyncTcpConnection;
-use \Workerman\Worker;
 
-class Workerhttp extends Server {
+class LogApi extends Server {
     protected $socket = 'http://0.0.0.0:12100';
     protected $worker;
     protected $option = [];
@@ -15,8 +14,8 @@ class Workerhttp extends Server {
 
     public function __construct() {
         parent::__construct();
-        $this->worker->count = 2;
-        $this->worker->name  = 'workerhttp';
+        $this->worker->count = 4;
+        $this->worker->name  = '接口日志';
     }
 
     function onWorkerStart() {

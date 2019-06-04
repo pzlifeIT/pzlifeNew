@@ -23,7 +23,9 @@ class Category extends MyController {
      * 2019/1/7-9:47
      */
     public function getFirstCate() {
-        $res = $this->app->category->getFirstCate();
+        $apiName = classBasename($this) . '/' . __function__;
+        $res     = $this->app->category->getFirstCate();
+        $this->apiLog($apiName, [], $res['code'], '');
         return $res;
     }
 
@@ -38,8 +40,10 @@ class Category extends MyController {
      * @author rzc
      * 2019/1/7-9:47
      */
-    public function getGoodsSubject(){
-        $res = $this->app->category->getGoodsSubject();
+    public function getGoodsSubject() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $res     = $this->app->category->getGoodsSubject();
+        $this->apiLog($apiName, [], $res['code'], '');
         return $res;
     }
 }

@@ -24,12 +24,14 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function login() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $adminName = trim($this->request->post('admin_name'));
         $passwd    = trim($this->request->post('passwd'));
         if (empty($adminName) || empty($passwd)) {
             return ['code' => '3001'];
         }
         $result = $this->app->admin->login($adminName, $passwd);
+        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -48,8 +50,10 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getAdminUsers() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminUsers();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -69,8 +73,10 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getAdminInfo() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminInfo($cmsConId);
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -128,6 +134,7 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function midifyPasswd() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $passwd     = trim($this->request->post('passwd'));
         $newPasswd1 = trim($this->request->post('new_passwd1'));
@@ -142,6 +149,7 @@ class Admin extends AdminController {
             return ['code' => '3003']; //老密码不能为空
         }
         $result = $this->app->admin->midifyPasswd($cmsConId, $passwd, $newPasswd1);
+        $this->apiLog($apiName, [$cmsConId, $passwd, $newPasswd1], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -304,6 +312,7 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getOpenBossList() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $mobile   = trim($this->request->post('mobile')); //开通账号手机号
         $nickName = trim($this->request->post('nick_name')); //开通账号昵称
@@ -315,7 +324,7 @@ class Admin extends AdminController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->admin->getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $mobile, $nickName, $page, $pageNum], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $nickName, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -343,6 +352,8 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getAdminRemittance() {
+        $apiName           = classBasename($this) . '/' . __function__;
+        $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $page              = trim(input("post.page"));
         $pageNum           = trim(input("post.page_num"));
         $initiate_admin_id = trim(input("post.initiate_admin_id"));
@@ -392,8 +403,8 @@ class Admin extends AdminController {
             }
         }
         $result = $this->app->admin->getAdminRemittance(intval($page), intval($pageNum), $initiate_admin_id, $audit_admin_id, $status, $min_credit, $max_credit, $uid, $stype, $start_time, $end_time);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $initiate_admin_id, $audit_admin_id, $status, $min_credit, $max_credit, $uid, $stype, $start_time, $end_time], $result['code'], $cmsConId);
         return $result;
-
     }
 
     /**
@@ -411,7 +422,10 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getInvoice() {
+        $apiName           = classBasename($this) . '/' . __function__;
+        $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $result = $this->app->admin->getInvoice();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -466,8 +480,9 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-
     public function getAdminBank() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $id        = trim(input("post.id"));
         $page      = trim(input("post.page"));
         $pageNum   = trim(input("post.page_num"));
@@ -491,6 +506,7 @@ class Admin extends AdminController {
             }
         }
         $result = $this->app->admin->getAdminBank($page, $pageNum, $abbrev, $bank_name, $status, $id);
+        $this->apiLog($apiName, [$cmsConId, $id, $page, $pageNum, $abbrev, $bank_name, $status, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -636,6 +652,8 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getLogTransfer() {
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id')); //操作管理员
         $id          = trim(input("post.id"));
         $page        = trim(input("post.page"));
         $pageNum     = trim(input("post.page_num"));
@@ -723,8 +741,8 @@ class Admin extends AdminController {
             }
         }
         $result = $this->app->admin->getLogTransfer($bank_card, $abbrev, $bank_mobile, $user_name, $bank_name, $min_money, $max_money, $invoice, $status, $stype, $wtype, $start_time, $end_time, intval($page), intval($pageNum), intval($id));
+        $this->apiLog($apiName, [$cmsConId, $id, $page, $pageNum, $pageNum, $abbrev, $bank_name, $bank_card, $bank_mobile, $user_name, $stype, $wtype, $invoice, $status, $min_money, $max_money, $start_time, $end_time], $result['code'], $cmsConId);
         return $result;
-
     }
 
     /**
@@ -845,6 +863,8 @@ class Admin extends AdminController {
      * @author rzc
      */
     public function getUserBank() {
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id')); //操作管理员
         $id          = trim($this->request->post('id'));
         $bank_card   = trim($this->request->post('bank_card'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
@@ -879,6 +899,7 @@ class Admin extends AdminController {
             }
         }
         $result = $this->app->admin->getUserBank(intval($id), $bank_card, $bank_mobile, $user_name, $status, intval($page), intval($page_num));
+        $this->apiLog($apiName, [$cmsConId, $id, $bank_card, $bank_mobile, $user_name, $status, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -950,9 +971,10 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function cmsMenu() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->cmsMenu($cmsConId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -1264,13 +1286,13 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getPermissionsGroupAdmin() {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
         if (!is_numeric($groupId) || $groupId < 1) {
             return ['code' => '3001'];
         }
         $groupId = intval($groupId);
-        $apiName = classBasename($this) . '/' . __function__;
         $result  = $this->app->admin->getPermissionsGroupAdmin($cmsConId, $groupId);
         $this->apiLog($apiName, [$cmsConId, $groupId], $result['code'], $cmsConId);
         return $result;
@@ -1291,6 +1313,7 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getAdminGroup() {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $getAdminId = trim($this->request->post('get_admin_id'));
         if (!is_numeric($getAdminId) || $getAdminId < 2) {
@@ -1298,7 +1321,7 @@ class Admin extends AdminController {
         }
         $getAdminId = intval($getAdminId);
         $result     = $this->app->admin->getAdminGroup($cmsConId, $getAdminId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $getAdminId], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $getAdminId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -1317,6 +1340,7 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getGroupInfo() {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
         if (!is_numeric($groupId) || $groupId < 1) {
@@ -1324,7 +1348,7 @@ class Admin extends AdminController {
         }
         $groupId = intval($groupId);
         $result  = $this->app->admin->getGroupInfo($cmsConId, $groupId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $groupId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -1340,6 +1364,7 @@ class Admin extends AdminController {
      * @author zyr
      */
     public function getPermissionsList() {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
         if (!is_numeric($groupId) || $groupId < 1) {
@@ -1347,7 +1372,7 @@ class Admin extends AdminController {
         }
         $groupId = intval($groupId);
         $result  = $this->app->admin->getPermissionsList($cmsConId, $groupId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $groupId], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $groupId], $result['code'], $cmsConId);
         return $result;
     }
 

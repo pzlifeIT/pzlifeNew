@@ -111,6 +111,8 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getAllSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
         $stype    = trim($this->request->post('stype'));
         $stype    = empty($stype) ? 1 : $stype;
@@ -118,6 +120,7 @@ class Subject extends AdminController {
             return ['code' => '3001'];//stype参数有误
         }
         $result = $this->app->subject->getAllSubject(intval($stype));
+        $this->apiLog($apiName, [$cmsConId, $stype], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -166,6 +169,8 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getGoodsSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
         $goodsId  = trim($this->request->post('goods_id'));
         $stype    = trim($this->request->post('stype'));
@@ -176,6 +181,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->getGoodsSubject(intval($goodsId), intval($stype));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $stype], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -195,11 +201,14 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getSubjectDetail() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($subjectId)) {
             return ["code" => '3001'];
         }
         $result = $this->app->subject->getSubjectDetail(intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 

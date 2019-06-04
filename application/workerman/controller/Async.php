@@ -15,8 +15,8 @@ class Async extends Server {
 
     public function __construct() {
         parent::__construct();
-        $this->worker->count = 2;
-        $this->worker->name  = 'async';
+        $this->worker->count = 4;
+        $this->worker->name  = '异步日志添加处理';
     }
 
     function onConnect() {

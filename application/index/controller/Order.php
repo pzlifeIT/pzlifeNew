@@ -58,7 +58,8 @@ class Order extends MyController {
      * @author rzc
      */
     public function getUserOrderList() {
-        $con_id = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         // $con_id = 1;
         $order_status = $this->request->post('orderStatus');
         $page         = trim($this->request->post('page'));
@@ -85,7 +86,8 @@ class Order extends MyController {
             }
         }
 
-        $result = $this->app->order->getUserOrderList($con_id, $order_status, $page, $pagenum);
+        $result = $this->app->order->getUserOrderList($conId, $order_status, $page, $pagenum);
+        $this->apiLog($apiName, [$conId, $order_status, $page, $pagenum], $result['code'], $conId);
         return $result;
     }
 
@@ -143,7 +145,8 @@ class Order extends MyController {
      * @author rzc
      */
     public function getUserOrderInfo() {
-        $con_id = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         // $con_id = 1;
         $order_no = trim($this->request->post('order_no'));
         if (empty($order_no)) {
@@ -152,7 +155,8 @@ class Order extends MyController {
         if (strlen($order_no) != 23) {
             return ['code' => '3003'];
         }
-        $result = $this->app->order->getUserOrderInfo($con_id, $order_no);
+        $result = $this->app->order->getUserOrderInfo($conId, $order_no);
+        $this->apiLog($apiName, [$conId, $order_no], $result['code'], $conId);
         return $result;
     }
 
@@ -203,6 +207,7 @@ class Order extends MyController {
      * @author zyr
      */
     public function quickSettlement() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $buid          = trim($this->request->post('buid'));
         $skuId         = trim($this->request->post('sku_id'));
@@ -227,6 +232,7 @@ class Order extends MyController {
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickSettlement($conId, $buid, $skuId, $num, $userAddressId);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId], $result['code'], $conId);
         return $result;
     }
 
@@ -248,6 +254,7 @@ class Order extends MyController {
      * @author zyr
      */
     public function quickCreateOrder() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $buid          = trim($this->request->post('buid'));
         $skuId         = trim($this->request->post('sku_id'));
@@ -278,6 +285,7 @@ class Order extends MyController {
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType], $result['code'], $conId);
         return $result;
     }
 
@@ -327,8 +335,9 @@ class Order extends MyController {
      * @author zyr
      */
     public function createSettlement() {
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
@@ -347,6 +356,7 @@ class Order extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId));
+        $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId], $result['code'], $conId);
         return $result;
     }
 
@@ -366,8 +376,9 @@ class Order extends MyController {
      * @author zyr
      */
     public function createOrder() {
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
         $payType       = trim($this->request->post('pay_type'));
         $payTypeArr    = [1, 2];
@@ -390,6 +401,7 @@ class Order extends MyController {
             return ['code' => '3008'];
         }
         $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
+        $this->apiLog($apiName, [$conId, $skuIdList, $payType], $result['code'], $conId);
         return $result;
     }
 
@@ -405,6 +417,7 @@ class Order extends MyController {
      * @author zyr
      */
     public function cancelOrder() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
@@ -417,6 +430,7 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->cancelOrder($orderNo, $conId);
+        $this->apiLog($apiName, [$conId, $orderNo], $result['code'], $conId);
         return $result;
     }
 
@@ -432,6 +446,7 @@ class Order extends MyController {
      * @author rzc
      */
     public function confirmOrder() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
@@ -444,6 +459,7 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->confirmOrder($orderNo, $conId);
+        $this->apiLog($apiName, [$conId, $orderNo], $result['code'], $conId);
         return $result;
     }
 
@@ -463,6 +479,7 @@ class Order extends MyController {
      * @author rzc
      */
     public function createMemberOrder() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $conId     = trim($this->request->post('con_id'));
         $user_type = trim($this->request->post('user_type'));
         $pay_type  = trim($this->request->post('pay_type'));
@@ -482,7 +499,8 @@ class Order extends MyController {
         if ($actype != 1) {
             $actype = 2;
         }
-        $result        = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id, $old_parent_id, intval($actype));
+        $result = $this->app->order->createMemberOrder($conId, intval($user_type), intval($pay_type), $parent_id, $old_parent_id, intval($actype));
+        $this->apiLog($apiName, [$conId, $user_type, $pay_type, $parent_id, $actype], $result['code'], $conId);
         return $result;
     }
 
@@ -499,6 +517,7 @@ class Order extends MyController {
      * @author rzc
      */
     public function getOrderSubpackage() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
@@ -511,6 +530,7 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->getOrderSubpackage($orderNo, $conId);
+        $this->apiLog($apiName, [$conId, $orderNo], $result['code'], $conId);
         return $result;
     }
 
@@ -541,6 +561,7 @@ class Order extends MyController {
      * @author rzc
      */
     public function getExpressLog() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $express_key = trim($this->request->post('express_key'));
         $express_no  = trim($this->request->post('express_no'));
@@ -552,6 +573,7 @@ class Order extends MyController {
             return ['code' => '3002'];
         }
         $result = $this->app->order->getExpressLog($express_key, $express_no, $orderNo, $conId);
+        $this->apiLog($apiName, [$conId, $express_key, $express_no, $orderNo], $result['code'], $conId);
         return $result;
     }
 }
