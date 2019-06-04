@@ -62,4 +62,37 @@ class User extends AdminController {
     }
 
 
+    /**
+     * @api              {post} / boss降级处理
+     * @apiDescription   userDemotion
+     * @apiGroup         admin_Users
+     * @apiName          userDemotion
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} mobile 降级boss的手机号
+     * @apiParam (入参) {Int} user_identity 降级后用户身份 1.普通,2.钻石会员
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:手机格式有误 / 3002:只能降级为钻石或普通会员 / 3003:只有boss可以降级 / 3004:有未完成订单 / 3006:修改失败
+     * @apiSuccess (返回) {Array} order_list 未完成订单列表
+     * @apiSuccess (order_list) {String} order_no 订单号
+     * @apiSampleRequest /admin/user/userdemotion
+     * @author zyr
+     */
+    public function userDemotion() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $mobile          = trim($this->request->post('mobile'));
+        $userIdentity    = trim($this->request->post('user_identity'));
+        $userIdentityArr = [1, 2];
+        if (!checkMobile($mobile)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($userIdentity, $userIdentityArr)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->userDemotion($mobile, $userIdentity);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $userIdentity], $result['code'], $cmsConId);
+        return $result;
+    }
 }

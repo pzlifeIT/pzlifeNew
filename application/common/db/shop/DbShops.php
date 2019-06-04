@@ -2,6 +2,7 @@
 
 namespace app\common\db\shop;
 
+use app\common\model\LogDemotion;
 use app\common\model\Shops;
 use app\common\model\ShopGoods;
 use app\common\model\Goods;
@@ -144,5 +145,28 @@ class DbShops {
         $ShopGoods = new ShopGoods;
         // return $ShopGoods->where('id',$id)->delete();
         return $ShopGoods->destroy($id);
+    }
+
+    /**
+     * 删除店铺
+     * @param $id
+     * @return bool
+     * @author zyr
+     */
+    public function deleteShop($id){
+        $shop = new Shops();
+        return $shop->destroy($id);
+    }
+
+    /**
+     * 添加降级处理记录
+     * @param $data
+     * @return mixed
+     * @author zyr
+     */
+    public function addLogDemotion($data){
+        $logDemotion = new LogDemotion;
+        $logDemotion->save($data);
+        return $logDemotion->id;
     }
 }
