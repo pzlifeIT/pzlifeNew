@@ -125,6 +125,10 @@ class DbShops {
         return $obj->toArray();
     }
 
+    public function getLogDemotionCount($where){
+        return LogDemotion::where($where)->count();
+    }
+
     /**
      * 添加店铺商品
      * @param $data 
