@@ -6,7 +6,7 @@ use app\index\MyController;
 //
 class OfflineActivities extends MyController {
     /**
-     * @api              {post} / 分类商品列表
+     * @api              {post} / 线下活动
      * @apiDescription   getOfflineActivities
      * @apiGroup         index_OfflineActivities
      * @apiName          getOfflineActivities
@@ -90,8 +90,8 @@ class OfflineActivities extends MyController {
      * @apiName          createOrderQrCode
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {String} data base64加密后的参数
-     * @apiSuccess (返回) {code} 错误码 / 3002 参数为空或者加密参数格式有误
-     * @apiSuccess (返回) {String} 二维码图片
+     *  @apiSuccess (返回) {String}  code 错误码 / 3002 参数为空或者加密参数格式有误
+     * @apiSuccess (返回) {String}  image 二维码图片
      * @apiSampleRequest /index/OfflineActivities/createOrderQrCode
      * @author rzc
      */
