@@ -96,7 +96,7 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function createOrderQrCode() {
-        $data = trim($this->request->post('data'));
+        $data = trim($this->request->get('data'));
         $data = base64_decode($data);
 
         if (strlen($data) < 2) {
