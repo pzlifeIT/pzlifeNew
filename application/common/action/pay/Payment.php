@@ -19,7 +19,8 @@ class Payment {
     private $redis;
 
     public function __construct() {
-        $this->redis = Phpredis::getConn();
+        $this->redis            = Phpredis::getConn();
+        $this->redisAccessToken = Config::get('redisKey.weixin.redisAccessToken');
     }
 
     public function payment($orderNo, int $payment, int $platform, $code) {
@@ -131,6 +132,9 @@ class Payment {
         if (!empty($addRes)) {
             $wxPay  = new WxMiniprogramPay($openid, $data['pay_no'], $data['money']);
             $result = $wxPay->pay();
+            /* 调用模板消息ID 2019/04/28 */
+            $logPayRes = DbOrder::getLogPay(['pay_no' => $payNo], 'id,order_id,payment', true);
+            DbOrder::updateLogPay(['prepay_id' => $result['prepay_id']], $logPayRes['id']);
             return $result;
         }
         return false;
@@ -182,7 +186,7 @@ class Payment {
             $orderData    = [];
             $memOrderData = [];
             if ($logPayRes['payment'] == 1) { //1.普通订单
-                $orderRes  = DbOrder::getOrder('id,order_type,order_no,uid', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
+                $orderRes  = DbOrder::getOrder('id,uid,create_time,pay_time,order_status,order_no', ['id' => $logPayRes['order_id'], 'order_status' => 1], true);
                 $orderData = [
                     'third_order_id' => $wxReturn['transaction_id'],
                     'order_status'   => 4,
@@ -197,6 +201,7 @@ class Payment {
                 ];
             }
             if (!empty($orderRes) || !empty($memOrderRes)) {
+
                 Db::startTrans();
                 try {
                     DbOrder::updateLogPay($data, $logPayRes['id']);
