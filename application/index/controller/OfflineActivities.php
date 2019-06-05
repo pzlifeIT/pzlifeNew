@@ -60,6 +60,7 @@ class OfflineActivities extends MyController {
      */
     public function createOfflineActivitiesOrder() {
         $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
         $buid       = trim($this->request->post('buid'));
         $skuId      = trim($this->request->post('sku_id'));
         $num        = trim($this->request->post('buy_num'));
@@ -84,7 +85,7 @@ class OfflineActivities extends MyController {
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId, $buid, $skuId, $num, $payType);
-        $this->apiLog($apiName, [$buid, $skuId, $num, $payType], $result['code'], '');
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $payType], $result['code'], $conId);
         return $result;
     }
 }
