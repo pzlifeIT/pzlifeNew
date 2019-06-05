@@ -1,14 +1,12 @@
 <?php
+
 namespace app\index\controller;
+
 //
 use app\index\MyController;
+
 //
-class OfflineActivities extends MyController{
-    protected $beforeActionList = [
-        'isLogin',//所有方法的前置操作
-//        'isLogin' => ['except' => 'getFirstCate,getGoodsSubject'],//除去getFirstCate其他方法都进行isLogin前置操作
-//        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
-    ];
+class OfflineActivities extends MyController {
     /**
      * @api              {post} / 分类商品列表
      * @apiDescription   getOfflineActivities
@@ -35,13 +33,12 @@ class OfflineActivities extends MyController{
      */
     public function getOfflineActivities() {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
         $id      = trim($this->request->post('active_id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];
         }
         $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
-        $this->apiLog($apiName, [$conId, $id], $result['code'], $conId);
+        $this->apiLog($apiName, [$id], $result['code'], '');
         return $result;
     }
 
@@ -63,7 +60,6 @@ class OfflineActivities extends MyController{
      */
     public function createOfflineActivitiesOrder() {
         $apiName    = classBasename($this) . '/' . __function__;
-        $conId      = trim($this->request->post('con_id'));
         $buid       = trim($this->request->post('buid'));
         $skuId      = trim($this->request->post('sku_id'));
         $num        = trim($this->request->post('buy_num'));
@@ -88,7 +84,7 @@ class OfflineActivities extends MyController{
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId, $buid, $skuId, $num, $payType);
-        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $payType], $result['code'], $conId);
+        $this->apiLog($apiName, [$buid, $skuId, $num, $payType], $result['code'], '');
         return $result;
     }
 }
