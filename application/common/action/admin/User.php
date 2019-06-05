@@ -94,7 +94,7 @@ class User extends CommonIndex {
      */
     public function userDemotionList($page, $pageNum) {
         $offset = ($page - 1) * $pageNum;
-        $list   = DbShops::getLogDemotion([], 'uid,after_identity,boss_uid,content,uid_list', false, 'id', 'asc', $offset . ',' . $pageNum);
+        $list   = DbShops::getLogDemotion([], 'uid,after_identity,boss_uid,content,uid_list,create_time', false, 'id', 'asc', $offset . ',' . $pageNum);
         $bonus  = DbUser::getLogBonus([
             ['to_uid', 'in', array_column($list, 'uid')],
             ['status', '=', 1]
