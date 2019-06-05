@@ -94,6 +94,7 @@ class User extends CommonIndex {
      */
     public function userDemotionList($page, $pageNum) {
         $offset = ($page - 1) * $pageNum;
+        $total  = DbShops::getLogDemotionCount([]);
         $list   = DbShops::getLogDemotion([], 'uid,after_identity,boss_uid,content,uid_list,create_time', false, 'id', 'asc', $offset . ',' . $pageNum);
         $bonus  = DbUser::getLogBonus([
             ['to_uid', 'in', array_column($list, 'uid')],
@@ -112,7 +113,7 @@ class User extends CommonIndex {
             $l['order_list'] = $orderList;
             array_push($result, $l);
         }
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result, 'total' => $total];
     }
 
 }
