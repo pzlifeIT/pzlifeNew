@@ -89,9 +89,9 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          createOrderQrCode
      * @apiParam (入参) {Number} con_id
-     * @apiParam (入参) {String} data 订单号
-     * @apiSuccess (返回) {String} code 200:成功
-     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiParam (入参) {String} data base64加密后的参数
+     * @apiSuccess (返回) {code} 错误码 / 3002 参数为空或者加密参数格式有误
+     * @apiSuccess (返回) {String} 二维码图片
      * @apiSampleRequest /index/OfflineActivities/createOrderQrCode
      * @author rzc
      */
@@ -100,10 +100,10 @@ class OfflineActivities extends MyController {
         $data = base64_decode($data);
 
         if (strlen($data) < 2) {
-            return ['code' => -2002];
+            return ['code' => '3002'];
         }
         if (!$data) {
-            return ['code' => -2002];
+            return ['code' => '3002'];
         }
 
         $result = $this->app->offlineactivities->createOrderQrCode($data);
