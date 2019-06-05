@@ -2,8 +2,9 @@
 namespace app\index\controller;
 //
 use app\index\MyController;
+
 //
-class OfflineActivities extends MyController{
+class OfflineActivities extends MyController {
     /**
      * @api              {post} / 分类商品列表
      * @apiDescription   getOfflineActivities
@@ -28,11 +29,11 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/getOfflineActivities
      * @author rzc
      */
-    public function getOfflineActivities(){
+    public function getOfflineActivities() {
         $id = trim($this->request->post('active_id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];
-        } 
+        }
         $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
         return $result;
     }
@@ -53,13 +54,13 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/createOfflineActivitiesOrder
      * @author rzc
      */
-    public function createOfflineActivitiesOrder(){
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('buy_num'));
-        $payType       = trim($this->request->post('pay_type'));
-        $payTypeArr    = [1, 2];
+    public function createOfflineActivitiesOrder() {
+        $conId      = trim($this->request->post('con_id'));
+        $buid       = trim($this->request->post('buid'));
+        $skuId      = trim($this->request->post('sku_id'));
+        $num        = trim($this->request->post('buy_num'));
+        $payType    = trim($this->request->post('pay_type'));
+        $payTypeArr = [1, 2];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -78,7 +79,35 @@ class OfflineActivities extends MyController{
         }
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId,$buid,$skuId,$num,$payType);
+        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId, $buid, $skuId, $num, $payType);
         return $result;
+    }
+
+    /**
+     * @api              {get} / 线下活动商品订单生成取货二维码
+     * @apiDescription   createOrderQrCode
+     * @apiGroup         index_OfflineActivities
+     * @apiName          createOrderQrCode
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} data 订单号
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSampleRequest /index/OfflineActivities/createOrderQrCode
+     * @author rzc
+     */
+    public function createOrderQrCode() {
+        $data = trim($this->request->post('data'));
+        $data = base64_decode($data);
+
+        if (strlen($data) < 2) {
+            return ['code' => -2002];
+        }
+        if (!$data) {
+            return ['code' => -2002];
+        }
+
+        $result = $this->app->offlineactivities->createOrderQrCode($data);
+        return $result;
+
     }
 }

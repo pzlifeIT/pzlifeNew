@@ -3,6 +3,7 @@
 namespace app\common\action\index;
 
 use app\common\action\notify\Note;
+use app\common\action\qrcode\qrcodelogic;
 use app\facade\DbGoods;
 use app\facade\DbOfflineActivities;
 use app\facade\DbOrder;
@@ -285,5 +286,15 @@ class OfflineActivities extends CommonIndex {
         $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
+    }
+
+    public function createOrderQrCode($data){
+        
+       
+        $qrcodelogic = new qrcodelogic($data, 470, '取货二维码');
+        $qrcodelogic->coverbackground('../public/background.png', 3, 3);
+        $qrcodelogic->output();
+        exit;
+        print_r($qrcodelogic);die;
     }
 }
