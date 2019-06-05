@@ -51,6 +51,15 @@ class DbOrder {
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
     }
 
+    public function getOrderList($field, $where, $row = false,$orderBy = '', $sc = '',$limit = '') {
+        $obj = Orders::field($field)->with([
+            'user' => function ($query){
+                $query->field('id,nick_name,avatar,user_identity');
+            },
+        ])->where($where);
+        return $this->getResult($obj, $row, $orderBy, $sc, $limit);
+    }
+
     /**
      * 获取订单(订单,子订单,商品订单)列表详情
      * @param $where

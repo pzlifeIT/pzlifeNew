@@ -2,17 +2,17 @@
 
 namespace app\common\action\admin;
 
-use app\facade\DbUser;
-use app\facade\DbShops;
-use Config;
 use app\facade\DbGoods;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
+use app\facade\DbShops;
+use app\facade\DbUser;
 use cache\Phpredis;
+use Config;
 use think\Db;
 
 class Order extends CommonIndex {
-    private $redisDeliverOrderKey = 'cms:order:deliver:express:';
+    private $redisDeliverOrderKey    = 'cms:order:deliver:express:';
     private $redisDeliverExpressList = 'cms:order:deliver:list:';
 
     public function __construct() {
@@ -26,7 +26,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOrderList($page, $pagenum, $order_status = '') {
+    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '') {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
@@ -35,8 +35,19 @@ class Order extends CommonIndex {
         if (!empty($order_status)) {
             array_push($where, ['order_status', '=', $order_status]);
         }
+        if (!empty($order_no)) {
+            array_push($where, ['order_no', '=',$order_no]);
+        }
+        if (!empty($nick_name)) {
+            $user =  DbUser::getUserInfo([['nick_name', 'like','%'.$nick_name.'%']], 'id', false);
+            $uid = [];
+            foreach ($user as $key => $value) {
+                $uid[] = $value['id'];
+            }
+            array_push($where, ['uid', 'in',$uid]);
+        }
         $field     = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
-        $orderList = DbOrder::getOrder($field, $where, false, $offset . ',' . $pagenum);
+        $orderList = DbOrder::getOrder($field, $where, false,$offset . ',' . $pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
             return ['code' => 3000];
@@ -44,10 +55,10 @@ class Order extends CommonIndex {
         foreach ($orderList as $key => $value) {
             $orderList[$key]['nick_name'] = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name', true)['nick_name'];
         }
+        
         $totle = DbOrder::getOrderCount($where);
         return ['code' => 200, 'totle' => $totle, 'order_list' => $orderList];
     }
-
 
     /**
      * 获取订单详情
@@ -65,16 +76,15 @@ class Order extends CommonIndex {
             $order_info['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['province_id']])['area_name'];
         }
         if ($order_info['city_id']) {
-            $order_info['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
+            $order_info['city_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
         }
         if ($order_info['area_id']) {
-            $order_info['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
+            $order_info['area_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
         }
-        
-       
-        $order_child                 = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
-        $express_money               = 0;
-        $order_goods_ids             = [];
+
+        $order_child     = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
+        $express_money   = 0;
+        $order_goods_ids = [];
         foreach ($order_child as $order => $child) {
             $order_goods = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
             foreach ($order_goods as $og => $goods) {
@@ -82,10 +92,10 @@ class Order extends CommonIndex {
                 $order_goods_ids[]            = $goods['id'];
             }
             $order_child[$order]['order_goods'] = $order_goods;
-            $express_money                      += $child['express_money'];
+            $express_money += $child['express_money'];
         }
         $order_info['express_money'] = $express_money;
-        $order_pack = [];
+        $order_pack                  = [];
         foreach ($order_child as $order => $child) {
             $order_goods     = DbOrder::getOrderGoods('goods_id,goods_name,order_child_id,sku_id,sup_id,goods_type,goods_price,margin_price,integral,goods_num,sku_json', ['order_child_id' => $child['id']], false, true);
             $order_goods_num = DbOrder::getOrderGoods('sku_id,COUNT(goods_num) as goods_num', ['order_child_id' => $child['id']], 'sku_id');
@@ -146,46 +156,46 @@ class Order extends CommonIndex {
         if ($order_express_id) {
             return ['code' => '3005', 'msg' => '已添加的订单商品物流分配关系'];
         }
-        $had_express = DbOrder::getOrderExpress('order_goods_id', ['express_key' => $express_key,'express_no' => $express_no]);
+        $had_express = DbOrder::getOrderExpress('order_goods_id', ['express_key' => $express_key, 'express_no' => $express_no]);
         if (!empty($had_express)) {
             $had_order_goods = [];
             foreach ($had_express as $had => $d_express) {
                 $had_order_goods[] = $d_express['order_goods_id'];
             }
-           
-            $had_child = DbOrder::getOrderGoods('order_child_id', [['id' ,'in', $had_order_goods]]);
+
+            $had_child    = DbOrder::getOrderGoods('order_child_id', [['id', 'in', $had_order_goods]]);
             $had_child_id = [];
-           
+
             if (!empty($had_child)) {
                 foreach ($had_child as $had => $child) {
                     $had_child_id[] = $child['order_child_id'];
                 }
-                
+
                 if (!empty($had_child_id)) {
-                    $had_order = DbOrder::getOrderChild('order_id', [['id' ,'in', $had_child_id]]);
+                    $had_order = DbOrder::getOrderChild('order_id', [['id', 'in', $had_child_id]]);
                     // print_r($had_child_id);die;
                     $had_order_id = [];
                     if (!empty($had_order)) {
                         foreach ($had_order as $has => $order) {
-                           $had_order_id[] = $order['order_id'];
+                            $had_order_id[] = $order['order_id'];
                         }
-                        $had_order_user = DbOrder::getOrder('uid', [['id' ,'in', $had_order_id]]);
-                        $had_uid = [];
+                        $had_order_user = DbOrder::getOrder('uid', [['id', 'in', $had_order_id]]);
+                        $had_uid        = [];
                         if ($had_order_user) {
                             foreach ($had_order_user as $key => $user) {
                                 $had_uid[] = $user['uid'];
                             }
                             $had_uid = array_unique($had_uid);
                             if (count($had_uid) > 1) {
-                                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+                                return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
                             }
                         }
                     }
-                   
+
                 }
 
             }
-            
+
         }
         // print_r(array_unique($had_uid));die;
 
@@ -198,11 +208,11 @@ class Order extends CommonIndex {
 
         $thisorder = DbOrder::getOrder('order_status,uid', ['id' => $order_id], true);
         if (!empty($had_uid)) {
-            if (!in_array($thisorder['uid'],$had_uid)) {
-                return ['code' => '3007','msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
-            } 
+            if (!in_array($thisorder['uid'], $had_uid)) {
+                return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
+            }
         }
-        
+
         if ($thisorder['order_status'] != 4) {
             return ['code' => '3004', 'msg' => '非待发货订单无法发货'];
         }
@@ -299,8 +309,7 @@ class Order extends CommonIndex {
 
     }
 
-
-    public function getMemberOrders(int $page, int $pagenum){
+    public function getMemberOrders(int $page, int $pagenum) {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
