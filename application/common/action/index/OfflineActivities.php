@@ -448,22 +448,22 @@ class OfflineActivities extends CommonIndex {
         ];
     }
 
-    public function getHdLucky($big = ''){
+    public function getHdLucky($big = '') {
         if ($big) {
-            $result = DbOfflineActivities::getHdLucky([['shop_num', 'in' ,'2,4,6,8'],'*']);
-            
-        }else {
-            $result = DbOfflineActivities::getHdLucky([],'*',false,['id' => 'desc'],15);
+            $result = DbOfflineActivities::getHdLucky([['shop_num', 'in', '2,4,6,8']], '*');
+
+        } else {
+            $result = DbOfflineActivities::getHdLucky([], '*', false, ['id' => 'desc'], 15);
         }
         if (empty($result)) {
             return ['code' => '3000'];
         }
         foreach ($result as $key => $value) {
-            $user_phone    = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
-            $mobile = substr($user_phone['mobile'],0,3).'*****'.substr($user_phone['mobile'],-4);
+            $user_phone           = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
+            $mobile               = substr($user_phone['mobile'], 0, 3) . '*****' . substr($user_phone['mobile'], -4);
             $result[$key]['user'] = $mobile;
         }
-        return ['code' => '200','winnings' => $result];
-        
+        return ['code' => '200', 'winnings' => $result];
+
     }
 }
