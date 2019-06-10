@@ -82,4 +82,8 @@ class DbOfflineActivities {
         $HdLucky = new HdLucky;
         return $HdLucky->save($data, ['id' => $id]);
     }
+
+    public function countWinning($where){
+        return HdLucky::where($where)->count();
+    }
 }

@@ -367,7 +367,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} pid 中奖用户ID
      * @apiParam (入参) {String} winning_id 中奖ID
-     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiSuccess (返回) {String} code 200:成功 3000:未查询到获奖记录 
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
      * @apiSampleRequest /admin/OfflineActivities/verifyWinners
@@ -387,7 +387,7 @@ class OfflineActivities extends AdminController {
         }
         $pid        = trim($this->request->post('pid'));
         $winning_id = trim($this->request->post('winning_id'));
-        $result = $this->app->offlineactivities->verifyWinners($pid,$winning_id,$cmsConId);
+        $result     = $this->app->offlineactivities->verifyWinners($pid, $winning_id, $cmsConId);
         $this->apiLog($apiName, [$cmsConId, $pid, $winning_id], $result['code'], $cmsConId);
         return $result;
     }
@@ -400,7 +400,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} pid 中奖用户ID
      * @apiParam (入参) {String} winning_id 中奖ID
-     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
      * @apiSampleRequest /admin/OfflineActivities/getWinning
@@ -420,7 +420,7 @@ class OfflineActivities extends AdminController {
         }
         $pid        = trim($this->request->post('pid'));
         $winning_id = trim($this->request->post('winning_id'));
-        $result = $this->app->offlineactivities->getWinning($pid,$winning_id,$cmsConId);
+        $result     = $this->app->offlineactivities->getWinning($pid, $winning_id, $cmsConId);
         $this->apiLog($apiName, [$cmsConId, $pid, $winning_id], $result['code'], $cmsConId);
         return $result;
     }
@@ -433,7 +433,8 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} [page] 页码
      * @apiParam (入参) {String} [pageNum] 数量
-     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiParam (入参) {String} [id] 中奖ID
+     * @apiSuccess (返回) {String} code 200:成功 3001:中奖id错误
      * @apiSuccess (返回) {String} total 总结果条数
      * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
      * @apiSampleRequest /admin/OfflineActivities/getWinnerList
@@ -445,13 +446,13 @@ class OfflineActivities extends AdminController {
      * ]
      * @author rzc
      */
-    public function getWinnerList(){
-        $page      = trim($this->request->post('page'));
-        $pagenum   = trim($this->request->post('pageNum'));
-        $id        = trim($this->request->post('id'));
-        $page      = is_numeric($page) ? $page : 1;
-        $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
-        $result = $this->app->offlineactivities->getWinnerList($page,$pagenum,$id);
+    public function getWinnerList() {
+        $page    = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pageNum'));
+        $id      = trim($this->request->post('id'));
+        $page    = is_numeric($page) ? $page : 1;
+        $pagenum = is_numeric($pagenum) ? $pagenum : 10;
+        $result  = $this->app->offlineactivities->getWinnerList($page, $pagenum, $id);
         return $result;
     }
 }
