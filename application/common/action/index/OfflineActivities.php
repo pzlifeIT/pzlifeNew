@@ -335,7 +335,7 @@ class OfflineActivities extends CommonIndex {
                     $image_path = $value['image_path'];
                 }
             }
-            DbOfflineActivities::addHdLucky([
+            $winning_id = DbOfflineActivities::addHdLucky([
                 'uid'        => $uid,
                 'shop_num'   => $shopNum,
                 'hd_num'     => $hdNum,
@@ -343,7 +343,7 @@ class OfflineActivities extends CommonIndex {
                 'image_path' => $image_path,
             ]);
             Db::commit();
-            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path];
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path, 'winning_id' => $winning_id];
         } catch (\Exception $e) {
             $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             Db::rollback();
@@ -407,44 +407,63 @@ class OfflineActivities extends CommonIndex {
                 [
                     'shop_num'   => 1,
                     'goods_name' => '2元商券',
-                    'image_path' => 'https://webimages.pzlive.vip/shangquan.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/1shangquan.jpg',
                 ],
                 [
                     'shop_num'   => 2,
                     'goods_name' => '还真精品茶具 1套',
-                    'image_path' => 'https://webimages.pzlive.vip/beizi.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/1beizi.jpg',
                 ],
                 [
                     'shop_num'   => 3,
                     'goods_name' => '深海野生脆虾北极虾 1包',
-                    'image_path' => 'https://webimages.pzlive.vip/xia.png',
+                    'image_path' => 'https://webimages.pzlive.vip/1xia.png',
                 ],
                 [
                     'shop_num'   => 4,
                     'goods_name' => '君乐宝纯享随机口味 一箱',
-                    'image_path' => 'https://webimages.pzlive.vip/chunxiang.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/cx.jpg',
                 ],
                 [
                     'shop_num'   => 5,
                     'goods_name' => '优加竹浆本色手帕 1包',
-                    'image_path' => 'https://webimages.pzlive.vip/zj.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/1zj.jpg',
                 ],
                 [
                     'shop_num'   => 6,
                     'goods_name' => '玛蒙德格兰赛干红葡萄酒 2瓶',
-                    'image_path' => 'https://webimages.pzlive.vip/ganhong.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/gh.jpg',
                 ],
                 [
                     'shop_num'   => 7,
                     'goods_name' => '君乐宝涨芝士 1袋',
-                    'image_path' => 'https://webimages.pzlive.vip/zzs.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/1zzs.jpg',
                 ],
                 [
                     'shop_num'   => 8,
                     'goods_name' => '克林伯瑞桃红葡萄酒 2瓶',
-                    'image_path' => 'https://webimages.pzlive.vip/taohong.jpg',
+                    'image_path' => 'https://webimages.pzlive.vip/th.jpg',
                 ],
             ],
         ];
+    }
+
+    public function getHdLucky($big = ''){
+        if ($big) {
+            $result = DbOfflineActivities::getHdLucky([['shop_num', 'in' ,'2,4,6,8'],'*']);
+            
+        }else {
+            $result = DbOfflineActivities::getHdLucky([],'*',false,['id' => 'desc'],15);
+        }
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        foreach ($result as $key => $value) {
+            $user_phone    = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
+            $mobile = substr($user_phone['mobile'],0,3).'*****'.substr($user_phone['mobile'],-4);
+            $result[$key]['user'] = $mobile;
+        }
+        return ['code' => '200','winnings' => $result];
+        
     }
 }

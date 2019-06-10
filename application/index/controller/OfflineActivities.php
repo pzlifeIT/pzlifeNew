@@ -154,4 +154,31 @@ class OfflineActivities extends MyController {
 //        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {get} / 获取抽奖记录
+     * @apiDescription   getHdLucky
+     * @apiGroup         index_OfflineActivities
+     * @apiName          getHdLucky
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} big 1:大奖， 不传为全部
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001 奖品类型错误
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/getHdLucky
+     * @author rzc
+     */
+    public function getHdLucky(){
+        $big = trim($this->request->post('big'));
+        if (!empty($big)) {
+            if ($big != 1) {
+                return ['code' => '3001'];
+            }
+        }
+        $result = $this->app->offlineactivities->getHdLucky($big);
+        return $result;
+    }
 }
