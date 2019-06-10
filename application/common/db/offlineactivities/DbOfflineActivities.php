@@ -2,6 +2,7 @@
 
 namespace app\common\db\offlineactivities;
 
+use app\common\model\HdLucky;
 use app\common\model\OfflineActivities;
 use app\common\model\OfflineActivitiesGoods;
 use app\common\model\Users;
@@ -71,5 +72,16 @@ class DbOfflineActivities {
     public function updateOfflineActivitiesGoods($data,$id){
         $OfflineActivitiesGoods = new OfflineActivitiesGoods;
         return $OfflineActivitiesGoods->save($data,['id' => $id]);
+    }
+
+    public function getHdLucky($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = HdLucky::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addHdLucky($data) {
+        $hdLucky = new HdLucky();
+        $hdLucky->save($data);
+        return $hdLucky->id;
     }
 }

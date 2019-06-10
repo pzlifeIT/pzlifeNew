@@ -13,6 +13,14 @@ use function Qiniu\json_decode;
 use think\Db;
 
 class OfflineActivities extends CommonIndex {
+    private $redisHdluckyDraw;
+
+    public function __construct() {
+        parent::__construct();
+        $this->redisHdluckyDraw = Config::get('rediskey.active.redisHdluckyDraw') . ':' . date('Ymd');
+        $this->redisHdluckyDrawLock = Config::get('rediskey.active.redisHdluckyDrawLock');
+    }
+
     public function getOfflineActivities($id) {
         $offlineactivities = DbOfflineActivities::getOfflineActivities(['id' => $id], '*', true);
         if (empty($offlineactivities)) {
@@ -285,5 +293,93 @@ class OfflineActivities extends CommonIndex {
         $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
+    }
+
+    /**
+     * 抽奖操作
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function luckyDraw($conId) {
+        $hdNum = 1;
+        $uid   = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3001'];
+        }
+//        $uid = 1;
+        if ($this->initShopCount() === false) {
+            return ['code' => '3004'];
+        }
+        $shopNum = $this->getDraw();
+        $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcsub($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+        $luckyRes = DbOfflineActivities::getHdLucky(['uid' => $uid, 'hd_num' => $hdNum], 'id,shop_num', true);
+        if (!empty($luckyRes)) {
+            $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+            return ['code' => '3003', 'shop_num' => $luckyRes['shop_num']];
+        }
+        Db::startTrans();
+        try {
+            DbOfflineActivities::addHdLucky([
+                'uid'      => $uid,
+                'shop_num' => $shopNum,
+                'hd_num'   => $hdNum,
+            ]);
+            Db::commit();
+            return ['code' => '200', 'shop_num' => $shopNum];
+        } catch (\Exception $e) {
+            $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+            Db::rollback();
+            return ['code' => '3005'];
+        }
+    }
+
+    private function getDraw() {
+        $shopList = [//抽奖商品
+            1 => 1250,
+            2 => 2500,
+            3 => 3750,
+            4 => 5000,
+            5 => 6250,
+            6 => 7500,
+            7 => 8750,
+            8 => 10000,
+        ];
+        $num      = mt_rand(1, 10000);
+        $shopNum  = 0;
+        foreach ($shopList as $sk => $sl) {
+            if ($num <= $sl) {
+                $shopNum = $sk;
+                break;
+            }
+        }
+        $result = $this->redis->hget($this->redisHdluckyDraw, $shopNum);
+        if ($result <= 0) {
+            $shopNum = $this->getDraw();
+        }
+        return $shopNum;
+    }
+
+    private function initShopCount() {
+        $shopCount = [//抽奖商品库存
+            1 => 0,
+            2 => 0,
+            3 => 1000,
+            4 => 500,
+            5 => 0,
+            6 => 10,
+            7 => 0,
+            8 => 0,
+        ];
+        if (!$this->redis->exists($this->redisHdluckyDraw)) {
+            $this->redis->hMSet($this->redisHdluckyDraw, $shopCount);
+            $this->redis->expireAt($this->redisHdluckyDraw, bcadd(time(), 24 * 3600, 0)); //设置过期
+        }
+        $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
+        $allNum = array_sum($allNum);
+        if ($allNum <= 0) {
+            return false;
+        }
+        return true;
     }
 }
