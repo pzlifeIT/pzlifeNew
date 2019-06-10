@@ -343,7 +343,7 @@ class OfflineActivities extends CommonIndex {
                 'image_path' => $image_path,
             ]);
             Db::commit();
-            return ['code' => '200', 'shop_num' => $shopNum];
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path];
         } catch (\Exception $e) {
             $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             Db::rollback();

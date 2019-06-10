@@ -74,7 +74,11 @@ class DbOfflineActivities {
     }
 
     public function getWinning($where, $field, $row = false, $orderBy = '', $limit = '') {
-        $obj = HdLucky::field($field)->where($where);
+        $obj = HdLucky::field($field)->with([
+             'user'       => function ($query) {
+                $query->field('id,nick_name,mobile');
+            }
+        ])->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 

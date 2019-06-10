@@ -35,4 +35,8 @@ class HdLucky extends Model {
         return $value;
     }
 
+    public function user(){
+        return $this->belongsTo('users', 'uid', 'id');
+    }
+
 }
