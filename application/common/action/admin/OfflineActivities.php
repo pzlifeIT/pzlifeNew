@@ -518,7 +518,7 @@ class OfflineActivities extends CommonIndex {
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        $total = DbOfflineActivities::countWinning();
+        $total = DbOfflineActivities::countWinning([]);
         return ['code' => '200', 'total' => $total, 'WinnerList' => $result];
     }
 }
