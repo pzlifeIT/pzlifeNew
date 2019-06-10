@@ -485,7 +485,7 @@ class OfflineActivities extends CommonIndex {
         if ($winnings['status'] == 2) { //已领取
             return ['code' => '200', 'is_winning' => 1];
         }
-        return ['code' => '200', 'is_winning' => 2];
+        return ['code' => '200', 'is_winning' => 2,'goods_name' => $winnings['goods_name'], 'image_path' => $winnings['image_path']];
     }
 
     public function getWinning($pid, $winning_id, $cmsConId) {
