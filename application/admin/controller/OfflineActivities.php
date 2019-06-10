@@ -358,4 +358,100 @@ class OfflineActivities extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $page, $scene], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 中奖核验接口
+     * @apiDescription   verifyWinners
+     * @apiGroup         admin_OfflineActivities
+     * @apiName          verifyWinners
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} pid 中奖用户ID
+     * @apiParam (入参) {String} winning_id 中奖ID
+     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiSuccess (返回) {String} total 总结果条数
+     * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
+     * @apiSampleRequest /admin/OfflineActivities/verifyWinners
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     * "is_winning":1,领取状态
+     *
+     * ]
+     * @author rzc
+     */
+    public function verifyWinners() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $pid        = trim($this->request->post('pid'));
+        $winning_id = trim($this->request->post('winning_id'));
+        $result = $this->app->offlineactivities->verifyWinners($pid,$winning_id,$cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $pid, $winning_id], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 中奖领取接口
+     * @apiDescription   getWinning
+     * @apiGroup         admin_OfflineActivities
+     * @apiName          getWinning
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} pid 中奖用户ID
+     * @apiParam (入参) {String} winning_id 中奖ID
+     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiSuccess (返回) {String} total 总结果条数
+     * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
+     * @apiSampleRequest /admin/OfflineActivities/getWinning
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     * "is_winning":1,领取状态
+     *
+     * ]
+     * @author rzc
+     */
+    public function getWinning() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $pid        = trim($this->request->post('pid'));
+        $winning_id = trim($this->request->post('winning_id'));
+        $result = $this->app->offlineactivities->getWinning($pid,$winning_id,$cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $pid, $winning_id], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询中奖领取记录
+     * @apiDescription   getWinnerList
+     * @apiGroup         admin_OfflineActivities
+     * @apiName          getWinnerList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} [page] 页码
+     * @apiParam (入参) {String} [pageNum] 数量
+     * @apiSuccess (返回) {String} code 200:成功 3001:未查询到获奖记录 / 3002:该商品已领取 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:微信错误 / 3011:上传失败 / 3012 该会员不存在
+     * @apiSuccess (返回) {String} total 总结果条数
+     * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
+     * @apiSampleRequest /admin/OfflineActivities/getWinnerList
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     * "is_winning":1,领取状态
+     *
+     * ]
+     * @author rzc
+     */
+    public function getWinnerList(){
+        $page      = trim($this->request->post('page'));
+        $pagenum   = trim($this->request->post('pageNum'));
+        $id        = trim($this->request->post('id'));
+        $page      = is_numeric($page) ? $page : 1;
+        $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
+        $result = $this->app->offlineactivities->getWinnerList($page,$pagenum,$id);
+        return $result;
+    }
 }

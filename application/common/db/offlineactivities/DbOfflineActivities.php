@@ -2,6 +2,7 @@
 
 namespace app\common\db\offlineactivities;
 
+use app\common\model\HdLucky;
 use app\common\model\OfflineActivities;
 use app\common\model\OfflineActivitiesGoods;
 use app\common\model\Users;
@@ -37,39 +38,48 @@ class DbOfflineActivities {
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
-    public function countOfflineActivities($where){
+    public function countOfflineActivities($where) {
         return OfflineActivities::where($where)->count();
     }
 
-    public function addOfflineActivities($data){
+    public function addOfflineActivities($data) {
         $OfflineActivities = new OfflineActivities;
         $OfflineActivities->save($data);
         return $OfflineActivities->id;
     }
 
-    public function updateOfflineActivities($data,$id){
+    public function updateOfflineActivities($data, $id) {
         $OfflineActivities = new OfflineActivities;
-        return $OfflineActivities->save($data,['id' => $id]);
+        return $OfflineActivities->save($data, ['id' => $id]);
     }
-
 
     public function getOfflineActivitiesGoods($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = OfflineActivitiesGoods::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
-    public function countOfflineActivitiesGoods($where){
+    public function countOfflineActivitiesGoods($where) {
         return OfflineActivitiesGoods::where($where)->count();
     }
 
-    public function addOfflineActivitiesGoods($data){
+    public function addOfflineActivitiesGoods($data) {
         $OfflineActivitiesGoods = new OfflineActivitiesGoods;
         $OfflineActivitiesGoods->save($data);
         return $OfflineActivitiesGoods->id;
     }
 
-    public function updateOfflineActivitiesGoods($data,$id){
+    public function updateOfflineActivitiesGoods($data, $id) {
         $OfflineActivitiesGoods = new OfflineActivitiesGoods;
-        return $OfflineActivitiesGoods->save($data,['id' => $id]);
+        return $OfflineActivitiesGoods->save($data, ['id' => $id]);
+    }
+
+    public function getWinning($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = HdLucky::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function updateWinning($data, $id) {
+        $HdLucky = new HdLucky;
+        return $HdLucky->save($data, ['id' => $id]);
     }
 }

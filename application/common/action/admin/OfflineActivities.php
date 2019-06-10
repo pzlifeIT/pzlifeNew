@@ -474,4 +474,33 @@ class OfflineActivities extends CommonIndex {
             return ['code' => 3009, 'error_data' => json_decode($result, true)];
         }
     }
+
+
+    public function verifyWinners($pid,$winning_id,$cmsConId){
+        $adminId       = $this->getUidByConId($cmsConId);
+        $uid = deUid($pid);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid,],'*',true);
+        if (empty($winnings)) {
+            return ['code' => '3001'];
+        }
+        if ($winnings['status'] == 2) {//已领取
+            return ['code' => '200', 'is_winning' => 1];
+        }
+        return ['code' => '200', 'is_winning' => 2];
+    }
+
+    public function getWinning($pid,$winning_id,$cmsConId){
+        $adminId       = $this->getUidByConId($cmsConId);
+        $uid = deUid($pid);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid,'id' => $winning_id],'*',true);
+        if (empty($winnings)) {
+            return ['code' => '3001'];
+        }
+        if ($winnings['status'] == 2) {//已领取
+            return ['code' => '3002'];
+        }
+        DbOfflineActivities::updateWinning(['status' => 2],$winnings['id']);
+        return ['code' => 200];
+    }
+    
 }
