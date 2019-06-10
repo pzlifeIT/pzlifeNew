@@ -86,4 +86,15 @@ class DbOfflineActivities {
     public function countWinning($where){
         return HdLucky::where($where)->count();
     }
+
+    public function getHdLucky($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = HdLucky::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addHdLucky($data) {
+        $hdLucky = new HdLucky();
+        $hdLucky->save($data);
+        return $hdLucky->id;
+    }
 }

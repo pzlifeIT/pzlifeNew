@@ -52,4 +52,10 @@ return [
      */
     'has_invoice'             => Env::get('proportion.has_invoice'),
     'no_invoice'              => Env::get('proportion.no_invoice'),
+
+    /**
+     * 模板消息
+     * @var unknown_type
+     */
+    'deliver_goods_template_id' => Env::get('modelmessage.deliver_goods_template_id'),
 ];

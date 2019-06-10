@@ -11,14 +11,15 @@ class Orders extends Model {
     // 设置当前模型对应的完整数据表名称
     protected $table = 'pz_orders';
     // 设置当前模型的数据库连接
-    protected $connection = '';
-    protected $deleteTime = 'delete_time';
-    protected $defaultSoftDelete = 0;
+    protected $connection         = '';
+    protected $deleteTime         = 'delete_time';
+    protected $defaultSoftDelete  = 0;
     protected $autoWriteTimestamp = true;
-    protected $updateTime = false;//关闭update_time
-    protected $type = [
-        'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
-        'third_time'  => 'timestamp:Y-m-d H:i:s',//最后登录时间
+    protected $updateTime         = false; //关闭update_time
+    protected $type               = [
+        'create_time' => 'timestamp:Y-m-d H:i:s', //注册时间
+        'third_time'  => 'timestamp:Y-m-d H:i:s', //最后登录时间
+        'pay_time'    => 'timestamp:Y-m-d H:i:s', //支付时间
     ];
     private $orderStatus = [
         1  => '待付款',
@@ -32,7 +33,7 @@ class Orders extends Model {
         9  => '退款中',
         10 => '退款成功',
     ];
-    private $payType = [1 => '支付宝', 2 => '微信', 3 => '银联',];//1.支付宝 2.微信 3.银联
+    private $payType = [1 => '支付宝', 2 => '微信', 3 => '银联']; //1.支付宝 2.微信 3.银联
 
     // 模型初始化
     protected static function init() {
@@ -40,8 +41,8 @@ class Orders extends Model {
     }
 
 //    public function getOrderStatusAttr($value) {
-//        return $this->orderStatus[$value];
-//    }
+    //        return $this->orderStatus[$value];
+    //    }
 
     public function setOrderStatusAttr($value) {
         if (!in_array($value, $this->orderStatus)) {
@@ -52,8 +53,8 @@ class Orders extends Model {
     }
 
 //    public function getPayTypeAttr($value) {
-//        return $this->payType[$value];
-//    }
+    //        return $this->payType[$value];
+    //    }
 
     public function setPayTypeAttr($value) {
         if (!in_array($value, $this->payType)) {

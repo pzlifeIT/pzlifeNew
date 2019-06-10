@@ -2,8 +2,10 @@
 
 namespace app\common\action\admin;
 
+use app\common\action\notify\Note;
 use app\facade\DbAdmin;
 use app\facade\DbImage;
+use app\facade\DbModelMessage;
 use app\facade\DbOrder;
 use app\facade\DbShops;
 use app\facade\DbUser;
@@ -780,9 +782,11 @@ class Admin extends CommonIndex {
         if ($transfer['status'] != 1) {
             return ['code' => '3004'];
         }
+        // print_r($transfer);die;
         if ($transfer['wtype'] == 1) { //提现方式 1 银行
+            
+            $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty,nick_name,mobile', true);
             if ($status == 3) { //审核不通过
-                $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty', true);
                 if ($transfer['stype'] == 2) { //2.佣金提现
                     $tradingData = [
                         'uid'          => $transfer['uid'],
@@ -828,12 +832,49 @@ class Admin extends CommonIndex {
                 try {
                     DbUser::editLogTransfer(['status' => $status, 'message' => $message], $id);
                     Db::commit();
+                    /* 发送短信通知 */
+                    if ($transfer['stype'] == 2) { //2.佣金提现
+                        $wtype = 7;
+                    } elseif ($transfer['stype'] == 4) { //4.奖励金提现
+                        $wtype = 8;
+                    }
+                    $user_identity = DbUser::getUserInfo(['id' => $transfer['uid']], 'user_identity', true)['user_identity'];
+                    $user_identity = $user_identity['user_identity'] + 1;
+                    $m_type        = '1,' . $user_identity;
+                    $message_task  = DbModelMessage::getMessageTask([['wtype', '=', $wtype], ['status', '=', 2], ['type', 'in', $m_type]], 'type,mt_id,trigger_id', true);
+                    // print_r($status);die;
+                    if (!empty($message_task)) {
+                        /* 获取触发器 */
+                        $trigger = DbModelMessage::getTrigger(['id' => $message_task['trigger_id'], 'status' => 2], 'start_time,stop_time', true);
+                        if (!empty($trigger)) {
+                            if (strtotime($trigger['start_time']) < time() && strtotime($trigger['stop_time']) > time()) {
+                                /* 获取消息模板 */
+                                $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
+                                if (!empty($message_template)) { //模板不为空
+                                    $message_template = $message_template['template'];
+                                    //匹配模板中需要查询内容
+                                    $message_template = str_replace('{{[nick_name]}}', $indexUser['nick_name'], $message_template);
+                                    $message_template = str_replace('{{[money]}}', $transfer['money'], $message_template);
+                                    $bankcard = substr($transfer['bank_card'],-4,4);
+                                    $message_template = str_replace('{{[bank_card]}}', '尾号为'.$bankcard.'账户', $message_template);
+                                    $Note = new Note;
+                                    // $send = $Note->sendSms('17091858001', $message_template);
+                                    $send = $Note->sendSms($indexUser['mobile'], $message_template);
+                                    // print_r($send);die;
+                                    // $thisorder['linkphone'];
+                                }
+                            }
+                        }
+                    }
                     return ['code' => '200'];
                 } catch (\Exception $e) {
+                    exception($e);
                     Db::rollback();
                     return ['code' => '3007']; //审核失败
                 }
             }
+        }else{
+            return ['code' => '3008', 'msg' => '错误的提现方式'];
         }
 
     }

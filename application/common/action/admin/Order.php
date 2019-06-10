@@ -2,7 +2,9 @@
 
 namespace app\common\action\admin;
 
+use app\common\action\notify\Note;
 use app\facade\DbGoods;
+use app\facade\DbModelMessage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
 use app\facade\DbShops;
@@ -16,6 +18,7 @@ class Order extends CommonIndex {
     private $redisDeliverExpressList = 'cms:order:deliver:list:';
 
     public function __construct() {
+        parent::__construct();
         $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
@@ -53,7 +56,10 @@ class Order extends CommonIndex {
             return ['code' => 3000];
         }
         foreach ($orderList as $key => $value) {
-            $orderList[$key]['nick_name'] = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name', true)['nick_name'];
+            $user = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name', true);
+            if (!empty($user)){
+                $orderList[$key]['nick_name'] = $user['nick_name'];
+            }
         }
         
         $totle = DbOrder::getOrderCount($where);
@@ -206,7 +212,7 @@ class Order extends CommonIndex {
         }
         $order_id = DbOrder::getOrderChild('order_id', ['id' => $order_child_id], true)['order_id'];
 
-        $thisorder = DbOrder::getOrder('order_status,uid', ['id' => $order_id], true);
+        $thisorder = DbOrder::getOrder('order_no,linkphone,linkman,order_status,uid,order_money,third_time', ['id' => $order_id], true);
         if (!empty($had_uid)) {
             if (!in_array($thisorder['uid'], $had_uid)) {
                 return ['code' => '3007', 'msg' => '不同用户订单不能使用同一物流公司物流单号发货'];
@@ -223,7 +229,7 @@ class Order extends CommonIndex {
             $new_chileds[] = $value['id'];
         }
 
-        $order_goods_data = DbOrder::getOrderGoods('id,goods_name,sku_json', [['order_child_id', 'IN', $new_chileds]]);
+        $order_goods_data = DbOrder::getOrderGoods('id,goods_name,sku_json,sku_id', [['order_child_id', 'IN', $new_chileds]]);
         $order_goods_ids  = [];
         foreach ($order_goods_data as $key => $value) {
             $order_goods_ids[] = $value['id'];
@@ -253,6 +259,137 @@ class Order extends CommonIndex {
             $no_order_goods_id = array_diff($order_goods_ids, $has_order_goods_id);
             if (!$no_order_goods_id) {
                 DbOrder::updataOrder(['order_status' => 5, 'send_time' => time()], $order_id);
+                /* 发送模板消息开始 2019/04/28 */
+                $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
+                $logPayRes         = DbOrder::getLogPay(['order_id' => $order_id, 'payment' => 1], 'uid,prepay_id', true);
+                if (!empty($logPayRes)) {
+                    $access_token = $this->getWeiXinAccessToken();
+                    $user_wxinfo  = DbUser::getUserWxinfo(['uid' => $logPayRes['uid']], 'openid', true);
+                    $skuids              = [];
+                    $sku_num             = [];
+                    $sku_name            = [];
+                    $data['keyword1']['value']        = $thisorder['order_no'];
+                    $data['keyword1']['color'] = '#157efb';
+                    #快递单号
+                    $express_word = '';
+                    foreach ($has_order_express as $order => $express) {
+                        $express_word = $express_word . '【' . $express['express_name'] . '】' . $express['express_no'];
+                    }
+                    $data['keyword2']['value']        = $express_word;
+                    $data['keyword2']['color'] = '#333';
+                    $keyword3                  = '';
+                    foreach ($order_goods_data as $key => $value) {
+                        if (empty($skuids)) {
+                            $skuids[]                           = $value['sku_id'];
+                            $sku_num[$value['sku_id']]  = 1;
+                            $sku_name[$value['sku_id']] = $value['goods_name'];
+                        } else {
+                            if (in_array($value['sku_id'], $skuids)) {
+                                $sku_num[$value['sku_id']] = $sku_num[$value['sku_id']] + 1;
+                            } else {
+                                $skuids[]                           = $value['sku_id'];
+                                $sku_num[$value['sku_id']]  = 1;
+                                $sku_name[$value['sku_id']] = $value['goods_name'];
+                            }
+                        }
+                        
+                    }
+                    foreach ($skuids as $key => $skuid) {
+                        $keyword3 = $keyword3 . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
+                    }
+                    $data['keyword3']['value']        = $keyword3;
+                    $data['keyword3']['color'] = '#333';
+                    // $goo
+                    // 商品名称
+
+                    $data['keyword4']['color'] = '#333';
+                    $data['keyword4']['value']        = $thisorder['order_money'];
+                    $data['keyword5']['color'] = '#333';
+                    $data['keyword5']['value']        = $thisorder['third_time'];
+
+                    $send_data                = [];
+                    $send_data['touser']      = $user_wxinfo['openid'];
+                    $send_data['template_id'] = Config::get('conf.deliver_goods_template_id');
+                    $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $thisorder['order_no'];
+                    $send_data['form_id']     = $logPayRes['prepay_id'];
+                    $send_data['data']        = $data;
+                    // print_r(json_encode($send_data,true));die;
+                    // echo $access_token;die;
+                    $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
+                    // print_r(json_encode($send_data,true));die;
+                    $result = $this->sendRequest2($requestUrl, $send_data);
+                    // Db::table('pz_log_error')->insert(['title' => '/pay/pay/wxPayCallback', 'data' => $result]);
+                } else {
+/* 发送模板消息代码结束 2019/04/28 */
+                    /* 短信模板发送短信 */
+                    $user_identity = DbUser::getUserInfo(['id' => $thisorder['uid']], 'user_identity', true);
+                    $user_identity = $user_identity['user_identity'] + 1;
+                    $m_type        = '1,' . $user_identity;
+                    $message_task  = DbModelMessage::getMessageTask([['wtype', '=', 1], ['status', '=', 2], ['type', 'in', $m_type]], 'type,mt_id,trigger_id', true);
+                    if (!empty($message_task)) {
+                        /* 获取触发器 */
+                        $trigger = DbModelMessage::getTrigger(['id' => $message_task['trigger_id'], 'status' => 2], 'start_time,stop_time', true);
+                        if (!empty($trigger)) {
+                            if (strtotime($trigger['start_time']) < time() && strtotime($trigger['stop_time']) > time()) {
+                                /* 获取消息模板 */
+                                $message_template = DbModelMessage::getMessageTemplate(['id' => $message_task['mt_id'], 'status' => 2], 'template', true);
+                                if (!empty($message_template)) { //模板不为空
+                                    $message_template = $message_template['template'];
+
+                                    //模板中订单号替换
+                                    $tem_orderNo      = '订单号' . $thisorder['order_no'];
+                                    $message_template = str_replace('{{[order_no]}}', $tem_orderNo, $message_template);
+
+                                    //商品发货信息替换
+
+                                    $tem_delivergoods = '';
+                                    foreach ($has_order_express as $order => $express) {
+                                        $where = [
+                                            'express_no'   => $express['express_no'],
+                                            'express_key'  => $express['express_key'],
+                                            'express_name' => $express['express_name'],
+                                        ];
+                                        $has_express_goodsid = DbOrder::getOrderExpress('order_goods_id', $where);
+                                        $skuids              = [];
+                                        $sku_num             = [];
+                                        $sku_name            = [];
+                                        foreach ($has_express_goodsid as $has_express => $goods) {
+                                            $express_goods = DbOrder::getOrderGoods('goods_name,sku_json,sku_id', [['id', '=', $goods['order_goods_id']]], false, false, true);
+                                            // $express_goods['sku_json'] = json_decode($express_goods['sku_json'], true);
+                                            if (empty($skuids)) {
+                                                $skuids[]                           = $express_goods['sku_id'];
+                                                $sku_num[$express_goods['sku_id']]  = 1;
+                                                $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
+                                            } else {
+                                                if (in_array($express_goods['sku_id'], $skuids)) {
+                                                    $sku_num[$express_goods['sku_id']] = $sku_num[$express_goods['sku_id']] + 1;
+                                                } else {
+                                                    $skuids[]                           = $express_goods['sku_id'];
+                                                    $sku_num[$express_goods['sku_id']]  = 1;
+                                                    $sku_name[$express_goods['sku_id']] = $express_goods['goods_name'];
+                                                }
+                                            }
+                                        }
+                                        $deliver_goods_text = '';
+                                        foreach ($skuids as $key => $skuid) {
+                                            $deliver_goods_text = $deliver_goods_text . '商品' . $sku_name[$skuid] . ' 数量' . $sku_num[$skuid];
+                                        }
+                                        $tem_delivergoods = $tem_delivergoods . ' 物流公司' . $express['express_name'] . ' 运单号' . $express['express_no'] . $deliver_goods_text . ' ';
+                                    }
+                                    $message_template = str_replace('{{[delivergoods]}}', $tem_delivergoods, $message_template);
+                                    $message_template = str_replace('{{[nick_name]}}', $thisorder['linkman'], $message_template);
+                                    $message_template = str_replace('{{[money]}}', '￥'.$thisorder['order_money'], $message_template);
+
+                                    $Note = new Note;
+                                    $send = $Note->sendSms($thisorder['linkphone'], $message_template);
+                                    // print_r($send);die;
+                                    // $thisorder['linkphone'];
+                                }
+                            }
+                        }
+                    }
+                }
+
                 $no_deliver_goods = [];
             } else {
                 $no_deliver_goods = DbOrder::getOrderGoods('id,goods_name,sku_json', [['id', 'IN', $no_order_goods_id]]);
@@ -321,5 +458,21 @@ class Order extends CommonIndex {
         $total = DbOrder::countMemberOrder(['pay_status' => 4]);
         return ['code' => '200', 'total' => $total, 'memberOrderList' => $result];
 
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
     }
 }

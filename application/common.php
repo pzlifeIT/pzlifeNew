@@ -222,6 +222,7 @@ function sendRequest($requestUrl, $method = 'get', $data = []) {
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 60);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($curl, CURLOPT_USERAGENT, 'Chrome/53.0.2785.104 Safari/537.36 Core/1.53.2372.400 QQBrowser/9.5.10548.400'); // 模拟用户使用的浏览器
     }
     // 设置cURL 参数，要求结果保存到字符串中还是输出到屏幕上。
     // 1如果成功只将结果返回，不自动输出任何内容。如果失败返回FALSE
@@ -451,7 +452,7 @@ function getBancardKey($cardNo) {
  * @author rzc
  */
 function checkIdcard($idcard) {
-    $idcard        = strtoupper($idcard);
+    $idcard    = strtoupper($idcard);
     $regx      = "/(^\d{15}$)|(^\d{17}([0-9]|X)$)/";
     $arr_split = array();
     if (!preg_match($regx, $idcard)) {
@@ -504,3 +505,4 @@ function checkIdcard($idcard) {
         }
     }
 }
+
