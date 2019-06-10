@@ -132,42 +132,42 @@ class OfflineActivities extends MyController {
             'LuckGoods' => [
                 [
                     'shop_num'   => 1,
-                    'goods_name'      => '2元商券',
+                    'goods_name' => '2元商券',
                     'image_path' => 'https://webimages.pzlive.vip/shangquan.jpg',
                 ],
                 [
                     'shop_num'   => 2,
-                    'goods_name'      => '还真精品茶具 1套',
+                    'goods_name' => '还真精品茶具 1套',
                     'image_path' => 'https://webimages.pzlive.vip/beizi.jpg',
                 ],
                 [
                     'shop_num'   => 3,
-                    'goods_name'      => '深海野生脆虾北极虾 1包',
+                    'goods_name' => '深海野生脆虾北极虾 1包',
                     'image_path' => 'https://webimages.pzlive.vip/xia.png',
                 ],
                 [
                     'shop_num'   => 4,
-                    'goods_name'      => '君乐宝纯享随机口味 一箱',
+                    'goods_name' => '君乐宝纯享随机口味 一箱',
                     'image_path' => 'https://webimages.pzlive.vip/chunxiang.jpg',
                 ],
                 [
                     'shop_num'   => 5,
-                    'goods_name'      => '优加竹浆本色手帕 1包',
+                    'goods_name' => '优加竹浆本色手帕 1包',
                     'image_path' => 'https://webimages.pzlive.vip/zj.jpg',
                 ],
                 [
                     'shop_num'   => 6,
-                    'goods_name'      => '玛蒙德格兰赛干红葡萄酒 2瓶',
+                    'goods_name' => '玛蒙德格兰赛干红葡萄酒 2瓶',
                     'image_path' => 'https://webimages.pzlive.vip/ganhong.jpg',
                 ],
                 [
                     'shop_num'   => 7,
-                    'goods_name'      => '君乐宝涨芝士 1袋',
+                    'goods_name' => '君乐宝涨芝士 1袋',
                     'image_path' => 'https://webimages.pzlive.vip/zzs.jpg',
                 ],
                 [
                     'shop_num'   => 8,
-                    'goods_name'      => '克林伯瑞桃红葡萄酒 2瓶',
+                    'goods_name' => '克林伯瑞桃红葡萄酒 2瓶',
                     'image_path' => 'https://webimages.pzlive.vip/taohong.jpg',
                 ],
             ],
