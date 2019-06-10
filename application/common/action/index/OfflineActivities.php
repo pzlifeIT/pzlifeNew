@@ -189,8 +189,8 @@ class OfflineActivities extends CommonIndex {
                 $skus       = [];
                 $sku_goods  = [];
                 $goods_name = [];
-                
-                
+
+
                 foreach ($orderGoodsData as $order => $list) {
                     if (in_array($list['sku_id'], $skus)) {
                         $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
@@ -302,6 +302,10 @@ class OfflineActivities extends CommonIndex {
      * @author zyr
      */
     public function luckyDraw($conId) {
+        $u = [23739 => 2, 23740 => 4, 23769 => 6, 23770 => 8];
+        if (Config::get('conf.platform_conf')[Config::get('app.deploy')] == 2) {//测试环境
+            $u = [23739 => 2, 26683 => 4, 26684 => 6, 26686 => 8];
+        }
         $hdNum = 1;
         $uid   = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -309,9 +313,13 @@ class OfflineActivities extends CommonIndex {
         }
 //        $uid = 1;
         if ($this->initShopCount() === false) {
-            return ['code' => '3004'];
+//            return ['code' => '3004'];
+            $shopNum = 5;//所有奖品抽完
+        } else if (in_array($uid, array_keys($u))) {
+            $shopNum = $u[$uid];
+        } else {
+            $shopNum = $this->getDraw();
         }
-        $shopNum = $this->getDraw();
         $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcsub($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
         $luckyRes = DbOfflineActivities::getHdLucky(['uid' => $uid, 'hd_num' => $hdNum], 'id,shop_num', true);
         if (!empty($luckyRes)) {
@@ -336,14 +344,14 @@ class OfflineActivities extends CommonIndex {
 
     private function getDraw() {
         $shopList = [//抽奖商品
-            1 => 1250,
-            2 => 2500,
-            3 => 3750,
-            4 => 5000,
-            5 => 6250,
-            6 => 7500,
-            7 => 8750,
-            8 => 10000,
+            1 => 1400,//2元商券
+            3 => 2800,//深海野生脆虾北极虾 1包
+            7 => 4200,//君乐宝涨芝士 1袋
+            5 => 10000,//优加竹浆本色手帕 1包
+            2 => 10000,//还真精品茶具 1套
+            4 => 10000,//君乐宝纯享随机口味 一箱
+            6 => 10000,//玛蒙德格兰赛干红葡萄酒 2瓶
+            8 => 10000,//克林伯瑞桃红葡萄酒 2瓶
         ];
         $num      = mt_rand(1, 10000);
         $shopNum  = 0;
@@ -362,13 +370,13 @@ class OfflineActivities extends CommonIndex {
 
     private function initShopCount() {
         $shopCount = [//抽奖商品库存
-            1 => 0,
+            1 => 50,
             2 => 0,
-            3 => 1000,
-            4 => 500,
-            5 => 0,
-            6 => 10,
-            7 => 0,
+            3 => 50,
+            4 => 0,
+            5 => 200,
+            6 => 0,
+            7 => 50,
             8 => 0,
         ];
         if (!$this->redis->exists($this->redisHdluckyDraw)) {
