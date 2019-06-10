@@ -478,7 +478,7 @@ class OfflineActivities extends CommonIndex {
     public function verifyWinners($pid, $winning_id, $cmsConId) {
         $adminId  = $this->getUidByConId($cmsConId);
         $uid      = deUid($pid);
-        $winnings = DbOfflineActivities::getWinning(['uid' => $uid,['id' => $winning_id]], '*', true);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid,'id' => $winning_id], '*', true);
         if (empty($winnings)) {
             return ['code' => '3001'];
         }
