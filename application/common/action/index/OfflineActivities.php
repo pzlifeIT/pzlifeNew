@@ -471,6 +471,6 @@ class OfflineActivities extends CommonIndex {
         $uid          = $this->getUidByConId($conId);
         $offect = ($page - 1)*$pagenum;
         $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect.','.$pagenum);
-        return $result;
+        return ['code' => 200, 'winnings'=>$result];
     }
 }
