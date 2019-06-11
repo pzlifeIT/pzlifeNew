@@ -49,18 +49,20 @@ class User extends AdminController {
      * @author rzc
      */
     public function getUsers() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
-        $mobile = trim($this->request->post('mobile'));
-        if (!empty($mobile)){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pagenum  = trim($this->request->post('pagenum'));
+        $mobile   = trim($this->request->post('mobile'));
+        if (!empty($mobile)) {
             if (checkMobile($mobile) == false) {
-                return ['code' =>'3001'];
+                return ['code' => '3001'];
             }
         }
-        $result = $this->app->user->getUsers($page, $pagenum , $mobile);
+        $result = $this->app->user->getUsers($page, $pagenum, $mobile);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
-
 
     /**
      * @api              {post} / boss降级处理

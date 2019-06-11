@@ -58,6 +58,8 @@ class Order extends AdminController {
      * @author rzc
      */
     public function getOrders() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
         $page         = trim($this->request->post('page'));
         $pagenum      = trim($this->request->post('pagenum'));
         $order_status = trim($this->request->post('order_status'));
@@ -77,6 +79,7 @@ class Order extends AdminController {
         }
 
         $result = $this->app->order->getOrderList(intval($page), intval($pagenum), intval($order_status));
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum, $order_status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -166,11 +169,14 @@ class Order extends AdminController {
      * @author rzc
      */
     public function getOrderInfo() {
-        $id = trim($this->request->post('id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim($this->request->post('id'));
         if (!is_numeric($id)) {
             return ['code' => 3002];
         }
         $result = $this->app->order->getOrderInfo($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -186,7 +192,10 @@ class Order extends AdminController {
      * @author rzc
      */
     public function getExpressList() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
         $ExpressList = getExpressList();
+        $this->apiLog($apiName, [$cmsConId], 200, $cmsConId);
         return ['code' => 200, 'ExpressList' => $ExpressList];
     }
 
@@ -295,8 +304,10 @@ class Order extends AdminController {
      * @author rzc
      */
     public function getMemberOrders() {
-        $pagenum = trim($this->request->post('pagenum'));
-        $page    = trim($this->request->post('page'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $pagenum  = trim($this->request->post('pagenum'));
+        $page     = trim($this->request->post('page'));
 
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
@@ -305,6 +316,7 @@ class Order extends AdminController {
             return ['code' => 3002];
         }
         $result = $this->app->order->getMemberOrders(intval($page), intval($pagenum));
+        $this->apiLog($apiName, [$cmsConId, $pagenum, $page], $result['code'], $cmsConId);
         return $result;
     }
 

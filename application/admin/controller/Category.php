@@ -32,9 +32,11 @@ class Category extends AdminController {
      * 2018/12/24-11:43
      */
     public function getCateList() {
-        $typeArr = [1, 2, 3];
-        $type    = trim(input("post.type"));
-        $type    = empty($type) ? 1 : intval($type);
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $typeArr  = [1, 2, 3];
+        $type     = trim(input("post.type"));
+        $type     = empty($type) ? 1 : intval($type);
         if (!in_array($type, $typeArr)) {
             return ['code' => 3002];
         }
@@ -48,6 +50,7 @@ class Category extends AdminController {
         $pageNum   = trim(input("post.page_num"));
         $pageNum   = empty($pageNum) ? 10 : intval($pageNum);//每页条数
         $cate_date = $this->app->category->getCateList($type, $pid, $page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $type, $pid, $page, $pageNum], $cate_date['code'], $cmsConId);
         return $cate_date;
     }
 
@@ -71,7 +74,10 @@ class Category extends AdminController {
      * 2018/12/24-13:58
      */
     public function addCatePage() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $page = $this->app->category->addCatePage();
+        $this->apiLog($apiName, [$cmsConId], $page['code'], $cmsConId);
         return $page;
     }
 
@@ -137,11 +143,14 @@ class Category extends AdminController {
      * 2018/12/24-14:56
      */
     public function editCatePage() {
-        $id = trim(input("post.id"));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim(input("post.id"));
         if (empty(is_numeric($id))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $result = $this->app->category->editCatePage($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -240,7 +249,10 @@ class Category extends AdminController {
      * 2018/12/25-10:42
      */
     public function getThreeCate() {
-        $res = $this->app->category->getThreeCate();
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $res      = $this->app->category->getThreeCate();
+        $this->apiLog($apiName, [$cmsConId], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -263,12 +275,16 @@ class Category extends AdminController {
      * @return array
      */
     public function allCateList() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $statusArr = [1, 2, 3];
         $status    = trim(input("post.status"));
         $status    = empty($status) ? 3 : intval($status);
         if (!in_array($status, $statusArr)) {
             return ['code' => 3001];
         }
-        return $this->app->category->allCateList($status);
+        $result = $this->app->category->allCateList($status);
+        $this->apiLog($apiName, [$cmsConId, $status], $result['code'], $cmsConId);
+        return $result;
     }
 }

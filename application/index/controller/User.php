@@ -25,13 +25,15 @@ class User extends MyController {
      * @author zyr
      */
     public function indexMain() {
-        $conId = trim($this->request->post('con_id'));
-        $buid  = trim($this->request->post('buid'));
-        $buid  = empty(deUid($buid)) ? 1 : deUid($buid);
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $buid    = trim($this->request->post('buid'));
+        $buid    = empty(deUid($buid)) ? 1 : deUid($buid);
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         $res = $this->app->user->indexMain($conId, $buid);
+        $this->apiLog($apiName, [$conId, $buid], $res['code'], $conId);
         return $res;
     }
 
@@ -50,6 +52,7 @@ class User extends MyController {
      * @author zyr
      */
     public function login() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $mobile   = trim($this->request->post('mobile'));
         $password = trim($this->request->post('password'));
         $buid     = trim($this->request->post('buid'));
@@ -61,6 +64,7 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $res = $this->app->user->login($mobile, $password, $buid);
+        $this->apiLog($apiName, [$mobile, $password, $buid], $res['code'], '');
         return $res;
     }
 
@@ -83,6 +87,7 @@ class User extends MyController {
      * @author zyr
      */
     public function quickLogin() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $mobile        = trim($this->request->post('mobile'));
         $vercode       = trim($this->request->post('vercode'));
         $code          = trim($this->request->post('code'));
@@ -103,6 +108,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+        $this->apiLog($apiName, [$mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid], $result['code'], '');
 //        $dd       = [$result, ['mobile' => $mobile, 'vercode' => $vercode, 'buid' => $buid]];
         //        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
         return $result;
@@ -128,6 +134,7 @@ class User extends MyController {
      * @author zyr
      */
     public function register() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $mobile        = trim($this->request->post('mobile'));
         $code          = trim($this->request->post('code'));
         $vercode       = trim($this->request->post('vercode'));
@@ -152,6 +159,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform, $buid);
+        $this->apiLog($apiName, [$mobile, $code, $vercode, $password, $encrypteddata, $iv, $platform, $buid], $result['code'], '');
         return $result;
     }
 
@@ -170,6 +178,7 @@ class User extends MyController {
      * @author zyr
      */
     public function resetPassword() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $mobile   = trim($this->request->post('mobile'));
         $vercode  = trim($this->request->post('vercode'));
         $password = trim($this->request->post('password'));
@@ -183,6 +192,7 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $result = $this->app->user->resetPassword($mobile, $vercode, $password);
+        $this->apiLog($apiName, [$mobile, $vercode, $password], $result['code'], '');
         return $result;
     }
 
@@ -200,6 +210,7 @@ class User extends MyController {
      * @author zyr
      */
     public function sendVercode() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $stypeArr = [1, 2, 3, 4];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
@@ -210,6 +221,7 @@ class User extends MyController {
             return ['code' => '3002']; //手机格式有误
         }
         $result = $this->app->user->sendVercode($mobile, $stype);
+        $this->apiLog($apiName, [$mobile, $stype], $result['code'], '');
         return $result;
     }
 
@@ -245,7 +257,8 @@ class User extends MyController {
      * @author zyr
      */
     public function getUser() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -253,6 +266,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $res = $this->app->user->getUser($conId);
+        $this->apiLog($apiName, [$conId], $res['code'], $conId);
         return $res;
     }
 
@@ -271,6 +285,7 @@ class User extends MyController {
      * @author zyr
      */
     public function loginUserByWx() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $code        = trim($this->request->post('code'));
         $platform    = trim($this->request->post('platform'));
         $buid        = trim($this->request->post('buid'));
@@ -281,6 +296,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $res      = $this->app->user->loginUserByWx($code, $platform, $buid);
+        $this->apiLog($apiName, [$code, $platform, $buid], $res['code'], '');
         return $res;
     }
 
@@ -306,7 +322,8 @@ class User extends MyController {
      * @author zyr
      */
     public function getBossShop() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -314,6 +331,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getBossShop($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -346,6 +364,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserBonus() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $conId     = trim($this->request->post('con_id'));
         $status    = trim($this->request->post('status'));
         $stype     = trim($this->request->post('stype'));
@@ -370,6 +389,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getUserBonus($conId, $status, $stype, $page, $pageNum, $year, $month);
+        $this->apiLog($apiName, [$conId, $status, $stype, $page, $pageNum, $year, $month], $result['code'], $conId);
         return $result;
     }
 
@@ -391,6 +411,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getShopCommission() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -403,6 +424,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getShopCommission($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -422,6 +444,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getShopCommissionSum() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -430,6 +453,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getShopCommissionSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -453,6 +477,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getShopBalance() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
         $page     = trim($this->request->post('page'));
@@ -470,6 +495,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getShopBalance($conId, $stype, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $stype, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -489,6 +515,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getShopBalanceSum() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -497,6 +524,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getShopBalanceSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -515,6 +543,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserSocialSum() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -523,6 +552,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserSocialSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -541,6 +571,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getRead() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -553,6 +584,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getRead($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -580,6 +612,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserSocial() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
         $page     = trim($this->request->post('page'));
@@ -597,6 +630,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getUserSocial($conId, $stype, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $stype, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -621,6 +655,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getMerchants() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -633,6 +668,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -654,6 +690,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getOtherEarn() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -666,6 +703,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getOtherEarn($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -687,6 +725,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getIntegralDetail() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -699,6 +738,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getIntegralDetail($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -721,6 +761,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserNextLevel() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -733,6 +774,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserNextLevel($conId, intval($page), intval($pageNum));
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -750,6 +792,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserAddress() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
@@ -764,6 +807,7 @@ class User extends MyController {
             }
         }
         $result = $this->app->user->getUserAddress($conId, $address_id);
+        $this->apiLog($apiName, [$conId, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -786,6 +830,7 @@ class User extends MyController {
      * @author rzc
      */
     public function addUserAddress() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
@@ -803,6 +848,7 @@ class User extends MyController {
             return ['code' => '3003']; //手机格式有误
         }
         $result = $this->app->user->addUserAddress($conId, $province_name, $city_name, $area_name, $address, $mobile, $name);
+        $this->apiLog($apiName, [$conId, $province_name, $city_name, $area_name, $address, $mobile, $name], $result['code'], $conId);
         return $result;
     }
 
@@ -826,6 +872,7 @@ class User extends MyController {
      * @author rzc
      */
     public function updateUserAddress() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
@@ -844,6 +891,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->updateUserAddress($conId, $province_name, $city_name, $area_name, $address, $name, $mobile, $address_id);
+        $this->apiLog($apiName, [$conId, $province_name, $city_name, $area_name, $address, $mobile, $name, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -862,6 +910,7 @@ class User extends MyController {
      */
 
     public function updateUserAddressDefault() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
@@ -874,6 +923,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->updateUserAddressDefault($conId, $address_id);
+        $this->apiLog($apiName, [$conId, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -893,10 +943,11 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserQrcode() {
-        $page  = trim($this->request->get('page'));
-        $scene = trim($this->request->get('scene'));
-        $conId = trim($this->request->get('con_id'));
-        $stype = trim($this->request->get('stype'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->get('page'));
+        $scene   = trim($this->request->get('scene'));
+        $stype   = trim($this->request->get('stype'));
         // print_r(Config::get('conf.image_path'));die;
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -917,6 +968,7 @@ class User extends MyController {
             return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
         }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
+        $this->apiLog($apiName, [$conId, $page, $scene, $stype], $result['code'], $conId);
         return $result;
     }
 
@@ -936,6 +988,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserOrderCount() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->get('con_id'));
 
         if (empty($conId)) {
@@ -945,6 +998,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserOrderCount($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
 
     }
@@ -967,6 +1021,7 @@ class User extends MyController {
      * @author rzc
      */
     public function addUserBankcard() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
@@ -1006,6 +1061,7 @@ class User extends MyController {
             return ['code' => '3011'];
         }
         $result = $this->app->user->addUserBankcard($conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
+        $this->apiLog($apiName, [$conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode], $result['code'], $conId);
         return $result;
     }
 
@@ -1043,6 +1099,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserBankcards() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $id          = trim($this->request->post('id'));
         $is_transfer = trim($this->request->post('is_transfer'));
@@ -1063,8 +1120,8 @@ class User extends MyController {
             }
         }
         $result = $this->app->user->getUserBankcards($conId, $id, $is_transfer);
+        $this->apiLog($apiName, [$conId, $id, $is_transfer], $result['code'], $conId);
         return $result;
-
     }
 
     /**
@@ -1086,8 +1143,9 @@ class User extends MyController {
      * @author rzc
      */
     public function editUserBankcards() {
-        $id          = trim($this->request->post('id'));
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
+        $id          = trim($this->request->post('id'));
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
         $bank_card   = trim($this->request->post('bank_card'));
@@ -1129,6 +1187,7 @@ class User extends MyController {
             return ['code' => '3011'];
         }
         $result = $this->app->user->editUserBankcards($id, $conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
+        $this->apiLog($apiName, [$conId, $id, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode], $result['code'], $conId);
         return $result;
     }
 
@@ -1146,9 +1205,10 @@ class User extends MyController {
      * @author rzc
      */
     public function changeUserBankcardStatus() {
-        $id     = trim($this->request->post('id'));
-        $conId  = trim($this->request->post('con_id'));
-        $status = trim($this->request->post('status'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1159,6 +1219,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->changeUserBankcardStatus($conId, intval($id), intval($status));
+        $this->apiLog($apiName, [$conId, $id, $status], $result['code'], $conId);
         return $result;
     }
 
@@ -1177,7 +1238,10 @@ class User extends MyController {
      * @author rzc
      */
     public function getInvoice() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         $result = $this->app->user->getInvoice();
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -1196,6 +1260,7 @@ class User extends MyController {
      * @author rzc
      */
     public function commissionTransferCash() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1216,6 +1281,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, $invoice);
+        $this->apiLog($apiName, [$conId, $bankcard_id, $money, $invoice], $result['code'], $conId);
         return $result;
     }
 
@@ -1233,6 +1299,7 @@ class User extends MyController {
      * @author rzc
      */
     public function bountyTransferCash() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1249,6 +1316,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, 2, 4);
+        $this->apiLog($apiName, [$conId, $bankcard_id, $money], $result['code'], $conId);
         return $result;
     }
 
@@ -1297,6 +1365,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getLogTransfer() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $bank_card  = trim($this->request->post('bank_card'));
         $bank_name  = trim($this->request->post('bank_name'));
@@ -1382,6 +1451,7 @@ class User extends MyController {
             }
         }
         $result = $this->app->user->getLogTransfer($conId, $bank_card, $bank_name, $min_money, $max_money, $invoice, $status, $wtype, $stype, $start_time, $end_time, intval($page), intval($pageNum), intval($id));
+        $this->apiLog($apiName, [$conId, $bank_card, $bank_name, $min_money, $max_money, $invoice, $status, $wtype, $stype, $start_time, $end_time, $id, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -1404,7 +1474,8 @@ class User extends MyController {
      * @author rzc
      */
     public function getAdminBank() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1412,6 +1483,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getAdminBank();
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -1428,8 +1500,9 @@ class User extends MyController {
      * @author rzc
      */
     public function commissionTransferBalance() {
-        $conId = trim($this->request->post('con_id'));
-        $money = trim($this->request->post('money'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $money   = trim($this->request->post('money'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1443,6 +1516,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferBalance($conId, $money, 1);
+        $this->apiLog($apiName, [$conId, $money], $result['code'], $conId);
         return $result;
     }
 
@@ -1459,6 +1533,7 @@ class User extends MyController {
      * @author rzc
      */
     public function bountyTransferBalance() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         $money = trim($this->request->post('money'));
         if (empty($conId)) {
@@ -1474,6 +1549,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferBalance($conId, $money, 2);
+        $this->apiLog($apiName, [$conId, $money], $result['code'], $conId);
         return $result;
     }
 
@@ -1503,6 +1579,7 @@ class User extends MyController {
      * @author rzc
      */
     public function bountyDetail() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('pageNum'));
@@ -1518,6 +1595,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->bountyDetail($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -1540,6 +1618,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserRead() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $code          = trim($this->request->post('code'));
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
@@ -1553,6 +1632,7 @@ class User extends MyController {
         $view_uid = deUid($view_uid);
         $view_uid = $view_uid ? $view_uid : 1;
         $result   = $this->app->user->userRead($code, $encrypteddata, $iv, $view_uid);
+        $this->apiLog($apiName, [$code, $encrypteddata, $iv, $view_uid], $result['code'], '');
         return $result;
     }
 }

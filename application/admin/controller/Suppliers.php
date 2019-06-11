@@ -47,17 +47,18 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSuppliers() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id'));
         $supplierName = trim($this->request->post('supplierName'));
         $page         = trim($this->request->post('page'));
         $pagenum      = trim($this->request->post('pagenum'));
         $page         = $page ? $page : 1;
         $pagenum      = $pagenum ? $pagenum : 10;
-
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3002'];
         }
-
         $result = $this->app->suppliers->getSuppliers($page, $pagenum, $supplierName);
+        $this->apiLog($apiName, [$cmsConId, $supplierName, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -75,7 +76,10 @@ class Suppliers extends AdminController {
      * @author zyr
      */
     public function getSuppliersAll() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id'));
         $result = $this->app->suppliers->getSuppliersAll();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -99,12 +103,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierData() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id'));
         $supplierId = trim($this->request->post('supplierId'));
         if (!is_numeric($supplierId)) {
             return ['code' => '3002'];
         }
-
         $result = $this->app->suppliers->getSupplierData($supplierId);
+        $this->apiLog($apiName, [$cmsConId, $supplierId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -256,6 +262,8 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreights() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         /* 获取提交参数 */
         $supid = trim($this->request->post('supplierId'));
         /* 判断值 */
@@ -264,6 +272,7 @@ class Suppliers extends AdminController {
         }
         /* 获取返回结果 */
         $result = $this->app->suppliers->getSupplierFreights($supid);
+        $this->apiLog($apiName, [$cmsConId, $supid], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -285,11 +294,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreight() {
+        $apiName           = classBasename($this) . '/' . __function__;
+        $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $supplierFreightId = trim($this->request->post('supplierFreightId'));
         if (!is_numeric($supplierFreightId)) {
             return ['code' => '3002'];
         }
         $result = $this->app->suppliers->getSupplierFreight($supplierFreightId);
+        $this->apiLog($apiName, [$cmsConId, $supplierFreightId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -313,6 +325,8 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreightdetailList() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id')); //操作管理员
         $page       = trim($this->request->post('page'));
         $pagenum    = trim($this->request->post('pagenum'));
         $freight_id = trim($this->request->post('freight_id'));
@@ -324,6 +338,7 @@ class Suppliers extends AdminController {
         }
 
         $result = $this->app->suppliers->getSupplierFreightdetailList($freight_id, $page, $pagenum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum, $freight_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -428,11 +443,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreightdetail() {
-        $sfd_id = trim($this->request->post('sfd_id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $sfd_id   = trim($this->request->post('sfd_id'));
         if (!is_numeric($sfd_id)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
         $result = $this->app->suppliers->getSupplierFreightdetail(intval($sfd_id));
+        $this->apiLog($apiName, [$cmsConId, $sfd_id], $result['code'], $cmsConId);
         return $result;
     }
 

@@ -17,10 +17,14 @@ class Upload extends MyController {
      * @author zyr
      */
     public function uploadUserImage() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $conId    = trim($this->request->post('con_id'));
         $filename = $this->request->post('filename');
         if (empty($filename)) {
             return ['code' => '3001'];
         }
-        return $this->app->upload->uploadUserImage($filename);
+        $result = $this->app->upload->uploadUserImage($filename);
+        $this->apiLog($apiName, [$conId, $filename], $result['code'], $conId);
+        return $result;
     }
 }

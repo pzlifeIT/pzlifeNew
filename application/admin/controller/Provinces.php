@@ -27,7 +27,10 @@ class Provinces extends AdminController {
      * @author zyr
      */
     public function getProvinceCity() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $result = $this->app->provinces->getProvinceCity();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
 //        $this->addLog($result['code'],__function__);//接口请求日志
         return $result;
     }
@@ -47,12 +50,15 @@ class Provinces extends AdminController {
      * @author zyr
      */
     public function getCity() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id'));
         $provinceId = trim($this->request->post('provinceId'));
         if (!is_numeric($provinceId)) {
             return ['3002'];
         }
         $provinceId = intval($provinceId);
         $result     = $this->app->provinces->getArea($provinceId, 2);
+        $this->apiLog($apiName, [$cmsConId, $provinceId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -71,12 +77,15 @@ class Provinces extends AdminController {
      * @author zyr
      */
     public function getArea() {
-        $cityId = trim($this->request->post('cityId'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $cityId   = trim($this->request->post('cityId'));
         if (!is_numeric($cityId)) {
             return ['3002'];
         }
         $cityId = intval($cityId);
         $result = $this->app->provinces->getArea($cityId, 3);
+        $this->apiLog($apiName, [$cmsConId, $cityId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -97,6 +106,8 @@ class Provinces extends AdminController {
      * @author zyr
      */
     public function getProvinceCityByFreight() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id'));
         $freightId = $this->request->post('freight_id');
         if (!is_numeric($freightId)) {
             return ['code' => '3001'];
@@ -106,16 +117,7 @@ class Provinces extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->provinces->getProvinceCityByFreight(intval($freightId), intval($freightDetailId));
+        $this->apiLog($apiName, [$cmsConId, $freightId, $freightDetailId], $result['code'], $cmsConId);
         return $result;
-    }
-
-    /**
-     * 写入api日志
-     * @param $code 接口返回code
-     * @param $func 调用的接口方法
-     * @param string $name
-     */
-    private function addLog($code, $func, $name = '') {
-        $this->app->adminLog->apiRequestLog(classBasename(__class__) . '/' . $func, $code, controllerBaseName(__FILE__), $name);
     }
 }
