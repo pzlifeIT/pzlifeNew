@@ -202,7 +202,7 @@ class Order extends AdminController {
      * @apiParam (入参) {Number} order_goods_id 订单商品关系表id
      * @apiParam (入参) {Number} express_no 快递单号
      * @apiParam (入参) {Number} express_key 快递key
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码 / 3003:不存在的order_goods_id / 3004:不同用户订单不能使用同一物流公司物流单号发货 / 3005:已添加的订单商品物流分配关系 / 3006:添加失败 / 3007:不同用户订单不能使用同一物流公司物流单号发货
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} ExpressList 结果
      * @apiSampleRequest /admin/Order/deliverOrderGoods
@@ -240,7 +240,7 @@ class Order extends AdminController {
      * @apiParam (入参) {Number} order_goods_id 订单商品关系表id
      * @apiParam (入参) {Number} express_no 快递单号
      * @apiParam (入参) {Number} express_key 快递key
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的快递key或者express_no / 3002:请输入正确的快递公司编码 / 3003:不存在的order_goods_id / 3004:非待发货订单无法发货或已发货订单无法变更 / 3005:未添加的订单商品物流分配关系，无法修改 / 3007:不同用户订单不能使用同一物流公司物流单号发货
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} ExpressList 结果
      * @apiSampleRequest /admin/Order/updateDeliverOrderGoods
