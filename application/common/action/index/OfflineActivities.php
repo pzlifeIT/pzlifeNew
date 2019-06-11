@@ -303,9 +303,9 @@ class OfflineActivities extends CommonIndex {
      */
     public function luckyDraw($conId) {
         $u = [23739 => 2, 23740 => 4, 23769 => 6, 23770 => 8];
-        if (Config::get('conf.platform_conf')[Config::get('app.deploy')] == 2) { //测试环境
-            $u = [23739 => 2, 26683 => 4, 26684 => 6, 26686 => 8];
-        }
+        // if (Config::get('conf.platform_conf')[Config::get('app.deploy')] == 2) { //测试环境
+        //     $u = [23739 => 2, 26683 => 4, 26684 => 6, 26686 => 8];
+        // }
         $hdNum = 1;
         $uid   = $this->getUidByConId($conId);
         if (empty($uid)) {
