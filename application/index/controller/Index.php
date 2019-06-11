@@ -42,7 +42,8 @@ class Index extends MyController {
     }
 
     public function hello() {
-        echo enUid(2);
+        echo '🌈12132132132🌈';
+        // echo preg_replace('/[^0-9a-zA-Z-_\x{4e00}-\x{9fff}]+/u', '', '🌈12132132132🌈');
         die;
 
 
