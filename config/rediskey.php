@@ -39,4 +39,7 @@ return [
         'redisMarketingActivity' => 'cms:modelmessage:marketingactivity:list', //营销活动
         'redisTimedTask'         => 'cms:modelmessage:timedtask:list', //定时任务
     ],
+    'active'=>[//活动
+        'redisHdluckyDraw'=>'index:offlineActivities:luckyDraw',
+    ]
 ];

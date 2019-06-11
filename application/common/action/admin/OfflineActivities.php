@@ -474,4 +474,51 @@ class OfflineActivities extends CommonIndex {
             return ['code' => 3009, 'error_data' => json_decode($result, true)];
         }
     }
+
+    public function verifyWinners($pid, $winning_id, $cmsConId) {
+        $adminId  = $this->getUidByConId($cmsConId);
+        $uid      = deUid($pid);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid], '*', true);
+        if (empty($winnings)) {
+            return ['code' => '3001'];
+        }
+        if ($winnings['status'] == 2) { //已领取
+            return ['code' => '200', 'is_winning' => 1];
+        }
+        return ['code' => '200', 'is_winning' => 2,'goods_name' => $winnings['goods_name'], 'image_path' => $winnings['image_path']];
+    }
+
+    public function getWinning($pid, $winning_id, $cmsConId) {
+        $adminId  = $this->getUidByConId($cmsConId);
+        $uid      = deUid($pid);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid, 'id' => $winning_id], '*', true);
+        if (empty($winnings)) {
+            return ['code' => '3001'];
+        }
+        if ($winnings['status'] == 2) { //已领取
+            return ['code' => '3002'];
+        }
+        DbOfflineActivities::updateWinning(['status' => 2], $winnings['id']);
+        return ['code' => 200];
+    }
+
+    public function getWinnerList($page, $pagenum, $id = '') {
+        if (!empty($id)) {
+            if (!is_numeric($id)) {
+                return ['code' => '3001'];
+            }
+            $result = DbOfflineActivities::getWinning(['id' => $id], '*', true);
+            if (empty($result)) {
+                return ['code' => '3000'];
+            }
+            return ['code' => '200', 'WinnerList' => $result];
+        }
+        $offset = ($page - 1) * $pagenum;
+        $result = DbOfflineActivities::getWinning([], '*', false, ['id' => 'desc'], $offset . ',' . $pagenum);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $total = DbOfflineActivities::countWinning([]);
+        return ['code' => '200', 'total' => $total, 'WinnerList' => $result];
+    }
 }

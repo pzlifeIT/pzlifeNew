@@ -29,7 +29,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOrderList($page, $pagenum, $order_status = '') {
+    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '') {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
@@ -38,8 +38,19 @@ class Order extends CommonIndex {
         if (!empty($order_status)) {
             array_push($where, ['order_status', '=', $order_status]);
         }
+        if (!empty($order_no)) {
+            array_push($where, ['order_no', '=',$order_no]);
+        }
+        if (!empty($nick_name)) {
+            $user =  DbUser::getUserInfo([['nick_name', 'like','%'.$nick_name.'%']], 'id', false);
+            $uid = [];
+            foreach ($user as $key => $value) {
+                $uid[] = $value['id'];
+            }
+            array_push($where, ['uid', 'in',$uid]);
+        }
         $field     = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
-        $orderList = DbOrder::getOrder($field, $where, false, $offset . ',' . $pagenum);
+        $orderList = DbOrder::getOrder($field, $where, false,$offset . ',' . $pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
             return ['code' => 3000];
@@ -50,6 +61,7 @@ class Order extends CommonIndex {
                 $orderList[$key]['nick_name'] = $user['nick_name'];
             }
         }
+        
         $totle = DbOrder::getOrderCount($where);
         return ['code' => 200, 'totle' => $totle, 'order_list' => $orderList];
     }
@@ -70,16 +82,15 @@ class Order extends CommonIndex {
             $order_info['province_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['province_id']])['area_name'];
         }
         if ($order_info['city_id']) {
-            $order_info['city_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
+            $order_info['city_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['city_id'], 'level' => 2])['area_name'];
         }
         if ($order_info['area_id']) {
-            $order_info['area_name']     = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
+            $order_info['area_name'] = DbProvinces::getAreaOne('*', ['id' => $order_info['area_id']])['area_name'];
         }
-        
-       
-        $order_child                 = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
-        $express_money               = 0;
-        $order_goods_ids             = [];
+
+        $order_child     = DbOrder::getOrderChild('*', ['order_id' => $order_info['id']]);
+        $express_money   = 0;
+        $order_goods_ids = [];
         foreach ($order_child as $order => $child) {
             $order_goods = DbOrder::getOrderGoods('*', ['order_child_id' => $child['id']]);
             foreach ($order_goods as $og => $goods) {
