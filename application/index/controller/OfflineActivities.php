@@ -183,7 +183,7 @@ class OfflineActivities extends MyController {
     }
 
     /**
-     * @api              {get} / 获取会员自己抽奖记录
+     * @api              {post} / 获取会员自己抽奖记录
      * @apiDescription   getUserHdLucky
      * @apiGroup         index_OfflineActivities
      * @apiName          getUserHdLucky
