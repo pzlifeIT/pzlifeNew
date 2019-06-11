@@ -136,7 +136,7 @@ class OfflineActivities extends MyController {
         $result = $this->app->offlineactivities->LuckGoods();
         return $result;
     }
-    /** 
+    /**
      * @api              {post} / 抽奖操作
      * @apiDescription   luckyDraw
      * @apiGroup         index_OfflineActivities
@@ -148,8 +148,8 @@ class OfflineActivities extends MyController {
      * @author zyr
      */
     public function luckyDraw() {
-        $apiName    = classBasename($this) . '/' . __function__;
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -158,6 +158,66 @@ class OfflineActivities extends MyController {
         }
         $result = $this->app->offlineactivities->luckyDraw($conId);
 //        $this->apiLog($apiName, [$conId], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {get} / 获取抽奖记录
+     * @apiDescription   getHdLucky
+     * @apiGroup         index_OfflineActivities
+     * @apiName          getHdLucky
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} big 1:大奖， 不传为全部
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001 奖品类型错误
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/getHdLucky
+     * @author rzc
+     */
+    public function getHdLucky() {
+        $big = trim($this->request->post('big'));
+        if (!empty($big)) {
+            if ($big != 1) {
+                return ['code' => '3001'];
+            }
+        }
+        $result = $this->app->offlineactivities->getHdLucky($big);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取会员自己抽奖记录
+     * @apiDescription   getUserHdLucky
+     * @apiGroup         index_OfflineActivities
+     * @apiName          getUserHdLucky
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} [page] 页码
+     * @apiParam (入参) {Number} [pageNum] 页码
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/getUserHdLucky
+     * @author rzc
+     */
+    public function getUserHdLucky() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pageNum'));
+        $page    = is_numeric($page) ? $page : 1;
+        $pagenum = is_numeric($pagenum) ? $pagenum : 10;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum);
         return $result;
     }
 }

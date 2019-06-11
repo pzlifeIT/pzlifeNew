@@ -478,12 +478,12 @@ class OfflineActivities extends CommonIndex {
     public function verifyWinners($pid, $winning_id, $cmsConId) {
         $adminId  = $this->getUidByConId($cmsConId);
         $uid      = deUid($pid);
-        $winnings = DbOfflineActivities::getWinning(['uid' => $uid], '*', true);
+        $winnings = DbOfflineActivities::getWinning(['uid' => $uid,'id' => $winning_id], '*', true);
         if (empty($winnings)) {
             return ['code' => '3001'];
         }
         if ($winnings['status'] == 2) { //已领取
-            return ['code' => '200', 'is_winning' => 1];
+            return ['code' => '200', 'is_winning' => 1,'goods_name' => $winnings['goods_name'], 'image_path' => $winnings['image_path']];
         }
         return ['code' => '200', 'is_winning' => 2,'goods_name' => $winnings['goods_name'], 'image_path' => $winnings['image_path']];
     }
