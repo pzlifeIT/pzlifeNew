@@ -205,6 +205,7 @@ class User extends CommonIndex {
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {
             Db::rollback();
+            Db::table('pz_log_error')->insert(['title' => '/user/quickLogin/quickLogin', 'data' => $e]);
             return ['code' => '3007'];
         }
     }
