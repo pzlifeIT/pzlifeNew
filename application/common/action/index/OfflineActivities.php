@@ -459,18 +459,20 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3000'];
         }
         foreach ($result as $key => $value) {
-            $user_phone           = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
-            $mobile               = substr($user_phone['mobile'], 0, 3) . '*****' . substr($user_phone['mobile'], -4);
+            $user_phone = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
+            if (!empty($user_phone)) {
+                $mobile = substr($user_phone['mobile'], 0, 3) . '*****' . substr($user_phone['mobile'], -4);
+            }
             $result[$key]['user'] = $mobile;
         }
         return ['code' => '200', 'winnings' => $result];
 
     }
 
-    public function getUserHdLucky($conId, $page, $pagenum){
-        $uid          = $this->getUidByConId($conId);
-        $offect = ($page - 1)*$pagenum;
-        $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect.','.$pagenum);
-        return ['code' => 200, 'winnings'=>$result];
+    public function getUserHdLucky($conId, $page, $pagenum) {
+        $uid    = $this->getUidByConId($conId);
+        $offect = ($page - 1) * $pagenum;
+        $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+        return ['code' => 200, 'winnings' => $result];
     }
 }
