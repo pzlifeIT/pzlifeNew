@@ -27,6 +27,7 @@ class AdminController extends Controller {
             header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
         }
         if (Config::get('deploy') == 'production') {//生产环境
+            header('Access-Control-Allow-Origin:https://sj.cms.pzlive.vip');
             header('Access-Control-Allow-Origin:https://cms.pzlive.vip');
             header("Access-Control-Allow-Methods:GET,POST");
             header('Access-Control-Allow-Headers:content-type,token,id');
