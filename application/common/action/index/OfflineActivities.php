@@ -475,4 +475,14 @@ class OfflineActivities extends CommonIndex {
         $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
         return ['code' => 200, 'winnings' => $result];
     }
+
+    public function createOrderQrCode($data){
+        
+       
+        $qrcodelogic = new qrcodelogic($data, 470, '取货二维码');
+        $qrcodelogic->coverbackground('../public/background.png', 3, 3);
+        $qrcodelogic->output();
+        exit;
+        print_r($qrcodelogic);die;
+    }
 }
