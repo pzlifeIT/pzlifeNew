@@ -390,7 +390,7 @@ class OfflineActivities extends CommonIndex {
         ];
         if (!$this->redis->exists($this->redisHdluckyDraw)) {
             $this->redis->hMSet($this->redisHdluckyDraw, $shopCount);
-            $this->redis->expireAt($this->redisHdluckyDraw, bcadd(time(), 24 * 3600, 0)); //设置过期
+            $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
         }
         $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
         $allNum = array_sum($allNum);
