@@ -31,7 +31,7 @@ class AdminController extends Controller {
                 'https://sj.cms.pzlive.vip',
                 'https://cms.pzlive.vip',
             );
-            $origin       = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+            $origin       = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN/**/'] : '';
             if (in_array($origin, $allow_origin)) {
                 header('Access-Control-Allow-Origin:' . $origin);
             }
