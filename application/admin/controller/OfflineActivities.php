@@ -349,9 +349,9 @@ class OfflineActivities extends AdminController {
     public function getQrcode() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->get('cms_con_id')); //操作管理员
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
+        // if ($this->checkPermissions($cmsConId, $apiName) === false) {
+        //     return ['code' => '3100'];
+        // }
         $page  = trim($this->request->get('page'));
         $scene = trim($this->request->get('scene'));
         if (empty($page)) {
