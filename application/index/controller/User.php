@@ -944,7 +944,7 @@ class User extends MyController {
      */
     public function getUserQrcode() {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId   = trim($this->request->get('con_id'));
         $page    = trim($this->request->get('page'));
         $scene   = trim($this->request->get('scene'));
         $stype   = trim($this->request->get('stype'));
