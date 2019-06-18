@@ -12,7 +12,7 @@ class Spec extends CommonIndex {
      * @author wujunjie
      * 2018/12/25-9:59
      */
-    public function getSpecList($page, $pageNum) {
+    public function getSpecList($page, $pageNum, $type_name = '') {
         $offset = $pageNum * ($page - 1);
         if ($offset < 0) {
             return ["3000"];
@@ -20,9 +20,21 @@ class Spec extends CommonIndex {
         //根据一级属性表的cate_id招到三级分类，根据id找到对应的二级属性
 //        $spec = GoodsSpec::field("id,cate_id,spe_name")->select()->toArray();
         $where = [];
+        if (!empty($type_name)) {
+            $goodsclassIds = DbGoods::getGoodsClass('id',[['type_name', 'LIKE','%'.$type_name.'%']]);
+            if (empty($goodsclassIds)) {
+                return ['code' => '3000'];
+            }
+            $catids = [];
+           foreach ($goodsclassIds as $key => $value) {
+               $catids[] = $value['id'];
+           }
+           array_push($where,['cate_id', 'in', $catids]);
+        }
+       
         $field = "id,cate_id,spe_name";
         $spec  = DbGoods::getSpecList($field, $where, $offset, $pageNum);
-        $total = DbGoods::getSpecListNum();
+        $total = DbGoods::getSpecListNum($where);
         if (empty($spec)) {
             return ["msg" => "未获取到数据", "code" => 3000];
         }

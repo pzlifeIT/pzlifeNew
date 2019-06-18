@@ -19,6 +19,7 @@ class Spec extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} page_num 每页条数
+     * @apiParam (入参) {Number} [type_name] 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 一级规格id
@@ -36,6 +37,7 @@ class Spec extends AdminController {
     public function getSpecList() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
+        $type_name = trim(input("post.type_name"));
         $page     = trim(input("post.page"));
         $page     = empty($page) ? 1 : intval($page);
         $pageNum  = trim(input("post.page_num"));
@@ -43,8 +45,8 @@ class Spec extends AdminController {
         if (!is_numeric($page) || !is_numeric($pageNum)) {
             return ["msg" => "参数错误", "code" => 3001];
         }
-        $spec_data = $this->app->spec->getSpecList($page, $pageNum);
-        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $spec_data['code'], $cmsConId);
+        $spec_data = $this->app->spec->getSpecList($page, $pageNum, $type_name);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $type_name], $spec_data['code'], $cmsConId);
         return $spec_data;
     }
 

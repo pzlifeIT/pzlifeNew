@@ -233,8 +233,8 @@ class DbGoods {
      * @author wujunjie
      * 2019/1/3-18:57
      */
-    public function getSpecListNum() {
-        return GoodsSpec::count();
+    public function getSpecListNum($where) {
+        return GoodsSpec::where($where)->count();
     }
 
     /**
