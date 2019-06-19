@@ -506,3 +506,27 @@ function checkIdcard($idcard) {
     }
 }
 
+/**
+ * 查询
+ * @param $obj
+ * @param bool $row
+ * @param string $orderBy
+ * @param string $limit
+ * @return mixed
+ * @author zyr
+ */
+function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+    if (!empty($orderBy)) {
+        $obj = $obj->order($orderBy);
+    }
+    if (!empty($limit)) {
+        $obj = $obj->limit($limit);
+    }
+    if ($row === true) {
+        $obj = $obj->findOrEmpty();
+    } else {
+        $obj = $obj->select();
+    }
+    return $obj->toArray();
+}
+

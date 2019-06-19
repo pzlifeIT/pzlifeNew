@@ -11,6 +11,7 @@ use app\common\model\GoodsSku;
 use app\common\model\GoodsSubject;
 use app\common\model\GoodsSubjectImage;
 use app\common\model\GoodsSubjectRelation;
+use app\common\model\SupAdmin;
 use app\common\model\Supplier;
 use app\common\model\GoodsSpec;
 use app\common\model\GoodsAttr;
@@ -1165,5 +1166,15 @@ class DbGoods {
         return GoodsSubject::destroy($data);
     }
 
+    public function getSupAdmin($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = SupAdmin::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addSupAdmin($data){
+        $supAdmin  =new SupAdmin();
+        $supAdmin->save($data);
+        return $supAdmin->id;
+    }
 
 }

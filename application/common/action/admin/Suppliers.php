@@ -10,6 +10,7 @@ use think\Db;
 use Config;
 
 class Suppliers extends CommonIndex {
+    private $supCipherUserKey = 'suppass'; //用户密码加密key
 
     /**
      * 供应商列表
@@ -400,5 +401,51 @@ class Suppliers extends CommonIndex {
             return ["code" => "3003"];
         }
 
+    }
+
+    /**
+     * 添加供应商管理后台账号(密码默认111111)
+     * @param $supId
+     * @param $supName
+     * @return array
+     * @author zyr
+     */
+    public function addSupplierAdmin($supId, $supName) {
+        $supplier = DbGoods::getSupplierFreight('id', $supId);
+        if (empty($supplier)) {
+            return ['code' => '3002'];//供应商不存在
+        }
+        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
+        if (!empty($supAdmin)) {
+            return ['code' => '3003'];//账号名称已存在
+        }
+        $data = [
+            'sup_name'   => $supName,
+            'sup_passwd' => $this->getPassword('111111', $this->supCipherUserKey),
+            'sup_id'     => $supId,
+        ];
+        Db::startTrans();
+        try {
+            DbGoods::addSupAdmin($data);
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3005"];
+        }
+    }
+
+    /**
+     * @param $str 加密的内容
+     * @param $key
+     * @return string
+     * @author zyr
+     */
+    private function getPassword($str, $key) {
+        $algo   = Config::get('conf.cipher_algo');
+        $md5    = hash_hmac('md5', $str, $key);
+        $key2   = strrev($key);
+        $result = hash_hmac($algo, $md5, $key2);
+        return $result;
     }
 }

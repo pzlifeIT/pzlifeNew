@@ -572,4 +572,34 @@ class Suppliers extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $cityIdStr, $freightDetailId], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 添加供应商管理后台账号(密码默认111111)
+     * @apiDescription   addSupplierAdmin
+     * @apiGroup         admin_Suppliers
+     * @apiName          addSupplierAdmin
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} sup_id  供应商id
+     * @apiParam (入参) {Int} sup_name 供应商登录账号
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:供应商不存在 / 3003:账号名称已存在
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSampleRequest /admin/suppliers/addsupplieradmin
+     * @author zyr
+     */
+    public function addSupplierAdmin() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $supId   = trim($this->request->post('sup_id'));
+        $supName = trim($this->request->post('sup_name'));
+        if (empty($supName)) {
+            return ['code' => '3001'];//账号不能为空
+        }
+        $result = $this->app->suppliers->addSupplierAdmin($supId, $supName);
+        $this->apiLog($apiName, [$cmsConId, $supId, $supName], $result['code'], $cmsConId);
+        return $result;
+    }
 }
