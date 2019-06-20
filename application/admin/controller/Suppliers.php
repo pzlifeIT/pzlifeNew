@@ -599,10 +599,47 @@ class Suppliers extends AdminController {
             return ['code' => '3001'];//账号不能为空
         }
         if(!checkMobile($mobile)){
-            return ['code' => '3002'];//账号不能为空
+            return ['code' => '3002'];//手机格式有误
         }
         $result = $this->app->suppliers->addSupplierAdmin($mobile, $supName);
         $this->apiLog($apiName, [$cmsConId, $mobile, $supName], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 供应商管理员列表
+     * @apiDescription   supplierAdminList
+     * @apiGroup         admin_Suppliers
+     * @apiName          supplierAdminList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page  页码
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page错误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} id 编号
+     * @apiSuccess (data) {String} sup_name 名称
+     * @apiSuccess (data) {String} mobile 手机
+     * @apiSampleRequest /admin/suppliers/supplieradminlist
+     * @author zyr
+     */
+    public function supplierAdminList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001'];//page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->suppliers->supplierAdminList($page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 }

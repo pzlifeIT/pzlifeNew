@@ -430,4 +430,14 @@ class Suppliers extends CommonIndex {
             return ["code" => "3005"];
         }
     }
+
+    public function supplierAdminList($page, $pageNum) {
+        $offset = $pageNum * ($page - 1);
+        $total  = DbGoods::getSupAdminCount([]);
+        if ($total < 1) {
+            return ['code' => '3000', 'data' => '', 'total' => 0];
+        }
+        $supAdmin = DbGoods::getSupAdmin(['status'=>1], 'id,sup_name,mobile', false, '', $offset . ',' . $pageNum);
+        return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
+    }
 }

@@ -20,7 +20,7 @@ class User extends CommonIndex {
      */
     public function login($supName, $passwd) {
         $getPass  = getPassword($passwd, $this->supCipherUserKey, Config::get('conf.cipher_algo')); //用户填写的密码
-        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName, 'status' => 1], 'id,sup_passwd,sup_id', true);
+        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName, 'status' => 1], 'id,sup_passwd', true);
         if (empty($supAdmin)) {
             return ['code' => '3002']; //用户不存在
         }

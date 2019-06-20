@@ -1171,6 +1171,10 @@ class DbGoods {
         return getResult($obj, $row, $orderBy, $limit);
     }
 
+    public function getSupAdminCount($where) {
+        return SupAdmin::where($where)->count();
+    }
+
     public function addSupAdmin($data){
         $supAdmin  =new SupAdmin();
         $supAdmin->save($data);
