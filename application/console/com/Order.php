@@ -723,12 +723,12 @@ class Order extends Pzlife {
                     $from_diamondvip_get['create_time'] = time();
                     Db::name('diamondvip_get')->insert($from_diamondvip_get);
                     if ($from_user['user_identity'] > 1) {
-                        $from_balance = $from_user['bounty'] + 40;
-                        Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                        $from_balance = $from_user['balance'] + 40;
+                        Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                         Db::name('log_trading')->insert(
                             [
                                 'uid'          => $from_uid,
-                                'trading_type' => 3,
+                                'trading_type' => 1,
                                 'change_type'  => 5,
                                 'order_no'     => $memberOrder,
                                 'money'        => 40,
@@ -760,16 +760,16 @@ class Order extends Pzlife {
                             Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
                             }
                         }else{
-                            $from_balance = $from_user['bounty'] + 40;
-                            Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                            $from_balance = $from_user['balance'] + 40;
+                            Db::name('users')->where('id', $from_uid)->update(['bobalanceunty' => $from_balance]);
                             Db::name('log_trading')->insert(
                                 [
                                     'uid'          => $from_uid,
-                                    'trading_type' => 3,
+                                    'trading_type' => 1,
                                     'change_type'  => 5,
                                     'order_no'     => $memberOrder,
                                     'money'        => 40,
-                                    'befor_money'  => $from_user['bounty'],
+                                    'befor_money'  => $from_user['balance'],
                                     'after_money'  => $from_balance,
                                     'create_time'  => time(),
                                 ]

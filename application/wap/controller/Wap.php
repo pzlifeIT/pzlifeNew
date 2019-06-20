@@ -72,11 +72,12 @@ class Wap extends WapController {
             return ['code' => '3004'];
         }
         $result = $this->app->wap->wxregister($mobile, $vercode, $code, $buid);
+        $this->apiLog($apiName, [$mobile, $vercode, $code,$buid], $result['code'], '');
         return $result;
     }
 
     /**
-     * @api              {post} / 通过微信code登录
+     * @api              {post} / 通过微信code登录(公众号)
      * @apiDescription   loginUserByWx
      * @apiGroup         wap_wap
      * @apiName          loginUserByWx

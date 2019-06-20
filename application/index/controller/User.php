@@ -1293,12 +1293,13 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现 / 3010:暂时无法提现
      * @apiSampleRequest /index/user/bountyTransferCash
      * @return array
      * @author rzc
      */
     public function bountyTransferCash() {
+        return ['code' => '3010'];
         $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
@@ -1635,4 +1636,64 @@ class User extends MyController {
         $this->apiLog($apiName, [$code, $encrypteddata, $iv, $view_uid], $result['code'], '');
         return $result;
     }
+
+        /**
+     * @api              {post} / 微信公众号授权
+     * @apiDescription   wxaccredit
+     * @apiGroup         index_user
+     * @apiName          wxaccredit
+     * @apiParam (入参) {Number} redirect_uri 授权后重定向的回调链接地址
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 / 3001:redirect_uri跳转路径为空 / 3002:code有误
+     * @apiSampleRequest /index/user/wxaccredit
+     * @author rzc
+     */
+    public function wxaccredit() {
+        // $code         = trim($this->request->post('code'));
+        $apiName      = classBasename($this) . '/' . __function__;
+        $redirect_uri = trim($this->request->post('redirect_uri'));
+        // if (strlen($code) != 32) {
+        //     return ['code' => '3002']; //code有误
+        // }
+        if (empty($redirect_uri)) {
+            return ['code' => '3001'];
+        }
+        $redirect_uri = urlencode($redirect_uri);
+        $result       = $this->app->user->wxaccredit($redirect_uri);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 微信CODE注册登陆（公众号）
+     * @apiDescription   wxregister
+     * @apiGroup         index_user
+     * @apiName          wxregister
+     * @apiParam (入参) {String} code 微信code码
+     * @apiParam (入参) {String} mobile 接受验证码的手机号
+     * @apiParam (入参) {String} vercode 验证码
+     * @apiParam (入参) {String} [buid] 推荐人uid
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 /3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册 / 3009:新用户需授权
+     * @apiSampleRequest /index/user/wxregister
+     * @author rzc
+     */
+    public function wxregister() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $mobile  = trim($this->request->post('mobile'));
+        $code    = trim($this->request->post('code'));
+        $vercode = trim($this->request->post('vercode'));
+        $buid    = trim($this->request->post('buid'));
+        $buid    = empty(deUid($buid)) ? 1 : deUid($buid);
+        if (checkMobile($mobile) === false) {
+            return ['code' => '3001']; //手机号格式错误
+        }
+        if (strlen($code) != 32) {
+            return ['code' => '3002']; //code有误
+        }
+        if (checkVercode($vercode) === false) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->wxregister($mobile, $vercode, $code, $buid);
+        $this->apiLog($apiName, [$mobile, $vercode, $code,$buid], $result['code'], '');
+        return $result;
+    }
+
 }

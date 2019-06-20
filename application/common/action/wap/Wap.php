@@ -46,7 +46,7 @@ class Wap extends CommonIndex {
     }
 
     /**
-     * 微信注册
+     * 微信公众号注册
      * @param $mobile
      * @param $vercode
      * @param $code
