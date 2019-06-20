@@ -14,7 +14,7 @@ class Upload extends SupAdminController {
     /**
      * @api              {post} / 上传单个图片
      * @apiDescription   uploadFile
-     * @apiGroup         sup_upload
+     * @apiGroup         supadmin_upload
      * @apiName          uploadFilee
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {file} image 图片
