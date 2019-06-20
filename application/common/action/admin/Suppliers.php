@@ -405,24 +405,20 @@ class Suppliers extends CommonIndex {
 
     /**
      * 添加供应商管理后台账号(密码默认111111)
-     * @param $supId
+     * @param $mobile
      * @param $supName
      * @return array
      * @author zyr
      */
-    public function addSupplierAdmin($supId, $supName) {
-        $supplier = DbGoods::getSupplierFreight('id', $supId);
-        if (empty($supplier)) {
-            return ['code' => '3002'];//供应商不存在
-        }
+    public function addSupplierAdmin($mobile, $supName) {
         $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
         if (!empty($supAdmin)) {
             return ['code' => '3003'];//账号名称已存在
         }
         $data = [
             'sup_name'   => $supName,
-            'sup_passwd' => $this->getPassword('111111', $this->supCipherUserKey),
-            'sup_id'     => $supId,
+            'sup_passwd' => getPassword('111111', $this->supCipherUserKey, Config::get('conf.cipher_algo')),
+            'mobile'     => $mobile,
         ];
         Db::startTrans();
         try {
@@ -433,19 +429,5 @@ class Suppliers extends CommonIndex {
             Db::rollback();
             return ["code" => "3005"];
         }
-    }
-
-    /**
-     * @param $str 加密的内容
-     * @param $key
-     * @return string
-     * @author zyr
-     */
-    private function getPassword($str, $key) {
-        $algo   = Config::get('conf.cipher_algo');
-        $md5    = hash_hmac('md5', $str, $key);
-        $key2   = strrev($key);
-        $result = hash_hmac($algo, $md5, $key2);
-        return $result;
     }
 }

@@ -19,6 +19,8 @@ return [
         'redisCmsConIdTime'       => 'cms:user:cmsConId:expiration', //后台cmsConId到期时间的zadd
         'redisCmsConIdUid'        => 'cms:user:cmsConId:adminid', //后台cmsConId和adminid的hSet
         'redisUserOpenbossLock'   => 'index:user:openboss:lock:', //开通boss锁
+        'redisSupConIdTime'       => 'sup:user:supConId:expiration', //供应商后台supConId到期时间的zadd
+        'redisSupConIdUid'        => 'sup:user:supConId:adminid', //供应商后台supConId和supadminid的hSet
     ],
     'index'        => [
         'redisIndexShow'   => 'index:index:show',

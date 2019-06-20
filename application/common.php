@@ -507,6 +507,21 @@ function checkIdcard($idcard) {
 }
 
 /**
+ * @param $str 加密的内容
+ * @param $key
+ * @param $algo
+ * @return string
+ * @author zyr
+ */
+function getPassword($str, $key, $algo = 'sha256') {
+//    $algo   = Config::get('conf.cipher_algo');
+    $md5    = hash_hmac('md5', $str, $key);
+    $key2   = strrev($key);
+    $result = hash_hmac($algo, $md5, $key2);
+    return $result;
+}
+
+/**
  * 查询
  * @param $obj
  * @param bool $row
