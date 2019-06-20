@@ -16,7 +16,7 @@ class Upload extends SupAdminController {
      * @apiDescription   uploadFile
      * @apiGroup         supadmin_upload
      * @apiName          uploadFilee
-     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} sup_con_id
      * @apiParam (入参) {file} image 图片
      * @apiSuccess (返回) {String} code 200:成功  / 3001:上传的不是图片 / 3002:上传图片不能超过2M / 3003:上传失败 / 3004:上传文件不能为空
      * @apiSuccess (data) {Array} data 结果
