@@ -506,3 +506,42 @@ function checkIdcard($idcard) {
     }
 }
 
+/**
+ * @param $str 加密的内容
+ * @param $key
+ * @param $algo
+ * @return string
+ * @author zyr
+ */
+function getPassword($str, $key, $algo = 'sha256') {
+//    $algo   = Config::get('conf.cipher_algo');
+    $md5    = hash_hmac('md5', $str, $key);
+    $key2   = strrev($key);
+    $result = hash_hmac($algo, $md5, $key2);
+    return $result;
+}
+
+/**
+ * 查询
+ * @param $obj
+ * @param bool $row
+ * @param string $orderBy
+ * @param string $limit
+ * @return mixed
+ * @author zyr
+ */
+function getResult($obj, $row = false, $orderBy = '', $limit = '') {
+    if (!empty($orderBy)) {
+        $obj = $obj->order($orderBy);
+    }
+    if (!empty($limit)) {
+        $obj = $obj->limit($limit);
+    }
+    if ($row === true) {
+        $obj = $obj->findOrEmpty();
+    } else {
+        $obj = $obj->select();
+    }
+    return $obj->toArray();
+}
+

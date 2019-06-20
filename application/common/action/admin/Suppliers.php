@@ -10,6 +10,7 @@ use think\Db;
 use Config;
 
 class Suppliers extends CommonIndex {
+    private $supCipherUserKey = 'suppass'; //用户密码加密key
 
     /**
      * 供应商列表
@@ -400,5 +401,43 @@ class Suppliers extends CommonIndex {
             return ["code" => "3003"];
         }
 
+    }
+
+    /**
+     * 添加供应商管理后台账号(密码默认111111)
+     * @param $mobile
+     * @param $supName
+     * @return array
+     * @author zyr
+     */
+    public function addSupplierAdmin($mobile, $supName) {
+        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
+        if (!empty($supAdmin)) {
+            return ['code' => '3003'];//账号名称已存在
+        }
+        $data = [
+            'sup_name'   => $supName,
+            'sup_passwd' => getPassword('111111', $this->supCipherUserKey, Config::get('conf.cipher_algo')),
+            'mobile'     => $mobile,
+        ];
+        Db::startTrans();
+        try {
+            DbGoods::addSupAdmin($data);
+            Db::commit();
+            return ["code" => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ["code" => "3005"];
+        }
+    }
+
+    public function supplierAdminList($page, $pageNum) {
+        $offset = $pageNum * ($page - 1);
+        $total  = DbGoods::getSupAdminCount([]);
+        if ($total < 1) {
+            return ['code' => '3000', 'data' => '', 'total' => 0];
+        }
+        $supAdmin = DbGoods::getSupAdmin(['status'=>1], 'id,sup_name,mobile', false, '', $offset . ',' . $pageNum);
+        return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
     }
 }
