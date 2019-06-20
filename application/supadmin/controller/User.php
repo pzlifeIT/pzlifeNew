@@ -160,6 +160,7 @@ class User extends SupAdminController {
      * @apiParam (入参) {String} [page_num] 每页条数(默认10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:列表为空 / 3001:page错误
      * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Int} id
      * @apiSuccess (data) {String} title 标题
      * @apiSuccess (data) {String} big_image 大图
      * @apiSuccess (data) {String} share_title 微信转发分享标题

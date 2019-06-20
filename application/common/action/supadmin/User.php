@@ -154,7 +154,7 @@ class User extends CommonIndex {
      */
     public function getPromoteList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
-        $field  = 'title,big_image,share_title,share_image,share_count,bg_image';
+        $field  = 'id,title,big_image,share_title,share_image,share_count,bg_image';
         $where  = [];
         $count  = DbSup::getSupPromoteCount([]);
         if ($count <= 0) {
