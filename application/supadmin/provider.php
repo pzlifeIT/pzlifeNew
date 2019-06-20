@@ -12,4 +12,5 @@
 return [
     'user' => app\common\action\supadmin\User::class,
     'upload' => app\common\action\supadmin\Upload::class,
+    'promote' => app\common\action\supadmin\Promote::class,
 ];
