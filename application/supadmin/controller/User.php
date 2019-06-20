@@ -36,6 +36,28 @@ class User extends SupAdminController {
     }
 
     /**
+     * @api              {post} / 获取管理员信息
+     * @apiDescription   getSupUser
+     * @apiGroup         supadmin_user
+     * @apiName          getSupUser
+     * @apiParam (入参) {String} sup_con_id
+     * @apiSuccess (返回) {String} code 200:成功  / 5000:请重新登录 2.5001:账号已停用
+     * @apiSuccess (返回) {Array} data 用户信息
+     * @apiSuccess (返回) {String} admin_name 管理员名
+     * @apiSuccess (返回) {data} stype 用户类型 1.后台管理员 2.超级管理员
+     * @apiSampleRequest /supadmin/user/getsupuser
+     * @return array
+     * @author zyr
+     */
+    public function getSupUser() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $supConId = trim($this->request->post('sup_con_id'));
+        $result   = $this->app->user->getSupUser($supConId);
+//        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 添加推广
      * @apiDescription   addPromote
      * @apiGroup         supadmin_user

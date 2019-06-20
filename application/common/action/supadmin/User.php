@@ -36,6 +36,12 @@ class User extends CommonIndex {
         return ['code' => '200', 'sup_con_id' => $supConId];
     }
 
+    public function getSupUser($supConId){
+        $supId = $this->getUidByConId($supConId);
+        $supInfo = DbGoods::getSupAdmin(['id' => $supId], 'id,sup_name,mobile', true);
+        return ['code' => '200', 'data' => $supInfo];
+    }
+
     /**
      * 添加推广
      * @param $title
