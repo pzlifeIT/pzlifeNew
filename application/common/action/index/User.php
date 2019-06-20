@@ -349,6 +349,13 @@ class User extends CommonIndex {
      */
     public function loginUserByWx($code, $platform, $buid) {
         $wxInfo = getOpenid($code);
+        if ($platform == 2) {
+            $wxaccess_token = $this->getaccessToken($code);
+            if ($wxaccess_token == false) {
+                return ['code' => '3002'];
+            }
+            $wxInfo = $this->getunionid($wxaccess_token['openid'], $wxaccess_token['access_token']);
+        }
         if ($wxInfo === false) {
             return ['code' => '3001'];
         }
