@@ -148,14 +148,7 @@ class Wap extends CommonIndex {
 
     }
 
-    /**
-     * 微信登录
-     * @param $code
-     * @param $platform
-     * @param $buid
-     * @return array
-     * @author zyr
-     */
+
 
       /**
      * 微信登录

@@ -11,15 +11,25 @@ class PayController extends Controller {
 
     public function __construct(App $app = null) {
         parent::__construct($app);
-        if (Config::get('deploy') == 'development') {
-            header('Access-Control-Allow-Origin:*');
-        }
-        if (Config::get('deploy') == 'production') {//生产环境
-            header('Access-Control-Allow-Origin:*');
-        }
+        $this->headers();
         $checkRes = $this->checkApi();
         if ($checkRes['code'] !== 200) {
             exit(json_encode($checkRes));
+        }
+    }
+
+    private function headers() {
+        if (Config::get('deploy') == 'development') {
+            header('Access-Control-Allow-Origin:*');
+            header("Access-Control-Allow-Methods:GET,POST");
+            header('Access-Control-Allow-Headers:content-type,token,id');
+            header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
+        }
+        if (Config::get('deploy') == 'production') {//生产环境
+            header('Access-Control-Allow-Origin:*');
+            header("Access-Control-Allow-Methods:GET,POST");
+            header('Access-Control-Allow-Headers:content-type,token,id');
+            header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
         }
     }
 
