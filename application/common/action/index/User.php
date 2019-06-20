@@ -2470,7 +2470,7 @@ class User extends CommonIndex {
         // $requsest_subject = json_decode(sendRequest($requestUrl), true);
         // $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
         // $requsest_subject = json_decode(sendRequest($requestUrl), true);
-        return $requestUrl;
+        return ['code' => 200 , 'requestUrl' =>$requestUrl];
 
     }
 
