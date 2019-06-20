@@ -4,6 +4,7 @@ namespace app\common\model;
 
 use think\Model;
 use think\model\concern\SoftDelete;
+use Config;
 
 class SupPromote extends Model {
     use SoftDelete;
@@ -24,5 +25,35 @@ class SupPromote extends Model {
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
+    }
+
+    public function getBigImageAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
+
+    public function getShareImageAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
+
+    public function getBgImageAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
     }
 }

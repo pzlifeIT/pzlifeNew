@@ -581,7 +581,7 @@ class Suppliers extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} mobile  手机号
      * @apiParam (入参) {String} sup_name 登录账号
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:手机号格式有误 / 3003:账号名称已存在 / 3004:
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:手机号格式有误 / 3003:账号名称已存在 / 3004:未注册用户不能添加 / 3005:添加失败
      * @apiSuccess (返回) {Array} data 结果
      * @apiSuccess (data) {String} area_name 名称
      * @apiSampleRequest /admin/suppliers/addsupplieradmin
