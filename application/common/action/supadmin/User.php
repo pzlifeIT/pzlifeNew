@@ -33,7 +33,7 @@ class User extends CommonIndex {
         if ($conUid === false) {
             return ['code' => '3004']; //登录失败
         }
-        return ['code' => '200', 'cms_con_id' => $supConId];
+        return ['code' => '200', 'sup_con_id' => $supConId];
     }
 
     /**
