@@ -24,7 +24,7 @@ class Promote extends CommonIndex {
      */
     public function getSupPromoteSignUp($promote_id, $page, $pageNum, $nick_name = '', $mobile = '', $start_time = '', $end_time = '') {
         $where = [];
-        array_push($where, [['id', '=', $promote_id]]);
+        array_push($where, [['promote_id', '=', $promote_id]]);
 
         $promote = DbSup::getSupPromote($where, 'id', true);
         if (empty($promote)) {
