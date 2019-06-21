@@ -15,7 +15,7 @@ class Wap extends MyController {
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-                'isLogin' => ['except' => 'getSupPromote'],//除去login其他方法都进行isLogin前置操作
+                'isLogin' => ['except' => 'getSupPromote,getJsapiTicket'],//除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
             ];
 
@@ -110,6 +110,26 @@ class Wap extends MyController {
             return ['code' => 3003];
         }
         $result = $this->app->wap->getPromoteShareNum($promote_id,$conId);
+        return $result;
+    }
+
+    /**
+     * @api              {get} / 获取 JSAPI 分享签名包
+     * @apiDescription  getJsapiTicket
+     * @apiGroup         index_wap
+     * @apiName          getJsapiTicket
+     * @apiParam (入参) {Number} url 分享页面的当前网页的URL (不包含#及其后面部分)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/getJsapiTicket
+     * @author rzc
+     */
+    public function getJsapiTicket(){
+        $url = trim($this->request->get('url'));
+        if (empty($url)) {
+            return ['code' => 3001];
+        }
+        $result = $this->app->wap->getJsapiTicket($url);
         return $result;
     }
 }

@@ -20,7 +20,11 @@ class Wap extends CommonIndex {
 
     public function __construct() {
         parent::__construct();
+        $this->redisAccessTokenTencent = Config::get('redisKey.weixin.redisAccessTokenTencent');
+        $this->redisTicketTencent = Config::get('redisKey.weixin.redisTicketTencent');
     }
+
+    private $JSAPI_TICKET;
 
     /**
      * 报名活动详情
@@ -97,5 +101,51 @@ class Wap extends CommonIndex {
             $is_share = 1;
         }
         return ['code' => '200', 'is_share' => $is_share];
+    }
+
+    public function getJsapiTicket($durl){
+        $jsapiTicket = $this->get_jsapi_ticket();
+        $timestamp = time();
+        $nonceStr = $this->createNonceStr();
+        // 这里参数的顺序要按照 key 值 ASCII 码升序排序
+        
+        $string = "jsapi_ticket=$jsapiTicket&noncestr=$nonceStr&timestamp=$timestamp&url=$durl";
+
+        $signature = sha1($string);
+
+        $signPackage = [
+            "appId" => (string) Env::get('weixin.weixin_appid'),
+            "nonceStr" => (string) $nonceStr,
+            "timestamp" => (string) $timestamp,
+            "url" => (string) $durl,
+            "signature" => (string) $signature,
+        ];
+        return ['code' => 200,'signPackage' => $signPackage];
+    }
+
+    private function createNonceStr($length = 16)
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        $str = "";
+        for ($i = 0; $i < $length; $i++) {
+            $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+        }
+        return $str;
+    }
+
+    //获取微信jsapi_ticket
+    public function get_jsapi_ticket()
+    {
+        $access_token = $this->redis->get($this->redisAccessTokenTencent);
+
+        if (empty($access_token)) {
+            $access_token = $this->getWeiXinAccessTokenTencent();
+        }
+        if (($jsapi_ticket = $this->redis->get($this->redisTicketTencent)) === false) {
+            $jsapi_ticket = $this->getTicketTencent($access_token);
+            // return ['code' => '3002', 'msg' => '微信获取jsapi_ticket失败'];
+        }
+        
+        return $jsapi_ticket;
     }
 }
