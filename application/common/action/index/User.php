@@ -362,7 +362,6 @@ class User extends CommonIndex {
         if (empty($wxInfo['unionid'])) {
             return ['code' => '3000'];
         }
-        print_r($wxInfo['unionid']);die;
         $user = DbUser::getUser(['unionid' => $wxInfo['unionid']]);
         if (empty($user) || empty($user['mobile'])) {
             return ['code' => '3000'];
@@ -2473,11 +2472,7 @@ class User extends CommonIndex {
         // $appid         = 'wx1771b2e93c87e22c';
         $secret = Env::get('weixin.weixin_secret');
         // $secret        = '1566dc764f46b71b33085ba098f58317';
-
         $requestUrl = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' . $appid . '&redirect_uri=' . $redirect_uri . '&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect';
-        // $requsest_subject = json_decode(sendRequest($requestUrl), true);
-        // $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
-        // $requsest_subject = json_decode(sendRequest($requestUrl), true);
         return ['code' => 200 , 'requestUrl' =>$requestUrl];
 
     }
@@ -2593,7 +2588,6 @@ class User extends CommonIndex {
         $get_token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $appid . '&secret=' . $secret . '&code=' . $code . '&grant_type=authorization_code';
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
-        print_r($result);die;
         if (empty($result['openid'])) {
             return false;
         }
