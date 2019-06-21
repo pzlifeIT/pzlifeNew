@@ -3,7 +3,7 @@
 namespace app\common\action\index;
 
 //use third\AliSms;
-use app\common\action\wap\CommonIndex;
+use app\common\action\index\CommonIndex;
 use app\facade\DbSup;
 use config;
 use Env;
