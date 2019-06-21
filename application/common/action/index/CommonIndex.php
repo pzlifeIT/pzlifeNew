@@ -168,7 +168,7 @@ class CommonIndex {
             if (!$TicketTencent) {
                 return false;
             }
-            $this->redis->set($this->redisTicketTencent,$access_token);
+            $this->redis->set($this->redisTicketTencent,$TicketTencent);
             $this->redis->expire($this->redisTicketTencent, 6600);
         }
         
