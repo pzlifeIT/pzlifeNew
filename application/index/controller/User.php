@@ -278,7 +278,7 @@ class User extends MyController {
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败 / 3004:微信公众号token获取失败
      * @apiSuccess (data) {String} con_id
      * @apiSampleRequest /index/user/loginuserbywx
      * @return array

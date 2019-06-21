@@ -352,7 +352,7 @@ class User extends CommonIndex {
         if ($platform == 2) {
             $wxaccess_token = $this->getaccessToken($code);
             if ($wxaccess_token == false) {
-                return ['code' => '3002'];
+                return ['code' => '3004'];
             }
             $wxInfo = $this->getunionid($wxaccess_token['openid'], $wxaccess_token['access_token']);
         }
@@ -2593,6 +2593,7 @@ class User extends CommonIndex {
         $get_token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $appid . '&secret=' . $secret . '&code=' . $code . '&grant_type=authorization_code';
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
+        print_r($result);die;
         if (empty($result['openid'])) {
             return false;
         }
