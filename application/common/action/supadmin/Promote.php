@@ -38,7 +38,7 @@ class Promote extends CommonIndex {
             array_push($where, [['nick_name', 'LIKE', '%' . $nick_name . '%']]);
         }
         if (!empty($mobile)) {
-            array_push($where, [['mobile', '=', $mobile]]);
+            array_push($where, [['mobile', 'LIKE', '%' . $mobile . '%']]);
         }
         if (!empty($start_time)) {
             array_push($where, [['create_time', '>=', $start_time]]);
