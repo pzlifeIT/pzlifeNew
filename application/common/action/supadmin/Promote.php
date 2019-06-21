@@ -10,6 +10,18 @@ use think\Db;
 
 class Promote extends CommonIndex {
 
+    /**
+     * 报名列表
+     * @param $promote_id
+     * @param $page
+     * @param $pageNum
+     * @param $nick_name
+     * @param $mobile
+     * @param $start_time
+     * @param $end_time
+     * @return array
+     * @author zyr
+     */
     public function getSupPromoteSignUp($promote_id, $page, $pageNum, $nick_name = '', $mobile = '', $start_time = '',$end_time = '') {
         $where = [];
         array_push($where, [['id', '=', $promote_id]]);

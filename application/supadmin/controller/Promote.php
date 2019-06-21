@@ -17,7 +17,7 @@ class Promote extends SupAdminController {
      * @apiGroup         supadmin_promote
      * @apiName          getSupPromoteSignUp
      * @apiParam (入参) {String} sup_con_id
-     * @apiParam (入参) {String} promote_id
+     * @apiParam (入参) {String} promote_id 活动ID
      * @apiParam (入参) {String} page 页数
      * @apiParam (入参) {String} [page_num] 每页条数(默认10)
      * @apiParam (入参) {String} [nick_name] 姓名
@@ -30,8 +30,6 @@ class Promote extends SupAdminController {
      * @apiSuccess (data) {String} nick_name 姓名
      * @apiSuccess (data) {String} mobile 手机号
      * @apiSuccess (data) {String} create_time 报名时间
-     * @apiSuccess (data) {Int} share_count 需要分享次数
-     * @apiSuccess (data) {String} bg_image 分享成功页面图片
      * @apiSampleRequest /supadmin/promote/getSupPromoteSignUp
      * @return array
      * @author rzc

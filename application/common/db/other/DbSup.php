@@ -4,6 +4,7 @@ namespace app\common\db\other;
 
 use app\common\model\SupPromote;
 use app\common\model\SupPromoteSignUp;
+use app\common\model\SupPromoteShareLog;
 
 class DbSup {
     public function __construct() {
@@ -59,7 +60,7 @@ class DbSup {
      * @param string $orderBy
      * @param string $limit
      * @return mixed
-     * @author zyr
+     * @author rzc
      */
     public function getSupPromoteSignUp($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = SupPromoteSignUp::field($field)->where($where);
@@ -68,5 +69,37 @@ class DbSup {
 
     public function getSupPromoteSignUpCount($where) {
         return SupPromoteSignUp::where($where)->count();
+    }
+
+    public function saveSupPromoteSignUp($data){
+        $SupPromoteSignUp = new SupPromoteSignUp;
+        $SupPromoteSignUp->save($data);
+        return $SupPromoteSignUp->id;
+    }
+
+    /**
+     * 获取分享日志
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return mixed
+     * @author rzc
+     */
+    public function getSupPromoteShareLog($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = SupPromoteShareLog::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function saveSupPromoteShareLog($data){
+        $SupPromoteShareLog = new SupPromoteShareLog;
+        $SupPromoteShareLog->save($data);
+        return $SupPromoteShareLog->id;
+    }
+
+    public function updateSupPromoteShareLog($data,$id){
+        $SupPromoteShareLog = new SupPromoteShareLog;
+        return $SupPromoteShareLog->save($data,['id' => $id]);
     }
 }
