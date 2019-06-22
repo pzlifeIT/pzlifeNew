@@ -2565,7 +2565,7 @@ class User extends CommonIndex {
                     DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
                 }
                 $userconID = DbUser::getUserCon(['uid' => $uid],'id',true);
-                DbUser::addUserCon(['con_id' => $conId],['id' => $userconID['id']]);
+                DbUser::updateUserCon(['con_id' => $conId],['id' => $userconID['id']]);
             }
             
             
