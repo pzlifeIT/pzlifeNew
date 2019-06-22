@@ -1358,6 +1358,9 @@ class User extends CommonIndex {
             $res = $this->redis->hGetAll($this->redisKey . 'userinfo:' . $uid);
         } else {
             $res        = DbUser::getUser(['id' => $uid]);
+            if (empty($res)) {
+                return ['code' => '3000'];
+            }
             $res['uid'] = enUid($res['id']);
             unset($res['id']);
             $this->saveUser($uid, $res);
