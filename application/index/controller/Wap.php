@@ -126,7 +126,10 @@ class Wap extends MyController {
      */
     public function getJsapiTicket(){
         $url = trim($this->request->get('url'));
+        print_r($url);
         $url = urldecode($url);
+        
+        print_r($url);die;
         if (empty($url)) {
             return ['code' => 3001];
         }
