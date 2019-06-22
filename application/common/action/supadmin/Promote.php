@@ -50,7 +50,7 @@ class Promote extends CommonIndex {
         }
         $result = DbSup::getSupPromoteSignUp($where, 'id,nick_name,mobile,create_time', false, ['create_time' => 'ASC'], $offset . ',' . $pageNum);
         $total  = DbSup::getSupPromoteSignUpCount($where);
-        return ['code' => '200','$total' => $total, 'suppromotesignup' => $result];
+        return ['code' => '200','total' => $total, 'suppromotesignup' => $result];
     }
 
 }
