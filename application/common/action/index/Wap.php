@@ -79,7 +79,8 @@ class Wap extends CommonIndex {
             return ['code' => '3001'];//推广活动不存在
         }
         $has = DbSup::getSupPromoteShareLog(['promote_id' => $promote_id, 'uid' => $uid],'id,share_num',true);
-        if (!empty($has)) {
+        
+        if (empty($has)) {
             $share_num = 1;
             $data = [
                 'promote_id' => $promote_id,
