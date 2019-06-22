@@ -2515,6 +2515,9 @@ class User extends CommonIndex {
             }
             $uid = $user['id'];
         }
+        if ($wxInfo['sex'] == 0) {
+            $wxInfo['sex'] = 3;
+        }
         $data = [
             'mobile'    => $mobile,
             'unionid'   => $wxInfo['unionid'],
@@ -2543,6 +2546,7 @@ class User extends CommonIndex {
 
         Db::startTrans();
         try {
+            $conId = $this->createConId();
             if (empty($uid)) { //新用户,直接添加
                 $uid = DbUser::addUser($data); //添加后生成的uid
                 DbUser::addUserRecommend(['uid' => $uid, 'pid' => $buid]);
@@ -2554,14 +2558,17 @@ class User extends CommonIndex {
                     $relation = $relationRes . ',' . $uid;
                 }
                 DbUser::addUserRelation(['uid' => $uid, 'pid' => $buid, 'relation' => $relation]);
+                DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
             } else { //老版本用户
                 DbUser::updateUser($data, $uid);
                 if (!empty($userRelationId)) {
                     DbUser::updateUserRelation(['relation' => $buid . ',' . $uid, 'pid' => $buid], $userRelationId);
                 }
+                $userconID = DbUser::getUserCon(['uid' => $uid],'id',true);
+                DbUser::addUserCon(['con_id' => $conId],['id' => $userconID['id']]);
             }
-            $conId = $this->createConId();
-            DbUser::addUserCon(['uid' => $uid, 'con_id' => $conId]);
+            
+            
             $this->redis->zAdd($this->redisConIdTime, time(), $conId);
             $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
             if ($conUid === false) {
