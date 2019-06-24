@@ -26,13 +26,17 @@ class Wap extends MyController {
      * @apiName          getSupPromote
      * @apiParam (入参) {Number} promote_id 活动ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 / 3001:promote_id有误 / 3002:
-     * @apiSuccess (返回) {Array} data
-     * @apiSuccess (data) {String} title 标题
-     * @apiSuccess (data) {String} big_image 大图
-     * @apiSuccess (data) {String} share_title 微信转发分享标题
-     * @apiSuccess (data) {String} share_image 微信转发分享图片
-     * @apiSuccess (data) {Int} share_count 需要分享次数
-     * @apiSuccess (data) {String} bg_image 分享成功页面图片
+     * @apiSuccess (返回) {Array} promote 基本属性
+     * @apiSuccess (返回) {Array} banner 头部轮播（暂无）
+     * @apiSuccess (返回) {Array} detail 详情图片
+     * @apiSuccess (promote) {String} title 标题
+     * @apiSuccess (promote) {String} big_image 大图
+     * @apiSuccess (promote) {String} share_title 微信转发分享标题
+     * @apiSuccess (promote) {String} share_image 微信转发分享图片
+     * @apiSuccess (promote) {Int} share_count 需要分享次数
+     * @apiSuccess (promote) {String} bg_image 分享成功页面图片
+     * @apiSuccess (banner) {String} image_path 图片路径
+     * @apiSuccess (detail) {String} image_path 标题
      * @apiSampleRequest /index/wap/getSupPromote
      * @author rzc
      */
