@@ -70,7 +70,10 @@ function checkCmsPassword($password) {
  * @return string
  * @author zyr
  */
-function getVercodeContent($code) {
+function getVercodeContent($code, $type = 0) {
+    if ($type == 5) {
+        return '您参与报名活动的验证码是:' . $code . '，在10分钟内有效。如非本人操作请忽略本短信。';
+    }
     return '您的验证码是:' . $code . '，在10分钟内有效。如非本人操作请忽略本短信。';
 }
 

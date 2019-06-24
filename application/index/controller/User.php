@@ -202,7 +202,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          sendVercode
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证
+     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证 5.报名手机验证码
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:发送类型有误 / 3003:一分钟内不能重复发送 / 3004:短信发送失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/sendvercode
@@ -211,7 +211,7 @@ class User extends MyController {
      */
     public function sendVercode() {
         $apiName  = classBasename($this) . '/' . __function__;
-        $stypeArr = [1, 2, 3, 4];
+        $stypeArr = [1, 2, 3, 4, 5];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
         if (!checkMobile($mobile)) {

@@ -24,6 +24,23 @@ class Wap extends CommonIndex {
         $this->redisTicketTencent = Config::get('redisKey.weixin.redisTicketTencent');
     }
 
+        /**
+     * 验证提交的验证码是否正确
+     * @param $stype
+     * @param $mobile
+     * @param $vercode
+     * @return bool
+     * @author zyr
+     */
+    private function checkVercode($stype, $mobile, $vercode) {
+        $redisKey  = $this->redisKey . 'vercode:' . $mobile . ':' . $stype;
+        $redisCode = $this->redis->get($redisKey); //服务器保存的验证码
+        if ($redisCode == $vercode) {
+            return true;
+        }
+        return false;
+    }
+
     private $JSAPI_TICKET;
 
     /**
@@ -46,7 +63,11 @@ class Wap extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id){
+    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $vercode){
+        $stype = 5;
+        if ($this->checkVercode($stype, $mobile, $vercode) === false) {
+            return ['code' => '3008']; //验证码错误
+        }
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -66,6 +87,7 @@ class Wap extends CommonIndex {
             'nick_name' => $nick_name,
         ];
         DbSup::saveSupPromoteSignUp($data);
+        $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
         return ['code' => '200'];
     }
 

@@ -53,8 +53,9 @@ class Wap extends MyController {
      * @apiParam (入参) {Number} promote_id 活动ID
      * @apiParam (入参) {String} con_id 用户登录ID
      * @apiParam (入参) {String} mobile 手机号
+     * @apiParam (入参) {String} vercode 验证码
      * @apiParam (入参) {String} nick_name 用户昵称
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名 / 3007:验证码格式有误 / 3008:验证码错误
      * @apiSuccess (返回) {Array} data
      * @apiSampleRequest /index/wap/SupPromoteSignUp
      * @author rzc
@@ -62,6 +63,7 @@ class Wap extends MyController {
     public function SupPromoteSignUp() {
         $apiName    = classBasename($this) . '/' . __function__;
         $mobile     = trim($this->request->post('mobile'));
+        $vercode = trim($this->request->post('vercode'));
         $nick_name  = trim($this->request->post('nick_name'));
         $promote_id = trim($this->request->post('promote_id'));
         $conId      = trim($this->request->post('con_id'));
@@ -77,11 +79,14 @@ class Wap extends MyController {
         if (checkMobile($mobile) === false) {
             return ['code' => '3004']; //手机号格式错误
         }
+        if (checkVercode($vercode) === false) {
+            return ['code' => '3007'];
+        }
         if (empty($nick_name)) {
             return ['code' => 3006];
         }
-        $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id);
-        $this->apiLog($apiName, [$conId, $mobile, $nick_name, $promote_id], $result['code'], '');
+        $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $vercode);
+        $this->apiLog($apiName, [$conId, $mobile, $nick_name, $promote_id, $vercode], $result['code'], '');
         return $result;
     }
 
