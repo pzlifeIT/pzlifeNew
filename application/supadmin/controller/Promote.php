@@ -176,7 +176,7 @@ class Promote extends SupAdminController {
     }
 
     /**
-     * @api              {post} / 对商品图进行排序
+     * @api              {post} / 活动图片详情
      * @apiDescription   getPromoteimagedetail
      * @apiGroup         supadmin_promote
      * @apiName          getPromoteimagedetail
