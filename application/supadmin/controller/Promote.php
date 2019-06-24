@@ -154,7 +154,7 @@ class Promote extends SupAdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_path 商品id
      * @apiParam (入参) {Number} order_by 排序
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:排序字段只能为数字 / 3004:上传失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:排序字段只能为数字或者排序最大为999 / 3004:修改失败
      * @apiSampleRequest /supadmin/promote/sortPromoteimagedetail
      * @return array
      * @author rzc
@@ -167,7 +167,7 @@ class Promote extends SupAdminController {
         if (empty($imagePath)) {
             return ['code' => '3001'];//图片不能为空
         }
-        if (!is_numeric($orderBy)) {
+        if (!is_numeric($orderBy) || $orderBy>999) {
             return ['code' => '3003'];//排序字段只能为数字
         }
         $result = $this->app->promote->sortPromoteimagedetail($imagePath, intval($orderBy));

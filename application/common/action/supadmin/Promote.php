@@ -155,7 +155,7 @@ class Promote extends CommonIndex {
             return ["code" => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ["code" => "3003"];
+            return ["code" => "3004"];
         }
     }
 
