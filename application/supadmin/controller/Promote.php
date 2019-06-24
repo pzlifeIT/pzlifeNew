@@ -80,4 +80,98 @@ class Promote extends SupAdminController {
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
+
+    /**
+     * @api              {post} / 提交活动详情和轮播图
+     * @apiDescription   uploadPromoteImages
+     * @apiGroup         admin_goods
+     * @apiName          uploadPromoteImages
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
+     * @apiParam (入参) {Number} promote_id 商品id
+     * @apiParam (入参) {Array} images 图片集合
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
+     * @apiSampleRequest /supadmin/promote/uploadPromoteImages
+     * @return array
+     * @author RZC
+     */
+    public function uploadPromoteImages() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $imageTypeArr = [1, 2];//1.详情图 2.轮播图
+        $promote_id      = trim($this->request->post('promote_id'));
+        $imageType    = trim($this->request->post('image_type'));
+        $images       = $this->request->post('images');
+        if (!is_numeric($imageType) || !in_array(intval($imageType), $imageTypeArr)) {
+            return ['code' => '3001'];//图片类型有误
+        }
+        if (!is_numeric($promote_id)) {
+            return ['code' => '3002'];//商品id只能是数字
+        }
+        if (empty($images)) {
+            return ['code' => '3003'];//图片不能空
+        }
+        $result = $this->app->goods->uploadPromoteImages($promote_id, $imageType, $images);
+        $this->apiLog($apiName, [$cmsConId, $promote_id, $imageType, $images], $result['code'], $cmsConId);
+        return $result;
+    }
+
+     /**
+     * @api              {post} / 删除商品详情和轮播图
+     * @apiDescription   delPromoteImage
+     * @apiGroup         admin_goods
+     * @apiName          delPromoteImage
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} image_path 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:上传失败
+     * @apiSampleRequest /supadmin/promote/delPromoteImage
+     * @return array
+     * @author rzc
+     */
+    public function delPromoteImage() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $imagePath = trim($this->request->post('image_path'));
+        if (empty($imagePath)) {
+            return ['code' => '3001'];//图片不能为空
+        }
+        $result = $this->app->goods->delPromoteImage($imagePath);
+        $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 对商品图进行排序
+     * @apiDescription   sortPromoteimagedetail
+     * @apiGroup         admin_goods
+     * @apiName          sortImageDetail
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} image_path 商品id
+     * @apiParam (入参) {Number} order_by 排序
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:图片不能为空 / 3002:图片不存在 / 3003:排序字段只能为数字 / 3004:上传失败
+     * @apiSampleRequest /supadmin/promote/sortPromoteimagedetail
+     * @return array
+     * @author rzc
+     */
+    public function sortPromoteimagedetail() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
+        $imagePath = trim($this->request->post('image_path'));
+        $orderBy   = trim($this->request->post('order_by'));
+        if (empty($imagePath)) {
+            return ['code' => '3001'];//图片不能为空
+        }
+        if (!is_numeric($orderBy)) {
+            return ['code' => '3003'];//排序字段只能为数字
+        }
+        $result = $this->app->goods->sortPromoteimagedetail($imagePath, intval($orderBy));
+        $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
+        return $result;
+    }
 }

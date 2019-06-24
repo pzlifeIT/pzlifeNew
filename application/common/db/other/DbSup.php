@@ -5,6 +5,7 @@ namespace app\common\db\other;
 use app\common\model\SupPromote;
 use app\common\model\SupPromoteSignUp;
 use app\common\model\SupPromoteShareLog;
+use app\common\model\PromoteImage;
 
 class DbSup {
     public function __construct() {
@@ -101,5 +102,50 @@ class DbSup {
     public function updateSupPromoteShareLog($data,$id){
         $SupPromoteShareLog = new SupPromoteShareLog;
         return $SupPromoteShareLog->save($data,['id' => $id]);
+    }
+    
+    /**
+     * 批量添加图片
+     * @param $data
+     * @return bool
+     */
+    public function addPromoteImageList($data) {
+        $PromoteImage = new PromoteImage();
+        return $PromoteImage->saveAll($data);
+    }
+
+    /**
+     * 获取一个商品的图片
+     * @param $where
+     * @param $field
+     * @param $orderBy
+     * @return array
+     * @author rzc
+     * 2019/1/2-16:26
+     */
+    public function getOnePromoteImage($where, $field, $orderBy = '') {
+        return PromoteImage::where($where)->field($field)->order($orderBy)->select()->toArray();
+    }
+
+   /**
+     * 删除商品图
+     * @param $id
+     * @return bool
+     * @author wujunjie
+     * 2019/1/8-10:09
+     */
+    public function delPromoteImage($id) {
+        return PromoteImage::destroy($id);
+    }
+
+    /**
+     * 更新商品图片
+     * @param $data
+     * @param $id
+     * @author zyr
+     */
+    public function updatePromoteImage($data, $id) {
+        $goodsImage = new PromoteImage();
+        $goodsImage->save($data, ['id' => $id]);
     }
 }
