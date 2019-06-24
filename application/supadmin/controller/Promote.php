@@ -115,7 +115,7 @@ class Promote extends SupAdminController {
             return ['code' => '3003'];//图片不能空
         }
         $result = $this->app->promote->uploadPromoteImages($promote_id, $imageType, $images);
-        $this->apiLog($apiName, [$cmsConId, $promote_id, $imageType, $images], $result['code'], $cmsConId);
+        // $this->apiLog($apiName, [$cmsConId, $promote_id, $imageType, $images], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -142,7 +142,7 @@ class Promote extends SupAdminController {
             return ['code' => '3001'];//图片不能为空
         }
         $result = $this->app->promote->delPromoteImage($imagePath);
-        $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
+        // $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -171,7 +171,7 @@ class Promote extends SupAdminController {
             return ['code' => '3003'];//排序字段只能为数字
         }
         $result = $this->app->promote->sortPromoteimagedetail($imagePath, intval($orderBy));
-        $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
+        // $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
         return $result;
     }
 
