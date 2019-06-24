@@ -54,8 +54,8 @@ class Wap extends CommonIndex {
         if (empty($promote)) {
             return ['code' => '3001'];//推广活动不存在
         }
-        $banner = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 2],'image_path');
-        $detail = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 1],'image_path');
+        $banner = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 2],'image_path',['order_by' => 'desc']);
+        $detail = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 1],'image_path',['order_by' => 'desc']);
 
         return ['code' => '200', 'promote' => $promote, 'banner' => $banner, 'detail' => $detail];
     }

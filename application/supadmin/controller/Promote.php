@@ -167,7 +167,7 @@ class Promote extends SupAdminController {
         if (empty($imagePath)) {
             return ['code' => '3001'];//图片不能为空
         }
-        if (!is_numeric($orderBy) || $orderBy>999) {
+        if (!is_numeric($orderBy)) {
             return ['code' => '3003'];//排序字段只能为数字
         }
         $result = $this->app->promote->sortPromoteimagedetail($imagePath, intval($orderBy));
