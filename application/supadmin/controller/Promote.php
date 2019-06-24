@@ -88,7 +88,7 @@ class Promote extends SupAdminController {
      * @apiName          uploadPromoteImages
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
-     * @apiParam (入参) {Number} promote_id 商品id
+     * @apiParam (入参) {Number} promote_id 活动id
      * @apiParam (入参) {Array} images 图片集合
      * @apiSuccess (返回) {String} code 200:成功 / 3001:图片类型有误 / 3002:商品id只能是数字 / 3003:图片不能空 / 3004:商品id不存在 / 3005:图片没有上传过 / 3006:上传失败
      * @apiSampleRequest /supadmin/promote/uploadPromoteImages
@@ -114,7 +114,7 @@ class Promote extends SupAdminController {
         if (empty($images)) {
             return ['code' => '3003'];//图片不能空
         }
-        $result = $this->app->goods->uploadPromoteImages($promote_id, $imageType, $images);
+        $result = $this->app->promote->uploadPromoteImages($promote_id, $imageType, $images);
         $this->apiLog($apiName, [$cmsConId, $promote_id, $imageType, $images], $result['code'], $cmsConId);
         return $result;
     }
@@ -141,7 +141,7 @@ class Promote extends SupAdminController {
         if (empty($imagePath)) {
             return ['code' => '3001'];//图片不能为空
         }
-        $result = $this->app->goods->delPromoteImage($imagePath);
+        $result = $this->app->promote->delPromoteImage($imagePath);
         $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
         return $result;
     }
@@ -170,8 +170,29 @@ class Promote extends SupAdminController {
         if (!is_numeric($orderBy)) {
             return ['code' => '3003'];//排序字段只能为数字
         }
-        $result = $this->app->goods->sortPromoteimagedetail($imagePath, intval($orderBy));
+        $result = $this->app->promote->sortPromoteimagedetail($imagePath, intval($orderBy));
         $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 对商品图进行排序
+     * @apiDescription   getPromoteimagedetail
+     * @apiGroup         supadmin_promote
+     * @apiName          getPromoteimagedetail
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} promote_id 活动id
+     * @apiSuccess (返回) {String} code 200:成功 / 3002:promote_id不存在 
+     * @apiSampleRequest /supadmin/promote/getPromoteimagedetail
+     * @return array
+     * @author rzc
+     */
+    public function getPromoteimagedetail() {
+        $promote_id = trim($this->request->post('promote_id'));
+        if (!is_numeric($promote_id) || $promote_id < 1) {
+            return ['code' => 3002];
+        }
+        $result = $this->app->promote->getPromoteimagedetail($promote_id);
         return $result;
     }
 }

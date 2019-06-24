@@ -159,4 +159,14 @@ class Promote extends CommonIndex {
         }
     }
 
+    public function getPromoteimagedetail($promote_id){
+        $promote = DbSup::getSupPromote(['id' => $promote_id], 'id', true);
+        if (empty($promote)) {
+            return ['code' => '3002']; //推广活动不存在
+        }
+        $banner = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 2],'*');
+        $detail = DbSup::getOnePromoteImage(['promote_id' => $promote_id,'image_type' => 1],'*');
+        return ['code' => '200','banner' => $banner,'detail' => $detail];
+    }
+
 }
