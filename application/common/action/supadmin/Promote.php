@@ -77,7 +77,7 @@ class Promote extends CommonIndex {
             $logImage['status'] = 1;//更新为完成状态
             $orderBy++;
             $row = [
-                'goods_id'    => $promote_id,
+                'promote_id'    => $promote_id,
                 'source_type' => 4,
                 'image_type'  => $imageType,
                 'image_path'  => $image,
