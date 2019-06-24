@@ -84,7 +84,7 @@ class Promote extends SupAdminController {
     /**
      * @api              {post} / 提交活动详情和轮播图
      * @apiDescription   uploadPromoteImages
-     * @apiGroup         admin_goods
+     * @apiGroup         supadmin_promote
      * @apiName          uploadPromoteImages
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_type 图片类型 1.详情图 2.轮播图
@@ -122,7 +122,7 @@ class Promote extends SupAdminController {
      /**
      * @api              {post} / 删除商品详情和轮播图
      * @apiDescription   delPromoteImage
-     * @apiGroup         admin_goods
+     * @apiGroup         supadmin_promote
      * @apiName          delPromoteImage
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_path 商品id
@@ -149,7 +149,7 @@ class Promote extends SupAdminController {
     /**
      * @api              {post} / 对商品图进行排序
      * @apiDescription   sortPromoteimagedetail
-     * @apiGroup         admin_goods
+     * @apiGroup         supadmin_promote
      * @apiName          sortImageDetail
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} image_path 商品id
