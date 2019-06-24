@@ -98,9 +98,9 @@ class Promote extends SupAdminController {
     public function uploadPromoteImages() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
+        // if ($this->checkPermissions($cmsConId, $apiName) === false) {
+        //     return ['code' => '3100'];
+        // }
         $imageTypeArr = [1, 2];//1.详情图 2.轮播图
         $promote_id      = trim($this->request->post('promote_id'));
         $imageType    = trim($this->request->post('image_type'));
@@ -134,9 +134,9 @@ class Promote extends SupAdminController {
     public function delPromoteImage() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
+        // if ($this->checkPermissions($cmsConId, $apiName) === false) {
+        //     return ['code' => '3100'];
+        // }
         $imagePath = trim($this->request->post('image_path'));
         if (empty($imagePath)) {
             return ['code' => '3001'];//图片不能为空
