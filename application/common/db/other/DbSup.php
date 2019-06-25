@@ -2,6 +2,7 @@
 
 namespace app\common\db\other;
 
+use app\common\model\SupAdmin;
 use app\common\model\SupPromote;
 use app\common\model\SupPromoteSignUp;
 use app\common\model\SupPromoteShareLog;
@@ -147,5 +148,11 @@ class DbSup {
     public function updatePromoteImage($data, $id) {
         $goodsImage = new PromoteImage();
         $goodsImage->save($data, ['id' => $id]);
+    }
+
+    public function updatePasswd($newPasswd, $id) {
+        $supAdmin = new SupAdmin();
+        return $supAdmin->save(['sup_passwd' => $newPasswd], ['id' => $id]);
+
     }
 }

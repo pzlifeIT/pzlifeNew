@@ -16,21 +16,21 @@ class User extends SupAdminController {
      * @apiDescription   sup_login
      * @apiGroup         supadmin_user
      * @apiName          sup_login
-     * @apiParam (入参) {String} sup_name 名称
+     * @apiParam (入参) {String} mobile 手机号
      * @apiParam (入参) {String} passwd 密码
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号密码不能为空 / 3002:用户不存在 / 3003:密码错误 / 3004:登录失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机号密码不能为空 / 3002:用户不存在 / 3003:密码错误 / 3004:登录失败
      * @apiSampleRequest /supadmin/user/login
      * @return array
      * @author zyr
      */
     public function login() {
         $apiName = classBasename($this) . '/' . __function__;
-        $supName = trim($this->request->post('sup_name'));
+        $mobile  = trim($this->request->post('mobile'));
         $passwd  = trim($this->request->post('passwd'));
-        if (empty($supName) || empty($passwd)) {
+        if (empty($mobile) || empty($passwd)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->user->login($supName, $passwd);
+        $result = $this->app->user->login($mobile, $passwd);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
@@ -102,7 +102,7 @@ class User extends SupAdminController {
             return ['code' => '3009'];//share_count有误
         }
         $shareCount = intval($shareCount);
-        $result     = $this->app->user->addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage);
+        $result     = $this->app->user->addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage, $supConId);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
@@ -156,8 +156,8 @@ class User extends SupAdminController {
      * @apiGroup         supadmin_user
      * @apiName          getPromoteList
      * @apiParam (入参) {String} sup_con_id
-     * @apiParam (入参) {String} page 页数
-     * @apiParam (入参) {String} [page_num] 每页条数(默认10)
+     * @apiParam (入参) {Int} page 页数
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:列表为空 / 3001:page错误
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (data) {Int} id
@@ -184,8 +184,75 @@ class User extends SupAdminController {
         }
         $page    = intval($page);
         $pageNum = intval($pageNum);
-        $result  = $this->app->user->getPromoteList($page, $pageNum);
+        $result  = $this->app->user->getPromoteList($page, $pageNum, $supConId);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 推广活动详情
+     * @apiDescription   getPromoteInfo
+     * @apiGroup         supadmin_user
+     * @apiName          getPromoteInfo
+     * @apiParam (入参) {String} sup_con_id
+     * @apiParam (入参) {Int} id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:列表为空 / 3001:id错误 / 3002:详情id不存在
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Int} id
+     * @apiSuccess (data) {String} title 标题
+     * @apiSuccess (data) {String} big_image 大图
+     * @apiSuccess (data) {String} share_title 微信转发分享标题
+     * @apiSuccess (data) {String} share_image 微信转发分享图片
+     * @apiSuccess (data) {Int} share_count 需要分享次数
+     * @apiSuccess (data) {String} bg_image 分享成功页面图片
+     * @apiSampleRequest /supadmin/user/getpromoteinfo
+     * @return array
+     * @author zyr
+     */
+    public function getPromoteInfo() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $supConId = trim($this->request->post('sup_con_id'));
+        $id       = trim($this->request->post('id'));
+        if (!is_numeric($id) || $id < 1) {
+            return ['code' => '3001'];//id错误
+        }
+        $id     = intval($id);
+        $result = $this->app->user->getPromoteInfo($id, $supConId);
+//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改密码
+     * @apiDescription   resetPassword
+     * @apiGroup         supadmin_user
+     * @apiName          resetPassword
+     * @apiParam (入参) {String} sup_con_id
+     * @apiParam (入参) {String} passwd 用户密码
+     * @apiParam (入参) {String} new_passwd1 新密码
+     * @apiParam (入参) {String} new_passwd2 确认密码
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:密码必须为6-16个任意字符 / 3003:老密码不能为空 / 3004:密码确认有误  / 3005:修改密码失败
+     * @apiSampleRequest /supadmin/user/resetpassword
+     * @return array
+     * @author zyr
+     */
+    public function resetPassword() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $supConId   = trim($this->request->post('sup_con_id'));
+        $passwd     = trim($this->request->post('passwd'));
+        $newPasswd1 = trim($this->request->post('new_passwd1'));
+        $newPasswd2 = trim($this->request->post('new_passwd2'));
+        if ($newPasswd1 !== $newPasswd2) {
+            return ['code' => '3004']; //密码确认有误
+        }
+        if (checkCmsPassword($newPasswd1) === false) {
+            return ['code' => '3002']; //密码必须为6-16个任意字符
+        }
+        if (empty($passwd)) {
+            return ['code' => '3003']; //老密码不能为空
+        }
+        $result = $this->app->user->resetPassword($supConId, $passwd, $newPasswd1);
+//        $this->apiLog($apiName, [$cmsConId, $passwd, $newPasswd1], $result['code'], $cmsConId);
         return $result;
     }
 }
