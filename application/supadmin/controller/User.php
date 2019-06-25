@@ -95,13 +95,14 @@ class User extends SupAdminController {
         if (empty($shareImage)) {
             return ['code' => '3004'];//share_image未上传
         }
-        if (empty($bgImage)) {
-            return ['code' => '3005'];//bg_image未上传
-        }
+        // if (empty($bgImage)) {
+        //     return ['code' => '3005'];//bg_image未上传
+        // }
         if (!is_numeric($shareCount) || $shareCount < 0) {
             return ['code' => '3009'];//share_count有误
         }
         $shareCount = intval($shareCount);
+        $shareCount = 0;
         $result     = $this->app->user->addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;

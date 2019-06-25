@@ -56,10 +56,10 @@ class User extends CommonIndex {
     public function addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage) {
         $newBigImage   = filtraImage(Config::get('qiniu.domain'), $bigImage);
         $newShareImage = filtraImage(Config::get('qiniu.domain'), $shareImage);
-        $newBgImage    = filtraImage(Config::get('qiniu.domain'), $bgImage);
+        // $newBgImage    = filtraImage(Config::get('qiniu.domain'), $bgImage);
         $logBigImage   = DbImage::getLogImage($newBigImage, 2);//判断时候有未完成的图片
         $logShareImage = DbImage::getLogImage($newShareImage, 2);//判断时候有未完成的图片
-        $logBgImage    = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
+        // $logBgImage    = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
         if (empty($logBigImage)) {//图片不存在
             return ['code' => '3006'];//big_image图片没有上传过
         }
