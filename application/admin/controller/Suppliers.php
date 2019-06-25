@@ -625,9 +625,6 @@ class Suppliers extends AdminController {
     public function supplierAdminList() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         if (!is_numeric($page) || $page < 1) {
