@@ -65,19 +65,19 @@ class User extends CommonIndex {
         $supAdminId    = $this->getUidByConId($supConId);
         $newBigImage   = filtraImage(Config::get('qiniu.domain'), $bigImage);
         $newShareImage = filtraImage(Config::get('qiniu.domain'), $shareImage);
-        $newBgImage    = filtraImage(Config::get('qiniu.domain'), $bgImage);
+        // $newBgImage    = filtraImage(Config::get('qiniu.domain'), $bgImage);
         $logBigImage   = DbImage::getLogImage($newBigImage, 2);//判断时候有未完成的图片
         $logShareImage = DbImage::getLogImage($newShareImage, 2);//判断时候有未完成的图片
-        $logBgImage    = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
+        // $logBgImage    = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
         if (empty($logBigImage)) {//图片不存在
             return ['code' => '3006'];//big_image图片没有上传过
         }
         if (empty($logShareImage)) {//图片不存在
             return ['code' => '3007'];//share_image图片没有上传过
         }
-        if (empty($logBgImage)) {//图片不存在
-            return ['code' => '3008'];//bg_image图片没有上传过
-        }
+        // if (empty($logBgImage)) {//图片不存在
+        //     return ['code' => '3008'];//bg_image图片没有上传过
+        // }
         $data = [
             'sup_id'      => $supAdminId,
             'title'       => $title,
@@ -85,7 +85,7 @@ class User extends CommonIndex {
             'share_title' => $shareTitle,
             'share_image' => $newShareImage,
             'share_count' => $shareCount,
-            'bg_image'    => $newBgImage,
+            // 'bg_image'    => $bgImage,
         ];
         Db::startTrans();
         try {
@@ -136,14 +136,14 @@ class User extends CommonIndex {
             }
             $data['share_image'] = $newShareImage;
         }
-        if (!empty($bgImage)) {
-            $newBgImage = filtraImage(Config::get('qiniu.domain'), $bgImage);
-            $logBgImage = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
-            if (empty($logBgImage)) {//图片不存在
-                return ['code' => '3008'];//bg_image图片没有上传过
-            }
-            $data['bg_image'] = $newBgImage;
-        }
+        // if (!empty($bgImage)) {
+        //     $newBgImage = filtraImage(Config::get('qiniu.domain'), $bgImage);
+        //     $logBgImage = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
+        //     if (empty($logBgImage)) {//图片不存在
+        //         return ['code' => '3008'];//bg_image图片没有上传过
+        //     }
+        //     $data['bg_image'] = $bgImage;
+        // }
         Db::startTrans();
         try {
             DbSup::editSupPromote($data, $id);

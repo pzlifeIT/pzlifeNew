@@ -140,10 +140,11 @@ class CommonIndex {
         // $secret        = '1566dc764f46b71b33085ba098f58317';
             $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
             $requsest_subject = json_decode(sendRequest($requestUrl), true);
-            $access_token     = $requsest_subject['access_token'];
-            if (!$access_token) {
+            if (!isset($requsest_subject['access_token'])) {
                 return false;
             }
+            $access_token     = $requsest_subject['access_token'];
+            
             $this->redis->set($this->redisAccessTokenTencent,$access_token);
             $this->redis->expire($this->redisAccessTokenTencent, 6600);
         }
