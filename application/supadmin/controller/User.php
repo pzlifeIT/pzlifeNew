@@ -98,11 +98,11 @@ class User extends SupAdminController {
         // if (empty($bgImage)) {
         //     return ['code' => '3005'];//bg_image未上传
         // }
-        if (!is_numeric($shareCount) || $shareCount < 0) {
-            return ['code' => '3009'];//share_count有误
-        }
-        $shareCount = intval($shareCount);
+        // if (!is_numeric($shareCount) || $shareCount < 0) {
+        //     return ['code' => '3009'];//share_count有误
+        // }
         $shareCount = 0;
+        // $shareCount = intval($shareCount);
         $result     = $this->app->user->addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
@@ -142,9 +142,10 @@ class User extends SupAdminController {
         if (empty($shareTitle)) {
             return ['code' => '3002'];//share_title不能为空
         }
-        if (!is_numeric($shareCount) || $shareCount < 0) {
-            return ['code' => '3009'];//share_count有误
-        }
+        // if (!is_numeric($shareCount) || $shareCount < 0) {
+        //     return ['code' => '3009'];//share_count有误
+        // }
+        $shareCount = 0;
         $shareCount = intval($shareCount);
         $result     = $this->app->user->editPromote($id, $title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage);
 //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
