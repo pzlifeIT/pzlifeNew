@@ -89,9 +89,9 @@ class User extends SupAdminController {
         if (empty($shareTitle)) {
             return ['code' => '3002'];//share_title不能为空
         }
-        if (empty($bigImage)) {
-            return ['code' => '3003'];//big_image未上传
-        }
+        // if (empty($bigImage)) {
+        //     return ['code' => '3003'];//big_image未上传
+        // }
         if (empty($shareImage)) {
             return ['code' => '3004'];//share_image未上传
         }

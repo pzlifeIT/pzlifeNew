@@ -66,9 +66,9 @@ class User extends CommonIndex {
         if (empty($logShareImage)) {//图片不存在
             return ['code' => '3007'];//share_image图片没有上传过
         }
-        if (empty($logBgImage)) {//图片不存在
-            return ['code' => '3008'];//bg_image图片没有上传过
-        }
+        // if (empty($logBgImage)) {//图片不存在
+        //     return ['code' => '3008'];//bg_image图片没有上传过
+        // }
         $data = [
             'title'       => $title,
             'big_image'   => $bigImage,
