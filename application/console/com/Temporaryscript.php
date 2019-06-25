@@ -213,9 +213,9 @@ class TemporaryScript extends Pzlife {
             if (!empty($user) && !empty($up_user)) {
                 $up_relation = Db::query("SELECT * FROM pz_user_relation WHERE uid = ".$up_user[0]['id']." AND delete_time=0 ");
                 if ($up_user[0]['user_identity'] == 4) {
-                    $have_up_relation =  $up_user[0]['id'].$user[0]['id'];
+                    $have_up_relation =  $up_user[0]['id'].','.$user[0]['id'];
                 } else {
-                    $have_up_relation = $up_relation[0]['relation'].$user[0]['id'];
+                    $have_up_relation = $up_relation[0]['relation'].','.$user[0]['id'];
                 }
                 Db::table('pz_user_relation')->where(['uid' => $user[0]['id']])->update(['pid' => $up_user[0]['id'],'relation' => $have_up_relation]);
             }
