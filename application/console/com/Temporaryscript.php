@@ -118,7 +118,7 @@ class TemporaryScript extends Pzlife {
             // Db::query("UPDATE `pz_diamondvips` SET `status` = 3 WHERE `delete_time` = 0");
 
             /* 2019/05/25 挂人关系调整 活动用户挂在王金  23926 下面*/
-            $user    = Db::query("SELECT * FROM pz_users WHERE `create_time` > '1558713600' AND `create_time` < '1558780200' AND delete_time=0 ");
+    /*         $user    = Db::query("SELECT * FROM pz_users WHERE `create_time` > '1558713600' AND `create_time` < '1558780200' AND delete_time=0 ");
             foreach ($user as $key => $value) {
                 $relation = Db::query("SELECT * FROM pz_user_relation WHERE `uid` = ".$value['id']);
                 if ($relation) {
@@ -127,11 +127,11 @@ class TemporaryScript extends Pzlife {
                     if ($value['user_identity'] == 2) {
                         
                         $from_diamonduid = $olduser_relation[0];
-                        /* 查询钻石领取记录 */
+                        // 查询钻石领取记录
                         $diamondvip_get = Db::query("SELECT * FROM pz_diamondvip_get WHERE `uid` = ".$value['id'] . " AND `share_uid` = ".$from_diamonduid);
                         Db::table('pz_diamondvip_get')->where('id', $diamondvip_get[0]['id'])->update(['share_uid' => 23926]);
                         // print_r($diamondvip_get);die;
-                        /* 查询订单号 */
+                        // 查询订单号 
                         $diamond_member_order = Db::query("SELECT `id`,`order_no` FROM pz_member_order WHERE `uid` = ".$value['id'] . " AND `from_uid` = ".$from_diamonduid. " AND `pay_status` = 4 ");
                         $log_trading = Db::query("SELECT * FROM pz_log_trading WHERE `trading_type` = 3 AND `order_no` = '".$diamond_member_order[0]['order_no']."'");
 
@@ -165,10 +165,10 @@ class TemporaryScript extends Pzlife {
                    
                 }
                
-            }
+            } */
             /* 老商城未注册会员变成以阅读数量*/
 
-            $mysql_connect = Db::connect(Config::get('database.db_config'));
+   /*          $mysql_connect = Db::connect(Config::get('database.db_config'));
             ini_set('memory_limit', '1024M');
             $member     = "SELECT * FROM pre_member  ";
             $memberdata = $mysql_connect->query($member);
@@ -205,8 +205,20 @@ class TemporaryScript extends Pzlife {
                         }
                     }
                 }
-            }
+            } */
 
+            /* 将爱心传播-友珍(15848209233)钻石购买关系挂在请叫我Mr.cai(18555858157)下面  2019/04/12 */
+            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 15848209233 AND delete_time=0 ");
+            $up_user = Db::query("SELECT * FROM pz_users WHERE mobile = 18555858157 AND delete_time=0 ");
+            if (!empty($user) && !empty($up_user)) {
+                $up_relation = Db::query("SELECT * FROM pz_user_relation WHERE uid = ".$up_user[0]['id']." AND delete_time=0 ");
+                if ($up_user[0]['user_identity'] == 4) {
+                    $have_up_relation =  $up_user[0]['id'].$user[0]['id'];
+                } else {
+                    $have_up_relation = $up_relation[0]['relation'].$user[0]['id'];
+                }
+                Db::table('pz_user_relation')->where(['uid' => $user[0]['id']])->update(['pid' => $up_user[0]['id'],'relation' => $have_up_relation]);
+            }
             Db::commit();
        } catch (\Exception $e) {
            // 回滚事务
