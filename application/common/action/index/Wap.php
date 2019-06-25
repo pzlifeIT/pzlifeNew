@@ -141,7 +141,7 @@ class Wap extends CommonIndex {
 
         $signPackage = [
             "appId" => (string) Env::get('weixin.weixin_appid'),
-            "noncestr" => (string) $nonceStr,
+            "nonceStr" => (string) $nonceStr,
             "timestamp" => (string) $timestamp,
             "url" => (string) $durl,
             "signature" => (string) $signature,
