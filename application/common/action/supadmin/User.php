@@ -75,7 +75,7 @@ class User extends CommonIndex {
             'share_title' => $shareTitle,
             'share_image' => $shareImage,
             'share_count' => $shareCount,
-            'bg_image'    => $bgImage,
+            // 'bg_image'    => $bgImage,
         ];
         Db::startTrans();
         try {
@@ -126,14 +126,14 @@ class User extends CommonIndex {
             }
             $data['share_image'] = $shareImage;
         }
-        if (!empty($bgImage)) {
-            $newBgImage = filtraImage(Config::get('qiniu.domain'), $bgImage);
-            $logBgImage = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
-            if (empty($logBgImage)) {//图片不存在
-                return ['code' => '3008'];//bg_image图片没有上传过
-            }
-            $data['bg_image'] = $bgImage;
-        }
+        // if (!empty($bgImage)) {
+        //     $newBgImage = filtraImage(Config::get('qiniu.domain'), $bgImage);
+        //     $logBgImage = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
+        //     if (empty($logBgImage)) {//图片不存在
+        //         return ['code' => '3008'];//bg_image图片没有上传过
+        //     }
+        //     $data['bg_image'] = $bgImage;
+        // }
         Db::startTrans();
         try {
             DbSup::editSupPromote($data, $id);
