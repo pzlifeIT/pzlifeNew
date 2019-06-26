@@ -103,7 +103,7 @@ class Wap extends MyController {
             return ['code' => '3010'];
         }
         $age = intval($age);
-        if ($age < 1 && $age > 100) {
+        if ($age < 1 || $age > 100) {
             return ['code' => '3010'];
         }
         if (empty($signinfo)) {
