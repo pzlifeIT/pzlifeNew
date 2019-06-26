@@ -98,10 +98,11 @@ class Wap extends MyController {
         if (!in_array($sex, [1, 2])) {
             return ['code' => '3009'];
         }
-        $age = intval($age);
+        
         if (!is_numeric($age)) {
             return ['code' => '3010'];
         }
+        $age = intval($age);
         if ($age < 1 && $age > 100) {
             return ['code' => '3010'];
         }
