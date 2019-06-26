@@ -1056,7 +1056,7 @@ class Order extends CommonIndex {
             $pay_money = 15000;
         } elseif ($user_type == 3) {
             $user_type = 1;
-            $pay_money = 120;
+            $pay_money = 108;
             $actype    = 1;
         }
 

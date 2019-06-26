@@ -78,7 +78,7 @@ class Wap extends CommonIndex {
         if (empty($promote)) {
             return ['code' => '3003']; //推广活动不存在
         }
-        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'nick_name' => $nick_name], true);
+        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'join_name' => $join_name], true);
         if (!empty($promotesignup)) {
             return ['code' => '3005'];
         }
