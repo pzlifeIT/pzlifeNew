@@ -128,12 +128,12 @@ class Recommend extends CommonIndex {
                 }
 
             } elseif ($data['model_id'] == 10) {
-                if ($data['tier'] == 3) {
-                    $has_num = DbRecommend::CountRecommends(['model_id' => $data['model_id'], 'parent_id' => $data['parent_id'], 'tier' => 3]);
-                    if ($has_num + 1 > 5) {
-                        return ['code' => '3009'];//超出限定添加数量
-                    }
-                }
+                // if ($data['tier'] == 3) {
+                //     $has_num = DbRecommend::CountRecommends(['model_id' => $data['model_id'], 'parent_id' => $data['parent_id'], 'tier' => 3]);
+                //     if ($has_num + 1 > 5) {
+                //         return ['code' => '3009'];//超出限定添加数量
+                //     }
+                // }
             }
 
         } else {
