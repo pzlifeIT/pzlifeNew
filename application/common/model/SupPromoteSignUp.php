@@ -20,9 +20,16 @@ class SupPromoteSignUp extends Model {
         'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
         'delete_time' => 'timestamp:Y-m-d H:i:s',//最后删除时间
     ];
-
+    private $sex = [1 => '男', 2 => '女',];//1.男 2.女
     // 模型初始化
     protected static function init() {
         //TODO:初始化内容
+    }
+    public function getSexAttr($value) {
+        if (!array_key_exists($value, $this->sex)) {
+            return $value;
+        }
+        // $sex = array_flip($this->sex);
+        return $this->sex[$value];
     }
 }
