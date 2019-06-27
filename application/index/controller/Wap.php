@@ -91,7 +91,7 @@ class Wap extends MyController {
         if (checkMobile($mobile) === false) {
             return ['code' => '3004']; //手机号格式错误
         }
-        if (checkMobile($study_mobile)) {
+        if (checkMobile($study_mobile) === false) {
             return ['code' => '3013']; //study_mobile手机号格式错误
         }
         // if (checkVercode($vercode) === false) {
