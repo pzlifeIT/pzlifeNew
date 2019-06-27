@@ -2518,7 +2518,28 @@ class User extends CommonIndex {
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
             if (!empty($user['mobile'])) { //该微信号已绑定
-                return ['code' => '3009'];
+                Db::startTrans();
+                try {
+                    $conId = $this->createConId();
+                    $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
+                    DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
+                    $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+                    $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+                   if ($conUid === false) {
+                       $this->redis->zDelete($this->redisConIdTime, $conId);
+                       $this->redis->hDel($this->redisConIdUid, $conId);
+                       Db::rollback();
+                    }
+                    $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
+                    $this->saveOpenid($uid, $wxInfo['openid'], 2);
+                    Db::commit();
+                    return ['code' => '200', 'con_id' => $conId];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    exception($e);
+                    return ['code' => '3007'];
+                }
+                // return ['code' => '3009'];
             }
             $uid = $user['id'];
         }
