@@ -2499,14 +2499,9 @@ class User extends CommonIndex {
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006']; //验证码错误
         }
-        $wxaccess_token = $this->getaccessToken($code);
-        if ($wxaccess_token == false) {
-            return ['code' => '3002'];
-        }
-        $wxInfo = $this->getunionid($wxaccess_token['openid'], $wxaccess_token['access_token']);
-        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
+       
         if (!empty($this->checkAccount($mobile))) {
-            $uid = $user['id'];
+            $uid = $this->checkAccount($mobile); //通过手机号获取uid
             Db::startTrans();
             try {
                 $conId = $this->createConId();
@@ -2529,7 +2524,11 @@ class User extends CommonIndex {
                 return ['code' => '3007'];
             }
         }
-        
+        $wxaccess_token = $this->getaccessToken($code);
+        if ($wxaccess_token == false) {
+            return ['code' => '3002'];
+        }
+        $wxInfo = $this->getunionid($wxaccess_token['openid'], $wxaccess_token['access_token']);
         if ($wxInfo == false) {
             return ['code' => '3002'];
         }
@@ -2538,7 +2537,9 @@ class User extends CommonIndex {
             return ['code' => '3000'];
         }
         
+        $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
+            $uid = $user['id'];
             if (!empty($user['mobile'])) { //该微信号已绑定
                 Db::startTrans();
                 try {
@@ -2563,7 +2564,7 @@ class User extends CommonIndex {
                 }
                 // return ['code' => '3009'];
             }
-            $uid = $user['id'];
+           
         }
         if ($wxInfo['sex'] == 0) {
             $wxInfo['sex'] = 3;
