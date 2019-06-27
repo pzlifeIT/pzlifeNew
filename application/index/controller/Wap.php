@@ -69,9 +69,9 @@ class Wap extends MyController {
      */
     public function SupPromoteSignUp() {
         $apiName = classBasename($this) . '/' . __function__;
-        $mobile  = trim($this->request->post('mobile'));
+        // $mobile  = trim($this->request->post('mobile'));
         // $vercode = trim($this->request->post('vercode'));
-        $nick_name  = trim($this->request->post('nick_name'));
+        // $nick_name  = trim($this->request->post('nick_name'));
         $sex        = trim($this->request->post('sex'));
         $age        = trim($this->request->post('age'));
         $signinfo   = trim($this->request->post('signinfo'));
@@ -88,18 +88,18 @@ class Wap extends MyController {
         if (!is_numeric($promote_id) || $promote_id < 1) {
             return ['code' => 3003];
         }
-        if (checkMobile($mobile) === false) {
-            return ['code' => '3004']; //手机号格式错误
-        }
+        // if (checkMobile($mobile) === false) {
+        //     return ['code' => '3004']; //手机号格式错误
+        // }
         if (checkMobile($study_mobile) === false) {
             return ['code' => '3013']; //study_mobile手机号格式错误
         }
         // if (checkVercode($vercode) === false) {
         //     return ['code' => '3007'];
         // }
-        if (empty($nick_name)) {
-            return ['code' => 3006];
-        }
+        // if (empty($nick_name)) {
+        //     return ['code' => 3006];
+        // }
         if (!in_array($sex, [1, 2])) {
             return ['code' => '3009'];
         }
@@ -117,6 +117,8 @@ class Wap extends MyController {
         if (empty($study_name)) {
             return ['code' => '3012'];
         }
+        $mobile = '';
+        $nick_name = '';
         $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $study_name, $study_mobile);
         $this->apiLog($apiName, [$conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo], $result['code'], '');
         return $result;
