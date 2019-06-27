@@ -103,7 +103,7 @@ class OfflineActivities extends MyController {
      */
     public function createOrderQrCode() {
         $data = trim($this->request->get('data'));
-        // $data = base64_decode($data);
+        $data = base64_decode($data);
 
         if (strlen($data) < 2) {
             return ['code' => '3002'];
