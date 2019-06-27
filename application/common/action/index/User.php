@@ -2500,7 +2500,27 @@ class User extends CommonIndex {
             return ['code' => '3006']; //验证码错误
         }
         if (!empty($this->checkAccount($mobile))) {
-            return ['code' => '3008'];
+            Db::startTrans();
+            try {
+                $conId = $this->createConId();
+                $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
+                DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
+                $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+                $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+               if ($conUid === false) {
+                   $this->redis->zDelete($this->redisConIdTime, $conId);
+                   $this->redis->hDel($this->redisConIdUid, $conId);
+                   Db::rollback();
+                }
+                $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
+                $this->saveOpenid($uid, $wxInfo['openid'], 2);
+                Db::commit();
+                return ['code' => '200', 'con_id' => $conId];
+            } catch (\Exception $e) {
+                Db::rollback();
+                exception($e);
+                return ['code' => '3007'];
+            }
         }
         $wxaccess_token = $this->getaccessToken($code);
         if ($wxaccess_token == false) {
