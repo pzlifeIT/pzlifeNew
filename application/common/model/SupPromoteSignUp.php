@@ -25,11 +25,11 @@ class SupPromoteSignUp extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
-    public function setSexAttr($value) {
-        if (!in_array($value, $this->sex)) {
+    public function getSexAttr($value) {
+        if (!array_key_exists($value, $this->sex)) {
             return $value;
         }
-        $sex = array_flip($this->sex);
-        return $sex[$value];
+        // $sex = array_flip($this->sex);
+        return $this->sex[$value];
     }
 }
