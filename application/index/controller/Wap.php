@@ -60,7 +60,8 @@ class Wap extends MyController {
      * @apiParam (入参) {String} age 年龄
      * @apiParam (入参) {String} signinfo 报名内容
      * @apiParam (入参) {String} nick_name 联系人姓名
-     * @apiParam (入参) {String} join_name 联系人姓名
+     * @apiParam (入参) {String} study_name 学员姓名
+     * @apiParam (入参) {String} study_mobile 学员手机号
      * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该姓名已报名参加 / 3006:请填写姓名 / 3007:验证码格式有误 / 3008:验证码错误 / 3009:性别格式不对  / 3010:年龄格式错误 / 3011:signinfo为空 / 3012:join_name为空
      * @apiSuccess (返回) {Array} data
      * @apiSampleRequest /index/wap/SupPromoteSignUp
@@ -76,7 +77,8 @@ class Wap extends MyController {
         $signinfo   = trim($this->request->post('signinfo'));
         $promote_id = trim($this->request->post('promote_id'));
         $conId      = trim($this->request->post('con_id'));
-        $join_name  = trim($this->request->post('join_name'));
+        $study_name  = trim($this->request->post('study_name'));
+        $study_mobile  = trim($this->request->post('study_mobile'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -87,6 +89,9 @@ class Wap extends MyController {
             return ['code' => 3003];
         }
         if (checkMobile($mobile) === false) {
+            return ['code' => '3004']; //手机号格式错误
+        }
+        if (checkMobile($study_mobile)) {
             return ['code' => '3004']; //手机号格式错误
         }
         // if (checkVercode($vercode) === false) {
@@ -112,7 +117,7 @@ class Wap extends MyController {
         if (empty($join_name)) {
             return ['code' => '3012'];
         }
-        $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $join_name);
+        $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $study_name, $study_mobile);
         $this->apiLog($apiName, [$conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo], $result['code'], '');
         return $result;
     }
