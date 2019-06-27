@@ -65,7 +65,7 @@ class Wap extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $join_name) {
+    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo,  $study_name, $study_mobile) {
         // $stype = 5;
         // if ($this->checkVercode($stype, $mobile, $vercode) === false) {
         //     return ['code' => '3008']; //验证码错误
@@ -78,7 +78,7 @@ class Wap extends CommonIndex {
         if (empty($promote)) {
             return ['code' => '3003']; //推广活动不存在
         }
-        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'join_name' => $join_name], true);
+        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'study_name' => $study_name, 'study_mobile' => $study_mobile,'uid' => $uid], true);
         if (!empty($promotesignup)) {
             return ['code' => '3005'];
         }
@@ -90,7 +90,8 @@ class Wap extends CommonIndex {
             'sex'        => $sex,
             'age'        => $age,
             'signinfo'   => $signinfo,
-            'join_name'   => $join_name,
+            'study_name'   => $study_name,
+            'study_mobile'   => $study_mobile,
         ];
         DbSup::saveSupPromoteSignUp($data);
         // $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码

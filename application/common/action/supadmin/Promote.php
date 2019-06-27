@@ -22,7 +22,7 @@ class Promote extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getSupPromoteSignUp($promote_id, $page, $pageNum, $nick_name = '', $mobile = '', $start_time = '', $end_time = '') {
+    public function getSupPromoteSignUp($promote_id, $page, $pageNum, $study_name = '', $study_mobile = '', $start_time = '', $end_time = '', $sex = '') {
         $where = [];
         array_push($where, [['id', '=', $promote_id]]);
 
@@ -36,11 +36,11 @@ class Promote extends CommonIndex {
         }
         $where = [];
         array_push($where, [['promote_id', '=', $promote_id]]);
-        if (!empty($nick_name)) {
-            array_push($where, [['nick_name', 'LIKE', '%' . $nick_name . '%']]);
+        if (!empty($study_name)) {
+            array_push($where, [['study_name', 'LIKE', '%' . $study_name . '%']]);
         }
-        if (!empty($mobile)) {
-            array_push($where, [['mobile', 'LIKE', '%' . $mobile . '%']]);
+        if (!empty($study_mobile)) {
+            array_push($where, [['study_mobile', 'LIKE', '%' . $study_mobile . '%']]);
         }
         if (!empty($start_time)) {
             array_push($where, [['create_time', '>=', $start_time]]);
@@ -48,7 +48,10 @@ class Promote extends CommonIndex {
         if (!empty($end_time)) {
             array_push($where, [['create_time', '<=', $end_time]]);
         }
-        $result = DbSup::getSupPromoteSignUp($where, 'id,nick_name,mobile,create_time', false, ['create_time' => 'ASC'], $offset . ',' . $pageNum);
+        if (!empty($sex)) {
+            array_push($where, [['sex', '=', $sex]]);
+        }
+        $result = DbSup::getSupPromoteSignUp($where, 'id,study_name,study_mobile,sex,age,signinfo,create_time', false, ['create_time' => 'ASC'], $offset . ',' . $pageNum);
         $total  = DbSup::getSupPromoteSignUpCount($where);
         return ['code' => '200','total' => $total, 'suppromotesignup' => $result];
     }
