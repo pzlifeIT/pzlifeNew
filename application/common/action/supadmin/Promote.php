@@ -48,7 +48,7 @@ class Promote extends CommonIndex {
         if (!empty($end_time)) {
             array_push($where, [['create_time', '<=', $end_time]]);
         }
-        $result = DbSup::getSupPromoteSignUp($where, 'id,nick_name,mobile,create_time', false, ['create_time' => 'ASC'], $offset . ',' . $pageNum);
+        $result = DbSup::getSupPromoteSignUp($where, 'id,nick_name,mobile,study_name,study_mobile,sex,age,signinfo,create_time', false, ['create_time' => 'ASC'], $offset . ',' . $pageNum);
         $total  = DbSup::getSupPromoteSignUpCount($where);
         return ['code' => '200','total' => $total, 'suppromotesignup' => $result];
     }

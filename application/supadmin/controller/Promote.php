@@ -27,8 +27,13 @@ class Promote extends SupAdminController {
      * @apiSuccess (返回) {String} code 200:成功 / 3000:列表为空 / 3001:page错误 / 3002:promote_id错误 / 3003:时间格式错误
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (data) {Int} id
-     * @apiSuccess (data) {String} nick_name 姓名
-     * @apiSuccess (data) {String} mobile 手机号
+     * @apiSuccess (data) {String} nick_name 联系人姓名
+     * @apiSuccess (data) {String} mobile 联系人手机号
+     * @apiSuccess (data) {String} study_name 学员姓名
+     * @apiSuccess (data) {String} study_mobile 学员手机号
+     * @apiSuccess (data) {String} sex 性别 1男 2女
+     * @apiSuccess (data) {String} age 年龄
+     * @apiSuccess (data) {String} signinfo 报名内容
      * @apiSuccess (data) {String} create_time 报名时间
      * @apiSampleRequest /supadmin/promote/getSupPromoteSignUp
      * @return array
