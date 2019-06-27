@@ -2499,15 +2499,36 @@ class User extends CommonIndex {
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006']; //验证码错误
         }
+       
         if (!empty($this->checkAccount($mobile))) {
-            return ['code' => '3008'];
+            $uid = $this->checkAccount($mobile); //通过手机号获取uid
+            Db::startTrans();
+            try {
+                $conId = $this->createConId();
+                $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
+                DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
+                $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+                $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+               if ($conUid === false) {
+                   $this->redis->zDelete($this->redisConIdTime, $conId);
+                   $this->redis->hDel($this->redisConIdUid, $conId);
+                   Db::rollback();
+                }
+                $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
+                // $this->saveOpenid($uid, $wxInfo['openid'], 2);
+                Db::commit();
+                return ['code' => '200', 'con_id' => $conId];
+            } catch (\Exception $e) {
+                Db::rollback();
+                exception($e);
+                return ['code' => '3007'];
+            }
         }
         $wxaccess_token = $this->getaccessToken($code);
         if ($wxaccess_token == false) {
             return ['code' => '3002'];
         }
         $wxInfo = $this->getunionid($wxaccess_token['openid'], $wxaccess_token['access_token']);
-
         if ($wxInfo == false) {
             return ['code' => '3002'];
         }
@@ -2515,12 +2536,35 @@ class User extends CommonIndex {
         if (empty($wxInfo['unionid'])) {
             return ['code' => '3000'];
         }
+        
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
-            if (!empty($user['mobile'])) { //该微信号已绑定
-                return ['code' => '3009'];
-            }
             $uid = $user['id'];
+            if (!empty($user['mobile'])) { //该微信号已绑定
+                Db::startTrans();
+                try {
+                    $conId = $this->createConId();
+                    $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
+                    DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
+                    $this->redis->zAdd($this->redisConIdTime, time(), $conId);
+                    $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
+                   if ($conUid === false) {
+                       $this->redis->zDelete($this->redisConIdTime, $conId);
+                       $this->redis->hDel($this->redisConIdUid, $conId);
+                       Db::rollback();
+                    }
+                    $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
+                    // $this->saveOpenid($uid, $wxInfo['openid'], 2);
+                    Db::commit();
+                    return ['code' => '200', 'con_id' => $conId];
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    exception($e);
+                    return ['code' => '3007'];
+                }
+                // return ['code' => '3009'];
+            }
+           
         }
         if ($wxInfo['sex'] == 0) {
             $wxInfo['sex'] = 3;
