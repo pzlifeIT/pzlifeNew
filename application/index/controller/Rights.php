@@ -25,8 +25,8 @@ class Rights extends MyController {
      * @author rzc
      */
     public function receiveDiamondvip() {
-        $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $apiName   = classBasename($this) . '/' . __function__;
+        $conId     = trim($this->request->post('con_id'));
         $parent_id = $this->request->post('parent_id');
         $parent_id = deUid($parent_id);
         if (empty($conId)) {
@@ -249,6 +249,34 @@ class Rights extends MyController {
         }
         $result = $this->app->rights->shopApplyBoss($conId, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id);
         $this->apiLog($apiName, [$conId, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_type, $parent_id], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户升级
+     * @apiDescription   userUpgrade
+     * @apiGroup         index_rights
+     * @apiName          userUpgrade
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {Number} refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
+     * @apiParam (入参) {String} parent_id 邀请人id 空视为自己升级，传值视为邀请升级
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:邀请类型错误
+     * @apiSuccess (data) {String} uid 用户id
+     * @apiSampleRequest /index/rights/userUpgrade
+     * @return array
+     * @author rzc
+     */
+    public function userUpgrade() {
+        $refe_type  = trim($this->request->post('refe_type'));
+        $parent_id  = trim($this->request->post('parent_id'));
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $refe_types = [1, 2, 3];
+        if (!in_array($refe_type, $refe_types)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->rights->userUpgrade($conId, $refe_type, $parent_id);
+        $this->apiLog($apiName, [$conId, $refe_type, $parent_id], $result['code'], $conId);
         return $result;
     }
 }
