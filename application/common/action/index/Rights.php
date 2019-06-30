@@ -247,5 +247,117 @@ class Rights extends CommonIndex {
             return ['code' => '3005']; //领取失败
         }
     }
+
+    /**
+     * 用户升级任务
+     * @param $con_id
+     * @return array
+     * @author rzc
+     */
+     public function userUpgrade($conId, $refe_type, $parent_id){
+        $uid       = $this->getUidByConId($con_id);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        //refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name,user_market', true);
+        if ($refe_type == 1) {
+            if ($userInfo['user_identity'] != 2) {
+                return ['code' => '3002'];
+            }
+        }else if ($refe_type == 2) {
+            if ($userInfo['user_identity'] != 3 || $userInfo['user_market'] > 0) {
+                return ['code' => '3003'];
+            }
+        }else if ($refe_type == 3) {
+            if ($userInfo['user_identity'] != 4) {
+                return ['code' => '3004'];
+            }
+        }
+        $parent_id = deUid($parent_id);
+        if (!$parent_id) {
+            $parent_id = 1;
+        }
+        $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market', true);
+        if (empty($parent_info)) {
+            $parent_id = 1;
+        }
+        
+        if ($refe_type == 1) {
+            if ($parent_info ) {
+                $parent_user_task = DbRights::getUserTask(['uid' => $parent_id,'type' => 1,'status' => 1],'*',true);
+                if ( $parent_info['user_market'] == 1) {
+                    if (!empty($parent_user_task)) {
+    
+                    }
+                }elseif ($parent_info['user_market'] > 1) {
+
+                }
+                
+            }
+            
+            Db::startTrans();
+            try {
+                DbUser::updateUser(['user_identity' => 3], $uid);
+                if () 
+                $this->resetUserInfo($uid);
+                Db::commit();
+                return ['code' => '200']; //领取成功
+            } catch (\Exception $e) {
+                Db::rollback();
+            return ['code' => '3005']; //领取失败
+            }
+        }
+        elseif ($refe_type == 2) {
+            if ($userInfo['user_market']> 0) {
+                return ['code' => '3006'];
+            }
+            
+            $user_task =  DbRights::getUserTask(['uid' => $uid,'type' => 1,'status' => 3],'*',true,['id' => 'desc']);
+            $has = 0;
+            if ($user_task) {
+                if (strtotime($user_task['end_time']) + 432000< time()){
+                    $can_time = strtotime($user_task['end_time']) + 432000;
+                    return ['code' => '3007', 'can_time' = date('Y-m-d H:i:s',$can_time)];
+                }
+                $has = DbRights::getUserTaskCount(['uid' => $uid,'type' => 1]);
+            } 
+            $has_num = $has +1;
+            
+            $add_user_task = [];
+            $add_user_task['uid'] = $uid;
+            $add_user_task['title'] = '第'.$has_num.'次升级任务';
+            $add_user_task['type'] = 1;
+            $add_user_task['target'] = 5;
+            $add_user_task['status'] = 1;
+            $add_user_task['timekey'] = date('Ym',time());
+            $add_user_task['start_time'] =time();
+            $add_user_task['end_time'] = time() + 2592000;
+            Db::startTrans();
+            try {
+                DbUser::updateUser(['user_market' => 1], $uid);
+                DbRights::addUserTask($add_user_task);
+                $this->resetUserInfo($uid);
+                Db::commit();
+                return ['code' => '200']; //领取成功
+            } catch (\Exception $e) {
+                Db::rollback();
+            return ['code' => '3005']; //领取失败
+            }
+        }
+        elseif ($refe_type == 3) {
+            Db::startTrans();
+            try {
+                DbUser::updateUser(['user_market' => 3], $uid);
+                DbRights::addUserTask($add_user_task);
+                $this->resetUserInfo($uid);
+                Db::commit();
+                return ['code' => '200']; //领取成功
+            } catch (\Exception $e) {
+                Db::rollback();
+            return ['code' => '3005']; //领取失败
+            }
+        }
+     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

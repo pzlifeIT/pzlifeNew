@@ -260,7 +260,7 @@ class Rights extends MyController {
      * @apiParam (入参) {String} con_id 用户con_id
      * @apiParam (入参) {Number} refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
      * @apiParam (入参) {String} parent_id 邀请人id 空视为自己升级，传值视为邀请升级
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:邀请类型错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:邀请类型错误 / 3002:只有钻石才能升级为创业店主 /3003:只有创业店主2才能升级为兼职市场经理 / 3004:只有合伙人才能升级为兼职市场总监 / 3005:升级失败 / 3006:已经是兼职市场经理，无法再次升级 / 3007:正在冷却期内无法升级
      * @apiSuccess (data) {String} uid 用户id
      * @apiSampleRequest /index/rights/userUpgrade
      * @return array
