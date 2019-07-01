@@ -8,6 +8,8 @@ use app\common\model\Diamondvips;
 use app\common\model\ShopApply;
 use app\common\model\User;
 use app\common\model\StatisticsMonth;
+use app\common\model\UserTask;
+use app\common\model\TaskInvited;
 
 class DbRights {
     /**
@@ -263,4 +265,104 @@ class DbRights {
         return StatisticsMonth::save($data, ['id' => $id]);
     }
 
+    /**
+     * 增加任务 
+     * @param $data
+     * @return array
+     */
+     public function addUserTask($data){
+         $UserTask = new UserTask;
+         $UserTask->save($data);
+         return $UserTask->id;
+     }
+
+     /**
+     * 查询升级任务
+     * @param $field
+     * @param $where
+     * @param $row
+     * @param $orderBy
+     * @param $sc
+     * @param $limit
+     * @return array
+     */
+    public function getUserTask($where, $field, $row = false, $orderBy = [],  $limit = '') {
+        $obj = UserTask::field($field)->where($where);
+        // if (!empty($orderBy) && !empty($sc)) {
+        //     $obj = $obj->order($orderBy, $sc);
+        // }
+        // if (!empty($limit)) {
+        //     $obj = $obj->limit($limit);
+        // }
+        // if ($row === true) {
+        //     $obj = $obj->findOrEmpty();
+        // } else {
+        //     $obj = $obj->select();
+        // }
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    /**
+     * 升级任务计数
+     * @param $where
+     * @return array
+     */
+     public function getUserTaskCount($where) {
+        return UserTask::where($where)->count();
+    }
+
+    /**
+     * 修改任务
+     * @param $data
+     * @param $id
+     * @return array
+     */
+     public function editUserTask($data, $id){
+        return UserTask::save($data, ['id' => $id]);
+    }
+
+    /**
+     * 添加任务关联记录
+     * @param $data
+     * @return array
+     */
+     public function addTaskInvited($data){
+        $TaskInvited = new TaskInvited;
+        $TaskInvited->save($data);
+        return $TaskInvited->id;
+    }
+
+    /**
+     * 查询关联任务记录
+     * @param $field
+     * @param $where
+     * @param $row
+     * @param $orderBy
+     * @param $sc
+     * @param $limit
+     * @return array
+     */
+     public function getTaskInvited($where, $field, $row = false, $orderBy = [], $limit = '') {
+        $obj = TaskInvited::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+     /**
+     * 修改任务关联记录
+     * @param $data
+     * @param $id
+     * @return array
+     */
+     public function editTaskInvited($data, $id){
+        return TaskInvited::save($data, ['id' => $id]);
+    }
+
+    /**
+     * 任务关联记录计数
+     * @param $where
+     * @return array
+     */
+    public function getTaskInvitedCount($where) {
+        return UserTask::where($where)->count();
+    }
 }

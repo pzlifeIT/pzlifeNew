@@ -9,6 +9,9 @@ use Config;
 use think\Db;
 
 class Rights extends CommonIndex {
+    public function __construct() {
+        parent::__construct();
+    }
 
     /**
      * 领取钻石会员
@@ -241,11 +244,390 @@ class Rights extends CommonIndex {
             Db::commit();
             return ['code' => '200']; //领取成功
         } catch (\Exception $e) {
-            $this->redis->del($redisKey.$uid);
+            $this->redis->del($redisKey . $uid);
             exception($e);
             Db::rollback();
             return ['code' => '3005']; //领取失败
         }
+    }
+
+    /**
+     * 用户升级任务
+     * @param $con_id
+     * @return array
+     * @author rzc
+     */
+    public function userUpgrade($conId, $refe_type, $parent_id) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        //refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name,user_market', true);
+        if ($refe_type == 1) {
+            if ($userInfo['user_identity'] != 2) {
+                return ['code' => '3002'];
+            }
+        } else if ($refe_type == 2) {
+            if ($userInfo['user_identity'] != 3 || $userInfo['user_market'] > 0) {
+                return ['code' => '3003'];
+            }
+        } else if ($refe_type == 3) {
+            if ($userInfo['user_identity'] != 4) {
+                return ['code' => '3004'];
+            }
+        }
+        $parent_id = deUid($parent_id);
+        if (!$parent_id) {
+            $parent_id = 1;
+        }
+        $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market,commission', true);
+        if (empty($parent_info)) {
+            $parent_id = 1;
+        }
+        //refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
+        if ($refe_type == 1) {
+
+            Db::startTrans();
+            try {
+
+                if ($parent_info) {
+                    //邀请用户为临时兼职市场经理
+                    if ($parent_info['user_market'] == 1) {
+                        //创业店主升级兼职市场经理任务
+                        $parent_user_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 1, 'status' => 1], '*', true);
+                        if (!empty($parent_user_task)) {
+                            //原任务进度
+                            $up_parent_task = [];
+                            $up_parent_task = [
+                                'has_target'  => $parent_user_task['has_target'] + 1,
+                                'bonus'       => $parent_user_task['bonus'] + 8,
+                                'update_time' => time(),
+                            ];
+                            if ($up_parent_task['target'] <= $up_parent_task['has_target']) {
+                                $up_parent_task['bonus_status'] = 2;
+                                $up_parent_task['status']       = 2;
+                                $tradingData                    = [];
+                                $tradingData                    = [
+                                    'uid'          => $parent_id,
+                                    'trading_type' => 2,
+                                    'change_type'  => 13,
+                                    'money'        => $up_parent_task['bonus'],
+                                    'befor_money'  => $parent_info['commission'],
+                                    'after_money'  => bcadd($parent_info['commission'], $up_parent_task['bonus'], 2),
+                                    'message'      => '推广创业店主奖励',
+                                ];
+                                DbRights::editUserTask($up_parent_task, $parent_user_task['id']);
+                                DbUser::updateUser(['user_market' => 2], $parent_id);
+                                DbUser::saveLogTrading($tradingData);
+                                DbUser::modifyCommission($parent_id, $up_parent_task['bonus'], 'inc');
+                                //创建兼职市场经理升级合伙人任务
+                                $upgrade_task = [];
+                                $upgrade_task = [
+                                    'uid'          => $parent_id,
+                                    'title'        => '兼职市场经理升级合伙人任务',
+                                    'type'         => 3,
+                                    'target'       => 1000,
+                                    'status'       => 1,
+                                    'bonus_status' => 2,
+                                    'timekey'      => date('Ym', time()),
+                                    'start_time'   => time(),
+                                    'end_time'     => strtotime("+1 year"),
+                                ];
+                                DbRights::addUserTask($upgrade_task);
+                            }
+                            $task_invited = [];
+                            $task_invited = [
+                                'utask_id'      => $parent_user_task['id'],
+                                'uid'           => $uid,
+                                'user_identity' => 3,
+                                'timekey'       => date('Ym', time()),
+                                'bonus'         => 8,
+                            ];
+                            DbRights::addTaskInvited($task_invited);
+                        }
+                    } elseif ($parent_info['user_market'] > 1) {
+                        //查询进行中的邀请创业店主奖励任务
+                        $parent_user_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 2, 'status' => 1], '*', true);
+                        if (empty($parent_user_task)) {
+                            $add_user_task = [];
+                            $add_user_task = [
+                                'uid'        => $parent_id,
+                                'title'      => '邀请创业店主奖励任务',
+                                'type'       => 2,
+                                'has_target' => 1,
+                                'status'     => 1,
+                                'bonus'      => 8,
+                                'timekey'    => date('Ym', time()),
+                            ];
+                            $id = DbRights::addUserTask($add_user_task);
+
+                        } else {
+                            $id             = $parent_user_task['id'];
+                            $up_parent_task = [];
+                            $up_parent_task = [
+                                `has_target`=> $parent_user_task['has_target'] + 1,
+                                `bonus`     => $parent_user_task['bonus'] + 8,
+                            ];
+                            DbRights::editUserTask($up_parent_task, $id);
+                        }
+                        //添加邀请创业任务详情记录
+                        $task_invited = [];
+                        $task_invited = [
+                            'utask_id'      => $id,
+                            'uid'           => $uid,
+                            'user_identity' => 3,
+                            'timekey'       => date('Ym', time()),
+                            'bonus'         => 8,
+                        ];
+                        DbRights::addTaskInvited($task_invited);
+                        $tradingData = [];
+                        $tradingData = [
+                            'uid'          => $parent_id,
+                            'trading_type' => 2,
+                            'change_type'  => 13,
+                            'money'        => 8,
+                            'befor_money'  => $parent_info['commission'],
+                            'after_money'  => bcadd($parent_info['commission'], 8, 2),
+                            'message'      => '推广创业店主奖励',
+                        ];
+                        DbUser::saveLogTrading($tradingData);
+                        DbUser::modifyCommission($parent_id, $add_user_task['bonus'], 'inc');
+
+                        //判断是否需要写入兼职市场经理升级合伙人任务记录中
+                        $upgrade_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 3, 'status' => 1], '*', true);
+                        if (!empty($upgrade_task)) {
+                            $task_invited = [];
+                            $task_invited = [
+                                'utask_id'      => $upgrade_task['id'],
+                                'uid'           => $uid,
+                                'user_identity' => 3,
+                                'timekey'       => date('Ym', time()),
+                                'bonus'         => 0,
+                            ];
+                            DbRights::addTaskInvited($task_invited);
+                            $new_upgrade_task = [];
+                            $new_upgrade_task = [
+                                'has_target' => $upgrade_task['has_target'] + 1,
+                            ];
+                            //判断是否达到任务完成条件
+                            if ($upgrade_task['has_target'] <= $new_upgrade_task['has_target']) {
+                                $new_upgrade_task['status'] = 2;
+                                //完成条件升级成为BOSS
+                                $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
+                                //该BOSS已选择其他开店方式
+                                if ($this->redis->setNx($redisKey . $parent_id, 1) === false) {
+
+                                } else {
+                                    //升级成为BOSS
+                                    $bossId = $this->getBoss($parent_id);
+                                    if ($bossId == 1) {
+                                        $re = $parent_id;
+                                    } else {
+                                        $re = $bossId . ',' . $parent_id;
+                                    }
+                                    $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $parent_id . ',%']], 'id,relation');
+                                    $userRelationData = [];
+                                    if (!empty($userRelationList)) {
+                                        foreach ($userRelationList as $url) {
+                                            $url['relation'] = substr($url['relation'], stripos($url['relation'], ',' . $parent_id . ',') + 1);
+                                            array_push($userRelationData, $url);
+                                        }
+                                    }
+                                    $shopData = [
+                                        'uid'         => $parent_id,
+                                        'shop_right'  => 'all',
+                                        'status'      => 1,
+                                        'create_time' => time(),
+                                    ];
+                                    $pid        = $bossId == 1 ? 0 : $bossId;
+                                    $relationId = $this->getRelation($parent_id)['id'];
+                                    if (!empty($userRelationData)) {
+                                        DbUser::updateUserRelation($userRelationData);
+                                    }
+                                    DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
+                                    DbShops::addShop($shopData); //添加店铺
+                                    DbUser::updateUser(['user_identity' => 4], $parent_id);
+                                }
+                            }
+                            DbRights::editUserTask($new_upgrade_task, $upgrade_task['id']);
+                        }
+
+                        //判断是否需要给与额外奖励1200或者每一人12元
+                        $thismonth_num = DbRights::getTaskInvitedCount(['utask_id' => $id, 'timekey' => date('Ym', time())]);
+                        if ($thismonth_num >= 100) {
+                            $month_task_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 4, 'timekey' => date('Ym', time())], 'id', true);
+                            if (empty($month_task_bonus)) {
+                                $add_month_task = [];
+                                $add_month_task = [
+                                    'uid'        => $parent_id,
+                                    'title'      => '推广创业店主额外奖励1200',
+                                    'type'       => 4,
+                                    'has_target' => 100,
+                                    'target'     => 100,
+                                    'status'     => 2,
+                                    'bonus'      => 1200,
+                                    'timekey'    => date('Ym', time()),
+                                ];
+                                DbRights::addUserTask($add_month_task);
+                                $tradingData = [];
+                                $tradingData = [
+                                    'uid'          => $parent_id,
+                                    'trading_type' => 2,
+                                    'change_type'  => 13,
+                                    'money'        => $add_month_task['bonus'],
+                                    'befor_money'  => $parent_info['commission'],
+                                    'after_money'  => bcadd($parent_info['commission'], $add_month_task['bonus'], 2),
+                                    'message'      => '推广创业店主额外奖励1200',
+                                ];
+                                DbUser::saveLogTrading($tradingData);
+                                DbUser::modifyCommission($parent_id, $add_month_task['bonus'], 'inc');
+                            }
+
+                            $the_month_extra_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 5, 'timekey' => date('Ym', time())], 'id,has_target', true);
+                            if (empty($the_month_extra_bonus)) {
+                                $add_month_extra_bonus = [
+                                    'uid'          => $parent_id,
+                                    'title'        => '推广创业店主额外奖励',
+                                    'type'         => 5,
+                                    'has_target'   => 1,
+                                    'status'       => 1,
+                                    'bonus'        => 12,
+                                    'bonus_status' => 2,
+                                    'timekey'      => date('Ym', time()),
+                                ];
+                                $extra_id = DbRights::addUserTask($add_month_extra_bonus);
+                            }else{
+                                $extra_id = $the_month_extra_bonus['id'];
+                                $new_upgrade_task = [];
+                                $new_upgrade_task = [
+                                    'has_target' => $the_month_extra_bonus['has_target'] + 1,
+                                ];
+                                DbRights::editUserTask($new_upgrade_task, $extra_id);
+                            }
+                            $task_invited = [];
+                            $task_invited = [
+                                'utask_id'      => $extra_id,
+                                'uid'           => $uid,
+                                'user_identity' => 3,
+                                'timekey'       => date('Ym', time()),
+                                'bonus'         => 12,
+                            ];
+                            DbRights::addTaskInvited($task_invited);
+                            
+                            $tradingData = [];
+                            $tradingData = [
+                                'uid'          => $parent_id,
+                                'trading_type' => 2,
+                                'change_type'  => 13,
+                                'money'        => 12,
+                                'befor_money'  => $parent_info['commission'],
+                                'after_money'  => bcadd($parent_info['commission'], 12, 2),
+                                'message'      => '推广创业店主额外奖励12/人',
+                            ];
+                            DbUser::saveLogTrading($tradingData);
+                            DbUser::modifyCommission($parent_id, 12, 'inc');
+
+
+                        }
+
+                    }
+
+                }
+                DbUser::updateUser(['user_identity' => 3], $uid);
+                $this->resetUserInfo($uid);
+                $this->resetUserInfo($parent_id);
+                Db::commit();
+                return ['code' => '200']; //领取成功
+            } catch (\Exception $e) {
+                exception($e);
+                Db::rollback();
+                return ['code' => '3005']; //领取失败
+            }
+        } elseif ($refe_type == 2) {
+            if ($userInfo['user_market'] > 0) {
+                return ['code' => '3006'];
+            }
+
+            $user_task = DbRights::getUserTask(['uid' => $uid, 'type' => 1, 'status' => 3], '*', true, ['id' => 'desc']);
+            $has       = 0;
+            if ($user_task) {
+                if (strtotime($user_task['end_time']) + 432000 < time()) {
+                    $can_time = strtotime($user_task['end_time']) + 432000;
+                    return ['code' => '3007', 'can_time' => date('Y-m-d H:i:s', $can_time)];
+                }
+                $has = DbRights::getUserTaskCount(['uid' => $uid, 'type' => 1]);
+            }
+            $has_num = $has + 1;
+
+            $add_user_task               = [];
+            $add_user_task['uid']        = $uid;
+            $add_user_task['title']      = '第' . $has_num . '次升级任务';
+            $add_user_task['type']       = 1;
+            $add_user_task['target']     = 5;
+            $add_user_task['status']     = 1;
+            $add_user_task['timekey']    = date('Ym', time());
+            $add_user_task['start_time'] = time();
+            $add_user_task['end_time']   = time() + 2592000;
+            Db::startTrans();
+            try {
+                DbUser::updateUser(['user_market' => 1], $uid);
+                DbRights::addUserTask($add_user_task);
+                $this->resetUserInfo($uid);
+                Db::commit();
+                return ['code' => '200']; //升级成功
+            } catch (\Exception $e) {
+                Db::rollback();
+                return ['code' => '3005']; //升级失败
+            }
+        } elseif ($refe_type == 3) {
+            Db::startTrans();
+            try {
+                DbUser::updateUser(['user_market' => 3], $uid);
+                DbRights::addUserTask($add_user_task);
+                $this->resetUserInfo($uid);
+                Db::commit();
+                return ['code' => '200']; //升级成功
+            } catch (\Exception $e) {
+                Db::rollback();
+                return ['code' => '3005']; //升级失败
+            }
+        }
+    }
+
+    private function getBoss($uid) {
+        if ($uid == 1) {
+            return 1;
+        }
+        $relation = $this->getRelation($uid);
+        $bossUid  = explode(',', $relation['relation'])[0];
+        if ($uid == $bossUid) {
+            return 1;
+        }
+        $pBossUidCheck = $this->getIdentity($bossUid);
+        if ($pBossUidCheck != 4) { //relation第一个关系人不是boss说明是总店下的用户
+            return 1;
+        }
+        return $bossUid;
+    }
+
+    private function getRelation($uid) {
+        $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,pid,is_boss,relation', true);
+        return $userRelation;
+    }
+
+    /**
+     * 获取用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @param $uid
+     * @return mixed
+     * @author zyr
+     */
+    private function getIdentity($uid) {
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if (empty($user)) {
+            return false;
+        }
+        return $user['user_identity'];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
