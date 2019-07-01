@@ -356,4 +356,13 @@ class DbRights {
      public function editTaskInvited($data, $id){
         return TaskInvited::save($data, ['id' => $id]);
     }
+
+    /**
+     * 任务关联记录计数
+     * @param $where
+     * @return array
+     */
+    public function getTaskInvitedCount($where) {
+        return UserTask::where($where)->count();
+    }
 }
