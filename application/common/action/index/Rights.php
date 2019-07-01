@@ -497,8 +497,8 @@ class Rights extends CommonIndex {
                                     'timekey'      => date('Ym', time()),
                                 ];
                                 $extra_id = DbRights::addUserTask($add_month_extra_bonus);
-                            }else{
-                                $extra_id = $the_month_extra_bonus['id'];
+                            } else {
+                                $extra_id         = $the_month_extra_bonus['id'];
                                 $new_upgrade_task = [];
                                 $new_upgrade_task = [
                                     'has_target' => $the_month_extra_bonus['has_target'] + 1,
@@ -514,7 +514,7 @@ class Rights extends CommonIndex {
                                 'bonus'         => 12,
                             ];
                             DbRights::addTaskInvited($task_invited);
-                            
+
                             $tradingData = [];
                             $tradingData = [
                                 'uid'          => $parent_id,
@@ -527,7 +527,6 @@ class Rights extends CommonIndex {
                             ];
                             DbUser::saveLogTrading($tradingData);
                             DbUser::modifyCommission($parent_id, 12, 'inc');
-
 
                         }
 
@@ -581,6 +580,22 @@ class Rights extends CommonIndex {
                 return ['code' => '3005']; //升级失败
             }
         } elseif ($refe_type == 3) {
+            if ($userInfo['user_market'] > 2) {
+                return ['code' => '3008'];
+            }
+            $add_user_task = [];
+            $add_user_task = [
+                'uid'          => $uid,
+                'title'        => '升级兼职市场总监2任务',
+                'type'         => 6,
+                'target'       => 10,
+                'status'       => 1,
+                'bonus_status' => 2,
+                'timekey'      => date('Ym', time()),
+                'start_time'   => time(),
+                'end_time'     => time() + 2592000,
+
+            ];
             Db::startTrans();
             try {
                 DbUser::updateUser(['user_market' => 3], $uid);
