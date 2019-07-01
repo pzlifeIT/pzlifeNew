@@ -935,7 +935,7 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {String} page 跳转页面
      * @apiParam (入参) {String} scene 跳转页面
-     * @apiParam (入参) {Number} stype 二维码类型 1.个人中心 2.店铺
+     * @apiParam (入参) {Number} stype 二维码类型 1.个人中心 2.店铺 3.创业店主推广码
      * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:scene不能为空 / 3004:获取access_token失败 / 3005:未获取到access_token / 3006:生成二维码识别 / 3007:scene最大长度32 / 3008:page不能为空 / 3009:图片上传失败
      * @apiSuccess (data) {String} address 用户添加的收货地址
      * @apiSampleRequest /index/user/getUserQrcode
@@ -964,7 +964,7 @@ class User extends MyController {
         if (strlen($scene) > 32) {
             return ['code' => '3007'];
         }
-        if (!in_array($stype, [1, 2])) {
+        if (!in_array($stype, [1, 2, 3])) {
             return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
         }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
