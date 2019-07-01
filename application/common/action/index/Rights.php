@@ -335,6 +335,29 @@ class Rights extends CommonIndex {
                                     'end_time'     => strtotime("+1 year"),
                                 ];
                                 DbRights::addUserTask($upgrade_task);
+                                $parent_userRelation = $this->getRelation($parent_id)['relation'];
+                                $parent_userRelation = explode(',',$parent_userRelation);
+                                if ($parent_userRelation[0] != $parent_id ) {
+                                    $rela_user = DbUser::getUserInfo(['id' => $parent_userRelation[0]], 'user_identity,nick_name,user_market', true);
+                                    if (!empty($rela_user)){
+                                        $rel_task = DbRights::getUserTask(['uid' => $parent_userRelation[0], 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
+                                        if (!empty($rel_task)) {
+                                            $new_rel_task = [];
+                                            $new_rel_task = [
+                                                'has_target' => $rel_task['has_target']+1,
+                                            ];
+                                            DbRights::editUserTask($new_rel_task, $rel_task['id']);
+                                            $res_task_invited = [];
+                                            $res_task_invited = [
+                                                'utask_id'      => $rel_task['id'],
+                                                'uid'           => $parent_id,
+                                                'user_identity' => 5,
+                                                'timekey'       => date('Ym', time()),
+                                            ];
+                                            DbRights::addTaskInvited($res_task_invited);
+                                        }
+                                    }
+                                }
                             }
                             $task_invited = [];
                             $task_invited = [
