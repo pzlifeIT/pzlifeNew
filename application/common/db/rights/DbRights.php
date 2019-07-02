@@ -352,7 +352,11 @@ class DbRights {
      * @return array
      */
      public function getTaskInvited($where, $field, $row = false, $orderBy = [], $limit = '') {
-        $obj = TaskInvited::field($field)->where($where);
+        $obj = TaskInvited::field($field)->with([
+             'user'       => function ($query) {
+                $query->field('id,nick_name,avatar');
+            }
+        ])->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
 
