@@ -279,4 +279,45 @@ class Rights extends MyController {
         $this->apiLog($apiName, [$conId, $refe_type, $parent_id], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 用户任务列表
+     * @apiDescription   userTask
+     * @apiGroup         index_rights
+     * @apiName          userTask
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 / 
+     * @apiSuccess (返回) {String} had_bonus 已结算奖金
+     * @apiSuccess (返回) {String} no_bonus 未结算奖金
+     * @apiSuccess (返回) {Array} usertask 任务记录
+     * @apiSuccess (usertask) {String} id 任务id
+     * @apiSuccess (usertask) {String} title 任务名称
+     * @apiSuccess (usertask) {String} type 任务类型
+     * @apiSuccess (usertask) {String} target 任务总目标
+     * @apiSuccess (usertask) {String} has_target 任务已完成目标
+     * @apiSuccess (usertask) {String} status 任务状态
+     * @apiSuccess (usertask) {String} bonus_status 任务奖金状态
+     * @apiSuccess (usertask) {String} start_time 任务开始时间
+     * @apiSuccess (usertask) {String} end_time 任务结束时间
+     * @apiSampleRequest /index/rights/userTask
+     * @return array
+     * @author rzc
+     */
+    public function userTask() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result  = $this->app->rights->userTask($conId, $page, $pageNum);
+        return $result;
+    }
 }

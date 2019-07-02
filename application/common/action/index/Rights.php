@@ -183,7 +183,7 @@ class Rights extends CommonIndex {
     }
 
     /**
-     * 获取用户钻石会员领取机会记录
+     * 用户推广合伙人
      * @param $con_id
      * @return array
      * @author rzc
@@ -260,7 +260,7 @@ class Rights extends CommonIndex {
     public function userUpgrade($conId, $refe_type, $parent_id) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
-            return ['code' => '3003'];
+            return ['code' => '3000'];
         }
         //refe_type 被邀请成为店主类型1.创业店主2.兼职市场经理 3 兼职市场总监
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name,user_market', true);
@@ -666,6 +666,22 @@ class Rights extends CommonIndex {
             return false;
         }
         return $user['user_identity'];
+    }
+
+    public function userTask($conId, int $page, int $pageNum){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $usertask = DbRights::getUserTask(['uid' => $uid],'id,title,type,target,has_target,status,bonus,bonus_status,start_time,end_time',false,['status' => 'asc','type' => 'desc'],$offset.','.$pageNum);
+        $had_bonus = DbRights::getUserTaskSum(['uid' => $uid,'bonus_status' => 2],'bonus');
+        $no_bonus = DbRights::getUserTaskSum(['uid' => $uid,'bonus_status' => 1],'bonus');
+        return ['code' => 200, 'had_bonus' => $had_bonus, 'no_bonus' => $no_bonus,'usertask' => $usertask];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

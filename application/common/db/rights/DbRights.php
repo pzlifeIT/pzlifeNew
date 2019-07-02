@@ -312,6 +312,15 @@ class DbRights {
     }
 
     /**
+     * 升级任务字段求和
+     * @param $where
+     * @param $field
+     * @return array
+     */
+    public function getUserTaskSum($where,$field) {
+        return UserTask::where($where)->sum($field);
+    }
+    /**
      * 修改任务
      * @param $data
      * @param $id
