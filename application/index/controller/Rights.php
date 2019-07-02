@@ -286,9 +286,10 @@ class Rights extends MyController {
      * @apiGroup         index_rights
      * @apiName          userTask
      * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {String} [taskid] 任务ID，传值视为查询单条详情
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {String} page_num 查询记录条数
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 / 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 /
      * @apiSuccess (返回) {String} had_bonus 已结算奖金
      * @apiSuccess (返回) {String} no_bonus 未结算奖金
      * @apiSuccess (返回) {Array} usertask 任务记录
@@ -307,6 +308,7 @@ class Rights extends MyController {
      */
     public function userTask() {
         $conId   = trim($this->request->post('con_id'));
+        $taskid  = trim($this->request->post('taskid'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         if (!is_numeric($page) || $page < 1) {
@@ -317,7 +319,13 @@ class Rights extends MyController {
         }
         $page    = intval($page);
         $pageNum = intval($pageNum);
-        $result  = $this->app->rights->userTask($conId, $page, $pageNum);
+        if (!empty($taskid)) {
+            if (!is_numeric($taskid)) {
+                return ['code' => '3003'];
+            }
+            intval($taskid);
+        }
+        $result = $this->app->rights->userTask($conId, $page, $pageNum, $taskid);
         return $result;
     }
 
@@ -327,15 +335,58 @@ class Rights extends MyController {
      * @apiGroup         index_rights
      * @apiName          userTaskProgress
      * @apiParam (入参) {String} con_id 用户con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 / 
-     * @apiSuccess (返回) {String} taskprogress 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 /
+     * @apiSuccess (返回) {String} taskprogress
      * @apiSampleRequest /index/rights/userTaskProgress
      * @return array
      * @author rzc
      */
-    public function userTaskProgress(){
+    public function userTaskProgress() {
+        $conId  = trim($this->request->post('con_id'));
+        $result = $this->app->rights->userTaskProgress($conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户任务详情
+     * @apiDescription   userTaskInfo
+     * @apiGroup         index_rights
+     * @apiName          userTaskInfo
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {String} taskid 任务ID
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:taskid必须是数字 / 3002:该任务不存在 / 3003:page错误
+     * @apiSuccess (返回) {Array} task_invited
+     * @apiSuccess (task_invited) {String} id
+     * @apiSuccess (task_invited) {String} utask_id 任务ID
+     * @apiSuccess (task_invited) {String} user_identity 邀请时身份
+     * @apiSuccess (task_invited) {String} timekey 关联时间索引
+     * @apiSuccess (task_invited) {String} bonus 奖励金
+     * @apiSuccess (task_invited) {String} create_time 记录时间
+     * @apiSuccess (task_invited[user]) {String} nick_name 用户昵称
+     * @apiSuccess (task_invited[user]) {String} avatar 用户头像
+     * @apiSampleRequest /index/rights/userTaskInfo
+     * @return array
+     * @author rzc
+     */
+    public function userTaskInfo() {
         $conId   = trim($this->request->post('con_id'));
-        $result  = $this->app->rights->userTaskProgress($conId);
+        $taskid  = trim($this->request->post('taskid'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($taskid)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3003']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->rights->userTaskInfo($conId, $taskid, $page, $pageNum);
         return $result;
     }
 }
