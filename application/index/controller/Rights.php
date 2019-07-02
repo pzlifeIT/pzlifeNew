@@ -320,4 +320,22 @@ class Rights extends MyController {
         $result  = $this->app->rights->userTask($conId, $page, $pageNum);
         return $result;
     }
+
+    /**
+     * @api              {post} / 用户任务进度
+     * @apiDescription   userTaskProgress
+     * @apiGroup         index_rights
+     * @apiName          userTaskProgress
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 / 
+     * @apiSuccess (返回) {String} taskprogress 
+     * @apiSampleRequest /index/rights/userTaskProgress
+     * @return array
+     * @author rzc
+     */
+    public function userTaskProgress(){
+        $conId   = trim($this->request->post('con_id'));
+        $result  = $this->app->rights->userTaskProgress($conId);
+        return $result;
+    }
 }

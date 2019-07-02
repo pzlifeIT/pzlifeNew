@@ -683,5 +683,31 @@ class Rights extends CommonIndex {
         $no_bonus = DbRights::getUserTaskSum(['uid' => $uid,'bonus_status' => 1],'bonus');
         return ['code' => 200, 'had_bonus' => $had_bonus, 'no_bonus' => $no_bonus,'usertask' => $usertask];
     }
+
+    public function userTaskProgress($conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        $where = [];
+        array_push($where, ['status' ,'=', 1]);
+        array_push($where, ['uid' ,'=', $uid]);
+        if ($userInfo['user_market'] == 0) {
+            return ['code' => '200','taskprogress' => ''];
+        }elseif ($userInfo['user_market'] == 1) {//临时兼职市场经理
+            $type = 1;
+        }elseif ($userInfo['user_market'] == 2) {//兼职市场经理
+            $type = 3;
+        }elseif ($userInfo['user_market'] == 3) {//兼职市场总监
+            $type = 6;
+        }
+        array_push($where,['type' ,'=', $type]);
+        $userTask = DbRights::getUserTask($where,'target,has_target',true,['id' => 'desc']);
+        return ['code' => '200','taskprogress' => '任务进度'.$userTask['has_target'].'/'.$userTask['target']];
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
