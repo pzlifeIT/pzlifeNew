@@ -200,9 +200,31 @@ class Rights extends CommonIndex {
         if ($userInfo['user_identity'] == 4) {
             return ['code' => '3010'];
         }
-        $parent_info = DbUser::getUserInfo(['id' => $parent_id, 'user_identity' => 4], 'user_identity,nick_name', true);
+        $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market', true);
         if (!empty($parent_info)) {
-            $parent_shop = DbShops::getShopInfo('id', ['uid' => $parent_id]);
+            $refe_identity = 0;
+            if ($parent_info['user_identity'] == 4) {
+                $parent_shop   = DbShops::getShopInfo('id', ['uid' => $parent_id]);
+                $refe_identity = 3;
+            }
+            if ($parent_info['user_identity'] == 3) {
+                $refe_identity = 1;
+            }
+            switch ($parent_info['user_market']) {
+            case '1':
+                $refe_identity = 2;
+                break;
+            case '2':
+                $refe_identity = 2;
+                break;
+            case '3':
+                $refe_identity = 4;
+                break;
+            case '4':
+                $refe_identity = 5;
+                break;
+
+            }
         } else {
             return ['code' => '3012'];
         }
@@ -224,23 +246,33 @@ class Rights extends CommonIndex {
         $apply_data['target_idcard']   = $target_idcard;
         $apply_data['refe_uid']        = $parent_id;
         $apply_data['refe_uname']      = $parent_info['nick_name'];
-        $apply_data['shop_id']         = $parent_shop['id'];
-        $apply_data['refe_type']       = $refe_type;
-        $apply_data['status']          = 1;
+        $apply_data['refe_identity']   = $refe_identity;
+        if ($parent_shop) {
+            $apply_data['shop_id'] = $parent_shop['id'];
+        }
+        $apply_data['refe_type'] = $refe_type;
+        $apply_data['status']    = 1;
 
-        //招商代理收益日志
+/*         //招商代理收益日志
         $log_invest               = [];
         $log_invest['uid']        = $parent_id;
         $log_invest['target_uid'] = $uid;
         $log_invest['status']     = 1;
-        $log_invest['cost']       = 5000;
+        if ($refe_identity == 2) {
+            $log_invest['cost']       = 3500;
+        }else if ($refe_identity == 4) {
+            $log_invest['cost']       = 4000;
+        }else if ($refe_identity == 5) {
+            $log_invest['cost']       = 5000;
+        } */
+        
         if ($this->redis->setNx($redisKey . $uid, 1) === false) {
             return ['code' => '3013'];
         }
         Db::startTrans();
         try {
             DbRights::saveShopApply($apply_data);
-            DbUser::saveLogInvest($log_invest);
+            // DbUser::saveLogInvest($log_invest);
             Db::commit();
             return ['code' => '200']; //领取成功
         } catch (\Exception $e) {
@@ -336,15 +368,15 @@ class Rights extends CommonIndex {
                                 ];
                                 DbRights::addUserTask($upgrade_task);
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
-                                $parent_userRelation = explode(',',$parent_userRelation);
-                                if ($parent_userRelation[0] != $parent_id ) {
+                                $parent_userRelation = explode(',', $parent_userRelation);
+                                if ($parent_userRelation[0] != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $parent_userRelation[0]], 'user_identity,nick_name,user_market', true);
-                                    if (!empty($rela_user)){
+                                    if (!empty($rela_user)) {
                                         $rel_task = DbRights::getUserTask(['uid' => $parent_userRelation[0], 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
                                         if (!empty($rel_task)) {
                                             $new_rel_task = [];
                                             $new_rel_task = [
-                                                'has_target' => $rel_task['has_target']+1,
+                                                'has_target' => $rel_task['has_target'] + 1,
                                             ];
                                             DbRights::editUserTask($new_rel_task, $rel_task['id']);
                                             $res_task_invited = [];
@@ -668,7 +700,7 @@ class Rights extends CommonIndex {
         return $user['user_identity'];
     }
 
-    public function userTask($conId, int $page, int $pageNum, $taskid = 0){
+    public function userTask($conId, int $page, int $pageNum, $taskid = 0) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -678,17 +710,17 @@ class Rights extends CommonIndex {
             return ['code' => '3000'];
         }
         if (!empty($taskid)) {
-            $usertask = DbRights::getUserTask(['uid' => $uid,'id' => $taskid],'id,title,type,target,has_target,status,bonus,bonus_status,start_time,end_time',true);
+            $usertask = DbRights::getUserTask(['uid' => $uid, 'id' => $taskid], 'id,title,type,target,has_target,status,bonus,bonus_status,start_time,end_time', true);
             return ['code' => 200, 'usertask' => $usertask];
         }
-        $offset = ($page - 1) * $pageNum;
-        $usertask = DbRights::getUserTask(['uid' => $uid],'id,title,type,target,has_target,status,bonus,bonus_status,start_time,end_time',false,['status' => 'asc','type' => 'desc'],$offset.','.$pageNum);
-        $had_bonus = DbRights::getUserTaskSum(['uid' => $uid,'bonus_status' => 2],'bonus');
-        $no_bonus = DbRights::getUserTaskSum(['uid' => $uid,'bonus_status' => 1],'bonus');
-        return ['code' => 200, 'had_bonus' => $had_bonus, 'no_bonus' => $no_bonus,'usertask' => $usertask];
+        $offset    = ($page - 1) * $pageNum;
+        $usertask  = DbRights::getUserTask(['uid' => $uid], 'id,title,type,target,has_target,status,bonus,bonus_status,start_time,end_time', false, ['status' => 'asc', 'type' => 'desc'], $offset . ',' . $pageNum);
+        $had_bonus = DbRights::getUserTaskSum(['uid' => $uid, 'bonus_status' => 2], 'bonus');
+        $no_bonus  = DbRights::getUserTaskSum(['uid' => $uid, 'bonus_status' => 1], 'bonus');
+        return ['code' => 200, 'had_bonus' => $had_bonus, 'no_bonus' => $no_bonus, 'usertask' => $usertask];
     }
 
-    public function userTaskProgress($conId){
+    public function userTaskProgress($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -698,23 +730,23 @@ class Rights extends CommonIndex {
             return ['code' => '3000'];
         }
         $where = [];
-        array_push($where, ['status' ,'=', 1]);
-        array_push($where, ['uid' ,'=', $uid]);
+        array_push($where, ['status', '=', 1]);
+        array_push($where, ['uid', '=', $uid]);
         if ($userInfo['user_market'] == 0) {
-            return ['code' => '200','taskprogress' => ''];
-        }elseif ($userInfo['user_market'] == 1) {//临时兼职市场经理
+            return ['code' => '200', 'taskprogress' => ''];
+        } elseif ($userInfo['user_market'] == 1) { //临时兼职市场经理
             $type = 1;
-        }elseif ($userInfo['user_market'] == 2) {//兼职市场经理
+        } elseif ($userInfo['user_market'] == 2) { //兼职市场经理
             $type = 3;
-        }elseif ($userInfo['user_market'] == 3) {//兼职市场总监
+        } elseif ($userInfo['user_market'] == 3) { //兼职市场总监
             $type = 6;
         }
-        array_push($where,['type' ,'=', $type]);
-        $userTask = DbRights::getUserTask($where,'target,has_target',true,['id' => 'desc']);
-        return ['code' => '200','taskprogress' => '任务进度'.$userTask['has_target'].'/'.$userTask['target']];
+        array_push($where, ['type', '=', $type]);
+        $userTask = DbRights::getUserTask($where, 'target,has_target', true, ['id' => 'desc']);
+        return ['code' => '200', 'taskprogress' => '任务进度' . $userTask['has_target'] . '/' . $userTask['target']];
     }
 
-    public function userTaskInfo($conId, $taskid,$page,$pageNum){
+    public function userTaskInfo($conId, $taskid, $page, $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
@@ -723,13 +755,13 @@ class Rights extends CommonIndex {
         if (empty($userInfo)) {
             return ['code' => '3000'];
         }
-        $usertask = DbRights::getUserTask(['uid' => $uid, 'id' => $taskid],'id',true);
+        $usertask = DbRights::getUserTask(['uid' => $uid, 'id' => $taskid], 'id', true);
         if (empty($usertask)) {
             return ['code' => '3002'];
         }
-        $offset = ($page - 1) * $pageNum;
-        $task_invited = DbRights::getTaskInvited(['utask_id' => $taskid],'*',false,['id' => 'asc'],$offset.','.$pageNum);
-        return ['code' => '200','task_invited' => $task_invited];
+        $offset       = ($page - 1) * $pageNum;
+        $task_invited = DbRights::getTaskInvited(['utask_id' => $taskid], '*', false, ['id' => 'asc'], $offset . ',' . $pageNum);
+        return ['code' => '200', 'task_invited' => $task_invited];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

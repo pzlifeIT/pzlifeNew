@@ -965,7 +965,7 @@ class User extends MyController {
             return ['code' => '3007'];
         }
         if (!in_array($stype, [1, 2, 3])) {
-            return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
+            return ['code' => '3010', 'msg' => '二维码类型 只能为1,2,3'];
         }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
         $this->apiLog($apiName, [$conId, $page, $scene, $stype], $result['code'], $conId);

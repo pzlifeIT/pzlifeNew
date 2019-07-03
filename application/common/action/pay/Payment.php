@@ -209,6 +209,25 @@ class Payment {
                         DbOrder::updataOrder($orderData, $orderRes['id']);
                         $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
+
+                        $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
+                        $skus       = [];
+                        $sku_goodsids  = [];
+                        foreach ($order_list as $order => $list) {
+                            $sku_goodsids[] = $list['goods_id'];
+                            if (in_array( $list['goods_id'],[1888,1887,1886])) {
+                                $userInfo = DbUser::getUserInfo(['id' => $orderRes['uid']], 'user_identity', true);
+                                if ($userInfo['user_identity'] > 1) {
+                                    break;
+                                }
+                                $receiveDiamondvip                   = [];
+                                $receiveDiamondvip['uid']            = $orderRes['uid'];
+                                $receiveDiamondvip['share_uid']      = '24648';
+                                DbRights::receiveDiamondvip($receiveDiamondvip);
+                                break;
+                            }
+                        }
+
                     }
                     if (!empty($memOrderData)) {
                         DbOrder::updateMemberOrder($memOrderData, ['id' => $memOrderRes['id']]);
@@ -216,7 +235,7 @@ class Payment {
                         $this->redis->rPush($redisListKey, $memOrderRes['id']);
                     }
                     Db::commit();
-                    if (!empty($orderData)) { //活动订单发送取货码
+              /*       if (!empty($orderData)) { //活动订单发送取货码
                         $orderRes = DbOrder::getOrder('id,order_type,order_status,order_no,uid', ['id' => $logPayRes['order_id']], true);
                         if ($orderRes['order_type'] == 2) { //线下取货发送取货码
                             $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
@@ -250,7 +269,7 @@ class Payment {
 
                             $user_phone = DbUser::getUserInfo(['id' => $orderRes['uid']], 'mobile', true);
 
-                            /* 取消发送取货码 */
+                            //取消发送取货码 
                             // $Note       = new Note;
                             // $send1      = $Note->sendSms($user_phone['mobile'], $message);
                             // $send2      = $Note->sendSms('17091858983', $admin_message);
@@ -260,7 +279,7 @@ class Payment {
 
                         }
 
-                    }
+                    } */
                 } catch (\Exception $e) {
                     $this->apiLog('pay/pay/wxPayCallback', json_encode($e));
                     Db::rollback();
