@@ -242,7 +242,7 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
-                $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile');
+                $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile,commission');
                 $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
                 $userRelationData = [];
                 $bossId           = $this->getBoss($target_user['id']);
@@ -376,6 +376,29 @@ class Rights extends CommonIndex {
                     ];
                     DbRights::addTaskInvited($res_task_invited);
     
+                }
+
+                //查询是否有未结算的临时升级市场经理任务和升级合伙人任务
+                $target_user_task = DbRights::getUserTask(['uid' => $shopapply['target_uid'], 'type' => 1, 'status' => 1], 'id,bonus', true);
+                if (!empty($target_user_task)) {
+                    if ($target_user_task['bonus'] > 0) {
+                        $tradinguser_taskData = [
+                            'uid'          => $shopapply['target_uid'],
+                            'trading_type' => 2,
+                            'change_type'  => 13,
+                            'money'        => $target_user_task['bonus'],
+                            'befor_money'  => $target_user['commission'],
+                            'after_money'  => bcadd($target_user['commission'], $target_user_task['bonus'], 2),
+                            'message'      => '推广合伙人奖励结算',
+                        ];
+                        DbOrder::addLogTrading($tradinguser_taskData); //写佣金明细
+                        DbUser::modifyCommission($shopapply['target_uid'], $target_user_task['bonus'], 'inc');
+                        DbRights::editUserTask(['status' => 4],$target_user_task['id']);
+                    }
+                }
+                $target_user_task = DbRights::getUserTask(['uid' => $shopapply['target_uid'], 'type' => 3, 'status' => 1], 'id,bonus', true);
+                if (!empty($target_user_task)) {
+                    DbRights::editUserTask(['status' => 4],$target_user_task['id']); 
                 }
                
                 if (!empty($userRelationData)) {
