@@ -267,7 +267,7 @@ class Rights extends CommonIndex {
                 $refe_user = DbUser::getUserOne(['id' => $shopapply['refe_uid']], 'user_market,commission');
                 $cost      = 0;
                 if ($shopapply['refe_identity'] == 2) {
-                    $cost          = 3500;
+                    $cost = 3500;
 
                     //上级奖励任务
                     $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
@@ -278,17 +278,17 @@ class Rights extends CommonIndex {
                             $rel_task = DbRights::getUserTask(['uid' => $refe_relation[0], 'type' => 7], '*', true);
                             if ($rela_user['user_market'] == 3) {
                                 $thiscost = 500;
-                            }elseif ($rela_user['user_market'] == 4) {
+                            } elseif ($rela_user['user_market'] == 4) {
                                 $thiscost = 1500;
                             }
                             if (!empty($rel_task)) {
                                 $new_rel_task = [];
                                 $new_rel_task = [
                                     'has_target' => $rel_task['has_target'] + 1,
-                                    'bonus' => $rel_task['bonus'] + $thiscost,
+                                    'bonus'      => $rel_task['bonus'] + $thiscost,
                                 ];
                                 DbRights::editUserTask($new_rel_task, $rel_task['id']);
-                               $rel_task_id = $rel_task['id'];
+                                $rel_task_id = $rel_task['id'];
                             } else {
                                 $upgrade_task = [];
                                 $upgrade_task = [
@@ -296,17 +296,18 @@ class Rights extends CommonIndex {
                                     'title'        => '推广合伙人奖励任务',
                                     'type'         => 7,
                                     'status'       => 1,
+                                    'has_target'   => 1,
                                     'bonus'        => $thiscost,
                                     'bonus_status' => 2,
                                     'timekey'      => date('Ym', time()),
-                                    'start_time'   => time()
+                                    'start_time'   => time(),
                                 ];
                                 $rel_task_id = DbRights::addUserTask($upgrade_task);
                             }
                             $res_task_invited = [];
                             $res_task_invited = [
                                 'utask_id'      => $rel_task_id,
-                                'uid'           => $shopapply['uid'],
+                                'uid'           => $shopapply['target_uid'],
                                 'user_identity' => 4,
                                 'timekey'       => date('Ym', time()),
                                 'bonus'         => $thiscost,
@@ -330,49 +331,53 @@ class Rights extends CommonIndex {
                 } else if ($shopapply['refe_identity'] == 5) {
                     $cost = 5000;
                 }
-                $tradingData = [
-                    'uid'          => $shopapply['refe_uid'],
-                    'trading_type' => 2,
-                    'change_type'  => 13,
-                    'money'        => $cost,
-                    'befor_money'  => $refe_user['commission'],
-                    'after_money'  => bcadd($refe_user['commission'], $cost, 2),
-                    'message'      => '推广合伙人奖励',
-                ];
-                $refe_task = DbRights::getUserTask(['uid' => $shopapply['refe_uid'], 'type' => 7], '*', true);
-                if (!empty($refe_task)) {
-                    $new_rel_task = [];
-                    $new_rel_task = [
-                        'has_target' => $refe_task['has_target'] + 1,
-                        'bonus' => $refe_task['bonus'] + $thiscost,
+                if ($cost) {
+                    $tradingData = [
+                        'uid'          => $shopapply['refe_uid'],
+                        'trading_type' => 2,
+                        'change_type'  => 13,
+                        'money'        => $cost,
+                        'befor_money'  => $refe_user['commission'],
+                        'after_money'  => bcadd($refe_user['commission'], $cost, 2),
+                        'message'      => '推广合伙人奖励',
                     ];
-                    DbRights::editUserTask($new_rel_task, $refe_task['id']);
-                   $rel_task_id = $refe_task['id'];
-                } else {
-                    $upgrade_task = [];
-                    $upgrade_task = [
-                        'uid'          =>  $shopapply['refe_uid'],
-                        'title'        => '推广合伙人奖励任务',
-                        'type'         => 7,
-                        'status'       => 1,
-                        'bonus'        => $cost,
-                        'bonus_status' => 2,
-                        'timekey'      => date('Ym', time()),
-                        'start_time'   => time()
+                    $refe_task = DbRights::getUserTask(['uid' => $shopapply['refe_uid'], 'type' => 7], '*', true);
+                    if (!empty($refe_task)) {
+                        $new_rel_task = [];
+                        $new_rel_task = [
+                            'has_target' => $refe_task['has_target'] + 1,
+                            'bonus'      => $refe_task['bonus'] + $cost,
+                        ];
+                        DbRights::editUserTask($new_rel_task, $refe_task['id']);
+                        $rel_task_id = $refe_task['id'];
+                    } else {
+                        $upgrade_task = [];
+                        $upgrade_task = [
+                            'uid'          => $shopapply['refe_uid'],
+                            'title'        => '推广合伙人奖励任务',
+                            'type'         => 7,
+                            'status'       => 1,
+                            'has_target'   => 1,
+                            'bonus'        => $cost,
+                            'bonus_status' => 2,
+                            'timekey'      => date('Ym', time()),
+                            'start_time'   => time(),
+                        ];
+                        $rel_task_id = DbRights::addUserTask($upgrade_task);
+    
+                    }
+                    $res_task_invited = [];
+                    $res_task_invited = [
+                        'utask_id'      => $rel_task_id,
+                        'uid'           => $shopapply['target_uid'],
+                        'user_identity' => 4,
+                        'timekey'       => date('Ym', time()),
+                        'bonus'         => $cost,
                     ];
-                    $rel_task_id = DbRights::addUserTask($upgrade_task);
-                    
+                    DbRights::addTaskInvited($res_task_invited);
+    
                 }
-                $res_task_invited = [];
-                $res_task_invited = [
-                    'utask_id'      => $rel_task_id,
-                    'uid'           => $shopapply['uid'],
-                    'user_identity' => 4,
-                    'timekey'       => date('Ym', time()),
-                    'bonus'         => $thiscost,
-                ];
-                DbRights::addTaskInvited($res_task_invited);
-  
+               
                 if (!empty($userRelationData)) {
                     DbUser::updateUserRelation($userRelationData);
                 }
