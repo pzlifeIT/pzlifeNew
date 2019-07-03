@@ -1683,7 +1683,9 @@ class User extends CommonIndex {
             }
             // echo $result;die;
         } else {
-            return json_decode($result);
+            $result = json_decode($result,true);
+            return ['code' => $result['errcode'],'errmsg' => $result['errmsg']];
+
         }
     }
 
