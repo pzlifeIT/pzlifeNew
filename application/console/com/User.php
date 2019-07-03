@@ -398,7 +398,10 @@ class User extends Pzlife {
     private function getUserInfo($uid) {
         $getUserSql = sprintf("select id,user_type,user_identity,sex,nick_name,balance,commission from pz_users where delete_time=0 and id = %d", $uid);
         $userInfo   = Db::query($getUserSql);
-        return $userInfo;
+        if (empty($userInfo)) {
+            return [];
+        }
+        return $userInfo[0];
     }
 
     public function getDiamondvip(){
@@ -498,6 +501,109 @@ class User extends Pzlife {
                     }
                 }
             }
+        }
+    }
+
+    //任务升级系统每天结算
+    public function clearUserUpgradeTask(){
+        $user_task = Db::query("SELECT * FROM pz_user_task WHERE `type` = 1 AND `status` = 1 ");
+        // print_r($user_task);die;
+        if (empty($user_task)) {
+            exit('user_task_is_null');
+        }
+        foreach ($user_task as $key => $task) {
+           
+            // print_r($user);die;
+            if ($task['end_time'] <= time()) {
+                $user = $this->getUserInfo($task['uid']);
+
+                Db::startTrans();
+                try {
+                    if ($task['bonus'] >0) {
+                        $tradingData = [];
+                        $user_balance = 0;
+                        $tradingData                    = [
+                            'uid'          => $task['uid'],
+                            'trading_type' => 1,
+                            'change_type'  => 13,
+                            'money'        => $task['bonus'],
+                            'befor_money'  => $user['balance'],
+                            'after_money'  => bcadd($user['balance'], $task['bonus'], 2),
+                            'message'      => '结算推广创业店主奖励',
+                        ];
+                        Db::table('pz_log_trading')->insert($tradingData);
+                        $user_balance = bcadd($user['balance'], $task['bonus'], 2);
+                        Db::table('pz_users')->where('id',$task['uid'])->update(['balance' => $user_balance]);
+                    }
+                    Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3]);
+                    Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 0]);
+                    Db::commit();
+                } catch (\Exception $e) {
+                    // 回滚事务
+
+                    Db::rollback();
+                    print_r($e);
+                    die;
+                }
+            }
+            
+        }
+    }
+
+    //每月初结算上月任务并更新下月任务
+    public function clearUserKeepIdentityTask(){
+        $timekey = date('Ym',time());
+        $timekey = $timekey - 1; 
+        $user_task = Db::query("SELECT * FROM pz_user_task WHERE `type` = 6 AND `status` = 1 AND `timekey` = ".$timekey);
+        // print_r($user_task);die;
+        if (empty($user_task)) {
+            exit('user_task_is_null');
+        }
+        foreach ($user_task as $key => $task) {
+            //本期任务未完成
+            if ($task['has_target'] < $task['target']) {
+                //任务失败并重置本期任务
+                Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3]);
+                Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 3]);
+                $add_user_task = [];
+                $add_user_task = [
+                    'uid'          => $task['uid'],
+                    'title'        => '升级兼职市场总监2任务',
+                    'type'         => 6,
+                    'target'       => 10,
+                    'status'       => 1,
+                    'bonus_status' => 2,
+                    'timekey'      => date('Ym', time()),
+                    'start_time'   => time(),
+    
+                ];
+                Db::table('pz_user_task')->insert($add_user_task);
+                continue;
+            }
+            //任务完成，
+            Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 2]);
+            Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 4]);
+            //并设置下期任务
+            $target = ceil($task['has_target'] * 1.1);
+            $add_user_task = [];
+            $add_user_task = [
+                'uid'          => $task['uid'],
+                'title'        => '维持兼职市场总监2任务',
+                'type'         => 6,
+                'target'       => $target,
+                'status'       => 1,
+                'bonus_status' => 2,
+                'timekey'      => date('Ym', time()),
+                'start_time'   => time(),
+
+            ];
+            Db::table('pz_user_task')->insert($add_user_task);
+            // $lasttimekey = $timekey - 1;
+            // $userLastTask = Db::query("SELECT * FROM pz_user_task WHERE `type` = 6 AND `uid` = ".$task['uid']." AND `timekey` = ".$lasttimekey);
+            //没有上一月份任务
+           
+               
+          
         }
     }
 }
