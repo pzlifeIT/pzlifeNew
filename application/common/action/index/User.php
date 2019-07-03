@@ -436,7 +436,7 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] != '4') {
+        if ($user['user_identity'] < 3) {
             return ['code' => '3004']; //不是boss
         }
         // $redisKey = Config::get('rediskey.user.redisUserNextLevelCount') . $uid;
