@@ -24,4 +24,5 @@ return [
     'offlineactivities' => app\common\action\index\OfflineActivities::class,
     'indexLog'          => app\common\action\index\IndexLog::class,
     'wap'               => app\common\action\index\Wap::class,
+    'wechattweets'      => app\common\action\index\WechatTweets::class,
 ];

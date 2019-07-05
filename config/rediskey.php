@@ -38,6 +38,7 @@ return [
         'redisAccessToken' => 'weixin:accesstoken', //微信access_token
         'redisAccessTokenTencent' => 'weixin:accesstoken:tencent', //微信公众号access_token
         'redisTicketTencent' => 'weixin:ticket:tencent', //微信公众号ticket
+        'redisBatchgetMaterial' => 'weixin:batchget:material', //微信公众号文章
     ],
     'modelmessage' => [
         'redisMarketingActivity' => 'cms:modelmessage:marketingactivity:list', //营销活动

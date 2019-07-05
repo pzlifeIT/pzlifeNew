@@ -9,7 +9,7 @@ use function Qiniu\json_decode;
 use think\Db;
 use cache\Phpredis;
 
-class LocalScript extends Pzlife {
+class WeChatGraphicMaterial extends Pzlife {
     private $redis;
 
     //    private $connect;
@@ -103,10 +103,10 @@ class LocalScript extends Pzlife {
         $redisAccessTokenTencent = Config::get('redisKey.weixin.redisAccessTokenTencent');
         $access_token = $this->redis->get($redisAccessTokenTencent);
         if (empty($access_token)) {
-            // $appid = Env::get('weixin.weixin_appid');
-            $appid         = 'wx112088ff7b4ab5f3';
-            // $secret = Env::get('weixin.weixin_secret');
-            $secret        = 'db7915c4a840421683be99c6d798757f';
+            $appid = Env::get('weixin.weixin_appid');
+            // $appid         = 'wx112088ff7b4ab5f3';
+            $secret = Env::get('weixin.weixin_secret');
+            // $secret        = 'db7915c4a840421683be99c6d798757f';
             $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
             $requsest_subject = json_decode(sendRequest($requestUrl), true);
             if (!isset($requsest_subject['access_token'])) {
