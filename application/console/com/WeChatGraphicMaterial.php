@@ -69,6 +69,9 @@ class WeChatGraphicMaterial extends Pzlife {
             
         } while (!$requsest_subject);
        
+        if (empty($news)) {
+            exit('news_is_null');
+        }
        foreach ($news as $n => $new) {
             $this->redis->Zadd($redisBatchgetMaterial,$n,json_encode($new));
        }
