@@ -648,7 +648,6 @@ class Rights extends CommonIndex {
                 'bonus_status' => 2,
                 'timekey'      => date('Ym', time()),
                 'start_time'   => time(),
-                'end_time'     => time() + 2592000,
 
             ];
             Db::startTrans();
