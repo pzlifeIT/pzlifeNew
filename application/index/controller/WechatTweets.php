@@ -8,7 +8,7 @@ class WechatTweets extends MyController {
 
     protected $beforeActionList = [
         //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => ''], //除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'getWeChatGraphicMaterialList'], //除去getFirstCate其他方法都进行second前置操作
         //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -17,7 +17,6 @@ class WechatTweets extends MyController {
      * @apiDescription   getWeChatGraphicMaterialList
      * @apiGroup         index_wechattweets
      * @apiName          getWeChatGraphicMaterialList
-     * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} [page] 默认第一页开始
      * @apiParam (入参) {String} [pageNum] 每页显示结果
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:page和pagenum必须是数字 / 4001:获取微信认证KEY失败
