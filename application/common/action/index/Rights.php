@@ -349,7 +349,7 @@ class Rights extends CommonIndex {
                                     'after_money'  => bcadd($parent_info['commission'], $up_parent_task['bonus'], 2),
                                     'message'      => '推广创业店主奖励',
                                 ];
-                                DbRights::editUserTask($up_parent_task, $parent_user_task['id']);
+                                
                                 DbUser::updateUser(['user_market' => 2], $parent_id);
                                 DbUser::saveLogTrading($tradingData);
                                 DbUser::modifyCommission($parent_id, $up_parent_task['bonus'], 'inc');
@@ -391,6 +391,7 @@ class Rights extends CommonIndex {
                                     }
                                 }
                             }
+                            DbRights::editUserTask($up_parent_task, $parent_user_task['id']);
                             $task_invited = [];
                             $task_invited = [
                                 'utask_id'      => $parent_user_task['id'],
