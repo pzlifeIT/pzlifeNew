@@ -745,7 +745,7 @@ class Rights extends CommonIndex {
         }
         array_push($where, ['type', '=', $type]);
         $userTask = DbRights::getUserTask($where, 'target,has_target', true, ['id' => 'desc']);
-        if (!empty($userTask)) {
+        if (empty($userTask)) {
             return ['code' => '3001'];
         }
         return ['code' => '200', 'taskprogress' => '任务进度' . $userTask['has_target'] . '/' . $userTask['target']];
