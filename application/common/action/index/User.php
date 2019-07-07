@@ -486,7 +486,7 @@ class User extends CommonIndex {
         ], 'cost'); //招商加盟收益
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 8, 11]],
+            ['change_type', 'in', [3, 4, 5, 8, 11, 12 , 13]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商券总额
