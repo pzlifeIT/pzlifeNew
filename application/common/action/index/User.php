@@ -635,7 +635,7 @@ class User extends CommonIndex {
         $offset = ($page - 1) * $pageNum;
         $where  = [
             ['trading_type', '=', '2'], //佣金交易
-            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
+            ['change_type', 'in', [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款 10.审核不通过退回 11.老商城转入
             ['uid', '=', $uid],
         ];
         $field  = 'change_type,money,create_time,message';
@@ -671,6 +671,12 @@ class User extends CommonIndex {
             case 11:
                 $ctype = '老商城转入';
                 break;
+            case 12:
+                $ctype = '奖励金转入';
+                break;
+            case 13:
+                $ctype = '市场任务奖励';
+                break;
             }
             $d['ctype'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['message']);
@@ -700,7 +706,7 @@ class User extends CommonIndex {
         }
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 8, 11]],
+            ['change_type', 'in', [3, 4, 5, 8, 11, 12 , 13]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //佣金总额
