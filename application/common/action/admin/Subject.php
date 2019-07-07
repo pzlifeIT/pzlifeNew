@@ -77,12 +77,12 @@ class Subject extends CommonIndex {
         if (empty($subject) && empty($status) && empty($image) && empty($orderBy)) {
             return ['code' => '3007'];
         }
-        $subjectRow = DbGoods::getSubject(['id' => $id], 'id,pid', true);//获取上级专题
+        $subjectRow = DbGoods::getSubject(['id' => $id], 'id,pid,tier', true);//获取上级专题
         if (empty($subjectRow)) {
             return ['code' => '3004'];//专题不存在
         }
         if (!empty($subject)) {//专题名称不为空
-            $subjectIsset = DbGoods::getSubject([['subject', '=', $subject], ['id', '<>', $id]], 'id', true);
+            $subjectIsset = DbGoods::getSubject([['subject', '=', $subject], ['id', '<>', $id], ['tier', '=', $subjectRow['tier']]], 'id', true);
             if (!empty($subjectIsset)) {
                 return ['code' => '3005'];//专题名已存在
             }

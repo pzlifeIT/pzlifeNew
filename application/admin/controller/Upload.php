@@ -24,7 +24,9 @@ class Upload extends AdminController {
      * @author zyr
      */
     public function uploadFile() {
-        $image = $this->request->file('image');
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $image    = $this->request->file('image');
         if (empty($image)) {
             return ['code' => '3004'];
         }
@@ -36,7 +38,9 @@ class Upload extends AdminController {
         if ($fileInfo['size'] > 1024 * 1024 * 2) {
             return ['3002'];//上传图片不能超过2M
         }
-        return $this->app->upload->uploadFile($fileInfo);
+        $result = $this->app->upload->uploadFile($fileInfo);
+        $this->apiLog($apiName, [$cmsConId, $image], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
@@ -52,7 +56,9 @@ class Upload extends AdminController {
      * @author zyr
      */
     public function uploadMultiFile() {
-        $images = $this->request->file('images');
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $images   = $this->request->file('images');
         if (empty($images)) {
             return ['code' => '3004'];
         }
@@ -71,7 +77,8 @@ class Upload extends AdminController {
             }
             array_push($list, $fileInfo);
         }
-        return $this->app->upload->uploadMultiFile($list);
-
+        $result = $this->app->upload->uploadMultiFile($list);
+        $this->apiLog($apiName, [$cmsConId, $images], $result['code'], $cmsConId);
+        return $result;
     }
 }

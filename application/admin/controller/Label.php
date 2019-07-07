@@ -66,8 +66,10 @@ class Label extends AdminController {
      * @author zyr
      */
     public function searchLabel() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $searchContent = trim($this->request->post('search_content')); //搜索内容
         $result        = $this->app->label->searchLabel(strtolower($searchContent));
+        $this->apiLog($apiName, [$searchContent], $result['code'], '');
         return $result;
     }
 
@@ -87,6 +89,7 @@ class Label extends AdminController {
      * @author zyr
      */
     public function goodsLabelList() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $goodsId  = trim($this->request->post('goods_id')); //商品id
         if (!is_numeric($goodsId)) {
@@ -97,7 +100,7 @@ class Label extends AdminController {
             return ['code' => '3002']; //商品id必须为数字
         }
         $result = $this->app->label->goodsLabelList($goodsId);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $goodsId], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $goodsId], $result['code'], $cmsConId);
         return $result;
     }
 

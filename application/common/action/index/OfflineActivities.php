@@ -3,6 +3,7 @@
 namespace app\common\action\index;
 
 use app\common\action\notify\Note;
+use app\common\action\qrcode\qrcodelogic;
 use app\facade\DbGoods;
 use app\facade\DbOfflineActivities;
 use app\facade\DbOrder;
@@ -13,6 +14,14 @@ use function Qiniu\json_decode;
 use think\Db;
 
 class OfflineActivities extends CommonIndex {
+    private $redisHdluckyDraw;
+
+    public function __construct() {
+        parent::__construct();
+        $this->redisHdluckyDraw     = Config::get('rediskey.active.redisHdluckyDraw') . ':' . date('Ymd');
+        $this->redisHdluckyDrawLock = Config::get('rediskey.active.redisHdluckyDrawLock');
+    }
+
     public function getOfflineActivities($id) {
         $offlineactivities = DbOfflineActivities::getOfflineActivities(['id' => $id], '*', true);
         if (empty($offlineactivities)) {
@@ -33,7 +42,7 @@ class OfflineActivities extends CommonIndex {
                     /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
                     $result[$key]['spec'] = $goods_spec;
                     $result[$key]['goods_sku'] = $goods_sku; */
-                    $where                             = ['goods_id' => $list['id'],'status' =>1];
+                    $where                             = ['goods_id' => $list['id'], 'status' => 1];
                     $field                             = 'market_price';
                     $goodslist[$l]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
                     $field                             = 'retail_price';
@@ -181,8 +190,7 @@ class OfflineActivities extends CommonIndex {
                 $skus       = [];
                 $sku_goods  = [];
                 $goods_name = [];
-                
-                
+
                 foreach ($orderGoodsData as $order => $list) {
                     if (in_array($list['sku_id'], $skus)) {
                         $sku_goods[$list['sku_id']] = $sku_goods[$list['sku_id']] + 1;
@@ -202,7 +210,7 @@ class OfflineActivities extends CommonIndex {
                     $message .= $name . '数量[' . $sku_goods[$goods] . ']';
                     $admin_message .= $name . '数量[' . $sku_goods[$goods] . ']';
                 }
-                $message       = $message . '}订单号为' . $orderNo . '取货码为：Off' .$orderRes['id'];
+                $message       = $message . '}订单号为' . $orderNo . '取货码为：Off' . $orderRes['id'];
                 $admin_message = $admin_message . '取货码为：Off' . $orderRes['id'];
                 $user_phone    = DbUser::getUserInfo(['id' => $uid], 'mobile', true);
                 $Note          = new Note;
@@ -285,5 +293,196 @@ class OfflineActivities extends CommonIndex {
         $rebate = bcmul($distrProfits, 0.75, 5);
         $result = bcmul($rebate, $num, 2);
         return $result;
+    }
+
+    /**
+     * 抽奖操作
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function luckyDraw($conId) {
+        $u = [23739 => 2, 23740 => 4, 23769 => 6, 23770 => 8];
+        // if (Config::get('conf.platform_conf')[Config::get('app.deploy')] == 2) { //测试环境
+        //     $u = [23739 => 2, 26683 => 4, 26684 => 6, 26686 => 8];
+        // }
+        $hdNum = 1;
+        $uid   = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3001'];
+        }
+//        $uid = 1;
+        if ($this->initShopCount() === false) {
+//            return ['code' => '3004'];
+            $shopNum = 5; //所有奖品抽完
+        } else if (in_array($uid, array_keys($u))) {
+            $shopNum = $u[$uid];
+        } else {
+            $shopNum = $this->getDraw();
+        }
+        $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcsub($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+        $luckyRes = DbOfflineActivities::getHdLucky(['uid' => $uid, 'hd_num' => $hdNum], 'id,shop_num', true);
+        if (!empty($luckyRes)) {
+            $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+            return ['code' => '3003', 'shop_num' => $luckyRes['shop_num']];
+        }
+        Db::startTrans();
+        try {
+            $LuckGoods = $this->LuckGoods();
+            foreach ($LuckGoods['LuckGoods'] as $key => $value) {
+                if ($value['shop_num'] == $shopNum) {
+                    $goods_name = $value['goods_name'];
+                    $image_path = $value['image_path'];
+                }
+            }
+            $winning_id = DbOfflineActivities::addHdLucky([
+                'uid'        => $uid,
+                'shop_num'   => $shopNum,
+                'hd_num'     => $hdNum,
+                'goods_name' => $goods_name,
+                'image_path' => $image_path,
+            ]);
+            Db::commit();
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path, 'winning_id' => $winning_id];
+        } catch (\Exception $e) {
+            $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+            Db::rollback();
+            return ['code' => '3005'];
+        }
+    }
+
+    private function getDraw() {
+        $shopList = [ //抽奖商品
+            1 => 1400, //2元商券
+            3 => 2800, //深海野生脆虾北极虾 1包
+            7 => 4200, //君乐宝涨芝士 1袋
+            5 => 10000, //优加竹浆本色手帕 1包
+            2 => 10000, //还真精品茶具 1套
+            4 => 10000, //君乐宝纯享随机口味 一箱
+            6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
+            8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
+        ];
+        $num     = mt_rand(1, 10000);
+        $shopNum = 0;
+        foreach ($shopList as $sk => $sl) {
+            if ($num <= $sl) {
+                $shopNum = $sk;
+                break;
+            }
+        }
+        $result = $this->redis->hget($this->redisHdluckyDraw, $shopNum);
+        if ($result <= 0) {
+            $shopNum = $this->getDraw();
+        }
+        return $shopNum;
+    }
+
+    private function initShopCount() {
+        $shopCount = [ //抽奖商品库存
+            1 => 50,
+            2 => 0,
+            3 => 50,
+            4 => 0,
+            5 => 200,
+            6 => 0,
+            7 => 50,
+            8 => 0,
+        ];
+        if (!$this->redis->exists($this->redisHdluckyDraw)) {
+            $this->redis->hMSet($this->redisHdluckyDraw, $shopCount);
+            $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
+        }
+        $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
+        $allNum = array_sum($allNum);
+        if ($allNum <= 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public function LuckGoods() {
+        return [
+            'code'      => '200',
+            'LuckGoods' => [
+                [
+                    'shop_num'   => 1,
+                    'goods_name' => '2元商券',
+                    'image_path' => 'https://webimages.pzlive.vip/1shangquan.jpg',
+                ],
+                [
+                    'shop_num'   => 2,
+                    'goods_name' => '还真精品茶具 1套',
+                    'image_path' => 'https://webimages.pzlive.vip/1beizi.jpg',
+                ],
+                [
+                    'shop_num'   => 3,
+                    'goods_name' => '深海野生脆虾北极虾 1包',
+                    'image_path' => 'https://webimages.pzlive.vip/1xia.png',
+                ],
+                [
+                    'shop_num'   => 4,
+                    'goods_name' => '君乐宝纯享随机口味 一箱',
+                    'image_path' => 'https://webimages.pzlive.vip/cx.jpg',
+                ],
+                [
+                    'shop_num'   => 5,
+                    'goods_name' => '优加竹浆本色手帕 1包',
+                    'image_path' => 'https://webimages.pzlive.vip/1zj.jpg',
+                ],
+                [
+                    'shop_num'   => 6,
+                    'goods_name' => '玛蒙德格兰赛干红葡萄酒 2瓶',
+                    'image_path' => 'https://webimages.pzlive.vip/gh.jpg',
+                ],
+                [
+                    'shop_num'   => 7,
+                    'goods_name' => '君乐宝涨芝士 1袋',
+                    'image_path' => 'https://webimages.pzlive.vip/1zzs.jpg',
+                ],
+                [
+                    'shop_num'   => 8,
+                    'goods_name' => '克林伯瑞桃红葡萄酒 2瓶',
+                    'image_path' => 'https://webimages.pzlive.vip/th.jpg',
+                ],
+            ],
+        ];
+    }
+
+    public function getHdLucky($big = '') {
+        if ($big) {
+            $result = DbOfflineActivities::getHdLucky([['shop_num', 'in', '2,4,6,8']], '*');
+
+        } else {
+            $result = DbOfflineActivities::getHdLucky([], '*', false, ['id' => 'desc'], 15);
+        }
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        foreach ($result as $key => $value) {
+            $user_phone = DbUser::getUserInfo(['id' => $value['uid']], 'nick_name,mobile', true);
+            if (!empty($user_phone)) {
+                $mobile = substr($user_phone['mobile'], 0, 3) . '*****' . substr($user_phone['mobile'], -4);
+            }
+            $result[$key]['user'] = $mobile;
+        }
+        return ['code' => '200', 'winnings' => $result];
+
+    }
+
+    public function getUserHdLucky($conId, $page, $pagenum) {
+        $uid    = $this->getUidByConId($conId);
+        $offect = ($page - 1) * $pagenum;
+        $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+        return ['code' => 200, 'winnings' => $result];
+    }
+
+    public function createOrderQrCode($data){
+        
+       
+        $qrcodelogic = new qrcodelogic($data, 470, '取货二维码');
+        $qrcodelogic->coverbackground('../public/background.png', 3, 3);
+        $qrcodelogic->output();
+        exit;
+        print_r($qrcodelogic);die;
     }
 }

@@ -79,7 +79,9 @@ class Recommend extends MyController {
      * 2019/3/6
      */
     public function getRecommend() {
-        $res = $this->app->recommend->getRecommend();
+        $apiName = classBasename($this) . '/' . __function__;
+        $res     = $this->app->recommend->getRecommend();
+        $this->apiLog($apiName, [], $res['code'], '');
         return $res;
     }
 }

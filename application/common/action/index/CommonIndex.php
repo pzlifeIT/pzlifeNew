@@ -22,6 +22,8 @@ class CommonIndex {
         $this->redisConIdTime   = Config::get('rediskey.user.redisConIdTime');
         $this->redisConIdUid    = Config::get('rediskey.user.redisConIdUid');
         $this->redisAccessToken = Config::get('redisKey.weixin.redisAccessToken');
+        $this->redisAccessTokenTencent = Config::get('redisKey.weixin.redisAccessTokenTencent');
+        $this->redisTicketTencent = Config::get('redisKey.weixin.redisTicketTencent');
     }
 
     /**
@@ -122,5 +124,55 @@ class CommonIndex {
         }
         
         return $access_token;
+    }
+
+    /**
+     * 获取微信公众号access_token
+     * @return array
+     * @author rzc
+     */
+    protected function getWeiXinAccessTokenTencent() {
+        $access_token = $this->redis->get($this->redisAccessTokenTencent);
+        if (empty($access_token)) {
+            $appid = Env::get('weixin.weixin_appid');
+            $appid         = 'wx112088ff7b4ab5f3';
+            $secret = Env::get('weixin.weixin_secret');
+            $secret        = 'db7915c4a840421683be99c6d798757f';
+            $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+            $requsest_subject = json_decode(sendRequest($requestUrl), true);
+            if (!isset($requsest_subject['access_token'])) {
+                return false;
+            }
+            $access_token     = $requsest_subject['access_token'];
+            
+            $this->redis->set($this->redisAccessTokenTencent,$access_token);
+            $this->redis->expire($this->redisAccessTokenTencent, 6600);
+        }
+        
+        return $access_token;
+    }
+
+    /**
+     * 获取微信公众号微信jsapi_ticket
+     * @return array
+     * @author rzc
+     */
+    public function getTicketTencent($access_token){
+        $TicketTencent = $this->redis->get($this->redisTicketTencent);
+        if (empty($TicketTencent)) {
+            $requestUrl = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token='.$access_token.'&type=jsapi';
+            $requsest_subject = json_decode(sendRequest($requestUrl), true);
+            if ($requsest_subject['errcode'] != 0) {
+            } else {
+                $TicketTencent = $requsest_subject['ticket'];
+            }
+            if (!$TicketTencent) {
+                return false;
+            }
+            $this->redis->set($this->redisTicketTencent,$TicketTencent);
+            $this->redis->expire($this->redisTicketTencent, 6600);
+        }
+        
+        return $TicketTencent;
     }
 }

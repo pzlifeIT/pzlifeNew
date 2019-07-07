@@ -19,6 +19,7 @@ class Spec extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {Number} page_num 每页条数
+     * @apiParam (入参) {Number} [type_name] 分类名称
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据
      * @apiSuccess (返回) {Array} data 返回数据
      * @apiSuccess (data) {Number} id 一级规格id
@@ -34,14 +35,18 @@ class Spec extends AdminController {
      * 2018/12/25-10:07
      */
     public function getSpecList() {
-        $page    = trim(input("post.page"));
-        $page    = empty($page) ? 1 : intval($page);
-        $pageNum = trim(input("post.page_num"));
-        $pageNum = empty($pageNum) ? 10 : intval($pageNum);
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $type_name = trim(input("post.type_name"));
+        $page     = trim(input("post.page"));
+        $page     = empty($page) ? 1 : intval($page);
+        $pageNum  = trim(input("post.page_num"));
+        $pageNum  = empty($pageNum) ? 10 : intval($pageNum);
         if (!is_numeric($page) || !is_numeric($pageNum)) {
             return ["msg" => "参数错误", "code" => 3001];
         }
-        $spec_data = $this->app->spec->getSpecList($page, $pageNum);
+        $spec_data = $this->app->spec->getSpecList($page, $pageNum, $type_name);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $type_name], $spec_data['code'], $cmsConId);
         return $spec_data;
     }
 
@@ -62,7 +67,10 @@ class Spec extends AdminController {
      * 2018/12/25-10:52
      */
     public function addAttrPage() {
-        $res = $this->app->spec->addAttrPage();
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $res      = $this->app->spec->addAttrPage();
+        $this->apiLog($apiName, [$cmsConId], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -120,12 +128,15 @@ class Spec extends AdminController {
      * 2018/12/25-14:32
      */
     public function getEditData() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));
         if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->getEditData($id, $type);
+        $this->apiLog($apiName, [$cmsConId, $id, $type], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -176,12 +187,15 @@ class Spec extends AdminController {
      * 2018/12/25-16:25
      */
     public function delSpecAttr() {
-        $id   = trim(input("post.id"));
-        $type = trim(input("post.type"));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim(input("post.id"));
+        $type     = trim(input("post.type"));
         if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->delSpecAttr($type, $id);
+        $this->apiLog($apiName, [$cmsConId, $id, $type], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -201,11 +215,14 @@ class Spec extends AdminController {
      * 2019/1/7-18:11
      */
     public function getAttr() {
-        $id = trim(input("post.spec_id"));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim(input("post.spec_id"));
         if (empty(is_numeric($id))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->getAttr($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -224,11 +241,14 @@ class Spec extends AdminController {
      * 2019/1/8-15:25
      */
     public function getSpecAttr() {
-        $id = trim(input("post.cate_id"));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim(input("post.cate_id"));
         if (!is_numeric($id)) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $res = $this->app->spec->getSpecAttr($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $res['code'], $cmsConId);
         return $res;
     }
 }

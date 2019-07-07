@@ -19,6 +19,8 @@ return [
         'redisCmsConIdTime'       => 'cms:user:cmsConId:expiration', //后台cmsConId到期时间的zadd
         'redisCmsConIdUid'        => 'cms:user:cmsConId:adminid', //后台cmsConId和adminid的hSet
         'redisUserOpenbossLock'   => 'index:user:openboss:lock:', //开通boss锁
+        'redisSupConIdTime'       => 'sup:user:supConId:expiration', //供应商后台supConId到期时间的zadd
+        'redisSupConIdUid'        => 'sup:user:supConId:adminid', //供应商后台supConId和supadminid的hSet
     ],
     'index'        => [
         'redisIndexShow'   => 'index:index:show',
@@ -34,9 +36,15 @@ return [
     ],
     'weixin'       => [
         'redisAccessToken' => 'weixin:accesstoken', //微信access_token
+        'redisAccessTokenTencent' => 'weixin:accesstoken:tencent', //微信公众号access_token
+        'redisTicketTencent' => 'weixin:ticket:tencent', //微信公众号ticket
+        'redisBatchgetMaterial' => 'weixin:batchget:material', //微信公众号文章
     ],
     'modelmessage' => [
         'redisMarketingActivity' => 'cms:modelmessage:marketingactivity:list', //营销活动
         'redisTimedTask'         => 'cms:modelmessage:timedtask:list', //定时任务
     ],
+    'active'=>[//活动
+        'redisHdluckyDraw'=>'index:offlineActivities:luckyDraw',
+    ]
 ];

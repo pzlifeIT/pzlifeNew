@@ -47,17 +47,18 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSuppliers() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id'));
         $supplierName = trim($this->request->post('supplierName'));
         $page         = trim($this->request->post('page'));
         $pagenum      = trim($this->request->post('pagenum'));
         $page         = $page ? $page : 1;
         $pagenum      = $pagenum ? $pagenum : 10;
-
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3002'];
         }
-
         $result = $this->app->suppliers->getSuppliers($page, $pagenum, $supplierName);
+        $this->apiLog($apiName, [$cmsConId, $supplierName, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -75,7 +76,10 @@ class Suppliers extends AdminController {
      * @author zyr
      */
     public function getSuppliersAll() {
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id'));
         $result = $this->app->suppliers->getSuppliersAll();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -99,12 +103,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierData() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id'));
         $supplierId = trim($this->request->post('supplierId'));
         if (!is_numeric($supplierId)) {
             return ['code' => '3002'];
         }
-
         $result = $this->app->suppliers->getSupplierData($supplierId);
+        $this->apiLog($apiName, [$cmsConId, $supplierId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -256,6 +262,8 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreights() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         /* 获取提交参数 */
         $supid = trim($this->request->post('supplierId'));
         /* 判断值 */
@@ -264,6 +272,7 @@ class Suppliers extends AdminController {
         }
         /* 获取返回结果 */
         $result = $this->app->suppliers->getSupplierFreights($supid);
+        $this->apiLog($apiName, [$cmsConId, $supid], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -285,11 +294,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreight() {
+        $apiName           = classBasename($this) . '/' . __function__;
+        $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $supplierFreightId = trim($this->request->post('supplierFreightId'));
         if (!is_numeric($supplierFreightId)) {
             return ['code' => '3002'];
         }
         $result = $this->app->suppliers->getSupplierFreight($supplierFreightId);
+        $this->apiLog($apiName, [$cmsConId, $supplierFreightId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -313,6 +325,8 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreightdetailList() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id')); //操作管理员
         $page       = trim($this->request->post('page'));
         $pagenum    = trim($this->request->post('pagenum'));
         $freight_id = trim($this->request->post('freight_id'));
@@ -324,6 +338,7 @@ class Suppliers extends AdminController {
         }
 
         $result = $this->app->suppliers->getSupplierFreightdetailList($freight_id, $page, $pagenum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum, $freight_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -428,11 +443,14 @@ class Suppliers extends AdminController {
      * @author rzc
      */
     public function getSupplierFreightdetail() {
-        $sfd_id = trim($this->request->post('sfd_id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $sfd_id   = trim($this->request->post('sfd_id'));
         if (!is_numeric($sfd_id)) {
             return ['code' => '3001']; /* 供应商id和方式必须是数字 */
         }
         $result = $this->app->suppliers->getSupplierFreightdetail(intval($sfd_id));
+        $this->apiLog($apiName, [$cmsConId, $sfd_id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -552,6 +570,73 @@ class Suppliers extends AdminController {
         }
         $result = $this->app->suppliers->updateSupplierFreightArea($cityIdStr, intval($freightDetailId));
         $this->apiLog($apiName, [$cmsConId, $cityIdStr, $freightDetailId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加供应商管理后台账号(密码默认111111)
+     * @apiDescription   addSupplierAdmin
+     * @apiGroup         admin_Suppliers
+     * @apiName          addSupplierAdmin
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} mobile  手机号
+     * @apiParam (入参) {String} sup_name 登录账号
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:手机号格式有误 / 3003:账号名称已存在 / 3004:未注册用户不能添加 / 3005:添加失败
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSampleRequest /admin/suppliers/addsupplieradmin
+     * @author zyr
+     */
+    public function addSupplierAdmin() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $supName = trim($this->request->post('sup_name'));
+        $mobile  = trim($this->request->post('mobile'));
+        if (empty($supName)) {
+            return ['code' => '3001'];//账号不能为空
+        }
+        if(!checkMobile($mobile)){
+            return ['code' => '3002'];//手机格式有误
+        }
+        $result = $this->app->suppliers->addSupplierAdmin($mobile, $supName);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $supName], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 供应商管理员列表
+     * @apiDescription   supplierAdminList
+     * @apiGroup         admin_Suppliers
+     * @apiName          supplierAdminList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page  页码
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page错误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} id 编号
+     * @apiSuccess (data) {String} sup_name 名称
+     * @apiSuccess (data) {String} mobile 手机
+     * @apiSampleRequest /admin/suppliers/supplieradminlist
+     * @author zyr
+     */
+    public function supplierAdminList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001'];//page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->suppliers->supplierAdminList($page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }
 }

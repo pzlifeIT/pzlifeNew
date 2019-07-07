@@ -86,8 +86,10 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function getBossShareDiamondvip() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim($this->request->post('page'));
+        $pagenum  = trim($this->request->post('pagenum'));
 
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
@@ -96,6 +98,7 @@ class Rights extends AdminController {
         }
 
         $result = $this->app->rights->getBossShareDiamondvip($page, $pagenum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -178,6 +181,8 @@ class Rights extends AdminController {
      * 2018/12/26-18:04
      */
     public function getShopApplyList() {
+        $apiName         = classBasename($this) . '/' . __function__;
+        $cmsConId        = trim($this->request->post('cms_con_id')); //操作管理员
         $page            = trim(input("post.page"));
         $pageNum         = trim(input("post.page_num"));
         $status          = trim(input("post.status"));
@@ -215,6 +220,7 @@ class Rights extends AdminController {
         //     return ['code' => '3004'];
         // }
         $result = $this->app->rights->getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -342,16 +348,19 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function getDiamondvipNetPush() {
-        $page    = trim(input("post.page"));
-        $pageNum = trim(input("post.page_num"));
-        $status  = trim(input("post.status"));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
-        $status  = empty($status) ? 1 : $status;
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim(input("post.page"));
+        $pageNum  = trim(input("post.page_num"));
+        $status   = trim(input("post.status"));
+        $page     = empty($page) ? 1 : $page;
+        $pageNum  = empty($pageNum) ? 10 : $pageNum;
+        $status   = empty($status) ? 1 : $status;
         if (!is_numeric($page) || !is_numeric($status) || !is_numeric($pageNum)) {
             return ['code' => '3001'];
         }
         $result = $this->app->rights->getDiamondvipNetPush($page, $pageNum, $status);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -375,7 +384,8 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function auditDiamondvipBounty() {
-        $cmsConId = trim($this->request->post('cms_con_id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $id       = trim($this->request->post('id'));
         $status   = trim($this->request->post('status'));
         if (!is_numeric($id) || !is_numeric($status)) {
@@ -388,7 +398,7 @@ class Rights extends AdminController {
             return ['code' => '3002'];
         }
         $result = $this->app->rights->auditDiamondvipBounty($id, $status);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 }

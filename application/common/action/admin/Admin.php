@@ -7,6 +7,7 @@ use app\facade\DbAdmin;
 use app\facade\DbImage;
 use app\facade\DbModelMessage;
 use app\facade\DbOrder;
+use app\facade\DbRights;
 use app\facade\DbShops;
 use app\facade\DbUser;
 use cache\Phpredis;
@@ -71,7 +72,7 @@ class Admin extends CommonIndex {
         $adminByGroup = DbAdmin::getAdminInfoByGroup([
             ['a.id', '<>', '1'],
         ], 'a.id as admin_id,pg.group_name');
-        $adminGroup   = [];
+        $adminGroup = [];
         foreach ($adminByGroup as $ag) {
             if (!isset($adminGroup[$ag['admin_id']])) {
                 $adminGroup[$ag['admin_id']] = [$ag['group_name']];
@@ -96,14 +97,14 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function addAdmin($cmsConId, $adminName, $passwd, $stype) {
-        $adminId   = $this->getUidByConId($cmsConId);
+        $adminId = $this->getUidByConId($cmsConId);
 //        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
-//        if ($adminInfo['stype'] != '2') {
-//            return ['code' => '3005']; //没有操作权限
-//        }
-//        if ($stype == 2 && $adminId != 1) {
-//            return ['code' => '3003']; //只有root账户可以添加超级管理员
-//        }
+        //        if ($adminInfo['stype'] != '2') {
+        //            return ['code' => '3005']; //没有操作权限
+        //        }
+        //        if ($stype == 2 && $adminId != 1) {
+        //            return ['code' => '3003']; //只有root账户可以添加超级管理员
+        //        }
         $newAdminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName], 'id', true);
         if (!empty($newAdminInfo)) {
             return ['code' => '3004']; //该账号已存在
@@ -158,11 +159,11 @@ class Admin extends CommonIndex {
      * @author zyr
      */
     public function openBoss($cmsConId, $mobile, $nickName, $money, $message) {
-        $adminId   = $this->getUidByConId($cmsConId);
+        $adminId = $this->getUidByConId($cmsConId);
 //        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
-//        if ($adminInfo['stype'] != '2') {
-//            return ['code' => '3005']; //没有操作权限
-//        }
+        //        if ($adminInfo['stype'] != '2') {
+        //            return ['code' => '3005']; //没有操作权限
+        //        }
         $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
         if (empty($user)) {
             return ['code' => '3006']; //用户不存在
@@ -188,13 +189,13 @@ class Admin extends CommonIndex {
                 array_push($userRelationData, $url);
             }
         }
-        $shopData        = [
+        $shopData = [
             'uid'         => $user['id'],
             'shop_right'  => 'all',
             'status'      => 1,
             'create_time' => time(),
         ];
-        $tradingDate     = [
+        $tradingDate = [
             'uid'          => $user['id'],
             'trading_type' => 2,
             'change_type'  => 9,
@@ -211,8 +212,12 @@ class Admin extends CommonIndex {
             'status'   => 1,
             'message'  => $message,
         ];
-        $pid             = $bossId == 1 ? 0 : $bossId;
-        $relationId      = $this->getRelation($user['id'])['id'];
+        $pid        = $bossId == 1 ? 0 : $bossId;
+        $relationId = $this->getRelation($user['id'])['id'];
+        //查询该用户是否有升级合伙人任务
+        $upgrade_task = DbRights::getUserTask(['uid' => $user['id'], 'type' => 3, 'status' => 1], '*', true);
+        //查询该用户是否有升级兼职市场经理的临时任务
+        $temporary_task = DbRights::getUserTask(['uid' => $user['id'], 'type' => 1, 'status' => 1], '*', true);
         Db::startTrans();
         try {
             if (!empty($userRelationData)) {
@@ -224,6 +229,27 @@ class Admin extends CommonIndex {
             DbShops::addShop($shopData); //添加店铺
             DbUser::updateUser(['user_identity' => 4], $user['id']);
             DbUser::addLogOpenboss($logOpenbossData);
+
+            if (!empty($upgrade_task)) {
+                DbRights::editUserTask(['status' => 4], $upgrade_task['id']);
+            }
+            
+            if (!empty($temporary_task)) {
+                $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
+                $tradingData = [];
+                $tradingData = [
+                    'uid'          => $user['id'],
+                    'trading_type' => 2,
+                    'change_type'  => 13,
+                    'money'        => $temporary_task['bonus'],
+                    'befor_money'  => $user['commission'],
+                    'after_money'  => bcadd($user['commission'], $temporary_task['bonus'], 2),
+                    'message'      => '结算推广创业店主奖励',
+                ];
+                DbRights::editUserTask(['status' => 4, 'bonus_status' => 2], $temporary_task['id']);
+                DbOrder::addLogTrading($tradingData); //写佣金明细
+                DbUser::modifyCommission($user['id'], $temporary_task['bonus'], 'inc'); //结算佣金
+            }
             Db::commit();
             $this->redis->del($redisKey . $user['id']);
             return ['code' => '200'];
@@ -367,9 +393,9 @@ class Admin extends CommonIndex {
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $adminId      = $this->getUidByConId($cmsConId);
 //        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
-//        if ($adminInfo['id'] != 1) {
-//            return ['code' => '3002'];
-//        }
+        //        if ($adminInfo['id'] != 1) {
+        //            return ['code' => '3002'];
+        //        }
         $remittance = DbAdmin::getAdminRemittance(['id' => $id], '*', true);
         if (empty($remittance)) {
             return ['code' => '3003'];
@@ -784,7 +810,7 @@ class Admin extends CommonIndex {
         }
         // print_r($transfer);die;
         if ($transfer['wtype'] == 1) { //提现方式 1 银行
-            
+
             $indexUser = DbUser::getUserInfo(['id' => $transfer['uid']], 'id,commission,bounty,nick_name,mobile', true);
             if ($status == 3) { //审核不通过
                 if ($transfer['stype'] == 2) { //2.佣金提现
@@ -855,9 +881,9 @@ class Admin extends CommonIndex {
                                     //匹配模板中需要查询内容
                                     $message_template = str_replace('{{[nick_name]}}', $indexUser['nick_name'], $message_template);
                                     $message_template = str_replace('{{[money]}}', $transfer['money'], $message_template);
-                                    $bankcard = substr($transfer['bank_card'],-4,4);
-                                    $message_template = str_replace('{{[bank_card]}}', '尾号为'.$bankcard.'账户', $message_template);
-                                    $Note = new Note;
+                                    $bankcard         = substr($transfer['bank_card'], -4, 4);
+                                    $message_template = str_replace('{{[bank_card]}}', '尾号为' . $bankcard . '账户', $message_template);
+                                    $Note             = new Note;
                                     // $send = $Note->sendSms('17091858001', $message_template);
                                     $send = $Note->sendSms($indexUser['mobile'], $message_template);
                                     // print_r($send);die;
@@ -873,7 +899,7 @@ class Admin extends CommonIndex {
                     return ['code' => '3007']; //审核失败
                 }
             }
-        }else{
+        } else {
             return ['code' => '3008', 'msg' => '错误的提现方式'];
         }
 
@@ -1115,7 +1141,7 @@ class Admin extends CommonIndex {
             'group_name' => $groupName,
             'content'    => $content,
         ];
-        $admin   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
+        $admin = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($admin)) {
             return ['code' => '3003'];
         }
@@ -1141,14 +1167,14 @@ class Admin extends CommonIndex {
     public function addAdminPermissions($cmsConId, $groupId, $addAdminId) {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
-        if (empty($group)) {//权限分组不存在
+        if (empty($group)) { //权限分组不存在
             return ['code' => '3003'];
         }
         $addAdmin = DbAdmin::getAdminInfo(['id' => $addAdminId, 'status' => 1], 'id');
         if (empty($addAdmin)) {
             return ['code' => '3004'];
         }
-        $data       = [
+        $data = [
             'admin_id' => $addAdminId,
             'group_id' => $groupId,
         ];
@@ -1181,15 +1207,15 @@ class Admin extends CommonIndex {
     public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content) {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId != '1') {
-            return ['code' => '3008'];//只有root可以添加
+            return ['code' => '3008']; //只有root可以添加
         }
         $apiRes = DbAdmin::getPermissionsApi(['api_name' => $apiName], 'id', true);
         if (!empty($apiRes)) {
-            return ['code' => '3005'];//接口已存在
+            return ['code' => '3005']; //接口已存在
         }
         $menu = DbAdmin::getMenuList(['id' => $menuId, 'level' => 2], 'id');
         if (empty($menu)) {
-            return ['code' => '3006'];//菜单不存在
+            return ['code' => '3006']; //菜单不存在
         }
         $data = [
             'menu_id'  => $menuId,
@@ -1222,7 +1248,7 @@ class Admin extends CommonIndex {
         $adminId = $this->getUidByConId($cmsConId);
         $apiRes  = DbAdmin::getPermissionsApi(['id' => $id], 'id', true);
         if (empty($apiRes)) {
-            return ['code' => '3005'];//接口不存在
+            return ['code' => '3005']; //接口不存在
         }
         $data = [
             'cn_name' => $cnName,
@@ -1250,19 +1276,19 @@ class Admin extends CommonIndex {
     public function addPermissionsGroupPower($cmsConId, $groupId, $permissions) {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
-        if (empty($group)) {//权限分组不存在
+        if (empty($group)) { //权限分组不存在
             return ['code' => '3003'];
         }
         $permissions = json_decode(htmlspecialchars_decode($permissions), true);
         if (!is_array($permissions)) {
             return ['code' => '3005'];
         }
-        $menuIdList = array_keys($permissions);//修改后的菜单权限
+        $menuIdList = array_keys($permissions); //修改后的菜单权限
         $menuList   = DbAdmin::getMenuList([['id', 'in', $menuIdList], ['level', '=', 2]], 'id');
         if (!empty(array_diff($menuIdList, array_column($menuList, 'id')))) {
-            return ['code' => '3006'];//菜单不存在
+            return ['code' => '3006']; //菜单不存在
         }
-        $useMenu       = DbAdmin::getAdminPermissionsRelation(['group_id' => $groupId], 'id,menu_id,api_id');//正在使用的权限
+        $useMenu       = DbAdmin::getAdminPermissionsRelation(['group_id' => $groupId], 'id,menu_id,api_id'); //正在使用的权限
         $useMenuList   = [];
         $apiIdList     = [];
         $relMenuIdList = [];
@@ -1289,7 +1315,7 @@ class Admin extends CommonIndex {
         $apiList    = array_column($perApi, 'menu_id', 'id');
         foreach ($permissions as $k => $p) {
             if (!is_array($p)) {
-                return ['code' => '3005'];//permissions参数有误,接口权限不属于菜单
+                return ['code' => '3005']; //permissions参数有误,接口权限不属于菜单
             }
             $mIds = array_keys($p);
             foreach ($mIds as $m) {
@@ -1315,11 +1341,11 @@ class Admin extends CommonIndex {
             if (in_array($k, $updateMenu)) {
                 foreach ($p as $kp => $pp) {
                     if (key_exists($kp, $apiIdList)) {
-                        if ($pp == 0) {//删除
+                        if ($pp == 0) { //删除
                             $delId = array_merge($delId, $apiIdList[$kp]);
                         }
                     } else {
-                        if ($pp == 1) {//添加
+                        if ($pp == 1) { //添加
                             array_push($addData, ['group_id' => $groupId, 'menu_id' => $k, 'api_id' => $kp]);
                         }
                     }
@@ -1353,19 +1379,19 @@ class Admin extends CommonIndex {
     public function delAdminPermissions($cmsConId, $groupId, $delAdminId) {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
-        if (empty($group)) {//权限分组不存在
+        if (empty($group)) { //权限分组不存在
             return ['code' => '3003'];
         }
         $delAdmin = DbAdmin::getAdminInfo(['id' => $delAdminId, 'status' => 1], 'id');
         if (empty($delAdmin)) {
             return ['code' => '3004'];
         }
-        $where      = [
+        $where = [
             'admin_id' => $delAdminId,
             'group_id' => $groupId,
         ];
         $adminGroup = DbAdmin::getAdminPermissionsGroup($where, 'id', true);
-        if (empty($adminGroup)) {//删除的管理员不存在
+        if (empty($adminGroup)) { //删除的管理员不存在
             return ['code' => '3006'];
         }
         $delId = $adminGroup['id'];
@@ -1420,7 +1446,7 @@ class Admin extends CommonIndex {
             }
             $adminGroupId = array_column($adminGroup, 'group_id');
             $group        = DbAdmin::getPermissionsGroup([
-                ['id', 'in', $adminGroupId]
+                ['id', 'in', $adminGroupId],
             ], 'id,group_name,content');
         }
         return ['code' => '200', 'data' => $group];
@@ -1447,8 +1473,8 @@ class Admin extends CommonIndex {
         $cate_tree = $tree->listTree();
         foreach ($cate_tree as &$ct) {
             foreach ($ct['_child'] as &$ch) {
-                $apiRes       = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
-                $useMenu      = DbAdmin::getAdminPermissionsRelation([
+                $apiRes  = DbAdmin::getPermissionsApi(['menu_id' => $ch['id']], 'id,cn_name,content');
+                $useMenu = DbAdmin::getAdminPermissionsRelation([
                     ['group_id', '=', $groupId],
                     ['menu_id', '=', $ch['id']],
                 ], 'api_id');
@@ -1475,7 +1501,6 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'data' => $cate_tree];
     }
 
-
     /**
      * 权限验证
      * @param $cmsConId
@@ -1496,12 +1521,12 @@ class Admin extends CommonIndex {
         $groupId    = DbAdmin::getAdminPermissionsGroup([
             ['admin_id', '=', $adminId],
         ], 'group_id');
-        $groupId    = array_column($groupId, 'group_id');
-        $apiId      = DbAdmin::getAdminPermissionsRelation([
+        $groupId = array_column($groupId, 'group_id');
+        $apiId   = DbAdmin::getAdminPermissionsRelation([
             ['group_id', 'in', $groupId],
             ['api_id', '<>', 0],
         ], 'api_id');
-        $apiId      = array_column($apiId, 'api_id');
+        $apiId = array_column($apiId, 'api_id');
         if (in_array($checkApiId, $apiId)) {
             return true;
         }

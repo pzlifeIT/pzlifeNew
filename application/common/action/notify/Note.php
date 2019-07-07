@@ -10,7 +10,7 @@ use third\Zthy;
  * @package app\common\notify
  */
 class Note {
-    private $sign = '【品质生活广场】';
+    private $sign = '【776品质生活广场】';
     private $end = ',退订回T提交';//营销内容结尾
 
     public function sendSms($phone, $content) {

@@ -377,7 +377,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 90);
+        // $this->redis->rPush($redisListKey, 86);
         $memberOrderId = $this->redis->lPop($redisListKey); //购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -602,7 +602,7 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             if ($actype == 1) { //无活动
-                if ($payMoney == 120) {
+                if ($payMoney == 108) {
                     $diamondvip_get                = [];
                     $diamondvip_get['uid']         = $uid;
                     $diamondvip_get['source']      = 1;
@@ -723,12 +723,12 @@ class Order extends Pzlife {
                     $from_diamondvip_get['create_time'] = time();
                     Db::name('diamondvip_get')->insert($from_diamondvip_get);
                     if ($from_user['user_identity'] > 1) {
-                        $from_balance = $from_user['bounty'] + 40;
-                        Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                        $from_balance = $from_user['balance'] + 40;
+                        Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                         Db::name('log_trading')->insert(
                             [
                                 'uid'          => $from_uid,
-                                'trading_type' => 3,
+                                'trading_type' => 1,
                                 'change_type'  => 5,
                                 'order_no'     => $memberOrder,
                                 'money'        => 40,
@@ -752,7 +752,7 @@ class Order extends Pzlife {
                     $share_from_user = $this->getUserInfo($fromDiamondvipGet['uid']);
                     // $this->redis->del($userRedisKey . 'userinfo:' . $fromDiamondvipGet['uid']);
                     // Db::getLastSql();die;
-                    // print_r($fromDiamondvipGet);die;
+                    // print_r($share_from_user);die;
                     
                         if ($share_from_user['user_identity'] < 2) {
                             if ($fromDiamondvipGet['share_num'] + 1 > 1) { //如果分享2个将会员升级钻石
@@ -760,16 +760,16 @@ class Order extends Pzlife {
                             Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
                             }
                         }else{
-                            $from_balance = $from_user['bounty'] + 40;
-                            Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                            $from_balance = $from_user['balance'] + 40;
+                            Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                             Db::name('log_trading')->insert(
                                 [
                                     'uid'          => $from_uid,
-                                    'trading_type' => 3,
+                                    'trading_type' => 1,
                                     'change_type'  => 5,
                                     'order_no'     => $memberOrder,
                                     'money'        => 40,
-                                    'befor_money'  => $from_user['bounty'],
+                                    'befor_money'  => $from_user['balance'],
                                     'after_money'  => $from_balance,
                                     'create_time'  => time(),
                                 ]

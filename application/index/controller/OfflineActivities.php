@@ -1,9 +1,12 @@
 <?php
+
 namespace app\index\controller;
+
 //
 use app\index\MyController;
+
 //
-class OfflineActivities extends MyController{
+class OfflineActivities extends MyController {
     /**
      * @api              {post} / 线下活动
      * @apiDescription   getOfflineActivities
@@ -28,12 +31,14 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/getOfflineActivities
      * @author rzc
      */
-    public function getOfflineActivities(){
-        $id = trim($this->request->post('active_id'));
+    public function getOfflineActivities() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $id      = trim($this->request->post('active_id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];
-        } 
+        }
         $result = $this->app->offlineactivities->getOfflineActivities(intval($id));
+        $this->apiLog($apiName, [$id], $result['code'], '');
         return $result;
     }
 
@@ -53,13 +58,14 @@ class OfflineActivities extends MyController{
      * @apiSampleRequest /index/OfflineActivities/createOfflineActivitiesOrder
      * @author rzc
      */
-    public function createOfflineActivitiesOrder(){
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('buy_num'));
-        $payType       = trim($this->request->post('pay_type'));
-        $payTypeArr    = [1, 2];
+    public function createOfflineActivitiesOrder() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $buid       = trim($this->request->post('buid'));
+        $skuId      = trim($this->request->post('sku_id'));
+        $num        = trim($this->request->post('buy_num'));
+        $payType    = trim($this->request->post('pay_type'));
+        $payTypeArr = [1, 2];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -78,7 +84,140 @@ class OfflineActivities extends MyController{
         }
         $num    = intval($num);
         $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId,$buid,$skuId,$num,$payType);
+        $result = $this->app->offlineactivities->createOfflineActivitiesOrder($conId, $buid, $skuId, $num, $payType);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $payType], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {get} / 线下活动商品订单生成取货二维码
+     * @apiDescription   createOrderQrCode
+     * @apiGroup         index_OfflineActivities
+     * @apiName          createOrderQrCode
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} data base64加密后的参数
+     *  @apiSuccess (返回) {String}  code 错误码 / 3002 参数为空或者加密参数格式有误
+     * @apiSuccess (返回) {String}  image 二维码图片
+     * @apiSampleRequest /index/OfflineActivities/createOrderQrCode
+     * @author rzc
+     */
+    public function createOrderQrCode() {
+        $data = trim($this->request->get('data'));
+        $data = base64_decode($data);
+
+        if (strlen($data) < 2) {
+            return ['code' => '3002'];
+        }
+        if (!$data) {
+            return ['code' => '3002'];
+        }
+
+        $result = $this->app->offlineactivities->createOrderQrCode($data);
+        return $result;
+
+    }
+
+    /**
+     * @api              {get} / 6/10期 抽奖奖品
+     * @apiDescription   LuckGoods
+     * @apiGroup         index_OfflineActivities
+     * @apiName          LuckGoods
+     * @apiParam (入参) {Number} con_id
+     *  @apiSuccess (返回) {String}  code 错误码 / 3002 参数为空或者加密参数格式有误
+     * @apiSuccess (返回) {String}  LuckGoods 奖品
+     * @apiSuccess (LuckGoods) {String}  shop_num 奖品编号
+     * @apiSuccess (LuckGoods) {String}  goods_name 奖品名称
+     * @apiSuccess (LuckGoods) {String}  image_path 图片地址
+     * @apiSampleRequest /index/OfflineActivities/LuckGoods
+     * @author rzc
+     */
+
+    public function LuckGoods() {
+        $result = $this->app->offlineactivities->LuckGoods();
+        return $result;
+    }
+    /**
+     * @api              {post} / 抽奖操作
+     * @apiDescription   luckyDraw
+     * @apiGroup         index_OfflineActivities
+     * @apiName          luckyDraw
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.用户不存在 / 3002.con_id有误 / 3003:已参与抽奖 / 3004:奖品已全部抽完 / 3005:操作失败
+     * @apiSuccess (返回) {Int} shop_num 中奖编号
+     * @apiSampleRequest /index/OfflineActivities/luckydraw
+     * @author zyr
+     */
+    public function luckyDraw() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->luckyDraw($conId);
+//        $this->apiLog($apiName, [$conId], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {get} / 获取抽奖记录
+     * @apiDescription   getHdLucky
+     * @apiGroup         index_OfflineActivities
+     * @apiName          getHdLucky
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} big 1:大奖， 不传为全部
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001 奖品类型错误
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/getHdLucky
+     * @author rzc
+     */
+    public function getHdLucky() {
+        $big = trim($this->request->post('big'));
+        if (!empty($big)) {
+            if ($big != 1) {
+                return ['code' => '3001'];
+            }
+        }
+        $result = $this->app->offlineactivities->getHdLucky($big);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取会员自己抽奖记录
+     * @apiDescription   getUserHdLucky
+     * @apiGroup         index_OfflineActivities
+     * @apiName          getUserHdLucky
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} [page] 页码
+     * @apiParam (入参) {Number} [pageNum] 页码
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/getUserHdLucky
+     * @author rzc
+     */
+    public function getUserHdLucky() {
+        $conId   = trim($this->request->post('con_id'));
+        $page    = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pageNum'));
+        $page    = is_numeric($page) ? $page : 1;
+        $pagenum = is_numeric($pagenum) ? $pagenum : 10;
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum);
         return $result;
     }
 }
