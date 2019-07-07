@@ -335,7 +335,7 @@ class Rights extends MyController {
      * @apiGroup         index_rights
      * @apiName          userTaskProgress
      * @apiParam (入参) {String} con_id 用户con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:page错误 /
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:无任务 /
      * @apiSuccess (返回) {String} taskprogress
      * @apiSampleRequest /index/rights/userTaskProgress
      * @return array
