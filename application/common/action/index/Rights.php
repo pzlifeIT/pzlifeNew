@@ -336,7 +336,7 @@ class Rights extends CommonIndex {
                                 'bonus'       => $parent_user_task['bonus'] + 8,
                                 'update_time' => time(),
                             ];
-                            if ($up_parent_task['target'] <= $up_parent_task['has_target']) {
+                            if ($parent_user_task['target'] <= $up_parent_task['has_target']) {
                                 $up_parent_task['bonus_status'] = 2;
                                 $up_parent_task['status']       = 2;
                                 $tradingData                    = [];
