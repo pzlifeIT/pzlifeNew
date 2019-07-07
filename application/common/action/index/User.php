@@ -1115,12 +1115,12 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] != '4') {
+        if ($user['user_identity'] <= '2') {
             return ['code' => '3000']; //boss才有权限查看
         }
         $where = [
-            ['trading_type', '=', '1'], //佣金交易
-            ['change_type', 'in', [3, 6, 7, 8, 9]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
+            ['trading_type', '=', '2'], //佣金交易
+            ['change_type', 'in', [3, 6, 7, 8, 9, 13]], //1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
             ['uid', '=', $uid],
         ];
         $field  = 'change_type,money,create_time,message';
