@@ -60,7 +60,10 @@ class User extends CommonIndex {
             $rl['relation'] = $bossUid . ',' . $rl['relation'];
         }
         unset($rl);
-        $shopId          = DbShops::getShopInfo('id', ['uid' => $userInfo['id']])['id'];
+        $shop          = DbShops::getShopInfo('id', ['uid' => $userInfo['id']]);
+        if ($shop) {
+            $shopId = $shop['id'];
+        }
         $shopGoodsList   = DbShops::getShopGoods(['shop_id' => $shopId], 'id');
         $shopGoodsListId = array_column($shopGoodsList, 'id');
         $logDemotionData = [
@@ -72,7 +75,9 @@ class User extends CommonIndex {
         ];
         Db::startTrans();
         try {
-            DbShops::deleteShop($shopId);
+            if ($shopId) {
+                DbShops::deleteShop($shopId);
+            }
             DbUser::updateUser(['user_identity' => $userIdentity], $userInfo['id']);
             DbUser::updateUserRelation($relationList);
             DbShops::deleteShopGoods($shopGoodsListId);
