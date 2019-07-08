@@ -449,7 +449,7 @@ class Rights extends CommonIndex {
                             'message'      => '推广创业店主奖励',
                         ];
                         DbUser::saveLogTrading($tradingData);
-                        DbUser::modifyCommission($parent_id, $add_user_task['bonus'], 'inc');
+                        DbUser::modifyCommission($parent_id, 8, 'inc');
 
                         //判断是否需要写入兼职市场经理升级合伙人任务记录中
                         $upgrade_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 3, 'status' => 1], '*', true);
