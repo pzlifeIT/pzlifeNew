@@ -378,6 +378,6 @@ class DbRights {
      * @return array
      */
     public function getTaskInvitedCount($where) {
-        return UserTask::where($where)->count();
+        return TaskInvited::where($where)->count();
     }
 }

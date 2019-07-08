@@ -328,6 +328,7 @@ class Rights extends CommonIndex {
                     if ($parent_info['user_market'] == 1) {
                         //创业店主升级兼职市场经理任务
                         $parent_user_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 1, 'status' => 1], '*', true);
+                       
                         if (!empty($parent_user_task)) {
                             //原任务进度
                             $up_parent_task = [];
@@ -467,7 +468,7 @@ class Rights extends CommonIndex {
                                 'has_target' => $upgrade_task['has_target'] + 1,
                             ];
                             //判断是否达到任务完成条件
-                            if ($upgrade_task['has_target'] <= $new_upgrade_task['has_target']) {
+                            if ($upgrade_task['target'] <= $new_upgrade_task['has_target']) {
                                 $new_upgrade_task['status'] = 2;
                                 //完成条件升级成为BOSS
                                 $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
