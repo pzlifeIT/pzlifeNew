@@ -327,7 +327,8 @@ class DbRights {
      * @return array
      */
      public function editUserTask($data, $id){
-        return UserTask::save($data, ['id' => $id]);
+        $UserTask = new UserTask;
+        return $UserTask->save($data, ['id' => $id]);
     }
 
     /**
@@ -367,7 +368,8 @@ class DbRights {
      * @return array
      */
      public function editTaskInvited($data, $id){
-        return TaskInvited::save($data, ['id' => $id]);
+         $TaskInvited = new TaskInvited;
+        return $TaskInvited->save($data, ['id' => $id]);
     }
 
     /**
@@ -376,6 +378,6 @@ class DbRights {
      * @return array
      */
     public function getTaskInvitedCount($where) {
-        return UserTask::where($where)->count();
+        return TaskInvited::where($where)->count();
     }
 }

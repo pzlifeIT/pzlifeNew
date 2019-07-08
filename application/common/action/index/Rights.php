@@ -328,6 +328,7 @@ class Rights extends CommonIndex {
                     if ($parent_info['user_market'] == 1) {
                         //创业店主升级兼职市场经理任务
                         $parent_user_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 1, 'status' => 1], '*', true);
+                       
                         if (!empty($parent_user_task)) {
                             //原任务进度
                             $up_parent_task = [];
@@ -336,7 +337,7 @@ class Rights extends CommonIndex {
                                 'bonus'       => $parent_user_task['bonus'] + 8,
                                 'update_time' => time(),
                             ];
-                            if ($up_parent_task['target'] <= $up_parent_task['has_target']) {
+                            if ($parent_user_task['target'] <= $up_parent_task['has_target']) {
                                 $up_parent_task['bonus_status'] = 2;
                                 $up_parent_task['status']       = 2;
                                 $tradingData                    = [];
@@ -349,7 +350,7 @@ class Rights extends CommonIndex {
                                     'after_money'  => bcadd($parent_info['commission'], $up_parent_task['bonus'], 2),
                                     'message'      => '推广创业店主奖励',
                                 ];
-                                DbRights::editUserTask($up_parent_task, $parent_user_task['id']);
+                                
                                 DbUser::updateUser(['user_market' => 2], $parent_id);
                                 DbUser::saveLogTrading($tradingData);
                                 DbUser::modifyCommission($parent_id, $up_parent_task['bonus'], 'inc');
@@ -391,6 +392,7 @@ class Rights extends CommonIndex {
                                     }
                                 }
                             }
+                            DbRights::editUserTask($up_parent_task, $parent_user_task['id']);
                             $task_invited = [];
                             $task_invited = [
                                 'utask_id'      => $parent_user_task['id'],
@@ -466,7 +468,7 @@ class Rights extends CommonIndex {
                                 'has_target' => $upgrade_task['has_target'] + 1,
                             ];
                             //判断是否达到任务完成条件
-                            if ($upgrade_task['has_target'] <= $new_upgrade_task['has_target']) {
+                            if ($upgrade_task['target'] <= $new_upgrade_task['has_target']) {
                                 $new_upgrade_task['status'] = 2;
                                 //完成条件升级成为BOSS
                                 $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
@@ -739,9 +741,14 @@ class Rights extends CommonIndex {
             $type = 3;
         } elseif ($userInfo['user_market'] == 3) { //兼职市场总监
             $type = 6;
+        } elseif ($userInfo['user_market'] == 4) {
+            $type = 6;
         }
         array_push($where, ['type', '=', $type]);
         $userTask = DbRights::getUserTask($where, 'target,has_target', true, ['id' => 'desc']);
+        if (empty($userTask)) {
+            return ['code' => '3001'];
+        }
         return ['code' => '200', 'taskprogress' => '任务进度' . $userTask['has_target'] . '/' . $userTask['target']];
     }
 
