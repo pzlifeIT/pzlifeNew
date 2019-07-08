@@ -5,6 +5,7 @@ namespace app\common\action\index;
 use app\facade\DbGoods;
 use app\facade\DbLabel;
 use Config;
+use think\Db;
 
 class Goods extends CommonIndex {
     private $transformRedisKey;
