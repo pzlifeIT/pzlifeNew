@@ -423,8 +423,8 @@ class Rights extends CommonIndex {
                             $id             = $parent_user_task['id'];
                             $up_parent_task = [];
                             $up_parent_task = [
-                                `has_target`=> $parent_user_task['has_target'] + 1,
-                                `bonus`     => $parent_user_task['bonus'] + 8,
+                                'has_target'=> $parent_user_task['has_target'] + 1,
+                                'bonus'     => $parent_user_task['bonus'] + 8,
                             ];
                             DbRights::editUserTask($up_parent_task, $id);
                         }
@@ -473,7 +473,7 @@ class Rights extends CommonIndex {
                                 //完成条件升级成为BOSS
                                 $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
                                 //该BOSS已选择其他开店方式
-                                if ($this->redis->setNx($redisKey . $parent_id, 1) === false) {
+                                if ($this->redis->setNx($redisKey . $parent_id, 1) === true) {
 
                                 } else {
                                     //升级成为BOSS
@@ -504,7 +504,7 @@ class Rights extends CommonIndex {
                                     }
                                     DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
                                     DbShops::addShop($shopData); //添加店铺
-                                    DbUser::updateUser(['user_identity' => 4], $parent_id);
+                                    DbUser::updateUser(['user_identity' => 4,'user_market' => 0], $parent_id);
                                 }
                             }
                             DbRights::editUserTask($new_upgrade_task, $upgrade_task['id']);
