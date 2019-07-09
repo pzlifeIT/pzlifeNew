@@ -78,7 +78,7 @@ class User extends CommonIndex {
             if ($shopId) {
                 DbShops::deleteShop($shopId);
             }
-            DbUser::updateUser(['user_identity' => $userIdentity], $userInfo['id']);
+            DbUser::updateUser(['user_identity' => $userIdentity,'user_market' => 0], $userInfo['id']);
             DbUser::updateUserRelation($relationList);
             DbShops::deleteShopGoods($shopGoodsListId);
             DbShops::addLogDemotion($logDemotionData);
