@@ -1142,6 +1142,9 @@ class User extends CommonIndex {
             case 8:
                 $ctype = '后台充值操作';
                 break;
+            case 13:
+                $ctype = '市场推广';
+                break;
             }
             $d['message'] = empty($d['message']) ? $ctype : $d['message'];
             unset($d['change_type']);
