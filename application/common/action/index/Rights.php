@@ -314,7 +314,6 @@ class Rights extends CommonIndex {
             $parent_id = 1;
         }
         
-        $parent_id = 26743;
         $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market,commission', true);
         if (empty($parent_info)) {
             $parent_id = 1;
