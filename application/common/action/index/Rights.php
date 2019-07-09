@@ -374,17 +374,11 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 if ($parent_userRelation[0] != $parent_id) {
                                     $new_parent_userRelation = krsort($parent_userRelation);
-                                    foreach ($new_parent_userRelation as $key => $value) {
-                                        $rela_user = [];
-                                        $pr_boss = DbUser::getUserInfo(['id' => $value], 'user_identity,nick_name,user_market', true);
-                                        if ($pr_boss['user_identity'] == 4) {
-                                            $rela_user = DbUser::getUserInfo(['id' => $parent_userRelation[0]], 'user_identity,nick_name,user_market', true);
-                                            break;
-                                        }
-                                    }
+                                    $p_bossid = $this->getPrentBoss($new_parent_userRelation);
                                     
-                                    if (!empty($rela_user)) {
-                                        $rel_task = DbRights::getUserTask(['uid' => $parent_userRelation[0], 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
+                                    if ($p_bossid) {
+                                        $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'user_identity,nick_name,user_market', true);
+                                        $rel_task = DbRights::getUserTask(['uid' => $p_bossid, 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
                                         if (!empty($rel_task)) {
                                             $new_rel_task = [];
                                             $new_rel_task = [
@@ -691,6 +685,19 @@ class Rights extends CommonIndex {
             return 1;
         }
         return $bossUid;
+    }
+    private function getPrentBoss($data){
+        if (empty($data)) {
+            return false;
+        }
+        foreach ($data as $key => $value) {
+            $rela_user = [];
+            $pr_boss = DbUser::getUserInfo(['id' => $value], 'user_identity,nick_name,user_market', true);
+            if ($pr_boss['user_identity'] == 4) {
+                return $value;
+            }
+        }
+        return false;
     }
 
     private function getRelation($uid) {
