@@ -189,7 +189,7 @@ class Goods extends CommonIndex {
         // $where = [["goods_id", "=", $goods_id],["status", "=",1],['retail_price','<>', 0]];
         $where     = [["goods_id", "=", $goods_id], ["status", "=", 1]];
         $goods_sku = DbGoods::getOneGoodsSku($where, $field);
-        /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本-售价*0.006)*0.9*(钻石返利：0.75) */
+        /* brokerage：佣金；计算公式：(商品售价-商品进价-其它运费成本-售价*0.006)*0.9*(钻石再补贴：0.75) */
         /* integral_active：积分；计算公式：(商品售价-商品进价-其它运费成本)*2 */
         foreach ($goods_sku as $goods => $sku) {
             $goods_sku[$goods]['brokerage']       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], $sku['margin_price']), 0.75, 2);

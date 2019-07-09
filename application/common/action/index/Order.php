@@ -688,7 +688,7 @@ class Order extends CommonIndex {
         $freightCount         = []; //各个运费模版的购买数量
         $freightWeight        = []; //各个运费模版的购买重量
         $freightVolume        = []; //各个运费模版的购买体积
-        $rebateAll            = 0; //所有商品钻石返利总和
+        $rebateAll            = 0; //所有商品钻石再补贴总和
         $totalGoodsPrice      = 0; //所有商品总价
         $goodsCount           = 0; //购买商品总数
         $totalFreightPrice    = 0; //总运费
@@ -719,7 +719,7 @@ class Order extends CommonIndex {
             $distrProfits                        = getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
             $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
-            $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2); //钻石返利
+            $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2); //钻石再补贴
             //            $integralAll                         = bcadd($this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price'], $cartSum));
             $totalGoodsPrice = bcadd(bcmul($value['retail_price'], $cartSum, 2), $totalGoodsPrice, 2); //商品总价
             $goodsCount      += $cartSum;
@@ -790,7 +790,7 @@ class Order extends CommonIndex {
     }
 
     /**
-     * 获取钻石返利
+     * 获取钻石再补贴
      * @param $distrProfits 可分配利润
      * @param int $num 商品数量
      * @return string

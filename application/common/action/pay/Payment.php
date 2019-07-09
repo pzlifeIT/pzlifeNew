@@ -210,7 +210,7 @@ class Payment {
                         $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
 
-                        $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
+                  /*       $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
                         $skus       = [];
                         $sku_goodsids  = [];
                         foreach ($order_list as $order => $list) {
@@ -226,7 +226,7 @@ class Payment {
                                 DbRights::receiveDiamondvip($receiveDiamondvip);
                                 break;
                             }
-                        }
+                        } */
 
                     }
                     if (!empty($memOrderData)) {

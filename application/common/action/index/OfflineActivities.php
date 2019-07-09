@@ -283,7 +283,7 @@ class OfflineActivities extends CommonIndex {
     }
 
     /**
-     * 获取钻石返利
+     * 获取钻石再补贴
      * @param $distrProfits 可分配利润
      * @param int $num 商品数量
      * @return string
