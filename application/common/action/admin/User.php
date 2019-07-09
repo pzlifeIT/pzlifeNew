@@ -4,6 +4,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbShops;
 use app\facade\DbUser;
+use app\facade\DbRights;
 use think\Db;
 
 class User extends CommonIndex {
@@ -73,12 +74,16 @@ class User extends CommonIndex {
             'content'        => $content,
             'uid_list'       => json_encode(array_column($relationList, 'uid')),
         ];
+        $user_task = DbRights::getUserTask(['type' => 6,'status' => 1],'id',true);
         Db::startTrans();
         try {
             if ($shopId) {
                 DbShops::deleteShop($shopId);
             }
             DbUser::updateUser(['user_identity' => $userIdentity,'user_market' => 0], $userInfo['id']);
+            if ($user_task) {
+                DbRights::editUserTask(['status' => 4],$user_task['id']);
+            }
             DbUser::updateUserRelation($relationList);
             DbShops::deleteShopGoods($shopGoodsListId);
             DbShops::addLogDemotion($logDemotionData);
