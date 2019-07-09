@@ -372,9 +372,8 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 if ($parent_userRelation[0] != $parent_id) {
-                                    $new_parent_userRelation = krsort($parent_userRelation);
-                                    $p_bossid = $this->getPrentBoss($new_parent_userRelation);
-                                    
+
+                                    $p_bossid = $this->getPrentBoss($parent_userRelation);
                                     if ($p_bossid) {
                                         $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'user_identity,nick_name,user_market', true);
                                         $rel_task = DbRights::getUserTask(['uid' => $p_bossid, 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
@@ -689,12 +688,15 @@ class Rights extends CommonIndex {
         if (empty($data)) {
             return false;
         }
+        $rela_user = [];
         foreach ($data as $key => $value) {
-            $rela_user = [];
             $pr_boss = DbUser::getUserInfo(['id' => $value], 'user_identity,nick_name,user_market', true);
             if ($pr_boss['user_identity'] == 4) {
-                return $value;
+                $rela_user[] = $value;
             }
+        }
+        if (!empty($rela_user)) {
+            return end($rela_user);
         }
         return false;
     }
