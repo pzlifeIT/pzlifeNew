@@ -798,7 +798,7 @@ class User extends CommonIndex {
                 $ctype = '订单取消商券退回';
                 break;
             case 4:
-                $ctype = '钻石再让利';
+                $ctype = '钻石再补贴';
                 break;
             case 5:
                 $ctype = '钻石会员邀请奖励';
@@ -816,7 +816,7 @@ class User extends CommonIndex {
         }
         // print_r($data);die;
         return ['code' => '200', 'data' => $result];
-        //商券退款  已使用商券   钻石会员邀请奖励  钻石返利
+        //商券退款  已使用商券   钻石会员邀请奖励  钻石再补贴
     }
 
     /**

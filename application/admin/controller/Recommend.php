@@ -50,7 +50,7 @@ class Recommend extends AdminController {
      * @apiSuccess (recommends[son]) {String} goods_subtitle 商品副标题
      * @apiSuccess (recommends[son]) {String} goods_image 商品图片
      * @apiSuccess (recommends[son]) {String} goods_status 商品状态
-     * @apiSuccess (recommends[son]) {String} goods_min_brokerage 商品最小钻石返利
+     * @apiSuccess (recommends[son]) {String} goods_min_brokerage 商品最小钻石再补贴
      * @apiSuccess (recommends[son]) {String} goods_min_integral_active 商品最小赠送积分
      * @apiSuccess (recommends[son][third]) {String} id 主键ID
      * @apiSuccess (recommends[son][third]) {String} model_id 模板id 1:轮播banner 2:图标tips 3:专题模块推荐 4:新品上市 5:每周推荐 6:爆款推荐 7:应季推荐 8:时令推荐 9:买主推荐 10:专题商品推荐
@@ -74,7 +74,7 @@ class Recommend extends AdminController {
      * @apiSuccess (recommends[son][third]) {String} goods_image 商品图片
      * @apiSuccess (recommends[son][third]) {String} goods_status 商品状态
      * @apiSuccess (recommends[son][third]) {String} goods_retail_price 商品零售价
-     * @apiSuccess (recommends[son][third]) {String} goods_min_brokerage 商品最小钻石返利
+     * @apiSuccess (recommends[son][third]) {String} goods_min_brokerage 商品最小钻石再补贴
      * @apiSuccess (recommends[son][third]) {String} goods_min_integral_active 商品最小赠送积分
      * @apiSampleRequest /admin/Recommend/getRecommend
      * @apiParamExample (data) {Array} 返回用户列表

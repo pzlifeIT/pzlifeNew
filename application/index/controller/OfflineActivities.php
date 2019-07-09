@@ -27,7 +27,7 @@ class OfflineActivities extends MyController {
      * @apiSuccess (data) {String} image 商品标题图
      * @apiSuccess (data) {String} min_market_price 最低市场价
      * @apiSuccess (data) {String} min_retail_price 最低零售价
-     * @apiSuccess (data) {String} min_brokerage 最低钻石返利
+     * @apiSuccess (data) {String} min_brokerage 最低钻石再补贴
      * @apiSampleRequest /index/OfflineActivities/getOfflineActivities
      * @author rzc
      */

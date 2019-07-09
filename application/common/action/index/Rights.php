@@ -313,6 +313,8 @@ class Rights extends CommonIndex {
         if (!$parent_id) {
             $parent_id = 1;
         }
+        
+        $parent_id = 26743;
         $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market,commission', true);
         if (empty($parent_info)) {
             $parent_id = 1;
@@ -371,7 +373,16 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 if ($parent_userRelation[0] != $parent_id) {
-                                    $rela_user = DbUser::getUserInfo(['id' => $parent_userRelation[0]], 'user_identity,nick_name,user_market', true);
+                                    $new_parent_userRelation = krsort($parent_userRelation);
+                                    foreach ($new_parent_userRelation as $key => $value) {
+                                        $rela_user = [];
+                                        $pr_boss = DbUser::getUserInfo(['id' => $value], 'user_identity,nick_name,user_market', true);
+                                        if ($pr_boss['user_identity'] == 4) {
+                                            $rela_user = DbUser::getUserInfo(['id' => $parent_userRelation[0]], 'user_identity,nick_name,user_market', true);
+                                            break;
+                                        }
+                                    }
+                                    
                                     if (!empty($rela_user)) {
                                         $rel_task = DbRights::getUserTask(['uid' => $parent_userRelation[0], 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
                                         if (!empty($rel_task)) {
