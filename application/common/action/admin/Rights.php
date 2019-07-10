@@ -272,8 +272,9 @@ class Rights extends CommonIndex {
                     //上级奖励任务
                     $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
                     $refe_relation = explode(',', $refe_relation);
-                    if ($refe_relation[0] != $shopapply['refe_uid']) {
-                        $rela_user = DbUser::getUserInfo(['id' => $refe_relation[0]], 'id,user_identity,nick_name,user_market,commission', true);
+                    $re_boss_id = $this->getPrentBoss($refe_relation);
+                    if ($re_boss_id) {
+                        $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
                         if (!empty($rela_user) && $rela_user['user_market'] > 2) {
                             $rel_task = DbRights::getUserTask(['uid' => $refe_relation[0], 'type' => 7], '*', true);
                             if ($rela_user['user_market'] == 3) {
@@ -317,7 +318,7 @@ class Rights extends CommonIndex {
                                 'uid'          => $rela_user['id'],
                                 'trading_type' => 2,
                                 'change_type'  => 13,
-                                'money'        => $cost,
+                                'money'        => $thiscost,
                                 'befor_money'  => $rela_user['commission'],
                                 'after_money'  => bcadd($rela_user['commission'], $thiscost, 2),
                                 'message'      => '推广合伙人奖励',
@@ -452,6 +453,23 @@ class Rights extends CommonIndex {
     private function getRelation($uid) {
         $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,pid,is_boss,relation', true);
         return $userRelation;
+    }
+
+    private function getPrentBoss($data){
+        if (empty($data)) {
+            return false;
+        }
+        $rela_user = [];
+        foreach ($data as $key => $value) {
+            $pr_boss = DbUser::getUserInfo(['id' => $value], 'user_identity,nick_name,user_market', true);
+            if ($pr_boss['user_identity'] == 4) {
+                $rela_user[] = $value;
+            }
+        }
+        if (!empty($rela_user)) {
+            return end($rela_user);
+        }
+        return false;
     }
 
     /**
