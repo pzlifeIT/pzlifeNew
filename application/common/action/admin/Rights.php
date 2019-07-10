@@ -277,7 +277,7 @@ class Rights extends CommonIndex {
                         if (!empty($rela_user) && $rela_user['user_market'] > 2) {
                             $rel_task = DbRights::getUserTask(['uid' => $refe_relation[0], 'type' => 7], '*', true);
                             if ($rela_user['user_market'] == 3) {
-                                $thiscost = 500;
+                                $thiscost = 1000;
                             } elseif ($rela_user['user_market'] == 4) {
                                 $thiscost = 1500;
                             }
@@ -327,7 +327,7 @@ class Rights extends CommonIndex {
                         }
                     }
                 } else if ($shopapply['refe_identity'] == 4) {
-                    $cost = 4000;
+                    $cost = 4500;
                 } else if ($shopapply['refe_identity'] == 5) {
                     $cost = 5000;
                 }
