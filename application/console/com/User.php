@@ -511,6 +511,7 @@ class User extends Pzlife {
         if (empty($user_task)) {
             exit('user_task_is_null');
         }
+        ini_set('memory_limit', '1024M');
         foreach ($user_task as $key => $task) {
            
             // print_r($user);die;
@@ -535,7 +536,7 @@ class User extends Pzlife {
                         $user_balance = bcadd($user['balance'], $task['bonus'], 2);
                         Db::table('pz_users')->where('id',$task['uid'])->update(['balance' => $user_balance]);
                     }
-                    Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3]);
+                    Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3,'bonus_status' => 2]);
                     Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 0]);
                     Db::commit();
                 } catch (\Exception $e) {
@@ -546,8 +547,8 @@ class User extends Pzlife {
                     die;
                 }
             }
-            
         }
+        exit('ok!');
     }
 
     //每月初结算上月任务并更新下月任务
