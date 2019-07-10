@@ -273,7 +273,7 @@ class Rights extends CommonIndex {
                     $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
                     $refe_relation = explode(',', $refe_relation);
                     if ($refe_relation[0] != $shopapply['refe_uid']) {
-                        $rela_user = DbUser::getUserInfo(['id' => $refe_relation[0]], 'user_identity,nick_name,user_market,commission', true);
+                        $rela_user = DbUser::getUserInfo(['id' => $refe_relation[0]], 'id,user_identity,nick_name,user_market,commission', true);
                         if (!empty($rela_user) && $rela_user['user_market'] > 2) {
                             $rel_task = DbRights::getUserTask(['uid' => $refe_relation[0], 'type' => 7], '*', true);
                             if ($rela_user['user_market'] == 3) {
