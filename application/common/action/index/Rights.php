@@ -441,7 +441,7 @@ class Rights extends CommonIndex {
                                                 'money'        => $p_bouns,
                                                 'befor_money'  => $rela_user['commission'],
                                                 'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
-                                                'message'      => '推广创业店主奖励',
+                                                'message'      => '兼职市场经理升级永久奖励',
                                             ];
                                             DbUser::saveLogTrading($tradingData);
                                             DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
@@ -759,7 +759,7 @@ class Rights extends CommonIndex {
                                             'money'        => $p_bouns,
                                             'befor_money'  => $rela_user['commission'],
                                             'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
-                                            'message'      => '推广创业店主奖励',
+                                            'message'      => '兼职市场经理超额完成任务奖励',
                                         ];
                                         DbUser::saveLogTrading($tradingData);
                                         DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
