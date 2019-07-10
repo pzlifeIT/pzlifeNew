@@ -197,10 +197,11 @@ class Rights extends CommonIndex {
         }
 
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity,nick_name', true);
-        if ($userInfo['user_identity'] == 4) {
+        if ($userInfo['user_identity'] < 3) {
             return ['code' => '3010'];
         }
         $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market', true);
+        $parent_shop = [];
         if (!empty($parent_info)) {
             $refe_identity = 0;
             if ($parent_info['user_identity'] == 4) {
