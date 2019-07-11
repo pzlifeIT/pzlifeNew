@@ -311,7 +311,7 @@ class Rights extends CommonIndex {
             }
         }
         $parent_id = deUid($parent_id);
-        // $parent_id = 26743;
+        // $parent_id = 26781;
         if (!$parent_id) {
             $parent_id = 1;
         }
@@ -602,7 +602,7 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 $p_bossid = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid) {
+                                if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
@@ -682,6 +682,7 @@ class Rights extends CommonIndex {
                                     ];
                                     DbRights::editUserTask($new_upgrade_task, $extra_id);
                                 }
+                                print_r($extra_id);die;
                                 $task_invited = [];
                                 $task_invited = [
                                     'utask_id'      => $extra_id,
@@ -707,7 +708,7 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 $p_bossid = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid) {
+                                if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
