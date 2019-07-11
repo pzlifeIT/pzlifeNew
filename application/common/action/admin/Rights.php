@@ -25,7 +25,7 @@ class Rights extends CommonIndex {
      */
     public function creatBossShareDiamondvip($mobile, $linkman, $stock, $redmoney_status, $type, $coupon_money) {
 
-        $user = DbUser::getUserOne(['mobile' => $mobile, 'user_identity' => 4], 'id');
+        $user = DbUser::getUserOne(['mobile' => $mobile, 'user_identity' => 4, 'nick_name' => $linkman], 'id');
         if (!$user) {
             return ['code' => '3003', 'msg' => '该用户不存在'];
         }
