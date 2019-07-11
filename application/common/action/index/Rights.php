@@ -255,18 +255,18 @@ class Rights extends CommonIndex {
         $apply_data['status']    = 1;
 
 /*         //招商代理收益日志
-        $log_invest               = [];
-        $log_invest['uid']        = $parent_id;
-        $log_invest['target_uid'] = $uid;
-        $log_invest['status']     = 1;
-        if ($refe_identity == 2) {
-            $log_invest['cost']       = 3500;
-        }else if ($refe_identity == 4) {
-            $log_invest['cost']       = 4000;
-        }else if ($refe_identity == 5) {
-            $log_invest['cost']       = 5000;
-        } */
-        
+$log_invest               = [];
+$log_invest['uid']        = $parent_id;
+$log_invest['target_uid'] = $uid;
+$log_invest['status']     = 1;
+if ($refe_identity == 2) {
+$log_invest['cost']       = 3500;
+}else if ($refe_identity == 4) {
+$log_invest['cost']       = 4000;
+}else if ($refe_identity == 5) {
+$log_invest['cost']       = 5000;
+} */
+
         if ($this->redis->setNx($redisKey . $uid, 1) === false) {
             return ['code' => '3013'];
         }
@@ -315,7 +315,7 @@ class Rights extends CommonIndex {
         if (!$parent_id) {
             $parent_id = 1;
         }
-        
+
         $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market,commission', true);
         if (empty($parent_info)) {
             $parent_id = 1;
@@ -331,7 +331,7 @@ class Rights extends CommonIndex {
                     if ($parent_info['user_market'] == 1) {
                         //创业店主升级兼职市场经理任务
                         $parent_user_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 1, 'status' => 1], '*', true);
-                       
+
                         if (!empty($parent_user_task)) {
                             //原任务进度
                             $up_parent_task = [];
@@ -353,7 +353,7 @@ class Rights extends CommonIndex {
                                     'after_money'  => bcadd($parent_info['commission'], $up_parent_task['bonus'], 2),
                                     'message'      => '推广创业店主奖励',
                                 ];
-                                
+
                                 DbUser::updateUser(['user_market' => 2], $parent_id);
                                 DbUser::saveLogTrading($tradingData);
                                 DbUser::modifyCommission($parent_id, $up_parent_task['bonus'], 'inc');
@@ -378,7 +378,7 @@ class Rights extends CommonIndex {
                                     $p_bossid = $this->getPrentBoss($parent_userRelation);
                                     if ($p_bossid) {
                                         $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
-                                        $rel_task = DbRights::getUserTask(['uid' => $p_bossid, 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
+                                        $rel_task  = DbRights::getUserTask(['uid' => $p_bossid, 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
                                         if (!empty($rel_task)) {
                                             $new_rel_task = [];
                                             $new_rel_task = [
@@ -394,15 +394,15 @@ class Rights extends CommonIndex {
                                             ];
                                             DbRights::addTaskInvited($res_task_invited);
                                             if ($rela_user['user_market'] == 3) {
-                                                $ptype = 8;
-                                                $ptitle = '兼职市场总监1推广兼职市场经理奖励任务';
+                                                $ptype   = 8;
+                                                $ptitle  = '兼职市场总监1推广兼职市场经理奖励任务';
                                                 $p_bouns = 2;
-                                            }else if ($rela_user['user_market'] == 4) {
-                                                $ptype = 9;
-                                                $ptitle = '兼职市场总监2推广兼职市场经理奖励任务';
+                                            } else if ($rela_user['user_market'] == 4) {
+                                                $ptype   = 9;
+                                                $ptitle  = '兼职市场总监2推广兼职市场经理奖励任务';
                                                 $p_bouns = 3;
                                             }
-                                            $p_task =  DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                            $p_task = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
                                             if (empty($p_task)) {
                                                 $newp_task = [
                                                     'uid'          => $p_bossid,
@@ -416,20 +416,20 @@ class Rights extends CommonIndex {
                                                     'start_time'   => time(),
                                                 ];
                                                 $p_task_id = DbRights::addUserTask($newp_task);
-                                            }else{
+                                            } else {
                                                 $newp_task = [
                                                     'has_target' => $p_task['has_target'] + 1,
-                                                    'bonus' => $p_task['bonus'] + $p_bouns,
+                                                    'bonus'      => $p_task['bonus'] + $p_bouns,
                                                 ];
                                                 DbRights::editUserTask($newp_task, $p_task['id']);
                                                 $p_task_id = $p_task['id'];
 
-                                               
                                             }
                                             $p_task_invited = [
                                                 'utask_id'      => $p_task_id,
                                                 'uid'           => $parent_id,
                                                 'user_identity' => 5,
+                                                'bonus'         => $p_bouns,
                                                 'timekey'       => date('Ym', time()),
                                             ];
                                             DbRights::addTaskInvited($p_task_invited);
@@ -480,8 +480,8 @@ class Rights extends CommonIndex {
                             $id             = $parent_user_task['id'];
                             $up_parent_task = [];
                             $up_parent_task = [
-                                'has_target'=> $parent_user_task['has_target'] + 1,
-                                'bonus'     => $parent_user_task['bonus'] + 8,
+                                'has_target' => $parent_user_task['has_target'] + 1,
+                                'bonus'      => $parent_user_task['bonus'] + 8,
                             ];
                             DbRights::editUserTask($up_parent_task, $id);
                         }
@@ -561,7 +561,7 @@ class Rights extends CommonIndex {
                                     }
                                     DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
                                     DbShops::addShop($shopData); //添加店铺
-                                    DbUser::updateUser(['user_identity' => 4,'user_market' => 0], $parent_id);
+                                    DbUser::updateUser(['user_identity' => 4, 'user_market' => 0], $parent_id);
                                 }
                             }
                             DbRights::editUserTask($new_upgrade_task, $upgrade_task['id']);
@@ -601,20 +601,20 @@ class Rights extends CommonIndex {
                                 //上级总监提成
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
-                                $p_bossid = $this->getPrentBoss($parent_userRelation);
+                                $p_bossid            = $this->getPrentBoss($parent_userRelation);
                                 if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
-                                            $ptype = 12;
-                                            $ptitle = '兼职市场总监1获得兼职市场经理本月推广100创业奖励任务';
-                                            $p_bouns = bcmul(1200,0.1,2);
-                                        }else if ($rela_user['user_market'] == 4) {
-                                            $ptype = 13;
-                                            $ptitle = '兼职市场总监2获得兼职市场经理本月推广100创业奖励任务';
-                                            $p_bouns = bcmul(1200,0.15,2);
+                                            $ptype   = 12;
+                                            $ptitle  = '兼职市场总监1获得兼职市场经理本月推广100创业奖励任务';
+                                            $p_bouns = bcmul(1200, 0.1, 2);
+                                        } else if ($rela_user['user_market'] == 4) {
+                                            $ptype   = 13;
+                                            $ptitle  = '兼职市场总监2获得兼职市场经理本月推广100创业奖励任务';
+                                            $p_bouns = bcmul(1200, 0.15, 2);
                                         }
-                                        $p_task =  DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                        $p_task    = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
                                         $newp_task = [];
                                         if (empty($p_task)) {
                                             $newp_task = [
@@ -629,20 +629,20 @@ class Rights extends CommonIndex {
                                                 'start_time'   => time(),
                                             ];
                                             $p_task_id = DbRights::addUserTask($newp_task);
-                                        }else{
+                                        } else {
                                             $newp_task = [
                                                 'has_target' => $p_task['has_target'] + 1,
-                                                'bonus' => $p_task['bonus'] + $p_bouns,
+                                                'bonus'      => $p_task['bonus'] + $p_bouns,
                                             ];
                                             DbRights::editUserTask($newp_task, $p_task['id']);
                                             $p_task_id = $p_task['id'];
-    
-                                           
+
                                         }
                                         $p_task_invited = [
                                             'utask_id'      => $p_task_id,
                                             'uid'           => $parent_id,
                                             'user_identity' => 5,
+                                            'bonus'         => $p_bouns,
                                             'timekey'       => date('Ym', time()),
                                         ];
                                         DbRights::addTaskInvited($p_task_invited);
@@ -692,7 +692,7 @@ class Rights extends CommonIndex {
                                     'bonus'         => 12,
                                 ];
                                 DbRights::addTaskInvited($task_invited);
-    
+
                                 $tradingData = [];
                                 $tradingData = [
                                     'uid'          => $parent_id,
@@ -707,20 +707,20 @@ class Rights extends CommonIndex {
                                 DbUser::modifyCommission($parent_id, 12, 'inc');
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
-                                $p_bossid = $this->getPrentBoss($parent_userRelation);
+                                $p_bossid            = $this->getPrentBoss($parent_userRelation);
                                 if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
-                                            $ptype = 10;
-                                            $ptitle = '兼职市场总监1获得兼职市场经理超额完成任务奖励';
-                                            $p_bouns = bcmul(12,0.1,2);
-                                        }else if ($rela_user['user_market'] == 4) {
-                                            $ptype = 11;
-                                            $ptitle = '兼职市场总监2获得兼职市场经理超额完成任务奖励';
-                                            $p_bouns = bcmul(12,0.15,2);
+                                            $ptype   = 10;
+                                            $ptitle  = '兼职市场总监1获得兼职市场经理超额完成任务奖励';
+                                            $p_bouns = bcmul(12, 0.1, 2);
+                                        } else if ($rela_user['user_market'] == 4) {
+                                            $ptype   = 11;
+                                            $ptitle  = '兼职市场总监2获得兼职市场经理超额完成任务奖励';
+                                            $p_bouns = bcmul(12, 0.15, 2);
                                         }
-                                        $p_task =  DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                        $p_task    = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
                                         $newp_task = [];
                                         if (empty($p_task)) {
                                             $newp_task = [
@@ -735,20 +735,20 @@ class Rights extends CommonIndex {
                                                 'start_time'   => time(),
                                             ];
                                             $p_task_id = DbRights::addUserTask($newp_task);
-                                        }else{
+                                        } else {
                                             $newp_task = [
                                                 'has_target' => $p_task['has_target'] + 1,
-                                                'bonus' => $p_task['bonus'] + $p_bouns,
+                                                'bonus'      => $p_task['bonus'] + $p_bouns,
                                             ];
                                             DbRights::editUserTask($newp_task, $p_task['id']);
                                             $p_task_id = $p_task['id'];
-    
-                                           
+
                                         }
                                         $p_task_invited = [
                                             'utask_id'      => $p_task_id,
                                             'uid'           => $parent_id,
                                             'user_identity' => 5,
+                                            'bonus'         => $p_bouns,
                                             'timekey'       => date('Ym', time()),
                                         ];
                                         DbRights::addTaskInvited($p_task_invited);
@@ -766,12 +766,10 @@ class Rights extends CommonIndex {
                                         DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
                                     }
                                 }
-    
 
                             }
 
-                            
-                        } 
+                        }
                     }
 
                 }
@@ -866,7 +864,7 @@ class Rights extends CommonIndex {
         }
         return $bossUid;
     }
-    private function getPrentBoss($data){
+    private function getPrentBoss($data) {
         if (empty($data)) {
             return false;
         }
