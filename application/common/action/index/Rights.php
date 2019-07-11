@@ -602,7 +602,7 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 $p_bossid = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid) {
+                                if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
@@ -707,7 +707,7 @@ class Rights extends CommonIndex {
                                 $parent_userRelation = $this->getRelation($parent_id)['relation'];
                                 $parent_userRelation = explode(',', $parent_userRelation);
                                 $p_bossid = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid) {
+                                if ($p_bossid && $p_bossid != $parent_id) {
                                     $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
                                     if ($rela_user['user_market'] > 2) {
                                         if ($rela_user['user_market'] == 3) {
