@@ -682,7 +682,6 @@ $log_invest['cost']       = 5000;
                                     ];
                                     DbRights::editUserTask($new_upgrade_task, $extra_id);
                                 }
-                                print_r($extra_id);die;
                                 $task_invited = [];
                                 $task_invited = [
                                     'utask_id'      => $extra_id,
