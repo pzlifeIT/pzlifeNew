@@ -570,7 +570,7 @@ class Rights extends CommonIndex {
                         //判断是否需要给与额外奖励1200或者每一人12元
                         //测试数量2
                         $thismonth_num = DbRights::getTaskInvitedCount(['utask_id' => $id, 'timekey' => date('Ym', time())]);
-                        if ($thismonth_num >= 2) {
+                        if ($thismonth_num >= 100) {
                             $month_task_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 4, 'timekey' => date('Ym', time())], 'id', true);
                             if (empty($month_task_bonus)) {
                                 $add_month_task = [];
