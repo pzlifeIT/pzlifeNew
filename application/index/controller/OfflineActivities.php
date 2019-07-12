@@ -52,7 +52,7 @@ class OfflineActivities extends MyController {
      * @apiParam (入参) {Number} sku_id 商品SKU_ID
      * @apiParam (入参) {Number} buy_num 购买数量
      * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在  / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/OfflineActivities/createOfflineActivitiesOrder

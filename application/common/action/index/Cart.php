@@ -29,6 +29,10 @@ class Cart extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
+        $user = DbUser::getUserOne(['uid' => $uid], 'id,user_identity');
+        if (empty($user)) {
+            return ['code' => '3003'];
+        }
 
         /* 获取该商品规格属性ID */
         $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image';
@@ -56,10 +60,19 @@ class Cart extends CommonIndex {
         }
         /* 获取商品基础信息 */
         $where      = [["id", "=", $goods_sku['goods_id']], ["status", "=", 1]];
-        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+        $field      = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
         $goods_data = DbGoods::getOneGoods($where, $field);
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在或者已下架'];
+        }
+        if ($user['user_identity'] < $goods_data['target_users']) {
+            if ($goods_data['target_users'] == 2){
+                return ['code' => 3005, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($goods_data['target_users'] == 3){
+                return ['code' => 3007, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($goods_data['target_users'] == 4){
+                return ['code' => 3008, 'msg' => '该商品合伙人及以上身份专享'];
+            }
         }
 
         /* 获取商品所在分类 */
