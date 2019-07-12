@@ -371,81 +371,78 @@ $log_invest['cost']       = 5000;
                                     'end_time'     => strtotime("+1 year"),
                                 ];
                                 DbRights::addUserTask($upgrade_task);
-                                $parent_userRelation = $this->getRelation($parent_id)['relation'];
-                                $parent_userRelation = explode(',', $parent_userRelation);
-                                if ($parent_userRelation[0] != $parent_id) {
+                                $parent_userRelation = $this->getRelation($parent_id);
+                                $rela_user           = DbUser::getUserInfo(['id' => $parent_userRelation['pid']], 'commission,user_identity,nick_name,user_market', true);
+                                if (!empty($rela_user) && $rela_user['user_market'] > 2) {
 
-                                    $p_bossid = $this->getPrentBoss($parent_userRelation);
-                                    if ($p_bossid) {
-                                        $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
-                                        $rel_task  = DbRights::getUserTask(['uid' => $p_bossid, 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
-                                        if (!empty($rel_task)) {
-                                            $new_rel_task = [];
-                                            $new_rel_task = [
-                                                'has_target' => $rel_task['has_target'] + 1,
-                                            ];
-                                            DbRights::editUserTask($new_rel_task, $rel_task['id']);
-                                            $res_task_invited = [];
-                                            $res_task_invited = [
-                                                'utask_id'      => $rel_task['id'],
-                                                'uid'           => $parent_id,
-                                                'user_identity' => 5,
-                                                'timekey'       => date('Ym', time()),
-                                            ];
-                                            DbRights::addTaskInvited($res_task_invited);
-                                            if ($rela_user['user_market'] == 3) {
-                                                $ptype   = 8;
-                                                $ptitle  = '兼职市场总监1推广兼职市场经理奖励任务';
-                                                $p_bouns = 2;
-                                            } else if ($rela_user['user_market'] == 4) {
-                                                $ptype   = 9;
-                                                $ptitle  = '兼职市场总监2推广兼职市场经理奖励任务';
-                                                $p_bouns = 3;
-                                            }
-                                            $p_task = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
-                                            if (empty($p_task)) {
-                                                $newp_task = [
-                                                    'uid'          => $p_bossid,
-                                                    'title'        => $ptitle,
-                                                    'type'         => $ptype,
-                                                    'has_target'   => 1,
-                                                    'status'       => 1,
-                                                    'bonus'        => $p_bouns,
-                                                    'bonus_status' => 2,
-                                                    'timekey'      => date('Ym', time()),
-                                                    'start_time'   => time(),
-                                                ];
-                                                $p_task_id = DbRights::addUserTask($newp_task);
-                                            } else {
-                                                $newp_task = [
-                                                    'has_target' => $p_task['has_target'] + 1,
-                                                    'bonus'      => $p_task['bonus'] + $p_bouns,
-                                                ];
-                                                DbRights::editUserTask($newp_task, $p_task['id']);
-                                                $p_task_id = $p_task['id'];
-
-                                            }
-                                            $p_task_invited = [
-                                                'utask_id'      => $p_task_id,
-                                                'uid'           => $parent_id,
-                                                'user_identity' => 5,
-                                                'bonus'         => $p_bouns,
-                                                'timekey'       => date('Ym', time()),
-                                            ];
-                                            DbRights::addTaskInvited($p_task_invited);
-                                            $tradingData = [];
-                                            $tradingData = [
-                                                'uid'          => $p_bossid,
-                                                'trading_type' => 2,
-                                                'change_type'  => 13,
-                                                'money'        => $p_bouns,
-                                                'befor_money'  => $rela_user['commission'],
-                                                'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
-                                                'message'      => '兼职市场经理升级永久奖励',
-                                            ];
-                                            DbUser::saveLogTrading($tradingData);
-                                            DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
+                                    $rel_task = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => 6, 'timekey' => date('Ym', time())], '*', true);
+                                    if (!empty($rel_task)) {
+                                        $new_rel_task = [];
+                                        $new_rel_task = [
+                                            'has_target' => $rel_task['has_target'] + 1,
+                                        ];
+                                        DbRights::editUserTask($new_rel_task, $rel_task['id']);
+                                        $res_task_invited = [];
+                                        $res_task_invited = [
+                                            'utask_id'      => $rel_task['id'],
+                                            'uid'           => $parent_id,
+                                            'user_identity' => 5,
+                                            'timekey'       => date('Ym', time()),
+                                        ];
+                                        DbRights::addTaskInvited($res_task_invited);
+                                        if ($rela_user['user_market'] == 3) {
+                                            $ptype   = 8;
+                                            $ptitle  = '兼职市场总监1推广兼职市场经理奖励任务';
+                                            $p_bouns = 2;
+                                        } else if ($rela_user['user_market'] == 4) {
+                                            $ptype   = 9;
+                                            $ptitle  = '兼职市场总监2推广兼职市场经理奖励任务';
+                                            $p_bouns = 3;
                                         }
+                                        $p_task = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                        if (empty($p_task)) {
+                                            $newp_task = [
+                                                'uid'          => $parent_userRelation['pid'],
+                                                'title'        => $ptitle,
+                                                'type'         => $ptype,
+                                                'has_target'   => 1,
+                                                'status'       => 1,
+                                                'bonus'        => $p_bouns,
+                                                'bonus_status' => 2,
+                                                'timekey'      => date('Ym', time()),
+                                                'start_time'   => time(),
+                                            ];
+                                            $p_task_id = DbRights::addUserTask($newp_task);
+                                        } else {
+                                            $newp_task = [
+                                                'has_target' => $p_task['has_target'] + 1,
+                                                'bonus'      => $p_task['bonus'] + $p_bouns,
+                                            ];
+                                            DbRights::editUserTask($newp_task, $p_task['id']);
+                                            $p_task_id = $p_task['id'];
+
+                                        }
+                                        $p_task_invited = [
+                                            'utask_id'      => $p_task_id,
+                                            'uid'           => $parent_id,
+                                            'user_identity' => 5,
+                                            'bonus'         => $p_bouns,
+                                            'timekey'       => date('Ym', time()),
+                                        ];
+                                        DbRights::addTaskInvited($p_task_invited);
+                                        $tradingData = [];
+                                        $tradingData = [
+                                            'uid'          => $parent_userRelation['pid'],
+                                            'trading_type' => 2,
+                                            'change_type'  => 13,
+                                            'money'        => $p_bouns,
+                                            'befor_money'  => $rela_user['commission'],
+                                            'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
+                                            'message'      => '兼职市场经理升级永久奖励',
+                                        ];
+                                        DbUser::saveLogTrading($tradingData);
+                                        DbUser::modifyCommission($parent_userRelation['pid'], $p_bouns, 'inc');
+
                                     }
                                 }
                             }
@@ -599,67 +596,65 @@ $log_invest['cost']       = 5000;
                                 DbUser::modifyCommission($parent_id, $add_month_task['bonus'], 'inc');
 
                                 //上级总监提成
-                                $parent_userRelation = $this->getRelation($parent_id)['relation'];
-                                $parent_userRelation = explode(',', $parent_userRelation);
-                                $p_bossid            = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid && $p_bossid != $parent_id) {
-                                    $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
-                                    if ($rela_user['user_market'] > 2) {
-                                        if ($rela_user['user_market'] == 3) {
-                                            $ptype   = 12;
-                                            $ptitle  = '兼职市场总监1获得兼职市场经理本月推广100创业奖励任务';
-                                            $p_bouns = bcmul(1200, 0.1, 2);
-                                        } else if ($rela_user['user_market'] == 4) {
-                                            $ptype   = 13;
-                                            $ptitle  = '兼职市场总监2获得兼职市场经理本月推广100创业奖励任务';
-                                            $p_bouns = bcmul(1200, 0.15, 2);
-                                        }
-                                        $p_task    = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
-                                        $newp_task = [];
-                                        if (empty($p_task)) {
-                                            $newp_task = [
-                                                'uid'          => $p_bossid,
-                                                'title'        => $ptitle,
-                                                'type'         => $ptype,
-                                                'has_target'   => 1,
-                                                'status'       => 1,
-                                                'bonus'        => $p_bouns,
-                                                'bonus_status' => 2,
-                                                'timekey'      => date('Ym', time()),
-                                                'start_time'   => time(),
-                                            ];
-                                            $p_task_id = DbRights::addUserTask($newp_task);
-                                        } else {
-                                            $newp_task = [
-                                                'has_target' => $p_task['has_target'] + 1,
-                                                'bonus'      => $p_task['bonus'] + $p_bouns,
-                                            ];
-                                            DbRights::editUserTask($newp_task, $p_task['id']);
-                                            $p_task_id = $p_task['id'];
+                                $parent_userRelation = $this->getRelation($parent_id);
+                                $rela_user           = DbUser::getUserInfo(['id' => $parent_userRelation['pid']], 'commission,user_identity,nick_name,user_market', true);
+                                if (!empty($rela_user) && $rela_user['user_market'] > 2) {
 
-                                        }
-                                        $p_task_invited = [
-                                            'utask_id'      => $p_task_id,
-                                            'uid'           => $parent_id,
-                                            'user_identity' => 5,
-                                            'bonus'         => $p_bouns,
-                                            'timekey'       => date('Ym', time()),
-                                        ];
-                                        DbRights::addTaskInvited($p_task_invited);
-                                        $tradingData = [];
-                                        $tradingData = [
-                                            'uid'          => $p_bossid,
-                                            'trading_type' => 2,
-                                            'change_type'  => 13,
-                                            'money'        => $p_bouns,
-                                            'befor_money'  => $rela_user['commission'],
-                                            'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
-                                            'message'      => '推广创业店主奖励',
-                                        ];
-                                        DbUser::saveLogTrading($tradingData);
-                                        DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
+                                    if ($rela_user['user_market'] == 3) {
+                                        $ptype   = 12;
+                                        $ptitle  = '兼职市场总监1获得兼职市场经理本月推广100创业奖励任务';
+                                        $p_bouns = bcmul(1200, 0.1, 2);
+                                    } else if ($rela_user['user_market'] == 4) {
+                                        $ptype   = 13;
+                                        $ptitle  = '兼职市场总监2获得兼职市场经理本月推广100创业奖励任务';
+                                        $p_bouns = bcmul(1200, 0.15, 2);
                                     }
+                                    $p_task    = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                    $newp_task = [];
+                                    if (empty($p_task)) {
+                                        $newp_task = [
+                                            'uid'          => $parent_userRelation['pid'],
+                                            'title'        => $ptitle,
+                                            'type'         => $ptype,
+                                            'has_target'   => 1,
+                                            'status'       => 1,
+                                            'bonus'        => $p_bouns,
+                                            'bonus_status' => 2,
+                                            'timekey'      => date('Ym', time()),
+                                            'start_time'   => time(),
+                                        ];
+                                        $p_task_id = DbRights::addUserTask($newp_task);
+                                    } else {
+                                        $newp_task = [
+                                            'has_target' => $p_task['has_target'] + 1,
+                                            'bonus'      => $p_task['bonus'] + $p_bouns,
+                                        ];
+                                        DbRights::editUserTask($newp_task, $p_task['id']);
+                                        $p_task_id = $p_task['id'];
+
+                                    }
+                                    $p_task_invited = [
+                                        'utask_id'      => $p_task_id,
+                                        'uid'           => $parent_id,
+                                        'user_identity' => 5,
+                                        'bonus'         => $p_bouns,
+                                        'timekey'       => date('Ym', time()),
+                                    ];
+                                    DbRights::addTaskInvited($p_task_invited);
+                                    $tradingData = [];
+                                    $tradingData = [
+                                        'uid'          => $parent_userRelation['pid'],
+                                        'trading_type' => 2,
+                                        'change_type'  => 13,
+                                        'money'        => $p_bouns,
+                                        'befor_money'  => $rela_user['commission'],
+                                        'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
+                                        'message'      => '推广创业店主奖励',
+                                    ];
+                                    DbUser::saveLogTrading($tradingData);
+                                    DbUser::modifyCommission($parent_userRelation['pid'], $p_bouns, 'inc');
                                 }
+
                             } else {
                                 $the_month_extra_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 5, 'timekey' => date('Ym', time())], 'id,has_target', true);
                                 if (empty($the_month_extra_bonus)) {
@@ -704,66 +699,63 @@ $log_invest['cost']       = 5000;
                                 ];
                                 DbUser::saveLogTrading($tradingData);
                                 DbUser::modifyCommission($parent_id, 12, 'inc');
-                                $parent_userRelation = $this->getRelation($parent_id)['relation'];
-                                $parent_userRelation = explode(',', $parent_userRelation);
-                                $p_bossid            = $this->getPrentBoss($parent_userRelation);
-                                if ($p_bossid && $p_bossid != $parent_id) {
-                                    $rela_user = DbUser::getUserInfo(['id' => $p_bossid], 'commission,user_identity,nick_name,user_market', true);
-                                    if ($rela_user['user_market'] > 2) {
-                                        if ($rela_user['user_market'] == 3) {
-                                            $ptype   = 10;
-                                            $ptitle  = '兼职市场总监1获得兼职市场经理超额完成任务奖励';
-                                            $p_bouns = bcmul(12, 0.1, 2);
-                                        } else if ($rela_user['user_market'] == 4) {
-                                            $ptype   = 11;
-                                            $ptitle  = '兼职市场总监2获得兼职市场经理超额完成任务奖励';
-                                            $p_bouns = bcmul(12, 0.15, 2);
-                                        }
-                                        $p_task    = DbRights::getUserTask(['uid' => $p_bossid, 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
-                                        $newp_task = [];
-                                        if (empty($p_task)) {
-                                            $newp_task = [
-                                                'uid'          => $p_bossid,
-                                                'title'        => $ptitle,
-                                                'type'         => $ptype,
-                                                'has_target'   => 1,
-                                                'status'       => 1,
-                                                'bonus'        => $p_bouns,
-                                                'bonus_status' => 2,
-                                                'timekey'      => date('Ym', time()),
-                                                'start_time'   => time(),
-                                            ];
-                                            $p_task_id = DbRights::addUserTask($newp_task);
-                                        } else {
-                                            $newp_task = [
-                                                'has_target' => $p_task['has_target'] + 1,
-                                                'bonus'      => $p_task['bonus'] + $p_bouns,
-                                            ];
-                                            DbRights::editUserTask($newp_task, $p_task['id']);
-                                            $p_task_id = $p_task['id'];
-
-                                        }
-                                        $p_task_invited = [
-                                            'utask_id'      => $p_task_id,
-                                            'uid'           => $parent_id,
-                                            'user_identity' => 5,
-                                            'bonus'         => $p_bouns,
-                                            'timekey'       => date('Ym', time()),
-                                        ];
-                                        DbRights::addTaskInvited($p_task_invited);
-                                        $tradingData = [];
-                                        $tradingData = [
-                                            'uid'          => $p_bossid,
-                                            'trading_type' => 2,
-                                            'change_type'  => 13,
-                                            'money'        => $p_bouns,
-                                            'befor_money'  => $rela_user['commission'],
-                                            'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
-                                            'message'      => '兼职市场经理超额完成任务奖励',
-                                        ];
-                                        DbUser::saveLogTrading($tradingData);
-                                        DbUser::modifyCommission($p_bossid, $p_bouns, 'inc');
+                                $parent_userRelation = $this->getRelation($parent_id);
+                                $rela_user           = DbUser::getUserInfo(['id' => $parent_userRelation['pid']], 'commission,user_identity,nick_name,user_market', true);
+                                if (!empty($rela_user) && $rela_user['user_market'] > 2) {
+                                    if ($rela_user['user_market'] == 3) {
+                                        $ptype   = 10;
+                                        $ptitle  = '兼职市场总监1获得兼职市场经理超额完成任务奖励';
+                                        $p_bouns = bcmul(12, 0.1, 2);
+                                    } else if ($rela_user['user_market'] == 4) {
+                                        $ptype   = 11;
+                                        $ptitle  = '兼职市场总监2获得兼职市场经理超额完成任务奖励';
+                                        $p_bouns = bcmul(12, 0.15, 2);
                                     }
+                                    $p_task    = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
+                                    $newp_task = [];
+                                    if (empty($p_task)) {
+                                        $newp_task = [
+                                            'uid'          => $parent_userRelation['pid'],
+                                            'title'        => $ptitle,
+                                            'type'         => $ptype,
+                                            'has_target'   => 1,
+                                            'status'       => 1,
+                                            'bonus'        => $p_bouns,
+                                            'bonus_status' => 2,
+                                            'timekey'      => date('Ym', time()),
+                                            'start_time'   => time(),
+                                        ];
+                                        $p_task_id = DbRights::addUserTask($newp_task);
+                                    } else {
+                                        $newp_task = [
+                                            'has_target' => $p_task['has_target'] + 1,
+                                            'bonus'      => $p_task['bonus'] + $p_bouns,
+                                        ];
+                                        DbRights::editUserTask($newp_task, $p_task['id']);
+                                        $p_task_id = $p_task['id'];
+
+                                    }
+                                    $p_task_invited = [
+                                        'utask_id'      => $p_task_id,
+                                        'uid'           => $parent_id,
+                                        'user_identity' => 5,
+                                        'bonus'         => $p_bouns,
+                                        'timekey'       => date('Ym', time()),
+                                    ];
+                                    DbRights::addTaskInvited($p_task_invited);
+                                    $tradingData = [];
+                                    $tradingData = [
+                                        'uid'          => $parent_userRelation['pid'],
+                                        'trading_type' => 2,
+                                        'change_type'  => 13,
+                                        'money'        => $p_bouns,
+                                        'befor_money'  => $rela_user['commission'],
+                                        'after_money'  => bcadd($rela_user['commission'], $p_bouns, 2),
+                                        'message'      => '兼职市场经理超额完成任务奖励',
+                                    ];
+                                    DbUser::saveLogTrading($tradingData);
+                                    DbUser::modifyCommission($parent_userRelation['pid'], $p_bouns, 'inc');
+
                                 }
 
                             }
