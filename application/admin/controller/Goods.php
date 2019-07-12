@@ -285,7 +285,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} sku_image 规格详情图
      * @apiParam (入参) {Decimal} [weight] 重量(单位kg)用作计算运费
      * @apiParam (入参) {Decimal} [volume] 体积(单位m³)用作计算运费
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误 / 3010:请填写零售价和成本价 / 3011:选择重量模版必须填写重量 / 3012:选择体积模版必须填写体积 / 3013:商品下架才能编辑
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:没有商品sku / 3001:id必须为数字 / 3002:库存必须为大于或等于0的数字 / 3003:价格必须为大于或等于0的数字 / 3004:积分必须为大于或等于0的数字 / 3005:图片没有上传过 / 3006:零售价不能小于成本价 / 3007:skuid不存在 / 3008:编辑失败 / 3009:选择的供应山id有误 / 3010:请填写零售价和成本价 / 3011:选择重量模版必须填写重量 / 3012:选择体积模版必须填写体积 / 3013:商品下架才能编辑 / 3014:未选择运费模版
      * @apiSampleRequest /admin/goods/editgoodssku
      * @return array
      * @author zyr
@@ -307,9 +307,12 @@ class Goods extends AdminController {
         $weight        = trim($this->request->post('weight'));//重量
         $volume        = trim($this->request->post('volume'));//体积
         $skuImage      = trim($this->request->post('sku_image'));//规格详情图
-        $freightId     = intval($freightId) > 0 ? intval($freightId) : '';
         if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
             return ['code' => '3001'];
+        }
+        $freightId = intval($freightId);
+        if ($freightId <= 0) {
+            return ['code' => '3014'];
         }
         if (!is_numeric($stock) || intval($stock) < 0) {//库存必须为大于或等于0的数字
             return ['code' => '3002'];
