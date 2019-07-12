@@ -422,6 +422,7 @@ class Goods extends AdminController {
      * @apiSuccess (goods_data) {Number} cate_id 分类id
      * @apiSuccess (goods_data) {String} goods_name 商品名称
      * @apiSuccess (goods_data) {Number} goods_type 普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (goods_data) {Number} target_users 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上
      * @apiSuccess (goods_data) {String} subtitle 天然碱性苏打水
      * @apiSuccess (goods_data) {String} image 标题图
      * @apiSuccess (goods_data) {Number} status 1.上架 2.下架
