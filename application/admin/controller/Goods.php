@@ -292,6 +292,7 @@ class Goods extends AdminController {
         $weight        = trim($this->request->post('weight'));//重量
         $volume        = trim($this->request->post('volume'));//体积
         $skuImage      = trim($this->request->post('sku_image'));//规格详情图
+        $freightId     = intval($freightId) > 0 ? intval($freightId) : '';
         if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
             return ['code' => '3001'];
         }
