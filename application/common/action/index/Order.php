@@ -96,11 +96,21 @@ class Order extends CommonIndex {
             $defaultAddressId = $defaultAddress['id'] ?? 0;
             $cityId           = $defaultAddress['city_id'] ?? 0;
         }
-        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
+        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
         $balance = $balance['balance'] ?? 0;
         $summary = $this->quickSummary($uid, $buid, $skuId, $num, $cityId);
         if ($summary['code'] != '200') {
             return $summary;
+        }
+        $target_users = $summary['goods_list'][0]['target_users']; //适用人群
+        if ($balance['user_identity'] < $target_users) {
+            if ($target_users == 2){
+                return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($target_users == 3){
+                return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($target_users == 4){
+                return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
+            }
         }
         $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
         if (empty($shopList)) {
@@ -178,6 +188,17 @@ class Order extends CommonIndex {
             $buid = 1;
         }
         $goods = $summary['goods_list'][0];
+        $target_users = $goods['target_users']; //适用人群
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if ($user['user_identity'] < $target_users) {
+            if ($target_users == 2){
+                return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($target_users == 3){
+                return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($target_users == 4){
+                return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
+            }
+        }
 //        print_r($goods);die;
         $orderGoodsData = [];
         foreach ($goods['shopBuySum'] as $kgl => $gl) {
@@ -311,7 +332,7 @@ class Order extends CommonIndex {
     }
 
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status');
         if (empty($goodsSku)) {
             return ['code' => '3004']; //商品下架
         }
@@ -328,6 +349,7 @@ class Order extends CommonIndex {
         $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
         $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
         $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
+        $goodsSku['target_users']  = $goodsSku['goods']['target_users'];
         $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
         $goodsSku['status']      = $goodsSku['goods']['status'];
         $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
@@ -670,7 +692,7 @@ class Order extends CommonIndex {
         if ($cart === false) {
             return ['code' => '3005'];
         }
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,target_users,subtitle,status');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
             $eGoodsList = [];
@@ -693,7 +715,17 @@ class Order extends CommonIndex {
         $goodsCount           = 0; //购买商品总数
         $totalFreightPrice    = 0; //总运费
         $freightSupplierPrice = []; //各个供应商的运费
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         foreach ($goodsSku as $value) {
+            if ($user['user_identity'] < $value['goods']['target_users']) {
+                if ($value['goods']['target_users'] == 2){
+                    return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
+                }elseif ($value['goods']['target_users'] == 3){
+                    return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
+                }elseif ($value['goods']['target_users'] == 4){
+                    return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
+                }
+            }
             $value['supplier_id'] = $value['goods']['supplier_id'];
             $value['goods_name']  = $value['goods']['goods_name'];
             $value['goods_type']  = $value['goods']['goods_type'];
