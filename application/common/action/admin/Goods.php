@@ -65,7 +65,7 @@ class Goods extends CommonIndex {
         if (!empty($goodsType)) {
             array_push($where, ['pz_goods.goods_type', '=', $goodsType]);
         }
-        $field      = "id,image,supplier_id,cate_id,goods_name,goods_type,title,subtitle,status";
+        $field      = "id,image,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,status";
         $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum, 'id desc');
         $total      = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
@@ -455,7 +455,7 @@ class Goods extends CommonIndex {
         $goods_data = [];
         if (in_array(1, $getType)) {
             $where      = [["id", "=", $id]];
-            $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+            $field      = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
             $goods_data = DbGoods::getOneGoods($where, $field);
             if (empty($goods_data)) {
                 return ["code" => 3000];
