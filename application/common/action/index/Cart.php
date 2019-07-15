@@ -4,6 +4,7 @@ namespace app\common\action\index;
 
 use app\facade\DbGoods;
 use app\facade\DbShops;
+use app\facade\DbUser;
 use function Qiniu\json_decode;
 use Config;
 
@@ -29,7 +30,7 @@ class Cart extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        $user = DbUser::getUserOne(['uid' => $uid], 'id,user_identity');
+        $user = DbUser::getUserOne(['id' => $uid], 'id,user_identity');
         if (empty($user)) {
             return ['code' => '3003'];
         }
