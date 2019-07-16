@@ -1696,4 +1696,62 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 用户领取优惠券
+     * @apiDescription   addUserCoupon
+     * @apiGroup         index_user
+     * @apiName          addUserCoupon
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} coupon_id 优惠券id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券id有误 / 3002:用户不存在 / 3003:优惠券不存在 / 3004:有未使用的优惠券 / 3005:领取失败
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /index/user/addusercoupon
+     * @return array
+     * @author zyr
+     */
+    public function addUserCoupon() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $conId    = trim($this->request->post('con_id'));
+        $couponId = trim($this->request->post('coupon_id'));
+        if (!is_numeric($couponId) || $couponId <= 0) {
+            return ['code' => '3001'];
+        }
+        $couponId = intval($couponId);
+        $result   = $this->app->user->addUserCoupon($conId, $couponId);
+        $this->apiLog($apiName, [$conId, $couponId], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 用户优惠券列表
+     * @apiDescription   getUserCouponList
+     * @apiGroup         index_user
+     * @apiName          getUserCouponList
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} [is_use] 是否使用 1.已使用 2.未使用 3.全部 默认2
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:是否使用参数有误 / 3002:用户不存在
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {decimal} price 优惠券金额
+     * @apiSuccess (data) {Int} gs_id 商品id或专题id
+     * @apiSuccess (data) {Int} level 1.单商品优惠券 2.专题优惠券
+     * @apiSuccess (data) {String} title 优惠券标题
+     * @apiSuccess (data) {Int} is_use 是否使用 1.使用 2.未使用
+     * @apiSuccess (data) {Date} create_time 开始时间
+     * @apiSuccess (data) {Date} end_time 结束时间
+     * @apiSampleRequest /index/user/getusercouponlist
+     * @return array
+     * @author zyr
+     */
+    public function getUserCouponList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $conId    = trim($this->request->post('con_id'));
+        $isUse    = trim($this->request->post('is_use', 2));
+        $isUseArr = [1, 2, 3];
+        if (!in_array($isUse, $isUseArr)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->user->getUserCouponList($conId, $isUse);
+        $this->apiLog($apiName, [$conId, $isUse], $result['code'], $conId);
+        return $result;
+    }
 }

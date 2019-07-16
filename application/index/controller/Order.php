@@ -85,7 +85,6 @@ class Order extends MyController {
                 return ['code' => 3004];
             }
         }
-
         $result = $this->app->order->getUserOrderList($conId, $order_status, $page, $pagenum);
         $this->apiLog($apiName, [$conId, $order_status, $page, $pagenum], $result['code'], $conId);
         return $result;
@@ -170,9 +169,11 @@ class Order extends MyController {
      * @apiParam (入参) {Number} sku_id 购买的skuid
      * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
      * @apiParam (入参) {Number} [num] 购买数量
+     * @apiParam (入参) {Ind} [user_coupon_id] 用户优惠券id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
+     * @apiSuccess (返回) {Float} discount_money 优惠金额
      * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
      * @apiSuccess (返回) {Float} total_freight_price 运费总价
      * @apiSuccess (返回) {Float} total_price 价格总计
@@ -213,6 +214,7 @@ class Order extends MyController {
         $skuId         = trim($this->request->post('sku_id'));
         $num           = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
+        $userCouponId  = trim($this->request->post('user_coupon_id'));
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -229,10 +231,11 @@ class Order extends MyController {
         if (!is_numeric($num) || $num <= 0) {
             $num = 1;
         }
-        $num    = intval($num);
-        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result = $this->app->order->quickSettlement($conId, $buid, $skuId, $num, $userAddressId);
-        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId], $result['code'], $conId);
+        $userCouponId = intval($userCouponId);
+        $num          = intval($num);
+        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result       = $this->app->order->quickSettlement($conId, $buid, $skuId, $num, $userAddressId, $userCouponId);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $userCouponId], $result['code'], $conId);
         return $result;
     }
 
@@ -247,7 +250,8 @@ class Order extends MyController {
      * @apiParam (入参) {Number} user_address_id 用户选择的地址
      * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
      * @apiParam (入参) {Number} [num] 购买数量
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiParam (入参) {Ind} [user_coupon_id] 用户优惠券id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享 / 3013:用户优惠券不可使用
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/quickcreateorder
@@ -261,6 +265,7 @@ class Order extends MyController {
         $num           = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
         $payType       = trim($this->request->post('pay_type'));
+        $userCouponId  = trim($this->request->post('user_coupon_id'));
         $payTypeArr    = [1, 2];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
@@ -282,10 +287,11 @@ class Order extends MyController {
         if (!in_array($payType, $payTypeArr)) {
             return ['code' => '3008'];
         }
-        $num    = intval($num);
-        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result = $this->app->order->quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType);
-        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType], $result['code'], $conId);
+        $userCouponId = intval($userCouponId);
+        $num          = intval($num);
+        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result       = $this->app->order->quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
 
@@ -297,9 +303,11 @@ class Order extends MyController {
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
+     * @apiParam (入参) {Ind} [user_coupon_id] 用户优惠券id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 /3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
+     * @apiSuccess (返回) {Float} discount_money 优惠金额
      * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
      * @apiSuccess (返回) {Float} total_freight_price 运费总价
      * @apiSuccess (返回) {Float} total_price 价格总计
@@ -339,6 +347,7 @@ class Order extends MyController {
         $conId         = trim($this->request->post('con_id'));
         $skuIdList     = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
+        $userCouponId  = trim($this->request->post('user_coupon_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -355,8 +364,9 @@ class Order extends MyController {
         if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId));
-        $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId], $result['code'], $conId);
+        $userCouponId = intval($userCouponId);
+        $result       = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId), $userCouponId);
+        $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId, $userCouponId], $result['code'], $conId);
         return $result;
     }
 
@@ -369,7 +379,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} sku_id_list skuid列表
      * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
      * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3013:用户优惠券不可使用
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/createorder
@@ -381,6 +391,7 @@ class Order extends MyController {
         $skuIdList     = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
         $payType       = trim($this->request->post('pay_type'));
+        $userCouponId  = trim($this->request->post('user_coupon_id'));
         $payTypeArr    = [1, 2];
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
@@ -400,8 +411,9 @@ class Order extends MyController {
         if (!in_array($payType, $payTypeArr)) {
             return ['code' => '3008'];
         }
-        $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
-        $this->apiLog($apiName, [$conId, $skuIdList, $payType], $result['code'], $conId);
+        $userCouponId = intval($userCouponId);
+        $result       = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType), $userCouponId);
+        $this->apiLog($apiName, [$conId, $skuIdList, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
 
@@ -588,9 +600,9 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/sendModelMessage
      * @author rzc
      */
-    public function sendModelMessage(){
-        $conId       = trim($this->request->post('con_id'));
-        $orderNo     = trim($this->request->post('order_no'));
+    public function sendModelMessage() {
+        $conId   = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -598,7 +610,7 @@ class Order extends MyController {
             return ['code' => '3002'];
         }
         // print_r($conId);die;
-        $result = $this->app->order->sendModelMessage( $orderNo, $conId);
+        $result = $this->app->order->sendModelMessage($orderNo, $conId);
         return $result;
     }
 }
