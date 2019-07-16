@@ -61,6 +61,12 @@ class DbCoupon {
         }])->where($where)->select()->toArray()[0];
     }
 
+    public function getCouponHdByRelation($where, $offset, $pageNum) {
+        return Coupon::field('id,price,gs_id,level,title,days')->with(['couponsHd' => function ($query) use ($offset, $pageNum) {
+            $query->field('pz_coupon_hd.id,title,content')->limit($offset, $pageNum);
+        }])->where($where)->select()->toArray()[0];
+    }
+
     public function __call($name, $arguments) {
         // TODO: Implement __call() method.
         $name = str_replace('get', '', $name);

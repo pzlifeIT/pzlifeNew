@@ -126,6 +126,56 @@ class Coupons extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取某个优惠券的活动列表
+     * @apiDescription   getHdCouponList
+     * @apiGroup         admin_coupons
+     * @apiName          getHdCouponList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} coupon_id 优惠券id
+     * @apiParam (入参) {Int} [page] 当前页(默认1)
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num4有误
+     * @apiSuccess (返回) {Array} data
+     * @apiSuccess (data) {Int} id 优惠券活动id
+     * @apiSuccess (data) {String} title 优惠券活动标题
+     * @apiSuccess (data) {String} content 优惠券活动内容
+     * @apiSuccess (data) {Array} coupons
+     * @apiSuccess (coupons) {Int} id 优惠券id
+     * @apiSuccess (coupons) {Decimal} price 优惠价格
+     * @apiSuccess (coupons) {Int} gs_id 商品id或专题id
+     * @apiSuccess (coupons) {Int} level 1.单商品优惠券 2.专题优惠券
+     * @apiSuccess (coupons) {String} title 优惠券标题
+     * @apiSuccess (coupons) {Int} days 自领取后几天内有效
+     * @apiSampleRequest /admin/coupons/gethdcouponlist
+     * @return array
+     * @author zyr
+     */
+    public function getHdCouponList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $couponId = trim($this->request->post('coupon_id'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        if (!is_numeric($couponId)) {
+            return ["code" => '3001'];
+        }
+        if (!is_numeric($page) && !empty($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum) && !empty($pageNum)) {
+            return ["code" => '3003'];
+        }
+        if (intval($couponId) <= 0) {
+            return ["code" => '3001'];
+        }
+        $page    = $page > 0 ? intval($page) : 1;
+        $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
+        $result  = $this->app->coupons->getHdCouponList(intval($couponId), intval($page), intval($pageNum));
+        $this->apiLog($apiName, [$cmsConId, $couponId, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 添加优惠券活动
      * @apiDescription   addCouponHd
      * @apiGroup         admin_coupons
@@ -342,7 +392,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} coupon_hd_id 优惠券活动id
      * @apiParam (入参) {Int} coupon_id 优惠券id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券金额有误 / 3002:id参数有误 / 3003:level参数有误 / 3004:标题不能为空 / 3005:days参数有误 / 3008:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:参数coupon_hd_id有误 / 3002:参数coupon_id有误 / 3003:优惠券不存在 / 3004:优惠券活动不存在 / 3005:活动已关联 / 3008:修改失败
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/bindcouponhd
      * @return array
