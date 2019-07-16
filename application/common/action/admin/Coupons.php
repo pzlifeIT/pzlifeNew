@@ -52,6 +52,23 @@ class Coupons extends CommonIndex {
     }
 
     /**
+     * @param $couponId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getHdCouponList($couponId, $page, $pageNum) {
+        $offset               = $pageNum * ($page - 1);
+        $result               = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        $result['coupons_hd'] = array_map(function ($var) {
+            unset($var['pivot']);
+            return $var;
+        }, $result['coupons_hd']);
+        return ['code' => '200', 'data' => $result];
+    }
+
+    /**
      * @param $title
      * @param $content
      * @return array
@@ -102,7 +119,7 @@ class Coupons extends CommonIndex {
         }
     }
 
-    public function deleteCouponHd($id){
+    public function deleteCouponHd($id) {
         $couponHdRelation = DbCoupon::getCouponHdRelation(['coupon_hd_id' => $id], 'id', true);
         if (!empty($couponHdRelation)) {//活动已绑定优惠券
             return ['code' => '3002'];

@@ -50,7 +50,7 @@ class Coupon extends Model {
         $isSuperposition = array_flip($this->isSuperposition);
         return $isSuperposition[$value];
     }
-//    public function goodss() {
-//        return $this->belongsToMany('Goods', 'app\\common\\model\\GoodsSubjectRelation','goods_id','id');
-//    }
+    public function couponsHd() {
+        return $this->belongsToMany('CouponHd', 'app\\common\\model\\CouponHdRelation', 'coupon_hd_id', 'coupon_id');
+    }
 }
