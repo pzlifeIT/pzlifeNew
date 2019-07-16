@@ -4,6 +4,7 @@ namespace app\common\action\index;
 
 use app\common\action\notify\Note;
 use app\facade\DbAdmin;
+use app\facade\DbCoupon;
 use app\facade\DbImage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
@@ -2647,6 +2648,60 @@ class User extends CommonIndex {
             return ['code' => '3007'];
         }
 
+    }
+
+    /**
+     * 用户领取优惠券
+     * @param $conId
+     * @param $couponId
+     * @return array
+     * @author zyr
+     */
+    public function addUserCoupon($conId, $couponId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3002'];
+        }
+        $coupon = DbCoupon::getCoupon(['id' => $couponId], 'id,price,gs_id,level,stype,is_superposition,title,days', true);
+        if (empty($coupon)) {//优惠券不存在
+            return ['code' => '3003'];
+        }
+        $userCoupon = DbCoupon::getUserCoupon([['coupon_id', '=', $couponId], ['is_use', '=', 2], ['uid', '=', $uid]], 'id', true);//未使用的
+        if (!empty($userCoupon)) {//有未使用的优惠券
+            return ['code' => '3004'];
+        }
+        $coupon['uid']       = $uid;
+        $coupon['coupon_id'] = $couponId;
+        $coupon['end_time']  = $coupon['days'] * 24 * 3600 + strtotime(date('Y-m-d'));
+        unset($coupon['days']);
+        Db::startTrans();
+        try {
+            DbCoupon::addUserCoupon($coupon);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
+    }
+
+    /**
+     * @param $conId
+     * @param $isUse
+     * @return array
+     * @author zyr
+     */
+    public function getUserCouponList($conId, $isUse) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3002'];
+        }
+        $where = [['uid', '=', $uid], ['end_time', '>', time()]];
+        if (in_array($isUse, [1, 2])) {
+            array_push($where, ['is_use', '=', $isUse]);
+        }
+        $userCouponList = DbCoupon::getUserCoupon($where, 'price,gs_id,level,title,is_use,create_time,end_time');
+        return ['code' => '200', 'data' => $userCouponList];
     }
 
     private function getaccessToken($code) {
