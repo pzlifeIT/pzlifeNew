@@ -310,14 +310,9 @@ $log_invest['cost']       = 5000;
                 return ['code' => '3004'];
             }
         }
-<<<<<<< HEAD
-        $parent_id = deUid($parent_id);
-        // $parent_id = 26781;
-=======
         // $parent_id = deUid($parent_id);
         // $parent_id = 26743;
         $parent_id = $this->getRelation($uid)['pid'];
->>>>>>> CMSoptimize
         if (!$parent_id) {
             $parent_id = 1;
         }
