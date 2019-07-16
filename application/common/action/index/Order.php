@@ -97,13 +97,14 @@ class Order extends CommonIndex {
             $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $user_identity = $balance['user_identity'];
         $balance = $balance['balance'] ?? 0;
         $summary = $this->quickSummary($uid, $buid, $skuId, $num, $cityId);
         if ($summary['code'] != '200') {
             return $summary;
         }
         $target_users = $summary['goods_list'][0]['target_users']; //适用人群
-        if ($balance['user_identity'] < $target_users) {
+        if ($user_identity < $target_users) {
             if ($target_users == 2){
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
             }elseif ($target_users == 3){
