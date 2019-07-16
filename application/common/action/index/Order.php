@@ -347,18 +347,18 @@ class Order extends CommonIndex {
                 ['end_time', '>', time()],//未过期的
             ], 'id,price,gs_id,level', true);
             if (empty($userCoupon)) {
-                return ['code' => '3010'];
+                return ['code' => '3013'];
             }
             if ($userCoupon['level'] == 1) {//单品券
                 if ($userCoupon['gs_id'] != $goodsSku['goods_id']) {
-                    return ['code' => '3010'];
+                    return ['code' => '3013'];
                 }
             }
             if ($userCoupon['level'] == 2) {//专题券
                 $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
                 if (!in_array($userCoupon['gs_id'], $couponGoodsIdList)) {
-                    return ['code' => '3010'];
+                    return ['code' => '3013'];
                 }
             }
             $couponPrice = $userCoupon['price'];
@@ -767,11 +767,11 @@ class Order extends CommonIndex {
                 ['end_time', '>', time()],//未过期的
             ], 'id,price,gs_id,level', true);
             if (empty($userCoupon)) {
-                return ['code' => '3010'];
+                return ['code' => '3013'];
             }
             if ($userCoupon['level'] == 1) {//单品券
                 if (!in_array($userCoupon['gs_id'], $goodsIdList)) {
-                    return ['code' => '3010'];
+                    return ['code' => '3013'];
                 }
             }
             if ($userCoupon['level'] == 2) {//专题券
@@ -779,7 +779,7 @@ class Order extends CommonIndex {
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
                 $intersect         = array_intersect($couponGoodsIdList, $goodsIdList);
                 if (empty($intersect)) {//没有交集
-                    return ['code' => '3010'];
+                    return ['code' => '3013'];
                 }
             }
             $couponPrice = $userCoupon['price'];
