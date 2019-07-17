@@ -93,7 +93,7 @@ class DbCoupon {
         $field   = empty($arguments[1]) ? '*' : $arguments[1];
         $row     = empty($arguments[2]) ? false : $arguments[2];
         $orderBy = empty($arguments[3]) ? '' : $arguments[3];
-        $limit   = empty($arguments[3]) ? '' : $arguments[3];
+        $limit   = empty($arguments[4]) ? '' : $arguments[4];
         return $this->getList($name, $where, $field, $row, $orderBy, $limit);
     }
 
