@@ -18,7 +18,7 @@ class Coupons extends CommonIndex {
      */
     public function getCouponHdList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
-        $result = DbCoupon::getCouponHd([], 'id,status,title,content,create_time', false, 'id desc', $offset . ',', $pageNum);
+        $result = DbCoupon::getCouponHd([], 'id,status,title,content,create_time', false, 'id desc', $offset . ',' . $pageNum);
         $count  = DbCoupon::countCouponHd();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
@@ -31,7 +31,7 @@ class Coupons extends CommonIndex {
      */
     public function getCouponList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
-        $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',', $pageNum);
+        $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',' . $pageNum);
         $count  = DbCoupon::countCoupon();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
