@@ -19,7 +19,8 @@ class Coupons extends CommonIndex {
     public function getCouponHdList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
         $result = DbCoupon::getCouponHd([], 'id,status,title,content,create_time', false, 'id desc', $offset . ',', $pageNum);
-        return ['code' => '200', 'data' => $result];
+        $count  = DbCoupon::countCouponHd();
+        return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
     /**
@@ -31,7 +32,8 @@ class Coupons extends CommonIndex {
     public function getCouponList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
         $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',', $pageNum);
-        return ['code' => '200', 'data' => $result];
+        $count  = DbCoupon::countCoupon();
+        return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
     /**
@@ -44,11 +46,12 @@ class Coupons extends CommonIndex {
     public function getHdCoupon($couponHdId, $page, $pageNum) {
         $offset            = $pageNum * ($page - 1);
         $result            = DbCoupon::getCouponByRelation(['id' => $couponHdId], $offset, $pageNum);
+        $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
         $result['coupons'] = array_map(function ($var) {
             unset($var['pivot']);
             return $var;
         }, $result['coupons']);
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
     /**
@@ -61,11 +64,12 @@ class Coupons extends CommonIndex {
     public function getHdCouponList($couponId, $page, $pageNum) {
         $offset               = $pageNum * ($page - 1);
         $result               = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        $count                = DbCoupon::countCouponHdRelation([['coupon_id', '=', $couponId]]);
         $result['coupons_hd'] = array_map(function ($var) {
             unset($var['pivot']);
             return $var;
         }, $result['coupons_hd']);
-        return ['code' => '200', 'data' => $result];
+        return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
     /**
@@ -91,20 +95,18 @@ class Coupons extends CommonIndex {
     }
 
     /**
-     * @param $status
      * @param $title
      * @param $content
      * @param $id
      * @return array
      * @author zyr
      */
-    public function modifyCouponHd($status, $title, $content, $id) {
+    public function modifyCouponHd($title, $content, $id) {
         $couponHd = DbCoupon::getCouponHd(['id' => $id], 'id', true);
         if (empty($couponHd)) {//优惠券活动id不存在
             return ['code' => '3004'];
         }
         $data = [
-            'status'  => $status,
             'title'   => $title,
             'content' => $content,
         ];
@@ -119,6 +121,39 @@ class Coupons extends CommonIndex {
         }
     }
 
+    /**
+     * @param $status
+     * @param $id
+     * @return array
+     * @author zyr
+     */
+    public function modifyCouponHdStatus($status, $id) {
+        $couponHd = DbCoupon::getCouponHd(['id' => $id], 'id,status', true);
+        if (empty($couponHd)) {//优惠券活动id不存在
+            return ['code' => '3004'];
+        }
+        if ($couponHd['status'] == $status) {
+            return ['code' => '200'];
+        }
+        $data = [
+            'status' => $status,
+        ];
+        Db::startTrans();
+        try {
+            DbCoupon::updateCouponHd($data, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3006'];//修改失败
+        }
+    }
+
+    /**
+     * @param $id
+     * @return array
+     * @author zyr
+     */
     public function deleteCouponHd($id) {
         $couponHdRelation = DbCoupon::getCouponHdRelation(['coupon_hd_id' => $id], 'id', true);
         if (!empty($couponHdRelation)) {//活动已绑定优惠券
@@ -196,6 +231,11 @@ class Coupons extends CommonIndex {
         }
     }
 
+    /**
+     * @param $id
+     * @return array
+     * @author zyr
+     */
     public function deleteCoupon($id) {
         $couponHdRelation = DbCoupon::getCouponHdRelation(['coupon_id' => $id], 'id', true);
         if (!empty($couponHdRelation)) {//优惠券已绑定活动
@@ -238,6 +278,40 @@ class Coupons extends CommonIndex {
         Db::startTrans();
         try {
             DbCoupon::addCouponHdRelation($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3008'];//修改失败
+        }
+    }
+
+    /**
+     * @param $couponHdId
+     * @param $couponId
+     * @return array
+     * @author zyr
+     */
+    public function unbindCouponHd($couponHdId, $couponId) {
+        $coupon = DbCoupon::getCoupon(['id' => $couponId], 'id', true);
+        if (empty($coupon)) {//优惠券不存在
+            return ['code' => '3003'];
+        }
+        $couponHd = DbCoupon::getCouponHd(['id' => $couponHdId], 'id', true);
+        if (empty($couponHd)) {//优惠券活动不存在
+            return ['code' => '3004'];
+        }
+        $data             = [
+            'coupon_id'    => $couponId,
+            'coupon_hd_id' => $couponHdId,
+        ];
+        $couponHdRelation = DbCoupon::getCouponHdRelation($data, 'id', true);
+        if (empty($couponHdRelation)) {//活动未关联
+            return ['code' => '3005'];
+        }
+        Db::startTrans();
+        try {
+            DbCoupon::deleteCouponHdRelation($couponHdRelation['id']);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
