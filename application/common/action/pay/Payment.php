@@ -6,6 +6,7 @@ use app\common\model\LogApi;
 use app\common\action\notify\Note;
 use app\facade\DbOrder;
 use app\facade\DbUser;
+use app\facade\DbRights;
 use cache\Phpredis;
 use Config;
 use pay\wxpay\WxMiniprogramPay;
@@ -210,12 +211,12 @@ class Payment {
                         $redisListKey = Config::get('rediskey.order.redisOrderBonus');
                         $this->redis->rPush($redisListKey, $orderRes['id']);
 
-                  /*       $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
+                        $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
                         $skus       = [];
                         $sku_goodsids  = [];
                         foreach ($order_list as $order => $list) {
                             $sku_goodsids[] = $list['goods_id'];
-                            if (in_array( $list['goods_id'],[1888,1887,1886])) {
+                            if (in_array( $list['goods_id'],[1943])) {
                                 $userInfo = DbUser::getUserInfo(['id' => $orderRes['uid']], 'user_identity', true);
                                 if ($userInfo['user_identity'] > 1) {
                                     break;
@@ -224,9 +225,10 @@ class Payment {
                                 $receiveDiamondvip['uid']            = $orderRes['uid'];
                                 $receiveDiamondvip['share_uid']      = '24648';
                                 DbRights::receiveDiamondvip($receiveDiamondvip);
+                                DbUser::updateUser(['user_identity' => 2],$orderRes['uid']);
                                 break;
                             }
-                        } */
+                        }
 
                     }
                     if (!empty($memOrderData)) {
