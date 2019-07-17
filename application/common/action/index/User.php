@@ -2700,7 +2700,7 @@ class User extends CommonIndex {
         if (in_array($isUse, [1, 2])) {
             array_push($where, ['is_use', '=', $isUse]);
         }
-        $userCouponList = DbCoupon::getUserCoupon($where, 'price,gs_id,level,title,is_use,create_time,end_time');
+        $userCouponList = DbCoupon::getUserCoupon($where, 'id,price,gs_id,level,title,is_use,create_time,end_time');
         return ['code' => '200', 'data' => $userCouponList];
     }
 
