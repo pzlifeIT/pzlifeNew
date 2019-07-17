@@ -3,6 +3,7 @@
 namespace app\common\action\admin;
 
 use app\facade\DbCoupon;
+use app\facade\DbGoods;
 use think\Db;
 
 class Coupons extends CommonIndex {
@@ -32,7 +33,19 @@ class Coupons extends CommonIndex {
     public function getCouponList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
         $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',' . $pageNum);
-        $count  = DbCoupon::countCoupon();
+        foreach ($result as &$r) {
+            if ($r['level'] == 1) {
+                $goods     = DbGoods::getOneGoods(['id' => $r['gs_id']], 'goods_name');
+                $r['name'] = $goods['goods_name'];
+            } else if ($r['level'] == 2) {
+                $subject = DbGoods::getSubject(['id' => $r['gs_id']], 'subject', true);
+                $r['name'] = $subject['subject'];
+            } else {
+                $r['name'] = '';
+            }
+        }
+        unset($r);
+        $count = DbCoupon::countCoupon();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
