@@ -2708,18 +2708,29 @@ class User extends CommonIndex {
      * @param $couponHdId
      * @param $page
      * @param $pageNum
+     * @param $conId
      * @return array
      * @author zyr
      */
-    public function getHdCoupon($couponHdId, $page, $pageNum) {
-        $offset            = $pageNum * ($page - 1);
-        $result            = DbCoupon::getCouponByRelation(['id' => $couponHdId, 'status' => 1], $offset, $pageNum);
+    public function getHdCoupon($couponHdId, $page, $pageNum, $conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $offset = $pageNum * ($page - 1);
+        $result = DbCoupon::getCouponByRelation(['id' => $couponHdId, 'status' => 1], $offset, $pageNum);
         if (empty($result)) {
             return ['code' => '200', 'data' => $result, 'total' => 0];
         }
         $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
-        $result['coupons'] = array_map(function ($var) {
+        $couponIdList      = DbCoupon::getUserCoupon(['uid' => $uid, 'is_use' => 2], 'coupon_id');
+        $couponIdList      = array_column($couponIdList, 'coupon_id');//用户拥有的未使用优惠券
+        $result['coupons'] = array_map(function ($var) use ($couponIdList) {
             unset($var['pivot']);
+            $var['is_have'] = 2;
+            if (in_array($var['id'], $couponIdList)) {
+                $var['is_have'] = 1;
+            }
             return $var;
         }, $result['coupons']);
         return ['code' => '200', 'data' => $result, 'total' => $count];
