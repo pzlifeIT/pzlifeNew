@@ -34,14 +34,17 @@ class Coupons extends CommonIndex {
         $offset = $pageNum * ($page - 1);
         $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',' . $pageNum);
         foreach ($result as &$r) {
+            $r['name'] = '';
             if ($r['level'] == 1) {
                 $goods     = DbGoods::getOneGoods(['id' => $r['gs_id']], 'goods_name');
-                $r['name'] = $goods['goods_name'];
+                if(!empty($goods)){
+                    $r['name'] = $goods['goods_name'];
+                }
             } else if ($r['level'] == 2) {
                 $subject = DbGoods::getSubject(['id' => $r['gs_id']], 'subject', true);
-                $r['name'] = $subject['subject'];
-            } else {
-                $r['name'] = '';
+                if(!empty($subject['subject'])){
+                    $r['name'] = $subject['subject'];
+                }
             }
         }
         unset($r);
