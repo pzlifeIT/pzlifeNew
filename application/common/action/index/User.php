@@ -2704,6 +2704,24 @@ class User extends CommonIndex {
         return ['code' => '200', 'data' => $userCouponList];
     }
 
+    /**
+     * @param $couponHdId
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author zyr
+     */
+    public function getHdCoupon($couponHdId, $page, $pageNum) {
+        $offset            = $pageNum * ($page - 1);
+        $result            = DbCoupon::getCouponByRelation(['id' => $couponHdId], $offset, $pageNum);
+        $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
+        $result['coupons'] = array_map(function ($var) {
+            unset($var['pivot']);
+            return $var;
+        }, $result['coupons']);
+        return ['code' => '200', 'data' => $result, 'total' => $count];
+    }
+
     private function getaccessToken($code) {
         $appid = Env::get('weixin.weixin_appid');
         // $appid         = 'wx1771b2e93c87e22c';
