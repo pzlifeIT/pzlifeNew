@@ -2511,7 +2511,7 @@ class User extends CommonIndex {
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006']; //验证码错误
         }
-       
+
         if (!empty($this->checkAccount($mobile))) {
             $uid = $this->checkAccount($mobile); //通过手机号获取uid
             Db::startTrans();
@@ -2548,7 +2548,7 @@ class User extends CommonIndex {
         if (empty($wxInfo['unionid'])) {
             return ['code' => '3000'];
         }
-        
+
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
             $uid = $user['id'];
@@ -2576,7 +2576,7 @@ class User extends CommonIndex {
                 }
                 // return ['code' => '3009'];
             }
-           
+
         }
         if ($wxInfo['sex'] == 0) {
             $wxInfo['sex'] = 3;
@@ -2713,7 +2713,10 @@ class User extends CommonIndex {
      */
     public function getHdCoupon($couponHdId, $page, $pageNum) {
         $offset            = $pageNum * ($page - 1);
-        $result            = DbCoupon::getCouponByRelation(['id' => $couponHdId], $offset, $pageNum);
+        $result            = DbCoupon::getCouponByRelation(['id' => $couponHdId, 'status' => 1], $offset, $pageNum);
+        if (empty($result)) {
+            return ['code' => '200', 'data' => $result, 'total' => 0];
+        }
         $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
         $result['coupons'] = array_map(function ($var) {
             unset($var['pivot']);
