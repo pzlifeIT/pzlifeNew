@@ -62,8 +62,11 @@ class Coupons extends CommonIndex {
      * @author zyr
      */
     public function getHdCouponList($couponId, $page, $pageNum) {
-        $offset               = $pageNum * ($page - 1);
-        $result               = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        $offset = $pageNum * ($page - 1);
+        $result = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        if (empty($result)) {
+            return ['code' => '200', 'data' => $result, 'total' => 0];
+        }
         $count                = DbCoupon::countCouponHdRelation([['coupon_id', '=', $couponId]]);
         $result['coupons_hd'] = array_map(function ($var) {
             unset($var['pivot']);

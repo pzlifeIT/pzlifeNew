@@ -60,9 +60,13 @@ class DbCoupon {
     }
 
     public function getCouponByRelation($where, $offset, $pageNum) {
-        return CouponHd::field('id,title,content')->with(['coupons' => function ($query) use ($offset, $pageNum) {
+        $result = CouponHd::field('id,title,content')->with(['coupons' => function ($query) use ($offset, $pageNum) {
             $query->field('pz_coupon.id,price,gs_id,level,title,days')->limit($offset, $pageNum);
-        }])->where($where)->select()->toArray()[0];
+        }])->where($where)->select()->toArray();
+        if (!empty($result)) {
+            return $result[0];
+        }
+        return $result;
     }
 
     public function getCouponHdByRelation($where, $offset, $pageNum) {
