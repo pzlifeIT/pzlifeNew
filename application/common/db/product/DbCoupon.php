@@ -41,7 +41,7 @@ class DbCoupon {
     }
 
     public function deleteCouponHdRelation($id) {
-        return CouponHdRelation::destroy($id);
+        return CouponHdRelation::destroy($id, true);
     }
 
     public function addUserCoupon($data) {
