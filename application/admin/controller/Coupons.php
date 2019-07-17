@@ -225,8 +225,8 @@ class Coupons extends AdminController {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $id       = trim($this->request->post('id'));
-        $title   = trim($this->request->post('title'));
-        $content = trim($this->request->post('content'));
+        $title    = trim($this->request->post('title'));
+        $content  = trim($this->request->post('content'));
         if (!is_numeric($id) || intval($id) <= 0) {
             return ["code" => '3002'];
         }

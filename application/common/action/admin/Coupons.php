@@ -36,13 +36,13 @@ class Coupons extends CommonIndex {
         foreach ($result as &$r) {
             $r['name'] = '';
             if ($r['level'] == 1) {
-                $goods     = DbGoods::getOneGoods(['id' => $r['gs_id']], 'goods_name');
-                if(!empty($goods)){
+                $goods = DbGoods::getOneGoods(['id' => $r['gs_id']], 'goods_name');
+                if (!empty($goods)) {
                     $r['name'] = $goods['goods_name'];
                 }
             } else if ($r['level'] == 2) {
                 $subject = DbGoods::getSubject(['id' => $r['gs_id']], 'subject', true);
-                if(!empty($subject['subject'])){
+                if (!empty($subject['subject'])) {
                     $r['name'] = $subject['subject'];
                 }
             }
