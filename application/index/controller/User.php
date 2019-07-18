@@ -1764,7 +1764,7 @@ class User extends MyController {
      * @apiParam (入参) {Int} coupon_hd_id 优惠券活动id
      * @apiParam (入参) {Int} [page] 当前页(默认1)
      * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num4有误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误 / 3004:用户不存在
      * @apiSuccess (返回) {Int} total 优惠券总记录数
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (data) {Int} id 优惠券活动id
@@ -1777,6 +1777,7 @@ class User extends MyController {
      * @apiSuccess (coupons) {Int} level 1.单商品优惠券 2.专题优惠券
      * @apiSuccess (coupons) {String} title 优惠券标题
      * @apiSuccess (coupons) {Int} days 自领取后几天内有效
+     * @apiSuccess (coupons) {Int} is_have 1.已领取 2.未领取
      * @apiSampleRequest /index/user/gethdcoupon
      * @return array
      * @author zyr
@@ -1801,7 +1802,7 @@ class User extends MyController {
         }
         $page    = $page > 0 ? intval($page) : 1;
         $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
-        $result  = $this->app->user->getHdCoupon(intval($couponHdId), intval($page), intval($pageNum));
+        $result  = $this->app->user->getHdCoupon(intval($couponHdId), intval($page), intval($pageNum), $conId);
         $this->apiLog($apiName, [$conId, $couponHdId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }

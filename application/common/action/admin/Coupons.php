@@ -3,6 +3,7 @@
 namespace app\common\action\admin;
 
 use app\facade\DbCoupon;
+use app\facade\DbGoods;
 use think\Db;
 
 class Coupons extends CommonIndex {
@@ -18,7 +19,7 @@ class Coupons extends CommonIndex {
      */
     public function getCouponHdList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
-        $result = DbCoupon::getCouponHd([], 'id,status,title,content,create_time', false, 'id desc', $offset . ',', $pageNum);
+        $result = DbCoupon::getCouponHd([], 'id,status,title,content,create_time', false, 'id desc', $offset . ',' . $pageNum);
         $count  = DbCoupon::countCouponHd();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
@@ -31,8 +32,23 @@ class Coupons extends CommonIndex {
      */
     public function getCouponList($page, $pageNum) {
         $offset = $pageNum * ($page - 1);
-        $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',', $pageNum);
-        $count  = DbCoupon::countCoupon();
+        $result = DbCoupon::getCoupon([], 'id,price,gs_id,level,title,days,create_time', false, 'id desc', $offset . ',' . $pageNum);
+        foreach ($result as &$r) {
+            $r['name'] = '';
+            if ($r['level'] == 1) {
+                $goods = DbGoods::getOneGoods(['id' => $r['gs_id']], 'goods_name');
+                if (!empty($goods)) {
+                    $r['name'] = $goods['goods_name'];
+                }
+            } else if ($r['level'] == 2) {
+                $subject = DbGoods::getSubject(['id' => $r['gs_id']], 'subject', true);
+                if (!empty($subject['subject'])) {
+                    $r['name'] = $subject['subject'];
+                }
+            }
+        }
+        unset($r);
+        $count = DbCoupon::countCoupon();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
@@ -62,8 +78,11 @@ class Coupons extends CommonIndex {
      * @author zyr
      */
     public function getHdCouponList($couponId, $page, $pageNum) {
-        $offset               = $pageNum * ($page - 1);
-        $result               = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        $offset = $pageNum * ($page - 1);
+        $result = DbCoupon::getCouponHdByRelation(['id' => $couponId], $offset, $pageNum);
+        if (empty($result)) {
+            return ['code' => '200', 'data' => $result, 'total' => 0];
+        }
         $count                = DbCoupon::countCouponHdRelation([['coupon_id', '=', $couponId]]);
         $result['coupons_hd'] = array_map(function ($var) {
             unset($var['pivot']);
