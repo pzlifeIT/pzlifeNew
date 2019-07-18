@@ -338,4 +338,22 @@ class Coupons extends CommonIndex {
             return ['code' => '3008'];//修改失败
         }
     }
+
+    /**
+     * @param $page
+     * @param $pageNum
+     * @param $id
+     * @return array
+     * @author rzc
+     */
+    public function getHd(int $page, int $pageNum, $id = 0){
+        if (!empty($id)) {
+            $result = DbCoupon::getList('Hd',['id' => $id],'*',true);
+            return ['code' => '200','luckydraw' => $result];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $result = DbCoupon::getList('Hd',[],'*',false,['id' => 'desc'],$offset.','.$pageNum);
+        $count = DbCoupon::countNum('Hd',[]);
+        return ['code' => '200','total' => $count,'luckydraw' => $result];
+    }
 }

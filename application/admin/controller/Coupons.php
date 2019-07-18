@@ -469,4 +469,54 @@ class Coupons extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $couponHdId, $couponId], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 获取抽奖活动
+     * @apiDescription   getHd
+     * @apiGroup         admin_coupons
+     * @apiName          getHd
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page 页码
+     * @apiParam (入参) {Int} page_num 查询数量
+     * @apiParam (入参) {Int} [id] 查询详情
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num4有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/getHd
+     * @return array
+     * @author rzc
+     */
+    public function getHd(){
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $id       = trim($this->request->post('id'));
+        if (!is_numeric($page) && !empty($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum) && !empty($pageNum)) {
+            return ["code" => '3003'];
+        }
+        $page    = $page > 0 ? intval($page) : 1;
+        $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
+        if (!empty($id) && !is_numeric($id)) {
+            return ['code' => '3001'];
+        }
+        $result  = $this->app->coupons->getHd($page, $pageNum, $id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加抽奖活动
+     * @apiDescription   getHd
+     * @apiGroup         admin_coupons
+     * @apiName          getHd
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page 页码
+     * @apiParam (入参) {Int} page_num 查询数量
+     * @apiParam (入参) {Int} [id] 查询详情
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num4有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/getHd
+     * @return array
+     * @author rzc
+     */
 }
