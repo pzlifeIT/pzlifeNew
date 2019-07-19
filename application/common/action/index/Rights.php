@@ -737,6 +737,7 @@ $log_invest['cost']       = 5000;
                                     $new_upgrade_task = [];
                                     $new_upgrade_task = [
                                         'has_target' => $the_month_extra_bonus['has_target'] + 1,
+                                        'bonus' => $the_month_extra_bonus['bonus'] + 12,
                                     ];
                                     DbRights::editUserTask($new_upgrade_task, $extra_id);
                                 }
