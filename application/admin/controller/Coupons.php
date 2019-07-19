@@ -596,6 +596,9 @@ class Coupons extends AdminController {
                 return ['code' => '3004'];
             }
         }
+        if (!empty($status)) {
+            if (!is_numeric($status)) {}
+        }
 
         $result = $this->app->coupons->updateHd($title, $status, $start_time, $end_time);
         $this->apiLog($apiName, [$cmsConId, $title, $status, $start_time, $end_time], $result['code'], $cmsConId);
