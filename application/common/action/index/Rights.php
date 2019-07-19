@@ -901,10 +901,10 @@ $log_invest['cost']       = 5000;
 
             $user_task = DbRights::getUserTask(['uid' => $uid, 'type' => 1, 'status' => 3], '*', true, ['id' => 'desc']);
             $has       = 0;
+            $has_up = [];
             if ($user_task) {
-                if (strtotime($user_task['end_time']) + 432000 < time()) {
-                    $can_time = strtotime($user_task['end_time']) + 432000;
-                    return ['code' => '3007', 'can_time' => date('Y-m-d H:i:s', $can_time)];
+                if (strtotime($user_task['end_time'])< time()) {
+                   $has_up['status'] = 3;
                 }
                 $has = DbRights::getUserTaskCount(['uid' => $uid, 'type' => 1]);
             }
@@ -918,11 +918,14 @@ $log_invest['cost']       = 5000;
             $add_user_task['status']     = 1;
             $add_user_task['timekey']    = date('Ym', time());
             $add_user_task['start_time'] = time();
-            $add_user_task['end_time']   = time() + 2592000;
+            $add_user_task['end_time']   = strtotime("+1 year",time());
             Db::startTrans();
             try {
                 DbUser::updateUser(['user_market' => 1], $uid);
                 DbRights::addUserTask($add_user_task);
+                if (empty($has_up)) {
+                    DbRights::editUserTask($has_up,$user_task['id']);
+                }
                 $this->resetUserInfo($uid);
                 Db::commit();
                 return ['code' => '200']; //升级成功
