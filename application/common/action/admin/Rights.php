@@ -25,7 +25,7 @@ class Rights extends CommonIndex {
      */
     public function creatBossShareDiamondvip($mobile, $linkman, $stock, $redmoney_status, $type, $coupon_money) {
 
-        $user = DbUser::getUserOne(['mobile' => $mobile, 'user_identity' => 4, 'nick_name' => $linkman], 'id');
+        $user = DbUser::getUserOne(['mobile' => $mobile, 'user_identity' => 4], 'id');
         if (!$user) {
             return ['code' => '3003', 'msg' => '该用户不存在'];
         }
@@ -328,7 +328,7 @@ class Rights extends CommonIndex {
                         }
                     }
                 } else if ($shopapply['refe_identity'] == 4) {
-                    $cost = 4500;
+                    $cost = 4000;
                 } else if ($shopapply['refe_identity'] == 5) {
                     $cost = 5000;
                 }
