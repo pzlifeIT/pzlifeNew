@@ -719,7 +719,7 @@ $log_invest['cost']       = 5000;
 
                             }
                             else {
-                                $the_month_extra_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 5, 'timekey' => date('Ym', time())], 'id,has_target', true);
+                                $the_month_extra_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 5, 'timekey' => date('Ym', time())], 'id,has_target,bonus', true);
                                 if (empty($the_month_extra_bonus)) {
                                     $add_month_extra_bonus = [
                                         'uid'          => $parent_id,
