@@ -923,13 +923,14 @@ $log_invest['cost']       = 5000;
             try {
                 DbUser::updateUser(['user_market' => 1], $uid);
                 DbRights::addUserTask($add_user_task);
-                if (empty($has_up)) {
+                if (!empty($has_up)) {
                     DbRights::editUserTask($has_up,$user_task['id']);
                 }
                 $this->resetUserInfo($uid);
                 Db::commit();
                 return ['code' => '200']; //升级成功
             } catch (\Exception $e) {
+                exception($e);
                 Db::rollback();
                 return ['code' => '3005']; //升级失败
             }
