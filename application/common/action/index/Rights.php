@@ -527,37 +527,37 @@ $log_invest['cost']       = 5000;
                                 $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
                                 //该BOSS已选择其他开店方式
                                 if ($this->redis->setNx($redisKey . $parent_id, 1) === true) {
-                                } else {
-                                    //升级成为BOSS
-                                    $bossId = $this->getBoss($parent_id);
-                                    if ($bossId == 1) {
-                                        $re = $parent_id;
-                                    } else {
-                                        $re = $bossId . ',' . $parent_id;
-                                    }
-                                    $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $parent_id . ',%']], 'id,relation');
-                                    $userRelationData = [];
-                                    if (!empty($userRelationList)) {
-                                        foreach ($userRelationList as $url) {
-                                            $url['relation'] = substr($url['relation'], stripos($url['relation'], ',' . $parent_id . ',') + 1);
-                                            array_push($userRelationData, $url);
-                                        }
-                                    }
-                                    $shopData = [
-                                        'uid'         => $parent_id,
-                                        'shop_right'  => 'all',
-                                        'status'      => 1,
-                                        'create_time' => time(),
-                                    ];
-                                    $pid        = $bossId == 1 ? 0 : $bossId;
-                                    $relationId = $this->getRelation($parent_id)['id'];
-                                    if (!empty($userRelationData)) {
-                                        DbUser::updateUserRelation($userRelationData);
-                                    }
-                                    DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
-                                    DbShops::addShop($shopData); //添加店铺
-                                    DbUser::updateUser(['user_identity' => 4, 'user_market' => 0], $parent_id);
-                                }
+                                     //升级成为BOSS
+                                     $bossId = $this->getBoss($parent_id);
+                                     if ($bossId == 1) {
+                                         $re = $parent_id;
+                                     } else {
+                                         $re = $bossId . ',' . $parent_id;
+                                     }
+                                     $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $parent_id . ',%']], 'id,relation');
+                                     $userRelationData = [];
+                                     if (!empty($userRelationList)) {
+                                         foreach ($userRelationList as $url) {
+                                             $url['relation'] = substr($url['relation'], stripos($url['relation'], ',' . $parent_id . ',') + 1);
+                                             array_push($userRelationData, $url);
+                                         }
+                                     }
+                                     $shopData = [
+                                         'uid'         => $parent_id,
+                                         'shop_right'  => 'all',
+                                         'status'      => 1,
+                                         'create_time' => time(),
+                                     ];
+                                     $pid        = $bossId == 1 ? 0 : $bossId;
+                                     $relationId = $this->getRelation($parent_id)['id'];
+                                     if (!empty($userRelationData)) {
+                                         DbUser::updateUserRelation($userRelationData);
+                                     }
+                                     DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $pid], $relationId);
+                                     DbShops::addShop($shopData); //添加店铺
+                                     DbUser::updateUser(['user_identity' => 4, 'user_market' => 0], $parent_id);
+                                     $this->redis->del($redisKey . $parent_id);
+                                } 
                             }
                             DbRights::editUserTask($new_upgrade_task, $upgrade_task['id']);
                         }
