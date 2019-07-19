@@ -316,7 +316,6 @@ $log_invest['cost']       = 5000;
         if (!$parent_id) {
             $parent_id = 1;
         }
-
         $parent_info = DbUser::getUserInfo(['id' => $parent_id], 'user_identity,nick_name,user_market,commission', true);
         if (empty($parent_info)) {
             $parent_id = 1;
@@ -528,7 +527,6 @@ $log_invest['cost']       = 5000;
                                 $redisKey = Config::get('rediskey.user.redisUserOpenbossLock');
                                 //该BOSS已选择其他开店方式
                                 if ($this->redis->setNx($redisKey . $parent_id, 1) === true) {
-
                                 } else {
                                     //升级成为BOSS
                                     $bossId = $this->getBoss($parent_id);

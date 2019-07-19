@@ -411,7 +411,7 @@ class Rights extends CommonIndex {
                 // print_r($userRelationData);
                 // print_r($tradingData);die;
                 DbUser::updateUserRelation(['is_boss' => 1, 'relation' => $re, 'pid' => $shopapply['refe_uid']], $relationId);
-                DbUser::updateUser(['user_identity' => 4], $shopapply['target_uid']);
+                DbUser::updateUser(['user_identity' => 4,'user_market' => 0], $shopapply['target_uid']);
                 DbShops::addShop($shopData); //添加店铺
                 if ($cost > 0) {
                     DbOrder::addLogTrading($tradingData); //写佣金明细
