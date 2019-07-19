@@ -561,7 +561,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {Int} page 页码
      * @apiParam (入参) {Int} page_num 查询数量
      * @apiParam (入参) {Int} [id] 查询详情
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:title为空 / 3002:存在进行中的抽奖活动 / 3003:开始时间格式错误 / 3004:结束时间格式错误 /
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status为空 / 3002:存在进行中的抽奖活动 / 3003:开始时间格式错误 / 3004:结束时间格式错误 /
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/updateHd
      * @return array
@@ -597,7 +597,9 @@ class Coupons extends AdminController {
             }
         }
         if (!empty($status)) {
-            if (!is_numeric($status)) {}
+            if (!is_numeric($status) || !in_array($status,[1, 2])) {
+                return ['code' => '3001'];
+            }
         }
 
         $result = $this->app->coupons->updateHd($title, $status, $start_time, $end_time);
