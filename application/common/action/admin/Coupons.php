@@ -356,4 +356,40 @@ class Coupons extends CommonIndex {
         $count = DbCoupon::countNum('Hd',[]);
         return ['code' => '200','total' => $count,'luckydraw' => $result];
     }
+
+    /**
+     * @param $title
+     * @param $start_time
+     * @param $end_time
+     * @return array
+     * @author rzc
+     */
+    public function saveHd($title, $start_time, $end_time){
+        $has_Hd = DbCoupon::getList('Hd',['status' => 2],'*',true);
+        if (!empty($has_Hd)) {
+            return ['code' => '3002'];
+        }
+        $data = [];
+        $data = [
+            'title' => $title,
+            'status' => 1,
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+        ];
+        DbCoupon::saveHd($data);
+        return ['code' => '200'];
+    }
+
+    /**
+     * @param $title
+     * @param $status
+     * @param $start_time
+     * @param $end_time
+     * @return array
+     * @author rzc
+     */
+    public function updateHd($title = '', $status = 0, $start_time = 0, $end_time = 0){
+        $data = [];
+        
+    }
 }

@@ -3,6 +3,7 @@
 namespace app\common\db\product;
 
 use app\common\model\Coupon;
+use app\common\model\Hd;
 use app\common\model\CouponHd;
 use app\common\model\CouponHdRelation;
 use app\common\model\UserCoupon;
@@ -106,5 +107,16 @@ class DbCoupon {
     private function countNum($name, $where) {
         $obj = call_user_func_array(['app\\common\\model\\' . $name, 'where'], [$where]);
         return $obj->count();
+    }
+
+    public function saveHd($data){
+        $Hd = new Hd;
+        $Hd->save($data);
+        return $Hd->id;
+    }
+
+    public function updateHd($data, $id){
+        $Hd = new Hd;
+        return $Hd->save($data,['id' => $id]);
     }
 }
