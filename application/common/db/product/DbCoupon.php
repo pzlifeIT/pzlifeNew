@@ -4,6 +4,7 @@ namespace app\common\db\product;
 
 use app\common\model\Coupon;
 use app\common\model\Hd;
+use app\common\model\HdGoods;
 use app\common\model\CouponHd;
 use app\common\model\CouponHdRelation;
 use app\common\model\UserCoupon;

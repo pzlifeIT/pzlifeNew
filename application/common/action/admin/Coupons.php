@@ -4,6 +4,7 @@ namespace app\common\action\admin;
 
 use app\facade\DbCoupon;
 use app\facade\DbGoods;
+use app\facade\DbImage;
 use think\Db;
 
 class Coupons extends CommonIndex {
@@ -109,7 +110,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3003'];//添加失败
+            return ['code' => '3003']; //添加失败
         }
     }
 
@@ -122,7 +123,7 @@ class Coupons extends CommonIndex {
      */
     public function modifyCouponHd($title, $content, $id) {
         $couponHd = DbCoupon::getCouponHd(['id' => $id], 'id', true);
-        if (empty($couponHd)) {//优惠券活动id不存在
+        if (empty($couponHd)) { //优惠券活动id不存在
             return ['code' => '3004'];
         }
         $data = [
@@ -136,7 +137,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3006'];//修改失败
+            return ['code' => '3006']; //修改失败
         }
     }
 
@@ -148,7 +149,7 @@ class Coupons extends CommonIndex {
      */
     public function modifyCouponHdStatus($status, $id) {
         $couponHd = DbCoupon::getCouponHd(['id' => $id], 'id,status', true);
-        if (empty($couponHd)) {//优惠券活动id不存在
+        if (empty($couponHd)) { //优惠券活动id不存在
             return ['code' => '3004'];
         }
         if ($couponHd['status'] == $status) {
@@ -164,7 +165,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3006'];//修改失败
+            return ['code' => '3006']; //修改失败
         }
     }
 
@@ -175,7 +176,7 @@ class Coupons extends CommonIndex {
      */
     public function deleteCouponHd($id) {
         $couponHdRelation = DbCoupon::getCouponHdRelation(['coupon_hd_id' => $id], 'id', true);
-        if (!empty($couponHdRelation)) {//活动已绑定优惠券
+        if (!empty($couponHdRelation)) { //活动已绑定优惠券
             return ['code' => '3002'];
         }
         Db::startTrans();
@@ -185,7 +186,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//删除失败
+            return ['code' => '3005']; //删除失败
         }
     }
 
@@ -213,7 +214,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3008'];//修改失败
+            return ['code' => '3008']; //修改失败
         }
     }
 
@@ -229,7 +230,7 @@ class Coupons extends CommonIndex {
      */
     public function modifyCoupon($price, $gsId, $level, $title, $days, $id) {
         $coupon = DbCoupon::getCoupon(['id' => $id], 'id', true);
-        if (empty($coupon)) {//优惠券id不存在
+        if (empty($coupon)) { //优惠券id不存在
             return ['code' => '3007'];
         }
         $data = [
@@ -246,7 +247,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3008'];//修改失败
+            return ['code' => '3008']; //修改失败
         }
     }
 
@@ -257,7 +258,7 @@ class Coupons extends CommonIndex {
      */
     public function deleteCoupon($id) {
         $couponHdRelation = DbCoupon::getCouponHdRelation(['coupon_id' => $id], 'id', true);
-        if (!empty($couponHdRelation)) {//优惠券已绑定活动
+        if (!empty($couponHdRelation)) { //优惠券已绑定活动
             return ['code' => '3002'];
         }
         Db::startTrans();
@@ -267,7 +268,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//删除失败
+            return ['code' => '3005']; //删除失败
         }
     }
 
@@ -279,19 +280,19 @@ class Coupons extends CommonIndex {
      */
     public function bindCouponHd($couponHdId, $couponId) {
         $coupon = DbCoupon::getCoupon(['id' => $couponId], 'id', true);
-        if (empty($coupon)) {//优惠券不存在
+        if (empty($coupon)) { //优惠券不存在
             return ['code' => '3003'];
         }
         $couponHd = DbCoupon::getCouponHd(['id' => $couponHdId], 'id', true);
-        if (empty($couponHd)) {//优惠券活动不存在
+        if (empty($couponHd)) { //优惠券活动不存在
             return ['code' => '3004'];
         }
-        $data             = [
+        $data = [
             'coupon_id'    => $couponId,
             'coupon_hd_id' => $couponHdId,
         ];
         $couponHdRelation = DbCoupon::getCouponHdRelation($data, 'id', true);
-        if (!empty($couponHdRelation)) {//活动已关联
+        if (!empty($couponHdRelation)) { //活动已关联
             return ['code' => '3005'];
         }
         Db::startTrans();
@@ -301,7 +302,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3008'];//修改失败
+            return ['code' => '3008']; //修改失败
         }
     }
 
@@ -313,19 +314,19 @@ class Coupons extends CommonIndex {
      */
     public function unbindCouponHd($couponHdId, $couponId) {
         $coupon = DbCoupon::getCoupon(['id' => $couponId], 'id', true);
-        if (empty($coupon)) {//优惠券不存在
+        if (empty($coupon)) { //优惠券不存在
             return ['code' => '3003'];
         }
         $couponHd = DbCoupon::getCouponHd(['id' => $couponHdId], 'id', true);
-        if (empty($couponHd)) {//优惠券活动不存在
+        if (empty($couponHd)) { //优惠券活动不存在
             return ['code' => '3004'];
         }
-        $data             = [
+        $data = [
             'coupon_id'    => $couponId,
             'coupon_hd_id' => $couponHdId,
         ];
         $couponHdRelation = DbCoupon::getCouponHdRelation($data, 'id', true);
-        if (empty($couponHdRelation)) {//活动未关联
+        if (empty($couponHdRelation)) { //活动未关联
             return ['code' => '3005'];
         }
         Db::startTrans();
@@ -335,7 +336,7 @@ class Coupons extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3008'];//修改失败
+            return ['code' => '3008']; //修改失败
         }
     }
 
@@ -346,15 +347,15 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getHd(int $page, int $pageNum, $id = 0){
+    public function getHd(int $page, int $pageNum, $id = 0) {
         if (!empty($id)) {
-            $result = DbCoupon::getList('Hd',['id' => $id],'*',true);
-            return ['code' => '200','luckydraw' => $result];
+            $result = DbCoupon::getList('Hd', ['id' => $id], '*', true);
+            return ['code' => '200', 'luckydraw' => $result];
         }
         $offset = ($page - 1) * $pageNum;
-        $result = DbCoupon::getList('Hd',[],'*',false,['id' => 'desc'],$offset.','.$pageNum);
-        $count = DbCoupon::countNum('Hd',[]);
-        return ['code' => '200','total' => $count,'luckydraw' => $result];
+        $result = DbCoupon::getList('Hd', [], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        $count  = DbCoupon::countNum('Hd', []);
+        return ['code' => '200', 'total' => $count, 'luckydraw' => $result];
     }
 
     /**
@@ -364,17 +365,17 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function saveHd($title, $start_time, $end_time){
-        $has_Hd = DbCoupon::getList('Hd',['status' => 2],'*',true);
+    public function saveHd($title, $start_time, $end_time) {
+        $has_Hd = DbCoupon::getList('Hd', ['status' => 2], '*', true);
         if (!empty($has_Hd)) {
             return ['code' => '3002'];
         }
         $data = [];
         $data = [
-            'title' => $title,
-            'status' => 1,
+            'title'      => $title,
+            'status'     => 1,
             'start_time' => $start_time,
-            'end_time' => $end_time,
+            'end_time'   => $end_time,
         ];
         DbCoupon::saveHd($data);
         return ['code' => '200'];
@@ -385,11 +386,105 @@ class Coupons extends CommonIndex {
      * @param $status
      * @param $start_time
      * @param $end_time
+     * @param $id
      * @return array
      * @author rzc
      */
-    public function updateHd($title = '', $status = 0, $start_time = 0, $end_time = 0){
+    public function updateHd($id, $title = '', $status = 0, $start_time = 0, $end_time = 0) {
         $data = [];
-        
+        if ($status == '2') {
+            $has_Hd = DbCoupon::getList('Hd', [['status', '=', 2], ['id', '<>', $id]], '*', true);
+            if (!empty($has_Hd)) {
+                return ['code' => '3002'];
+            }
+        }
+
+        if (!empty($title)) {
+            array_push($data, ['title' => $title]);
+        }
+        if ($status) {
+            array_push($data, ['status' => $status]);
+        }
+        if ($start_time) {
+            array_push($data, ['start_time' => $start_time]);
+        }
+        if ($end_time) {
+            array_push($data, ['end_time' => $end_time]);
+        }
+        DbCoupon::saveHd($data, $id);
+        return ['code' => '200'];
+    }
+
+    /**
+     * @param $hd_id
+     * @return array
+     * @author rzc
+     */
+    public function getHdGoods($hd_id) {
+        $result = DbCoupon::getList('HdGoods', ['hd_id' => $hd_id], '*', false, ['id' => 'desc']);
+        return ['code' => '200', 'HdGoods' => $result];
+    }
+
+    /**
+     * @param $hd_id
+     * @param $image
+     * @param $kind
+     * @param $relevance
+     * @param $debris
+     * @param $title
+     * @param $probability
+     * @return array
+     * @author rzc
+     */
+    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability) {
+        $num = DbCoupon::countNum('HdGoods', ['hd_id' => $hd_id]);
+        if ($num > 7) {
+            return ['code' => '3008'];
+        }
+        $data = [];
+        $data = [
+            'image'       => $image,
+            'kind'        => $kind,
+            'relevance'   => $relevance,
+            'debris'      => $debris,
+            'title'       => $title,
+            'probability' => $probability,
+        ];
+        Db::startTrans();
+        try {
+
+            if (!empty($data['image'])) {
+                $oldImage = $data['image'];
+
+                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
+
+                if (!empty($oldImage)) {
+
+                    $oldImage_id = DbImage::getLogImage($oldImage, 1);
+                    DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
+
+                }
+                $image = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+
+                $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+
+                if (empty($logImage)) {//图片不存在
+                    return ['code' => '3010'];//图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                $data['image'] = $image;
+            }
+
+            $id = DbCoupon::saveHdGoods($data);
+            if ($id) {
+                Db::commit();
+                return ['code' => '200', 'id' => $id];
+            }
+            Db::rollback();
+            return ['code' => '3011'];//修改失败
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011'];//修改失败
+        }
     }
 }
