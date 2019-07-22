@@ -408,18 +408,18 @@ class Coupons extends CommonIndex {
         }
 
         if (!empty($title)) {
-            array_push($data, ['title' => $title]);
+            $data['title'] = $title;
         }
         if ($status) {
-            array_push($data, ['status' => $status]);
+            $data['status'] = $status;
         }
         if ($start_time) {
-            array_push($data, ['start_time' => $start_time]);
+            $data['start_time'] = $start_time;
         }
         if ($end_time) {
-            array_push($data, ['end_time' => $end_time]);
+            $data['end_time'] = $end_time;
         }
-        DbCoupon::saveHd($data, $id);
+        DbCoupon::updateHd($data, $id);
         return ['code' => '200'];
     }
 
@@ -451,7 +451,7 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability) {
+    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock) {
         $num = DbCoupon::countgetHdGoods( ['hd_id' => $hd_id]);
         if ($num > 7) {
             return ['code' => '3008'];
@@ -497,29 +497,32 @@ class Coupons extends CommonIndex {
         }
     }
 
-    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '') {
+    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '', $stock = 0) {
         $HdGoods = DbCoupon::getHd( ['id' => $id],'*',true);
         if (!$HdGoods) {
             return ['code' => '3000'];
         }
         $data = [];
         if (!empty($image)) {
-            array_push($data, ['image' => $image]);
+            $data['image'] = $image;
         }
         if (!empty($kind)) {
-            array_push($data, ['kind' => $kind]);
+            $data['kind'] = $kind;
         }
         if (!empty($relevance)) {
-            array_push($data, ['relevance' => $relevance]);
+            $data['relevance'] = $relevance;
         }
         if (!empty($debris)) {
-            array_push($data, ['debris' => $debris]);
+            $data['debris'] = $debris;
         }
         if (!empty($title)) {
-            array_push($data, ['title' => $title]);
+            $data['title'] = $title;
         }
         if (!empty($probability)) {
-            array_push($data, ['probability' => $probability]);
+            $data['probability'] = $probability;
+        }
+        if (!empty($stock)) {
+            $data['stock'] = $stock;
         }
         Db::startTrans();
         try {
