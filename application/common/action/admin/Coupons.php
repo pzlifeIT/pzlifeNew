@@ -472,17 +472,7 @@ class Coupons extends CommonIndex {
         try {
 
             if (!empty($data['image'])) {
-                $oldImage = $data['image'];
-
-                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
-
-                if (!empty($oldImage)) {
-
-                    $oldImage_id = DbImage::getLogImage($oldImage, 1);
-                    DbImage::updateLogImageStatus($oldImage_id, 3); //更新状态为弃用
-
-                }
-                $image = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+                $image = filtraImage(Config::get('qiniu.domain'), $data['image']);
 
                 $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
 
@@ -507,7 +497,7 @@ class Coupons extends CommonIndex {
     }
 
     public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '') {
-        $HdGoods = DbCoupon::getList('HdGoods', ['id' => $id]);
+        $HdGoods = DbCoupon::getHd( ['id' => $id],'*',true);
         if (!$HdGoods) {
             return ['code' => '3000'];
         }
@@ -534,7 +524,7 @@ class Coupons extends CommonIndex {
         try {
 
             if (!empty($data['image'])) {
-                $oldImage = $data['image'];
+                $oldImage = $HdGoods['image'];
 
                 $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
 
@@ -544,7 +534,7 @@ class Coupons extends CommonIndex {
                     DbImage::updateLogImageStatus($oldImage_id, 3); //更新状态为弃用
 
                 }
-                $image = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+                $image = filtraImage(Config::get('qiniu.domain'), $data['image']);
 
                 $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
 
