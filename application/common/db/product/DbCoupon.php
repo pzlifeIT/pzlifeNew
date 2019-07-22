@@ -142,4 +142,9 @@ class DbCoupon {
         $obj = $obj->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
+
+    public function countgetHdGoods($where){
+        $obj = HdGoods::where($where);
+        return $obj->count();
+    }
 }
