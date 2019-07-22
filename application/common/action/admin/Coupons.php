@@ -451,7 +451,7 @@ class Coupons extends CommonIndex {
      * @author rzc
      */
     public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability) {
-        $num = DbCoupon::countNum('HdGoods', ['hd_id' => $hd_id]);
+        $num = DbCoupon::countgetHdGoods( ['hd_id' => $hd_id]);
         if ($num > 7) {
             return ['code' => '3008'];
         }
