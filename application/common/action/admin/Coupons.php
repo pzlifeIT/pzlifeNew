@@ -349,7 +349,7 @@ class Coupons extends CommonIndex {
      */
     public function getHd(int $page, int $pageNum, $id = 0) {
         if (!empty($id)) {
-            $result = DbCoupon::getHd('Hd', ['id' => $id], '*', true);
+            $result = DbCoupon::getHd( ['id' => $id], '*', true);
             return ['code' => '200', 'luckydraw' => $result];
         }
         $offset = ($page - 1) * $pageNum;
