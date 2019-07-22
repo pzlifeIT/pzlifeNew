@@ -432,9 +432,9 @@ class Coupons extends CommonIndex {
             if (!is_numeric($id)) {
                 return ['code' => '3000'];
             }
-            $result = DbCoupon::getHdGoods('HdGoods', ['id' => $id], '*', true);
+            $result = DbCoupon::getHdGoods( ['id' => $id], '*', true);
         } else {
-            $result = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $hd_id], '*', false);
+            $result = DbCoupon::getHdGoods( ['hd_id' => $hd_id], '*', false);
         }
         return ['code' => '200', 'HdGoods' => $result];
     }
