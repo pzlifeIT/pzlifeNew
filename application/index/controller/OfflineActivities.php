@@ -118,12 +118,12 @@ class OfflineActivities extends MyController {
     }
 
     /**
-     * @api              {get} / 6/10期 抽奖奖品
+     * @api              {get} /  抽奖奖品
      * @apiDescription   LuckGoods
      * @apiGroup         index_OfflineActivities
      * @apiName          LuckGoods
      * @apiParam (入参) {Number} con_id
-     *  @apiSuccess (返回) {String}  code 错误码 / 3002 参数为空或者加密参数格式有误
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001 抽奖奖品为空
      * @apiSuccess (返回) {String}  LuckGoods 奖品
      * @apiSuccess (LuckGoods) {String}  shop_num 奖品编号
      * @apiSuccess (LuckGoods) {String}  goods_name 奖品名称

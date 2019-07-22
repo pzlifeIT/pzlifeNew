@@ -349,7 +349,7 @@ class Coupons extends CommonIndex {
      */
     public function getHd(int $page, int $pageNum, $id = 0) {
         if (!empty($id)) {
-            $result = DbCoupon::getList('Hd', ['id' => $id], '*', true);
+            $result = DbCoupon::getHd('Hd', ['id' => $id], '*', true);
             return ['code' => '200', 'luckydraw' => $result];
         }
         $offset = ($page - 1) * $pageNum;
@@ -373,7 +373,7 @@ class Coupons extends CommonIndex {
      * @author rzc
      */
     public function saveHd($title, $start_time, $end_time) {
-        $has_Hd = DbCoupon::getList('Hd', ['status' => 2], '*', true);
+        $has_Hd = DbCoupon::getHd( ['status' => 2], '*', true);
         if (!empty($has_Hd)) {
             return ['code' => '3002'];
         }
@@ -400,7 +400,7 @@ class Coupons extends CommonIndex {
     public function updateHd($id, $title = '', $status = 0, $start_time = 0, $end_time = 0) {
         $data = [];
         if ($status == '2') {
-            $has_Hd = DbCoupon::getList('Hd', [['status', '=', 2], ['id', '<>', $id]], '*', true);
+            $has_Hd = DbCoupon::getHd([['status', '=', 2], ['id', '<>', $id]], '*', true);
             if (!empty($has_Hd)) {
                 return ['code' => '3002'];
             }
@@ -432,9 +432,9 @@ class Coupons extends CommonIndex {
             if (!is_numeric($id)) {
                 return ['code' => '3000'];
             }
-            $result = DbCoupon::getList('HdGoods', ['id' => $id], '*', true);
+            $result = DbCoupon::getHdGoods('HdGoods', ['id' => $id], '*', true);
         } else {
-            $result = DbCoupon::getList('HdGoods', ['hd_id' => $hd_id], '*', false);
+            $result = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $hd_id], '*', false);
         }
         return ['code' => '200', 'HdGoods' => $result];
     }
