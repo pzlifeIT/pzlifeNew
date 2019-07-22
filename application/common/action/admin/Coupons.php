@@ -353,11 +353,12 @@ class Coupons extends CommonIndex {
             return ['code' => '200', 'luckydraw' => $result];
         }
         $offset = ($page - 1) * $pageNum;
-        $result = DbCoupon::getList('Hd', [], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
+        // $DbCoupon = new DbCoupon('Hd',[[], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum]);
+        $result = DbCoupon::getHd( [], '*', false,'', $offset . ',' . $pageNum);
         if (!$result) {
             $result = [];
         }
-        $count = DbCoupon::countNum('Hd', []);
+        $count =DbCoupon::getHdCount([]);
         if (!$count) {
             $count = 0;
         }
@@ -426,8 +427,15 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getHdGoods($hd_id) {
-        $result = DbCoupon::getList('HdGoods', ['hd_id' => $hd_id], '*', false, ['id' => 'desc']);
+    public function getHdGoods($hd_id,$id = 0) {
+        if ($id) {
+            if (!is_numeric($id)) {
+                return ['code' => '3000'];
+            }
+            $result = DbCoupon::getList('HdGoods', ['id' => $id], '*', true);
+        } else {
+            $result = DbCoupon::getList('HdGoods', ['hd_id' => $hd_id], '*', false);
+        }
         return ['code' => '200', 'HdGoods' => $result];
     }
 
