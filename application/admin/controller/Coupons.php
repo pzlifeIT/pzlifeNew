@@ -7,8 +7,8 @@ use app\admin\AdminController;
 class Coupons extends AdminController {
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -467,6 +467,259 @@ class Coupons extends AdminController {
         }
         $result = $this->app->coupons->unbindCouponHd($couponHdId, $couponId);
         $this->apiLog($apiName, [$cmsConId, $couponHdId, $couponId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取抽奖活动
+     * @apiDescription   getHd
+     * @apiGroup         admin_coupons
+     * @apiName          getHd
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page 页码
+     * @apiParam (入参) {Int} page_num 查询数量
+     * @apiParam (入参) {Int} [id] 查询详情
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/getHd
+     * @return array
+     * @author rzc
+     */
+    public function getHd() {
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        $id      = trim($this->request->post('id'));
+        if (!is_numeric($page) && !empty($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum) && !empty($pageNum)) {
+            return ["code" => '3003'];
+        }
+        $page    = $page > 0 ? intval($page) : 1;
+        $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
+        if (!empty($id) && !is_numeric($id)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->coupons->getHd($page, $pageNum, $id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加抽奖活动
+     * @apiDescription   saveHd
+     * @apiGroup         admin_coupons
+     * @apiName          saveHd
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {String} start_time 活动开始时间
+     * @apiParam (入参) {String} end_time 活动结束时间
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:title为空 / 3002:存在进行中的抽奖活动 / 3003:开始时间格式错误 / 3004:结束时间格式错误 /
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/saveHd
+     * @return array
+     * @author rzc
+     */
+    public function saveHd() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id'));
+        $title      = trim($this->request->post('title'));
+        $start_time = trim($this->request->post('start_time'));
+        $end_time   = trim($this->request->post('end_time'));
+        if (empty($title)) {
+            return ['code' => '3001'];
+        }
+        if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
+            if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
+                return ['code' => '3003'];
+            }
+            $start_time = strtotime($start_time);
+        } else {
+            return ['code' => '3003'];
+        }
+
+        if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+            if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
+                return ['code' => '3004'];
+            }
+            $end_time = strtotime($end_time);
+        } else {
+            return ['code' => '3004'];
+        }
+
+        $result = $this->app->coupons->saveHd($title, $start_time, $end_time);
+        $this->apiLog($apiName, [$cmsConId, $title, $start_time, $end_time], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改抽奖活动
+     * @apiDescription   updateHd
+     * @apiGroup         admin_coupons
+     * @apiName          updateHd
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} title 抽奖活动名称
+     * @apiParam (入参) {Int} status 1,停用;2,启用
+     * @apiParam (入参) {Int} start_time 开始时间
+     * @apiParam (入参) {Int} end_time 截止时间
+     * @apiParam (入参) {Int} id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:status为空 / 3002:存在进行中的抽奖活动 / 3003:开始时间格式错误 / 3004:结束时间格式错误 /
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/updateHd
+     * @return array
+     * @author rzc
+     */
+    public function updateHd() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $cmsConId   = trim($this->request->post('cms_con_id'));
+        $id         = trim($this->request->post('id'));
+        $title      = trim($this->request->post('title'));
+        $status     = trim($this->request->post('status'));
+        $start_time = trim($this->request->post('start_time'));
+        $end_time   = trim($this->request->post('end_time'));
+
+        if (!empty($start_time)) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
+                // print_r($parts);die;
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
+                    return ['code' => '3003'];
+                }
+                $start_time = strtotime($start_time);
+            } else {
+                return ['code' => '3003'];
+            }
+        }
+        if (!empty($end_time)) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
+                    return ['code' => '3004'];
+                }
+                $end_time = strtotime($end_time);
+            } else {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($status)) {
+            if (!is_numeric($status) || !in_array($status, [1, 2])) {
+                return ['code' => '3001'];
+            }
+        }
+        if (empty($id)) {
+            return ['code' => '3000'];
+        }
+        $result = $this->app->coupons->updateHd($id, $title, $status, $start_time, $end_time);
+        $this->apiLog($apiName, [$cmsConId, $title, $status, $start_time, $end_time], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取抽奖活动奖品
+     * @apiDescription   getHdGoods
+     * @apiGroup         admin_coupons
+     * @apiName          getHdGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} hd_id 活动ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/getHdGoods
+     * @return array
+     * @author rzc
+     */
+    public function getHdGoods() {
+        $hd_id = trim($this->request->post('hd_id'));
+        if (empty($hd_id) || !is_numeric($hd_id)) {
+            return ['code' => 3001];
+        }
+        $result = $this->app->coupons->getHdGoods($hd_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加抽奖活动奖品
+     * @apiDescription   addHdGoods
+     * @apiGroup         admin_coupons
+     * @apiName          addHdGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} hd_id 活动ID
+     * @apiParam (入参) {String} image 图片
+     * @apiParam (入参) {Int} kind 抽奖种类
+     * @apiParam (入参) {Int} relevance 奖品关联优惠券ID或者商品SKUID或者积分面额
+     * @apiParam (入参) {Int} debris 奖品分为碎片个数，0则为完整奖品，否则为该奖品合成完整奖品需要的碎片
+     * @apiParam (入参) {String} title 奖品名称
+     * @apiParam (入参) {Number} probability 中奖概率
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/addHdGoods
+     * @return array
+     * @author rzc
+     */
+    public function addHdGoods() {
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id'));
+        $hd_id       = trim($this->request->post('hd_id'));
+        $image       = trim($this->request->post('image'));
+        $kind        = trim($this->request->post('kind'));
+        $relevance   = trim($this->request->post('relevance'));
+        $debris      = trim($this->request->post('debris'));
+        $title       = trim($this->request->post('title'));
+        $probability = trim($this->request->post('probability'));
+        if (!empty($hd_id)) {
+            return ['code' => '3001'];
+        }
+        if (!empty($image)) {
+            return ['code' => '3002'];
+        }
+        if (!empty($kind)) {
+            return ['code' => '3003'];
+        }
+        if (!empty($relevance)) {
+            return ['code' => '3004'];
+        }
+        if (!empty($debris)) {
+            return ['code' => '3005'];
+        }
+        if (!empty($title)) {
+            return ['code' => '3006'];
+        }
+        if (!empty($probability)) {
+            return ['code' => '3007'];
+        }
+        $result = $this->app->coupons->addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability);
+        $this->apiLog($apiName, [$cmsConId, $hd_id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改抽奖活动奖品
+     * @apiDescription   saveHdGoods
+     * @apiGroup         admin_coupons
+     * @apiName          saveHdGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id 抽奖ID
+     * @apiParam (入参) {String} [image] 图片
+     * @apiParam (入参) {Int} [kind] 抽奖种类
+     * @apiParam (入参) {Int} [relevance] 奖品关联优惠券ID或者商品SKUID或者积分面额
+     * @apiParam (入参) {Int} [debris] 奖品分为碎片个数，0则为完整奖品，否则为该奖品合成完整奖品需要的碎片
+     * @apiParam (入参) {String} [title] 奖品名称
+     * @apiParam (入参) {Number} [probability] 中奖概率
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} msg 返回消息
+     * @apiSampleRequest /admin/coupons/saveHdGoods
+     * @return array
+     * @author rzc
+     */
+    public function saveHdGoods(){
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        $image       = trim($this->request->post('image'));
+        $kind        = trim($this->request->post('kind'));
+        $relevance   = trim($this->request->post('relevance'));
+        $debris      = trim($this->request->post('debris'));
+        $title       = trim($this->request->post('title'));
+        $probability = trim($this->request->post('probability'));
+        
+        $result = $this->app->coupons->saveHdGoods($id, $image, $kind, $relevance, $debris, $title, $probability);
+        $this->apiLog($apiName, [$cmsConId, $id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
         return $result;
     }
 }
