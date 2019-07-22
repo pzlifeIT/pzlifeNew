@@ -2665,7 +2665,7 @@ class User extends CommonIndex {
         if (empty($uid)) { //用户不存在
             return ['code' => '3002'];
         }
-        $coupon = DbCoupon::getCoupon(['id' => $couponId], 'id,price,gs_id,level,stype,is_superposition,title,days', true);
+        $coupon = DbCoupon::getCoupon(['id' => $couponId], 'price,gs_id,level,stype,is_superposition,title,days', true);
         if (empty($coupon)) {//优惠券不存在
             return ['code' => '3003'];
         }
