@@ -605,6 +605,7 @@ class Coupons extends AdminController {
      * @apiName          getHdGoods
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} hd_id 活动ID
+     * @apiParam (入参) {Int} id 奖品ID
      * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/getHdGoods
@@ -613,10 +614,11 @@ class Coupons extends AdminController {
      */
     public function getHdGoods() {
         $hd_id = trim($this->request->post('hd_id'));
+        $id = trim($this->request->post('id'));
         if (empty($hd_id) || !is_numeric($hd_id)) {
             return ['code' => 3001];
         }
-        $result = $this->app->coupons->getHdGoods($hd_id);
+        $result = $this->app->coupons->getHdGoods($hd_id,$id);
         return $result;
     }
 

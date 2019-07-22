@@ -110,6 +110,16 @@ class DbCoupon {
         return $obj->count();
     }
 
+    public function getHd( $where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = Hd::field($field);
+        $obj = $obj->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getHdCount($where) {
+        $obj = Hd::where($where);
+        return $obj->count();
+    }
     public function saveHd($data){
         $Hd = new Hd;
         $Hd->save($data);
@@ -125,5 +135,11 @@ class DbCoupon {
         $HdGoods = new HdGoods;
         $HdGoods->save($data);
         return $HdGoods->id;
+    }
+
+    public function getHdGoods( $where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = HdGoods::field($field);
+        $obj = $obj->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
     }
 }
