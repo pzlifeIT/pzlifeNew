@@ -528,19 +528,13 @@ class Coupons extends AdminController {
         if (empty($title)) {
             return ['code' => '3001'];
         }
-        if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
-            if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
-                return ['code' => '3003'];
-            }
+        if ( date('Y-m-d H:i:s', strtotime($start_time))  == $start_time) {
             $start_time = strtotime($start_time);
         } else {
             return ['code' => '3003'];
         }
 
-        if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
-            if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
-                return ['code' => '3004'];
-            }
+        if ( date('Y-m-d H:i:s', strtotime($end_time))  == $end_time) {
             $end_time = strtotime($end_time);
         } else {
             return ['code' => '3004'];
@@ -578,21 +572,14 @@ class Coupons extends AdminController {
         $end_time   = trim($this->request->post('end_time'));
 
         if (!empty($start_time)) {
-            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
-                // print_r($parts);die;
-                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
-                    return ['code' => '3003'];
-                }
+            if (date('Y-m-d H:i:s', strtotime($start_time))  == $start_time) {
                 $start_time = strtotime($start_time);
             } else {
                 return ['code' => '3003'];
             }
         }
         if (!empty($end_time)) {
-            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
-                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
-                    return ['code' => '3004'];
-                }
+            if (date('Y-m-d H:i:s', strtotime($end_time))  == $end_time) {
                 $end_time = strtotime($end_time);
             } else {
                 return ['code' => '3004'];
