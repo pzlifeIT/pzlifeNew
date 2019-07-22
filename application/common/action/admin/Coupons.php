@@ -462,6 +462,7 @@ class Coupons extends CommonIndex {
         $data = [];
         $data = [
             'image'       => $image,
+            'hd_id'       => $hd_id,
             'kind'        => $kind,
             'relevance'   => $relevance,
             'debris'      => $debris,

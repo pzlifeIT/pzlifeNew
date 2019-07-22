@@ -630,7 +630,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} hd_id 活动ID
      * @apiParam (入参) {String} image 图片
-     * @apiParam (入参) {Int} kind 抽奖种类
+     * @apiParam (入参) {Int} kind 抽奖种类 0,未设置种类;1,优惠券;2,商品;3,钻石卡身份;4,商城积分;5,通用碎片
      * @apiParam (入参) {Int} relevance 奖品关联优惠券ID或者商品SKUID或者积分面额
      * @apiParam (入参) {Int} debris 奖品分为碎片个数，0则为完整奖品，否则为该奖品合成完整奖品需要的碎片
      * @apiParam (入参) {String} title 奖品名称
@@ -660,7 +660,7 @@ class Coupons extends AdminController {
         if (empty($kind) || !in_array($kind, [1, 2, 3, 4, 5])) {
             return ['code' => '3003'];
         }
-        if (empty($relevance)) {
+        if (empty($relevance) && in_array($kind, [1, 2])) {
             return ['code' => '3004'];
         }
         if (empty($debris)) {
