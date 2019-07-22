@@ -6,6 +6,7 @@ use app\facade\DbCoupon;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use think\Db;
+use Config;
 
 class Coupons extends CommonIndex {
     public function __construct() {
