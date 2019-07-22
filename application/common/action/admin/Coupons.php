@@ -468,6 +468,7 @@ class Coupons extends CommonIndex {
             'debris'          => $debris,
             'title'           => $title,
             'probability'     => $probability,
+            'stock'           => $stock,
             'winnings_number' => $winnings_number,
         ];
         Db::startTrans();
