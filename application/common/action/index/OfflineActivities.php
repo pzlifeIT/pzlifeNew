@@ -313,11 +313,12 @@ class OfflineActivities extends CommonIndex {
         }
 //        $uid = 1;
         if ($this->initShopCount() === false) {
-//            return ['code' => '3004'];
-            $shopNum = 5; //所有奖品抽完
-        } else if (in_array($uid, array_keys($u))) {
-            $shopNum = $u[$uid];
-        } else {
+            return ['code' => '3004'];
+        }
+        //  else if (in_array($uid, array_keys($u))) {
+        //     $shopNum = $u[$uid];
+        // }
+         else {
             $shopNum = $this->getDraw();
         }
         $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcsub($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
@@ -352,17 +353,22 @@ class OfflineActivities extends CommonIndex {
     }
 
     private function getDraw() {
-        $shopList = [ //抽奖商品
-            1 => 1400, //2元商券
-            3 => 2800, //深海野生脆虾北极虾 1包
-            7 => 4200, //君乐宝涨芝士 1袋
-            5 => 10000, //优加竹浆本色手帕 1包
-            2 => 10000, //还真精品茶具 1套
-            4 => 10000, //君乐宝纯享随机口味 一箱
-            6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
-            8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
-        ];
-        $num     = mt_rand(1, 10000);
+        // $shopList = [ //抽奖商品
+        //     1 => 1400, //2元商券
+        //     3 => 2800, //深海野生脆虾北极虾 1包
+        //     7 => 4200, //君乐宝涨芝士 1袋
+        //     5 => 10000, //优加竹浆本色手帕 1包
+        //     2 => 10000, //还真精品茶具 1套
+        //     4 => 10000, //君乐宝纯享随机口味 一箱
+        //     6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
+        //     8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
+        // ];
+        $luckhd = DbCoupon::getHd( ['status' => 2], 'id', true);
+        $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $luckhd['id']], 'probability', false);
+        foreach ($LuckGoods as $key => $value) {
+            $shopList[$key] = bcmul($value['probability'],10000000);
+        }
+        $num     = mt_rand(1, 10000000);
         $shopNum = 0;
         foreach ($shopList as $sk => $sl) {
             if ($num <= $sl) {
@@ -370,29 +376,40 @@ class OfflineActivities extends CommonIndex {
                 break;
             }
         }
-        $result = $this->redis->hget($this->redisHdluckyDraw, $shopNum);
-        if ($result <= 0) {
+        // $result = $this->redis->hget($this->redisHdluckyDraw, $shopNum);
+        // if ($result <= 0) {
+        //     $shopNum = $this->getDraw();
+        // }
+        
+        $have_goods = DbCoupon::getHdGoods('HdGoods', ['id' => $shopNum], 'debris,stock,has', true);
+        if ($have_goods['debris'] * $have_goods['stock'] - $have_goods['has'] <= 0) {
             $shopNum = $this->getDraw();
         }
         return $shopNum;
     }
 
     private function initShopCount() {
-        $shopCount = [ //抽奖商品库存
-            1 => 50,
-            2 => 0,
-            3 => 50,
-            4 => 0,
-            5 => 200,
-            6 => 0,
-            7 => 50,
-            8 => 0,
-        ];
-        if (!$this->redis->exists($this->redisHdluckyDraw)) {
-            $this->redis->hMSet($this->redisHdluckyDraw, $shopCount);
-            $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
+        // $shopCount = [ //抽奖商品库存
+        //     1 => 50,
+        //     2 => 0,
+        //     3 => 50,
+        //     4 => 0,
+        //     5 => 200,
+        //     6 => 0,
+        //     7 => 50,
+        //     8 => 0,
+        // ];
+        // if (!$this->redis->exists($this->redisHdluckyDraw)) {
+        //     $this->redis->hMSet($this->redisHdluckyDraw, $shopCount);
+        //     $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
+        // }
+        // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
+        $luckhd = DbCoupon::getHd( ['status' => 2], 'id', true);
+        $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $luckhd['id']], 'debris,stock,has', false);
+        $allNum = [];
+        foreach ($LuckGoods as $key => $value) {
+           $allNum[] = $value['debris'] * $value['stock'] - $value['has'];
         }
-        $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
         $allNum = array_sum($allNum);
         if ($allNum <= 0) {
             return false;
