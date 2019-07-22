@@ -546,13 +546,9 @@ class Coupons extends CommonIndex {
                 $data['image'] = $image;
             }
 
-            $id = DbCoupon::updateHdGoods($data,$id);
-            if ($id) {
-                Db::commit();
-                return ['code' => '200', 'id' => $id];
-            }
-            Db::rollback();
-            return ['code' => '3011']; //修改失败
+            DbCoupon::updateHdGoods($data,$id); 
+            Db::commit();
+            return ['code' => '200', 'id' => $id];
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3011']; //修改失败
