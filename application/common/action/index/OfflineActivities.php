@@ -401,51 +401,19 @@ class OfflineActivities extends CommonIndex {
     }
 
     public function LuckGoods() {
+        
+        $luckhd = DbCoupon::getHd( ['status' => 2], 'id', true);
+        if (!empty($luckhd)) {
+            $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $luckhd['id']], '*', false);
+            return [
+                'code'      => '200',
+                'LuckGoods' => $LuckGoods
+            ];
+        }
         return [
-            'code'      => '200',
-            'LuckGoods' => [
-                [
-                    'shop_num'   => 1,
-                    'goods_name' => '2元商券',
-                    'image_path' => 'https://webimages.pzlive.vip/1shangquan.jpg',
-                ],
-                [
-                    'shop_num'   => 2,
-                    'goods_name' => '还真精品茶具 1套',
-                    'image_path' => 'https://webimages.pzlive.vip/1beizi.jpg',
-                ],
-                [
-                    'shop_num'   => 3,
-                    'goods_name' => '深海野生脆虾北极虾 1包',
-                    'image_path' => 'https://webimages.pzlive.vip/1xia.png',
-                ],
-                [
-                    'shop_num'   => 4,
-                    'goods_name' => '君乐宝纯享随机口味 一箱',
-                    'image_path' => 'https://webimages.pzlive.vip/cx.jpg',
-                ],
-                [
-                    'shop_num'   => 5,
-                    'goods_name' => '优加竹浆本色手帕 1包',
-                    'image_path' => 'https://webimages.pzlive.vip/1zj.jpg',
-                ],
-                [
-                    'shop_num'   => 6,
-                    'goods_name' => '玛蒙德格兰赛干红葡萄酒 2瓶',
-                    'image_path' => 'https://webimages.pzlive.vip/gh.jpg',
-                ],
-                [
-                    'shop_num'   => 7,
-                    'goods_name' => '君乐宝涨芝士 1袋',
-                    'image_path' => 'https://webimages.pzlive.vip/1zzs.jpg',
-                ],
-                [
-                    'shop_num'   => 8,
-                    'goods_name' => '克林伯瑞桃红葡萄酒 2瓶',
-                    'image_path' => 'https://webimages.pzlive.vip/th.jpg',
-                ],
-            ],
+            'code'      => '3001',
         ];
+       
     }
 
     public function getHdLucky($big = '') {
