@@ -120,4 +120,10 @@ class DbCoupon {
         $Hd = new Hd;
         return $Hd->save($data,['id' => $id]);
     }
+
+    public function saveHdGoods($data){
+        $HdGoods = new HdGoods;
+        $HdGoods->save($data);
+        return $HdGoods->id;
+    }
 }

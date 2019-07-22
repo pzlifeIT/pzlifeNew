@@ -510,9 +510,9 @@ class Coupons extends AdminController {
      * @apiGroup         admin_coupons
      * @apiName          saveHd
      * @apiParam (入参) {String} cms_con_id
-     * @apiParam (入参) {Int} page 页码
-     * @apiParam (入参) {Int} page_num 查询数量
-     * @apiParam (入参) {Int} [id] 查询详情
+     * @apiParam (入参) {String} title 标题
+     * @apiParam (入参) {String} start_time 活动开始时间
+     * @apiParam (入参) {String} end_time 活动结束时间
      * @apiSuccess (返回) {String} code 200:成功 / 3001:title为空 / 3002:存在进行中的抽奖活动 / 3003:开始时间格式错误 / 3004:结束时间格式错误 /
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/saveHd
@@ -529,7 +529,6 @@ class Coupons extends AdminController {
             return ['code' => '3001'];
         }
         if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
-            // print_r($parts);die;
             if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                 return ['code' => '3003'];
             }
@@ -709,6 +708,18 @@ class Coupons extends AdminController {
      * @author rzc
      */
     public function saveHdGoods(){
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        $image       = trim($this->request->post('image'));
+        $kind        = trim($this->request->post('kind'));
+        $relevance   = trim($this->request->post('relevance'));
+        $debris      = trim($this->request->post('debris'));
+        $title       = trim($this->request->post('title'));
+        $probability = trim($this->request->post('probability'));
         
+        $result = $this->app->coupons->saveHdGoods($id, $image, $kind, $relevance, $debris, $title, $probability);
+        $this->apiLog($apiName, [$cmsConId, $id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
+        return $result;
     }
 }

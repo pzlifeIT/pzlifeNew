@@ -354,7 +354,13 @@ class Coupons extends CommonIndex {
         }
         $offset = ($page - 1) * $pageNum;
         $result = DbCoupon::getList('Hd', [], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum);
-        $count  = DbCoupon::countNum('Hd', []);
+        if (!$result) {
+            $result = [];
+        }
+        $count = DbCoupon::countNum('Hd', []);
+        if (!$count) {
+            $count = 0;
+        }
         return ['code' => '200', 'total' => $count, 'luckydraw' => $result];
     }
 
@@ -461,17 +467,17 @@ class Coupons extends CommonIndex {
                 if (!empty($oldImage)) {
 
                     $oldImage_id = DbImage::getLogImage($oldImage, 1);
-                    DbImage::updateLogImageStatus($oldImage_id, 3);//更新状态为弃用
+                    DbImage::updateLogImageStatus($oldImage_id, 3); //更新状态为弃用
 
                 }
                 $image = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
 
-                $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
+                $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
 
-                if (empty($logImage)) {//图片不存在
-                    return ['code' => '3010'];//图片没有上传过
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
                 }
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
                 $data['image'] = $image;
             }
 
@@ -481,10 +487,72 @@ class Coupons extends CommonIndex {
                 return ['code' => '200', 'id' => $id];
             }
             Db::rollback();
-            return ['code' => '3011'];//修改失败
+            return ['code' => '3011']; //修改失败
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3011'];//修改失败
+            return ['code' => '3011']; //修改失败
+        }
+    }
+
+    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '') {
+        $HdGoods = DbCoupon::getList('HdGoods', ['id' => $id]);
+        if (!$HdGoods) {
+            return ['code' => '3000'];
+        }
+        $data = [];
+        if (!empty($image)) {
+            array_push($data, ['image' => $image]);
+        }
+        if (!empty($kind)) {
+            array_push($data, ['kind' => $kind]);
+        }
+        if (!empty($relevance)) {
+            array_push($data, ['relevance' => $relevance]);
+        }
+        if (!empty($debris)) {
+            array_push($data, ['debris' => $debris]);
+        }
+        if (!empty($title)) {
+            array_push($data, ['title' => $title]);
+        }
+        if (!empty($probability)) {
+            array_push($data, ['probability' => $probability]);
+        }
+        Db::startTrans();
+        try {
+
+            if (!empty($data['image'])) {
+                $oldImage = $data['image'];
+
+                $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
+
+                if (!empty($oldImage)) {
+
+                    $oldImage_id = DbImage::getLogImage($oldImage, 1);
+                    DbImage::updateLogImageStatus($oldImage_id, 3); //更新状态为弃用
+
+                }
+                $image = filtraImage(Config::get('qiniu.domain'), $data['image_path']);
+
+                $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
+                }
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+                $data['image'] = $image;
+            }
+
+            $id = DbCoupon::updateHdGoods($data,$id);
+            if ($id) {
+                Db::commit();
+                return ['code' => '200', 'id' => $id];
+            }
+            Db::rollback();
+            return ['code' => '3011']; //修改失败
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3011']; //修改失败
         }
     }
 }
