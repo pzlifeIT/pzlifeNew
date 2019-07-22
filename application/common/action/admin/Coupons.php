@@ -5,8 +5,8 @@ namespace app\common\action\admin;
 use app\facade\DbCoupon;
 use app\facade\DbGoods;
 use app\facade\DbImage;
-use think\Db;
 use Config;
+use think\Db;
 
 class Coupons extends CommonIndex {
     public function __construct() {
@@ -350,16 +350,16 @@ class Coupons extends CommonIndex {
      */
     public function getHd(int $page, int $pageNum, $id = 0) {
         if (!empty($id)) {
-            $result = DbCoupon::getHd( ['id' => $id], '*', true);
+            $result = DbCoupon::getHd(['id' => $id], '*', true);
             return ['code' => '200', 'luckydraw' => $result];
         }
         $offset = ($page - 1) * $pageNum;
         // $DbCoupon = new DbCoupon('Hd',[[], '*', false, ['id' => 'desc'], $offset . ',' . $pageNum]);
-        $result = DbCoupon::getHd( [], '*', false,'', $offset . ',' . $pageNum);
+        $result = DbCoupon::getHd([], '*', false, '', $offset . ',' . $pageNum);
         if (!$result) {
             $result = [];
         }
-        $count =DbCoupon::getHdCount([]);
+        $count = DbCoupon::getHdCount([]);
         if (!$count) {
             $count = 0;
         }
@@ -374,7 +374,7 @@ class Coupons extends CommonIndex {
      * @author rzc
      */
     public function saveHd($title, $start_time, $end_time) {
-        $has_Hd = DbCoupon::getHd( ['status' => 2], '*', true);
+        $has_Hd = DbCoupon::getHd(['status' => 2], '*', true);
         if (!empty($has_Hd)) {
             return ['code' => '3002'];
         }
@@ -428,14 +428,14 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getHdGoods($hd_id,$id = 0) {
+    public function getHdGoods($hd_id, $id = 0) {
         if ($id) {
             if (!is_numeric($id)) {
                 return ['code' => '3000'];
             }
-            $result = DbCoupon::getHdGoods( ['id' => $id], '*', true);
+            $result = DbCoupon::getHdGoods(['id' => $id], '*', true);
         } else {
-            $result = DbCoupon::getHdGoods( ['hd_id' => $hd_id], '*', false);
+            $result = DbCoupon::getHdGoods(['hd_id' => $hd_id], '*', false);
         }
         return ['code' => '200', 'HdGoods' => $result];
     }
@@ -451,23 +451,24 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock) {
-        $num = DbCoupon::countgetHdGoods( ['hd_id' => $hd_id]);
+    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number) {
+        $num = DbCoupon::countgetHdGoods(['hd_id' => $hd_id]);
         if ($num > 7) {
             return ['code' => '3008'];
         }
-         if ($probability + DbCoupon::sumgetHdGoods( ['hd_id' => $hd_id],'probability') > 1){
+        if ($probability + DbCoupon::sumgetHdGoods(['hd_id' => $hd_id], 'probability') > 1) {
             return ['code' => '3009'];
-         }
+        }
         $data = [];
         $data = [
-            'image'       => $image,
-            'hd_id'       => $hd_id,
-            'kind'        => $kind,
-            'relevance'   => $relevance,
-            'debris'      => $debris,
-            'title'       => $title,
-            'probability' => $probability,
+            'image'           => $image,
+            'hd_id'           => $hd_id,
+            'kind'            => $kind,
+            'relevance'       => $relevance,
+            'debris'          => $debris,
+            'title'           => $title,
+            'probability'     => $probability,
+            'winnings_number' => $winnings_number,
         ];
         Db::startTrans();
         try {
@@ -497,8 +498,8 @@ class Coupons extends CommonIndex {
         }
     }
 
-    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '', $stock = 0) {
-        $HdGoods = DbCoupon::getHd( ['id' => $id],'*',true);
+    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '', $stock = 0, $winnings_number = 0) {
+        $HdGoods = DbCoupon::getHd(['id' => $id], '*', true);
         if (!$HdGoods) {
             return ['code' => '3000'];
         }
@@ -523,6 +524,9 @@ class Coupons extends CommonIndex {
         }
         if (!empty($stock)) {
             $data['stock'] = $stock;
+        }
+        if (!empty($winnings_number)) {
+            $data['stock'] = $winnings_number;
         }
         Db::startTrans();
         try {
@@ -549,7 +553,7 @@ class Coupons extends CommonIndex {
                 $data['image'] = $image;
             }
 
-            DbCoupon::updateHdGoods($data,$id); 
+            DbCoupon::updateHdGoods($data, $id);
             Db::commit();
             return ['code' => '200', 'id' => $id];
         } catch (\Exception $e) {
