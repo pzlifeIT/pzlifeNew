@@ -147,4 +147,9 @@ class DbCoupon {
         $obj = HdGoods::where($where);
         return $obj->count();
     }
+
+    public function sumgetHdGoods($where,$field){
+        $obj = HdGoods::where($where);
+        return $obj->sum($field);
+    }
 }
