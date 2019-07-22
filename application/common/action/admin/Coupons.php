@@ -526,7 +526,7 @@ class Coupons extends CommonIndex {
             $data['stock'] = $stock;
         }
         if (!empty($winnings_number)) {
-            $data['stock'] = $winnings_number;
+            $data['winnings_number'] = $winnings_number;
         }
         Db::startTrans();
         try {
