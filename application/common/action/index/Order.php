@@ -380,7 +380,7 @@ class Order extends CommonIndex {
             if ($userCoupon['level'] == 2) {//专题券
                 $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
-                if (!in_array($userCoupon['gs_id'], $couponGoodsIdList)) {
+                if (!in_array($goodsSku['goods_id'], $couponGoodsIdList)) {
                     return ['code' => '3013'];
                 }
             }
