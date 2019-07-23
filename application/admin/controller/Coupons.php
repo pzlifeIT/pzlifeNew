@@ -637,6 +637,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {Number} probability 中奖概率
      * @apiParam (入参) {Number} stock 库存
      * @apiParam (入参) {Number} winnings_number 可中数量(按整个计算)
+     * @apiParam (入参) {Number} order 排序
      * @apiSuccess (返回) {String} code 200:成功 / 3001:活动id有误 / 3002:image有误 / 3003:kind有误 / 3004:relevance有误 / 3005:debris有误 / 3006:title有误 / 3007:probability有误 / 3008:奖品最大设置个数为8 / 3009:总抽奖概率大于1
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/addHdGoods
@@ -654,6 +655,7 @@ class Coupons extends AdminController {
         $title           = trim($this->request->post('title'));
         $probability     = trim($this->request->post('probability'));
         $stock           = trim($this->request->post('stock'));
+        $order           = trim($this->request->post('order'));
         $winnings_number = trim($this->request->post('winnings_number'));
         if (empty($hd_id)) {
             return ['code' => '3001'];
@@ -676,13 +678,13 @@ class Coupons extends AdminController {
         if (empty($probability) || $probability > 1) {
             return ['code' => '3007'];
         }
-        $result = $this->app->coupons->addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number);
-        $this->apiLog($apiName, [$cmsConId, $hd_id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
+        $result = $this->app->coupons->addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number, $order);
+        $this->apiLog($apiName, [$cmsConId, $hd_id, $image, $kind, $relevance, $debris, $probability, $stock, $winnings_number, $order], $result['code'], $cmsConId);
         return $result;
     }
 
     /**
-     * @api              {post} / 修改抽奖活动奖品
+     * @api              {post} / 修改抽奖活动奖品(接口变更为失效接口)
      * @apiDescription   saveHdGoods
      * @apiGroup         admin_coupons
      * @apiName          saveHdGoods
@@ -696,6 +698,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {Number} [probability] 中奖概率
      * @apiParam (入参) {Number} [stock] 库存
      * @apiParam (入参) {Number} [winnings_number] 可中数量(按整个计算)
+     * @apiParam (入参) {Number} [order] 排序
      * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/saveHdGoods
@@ -703,20 +706,27 @@ class Coupons extends AdminController {
      * @author rzc
      */
     public function saveHdGoods() {
-        $apiName         = classBasename($this) . '/' . __function__;
-        $cmsConId        = trim($this->request->post('cms_con_id'));
-        $id              = trim($this->request->post('id'));
-        $image           = trim($this->request->post('image'));
-        $kind            = trim($this->request->post('kind'));
-        $relevance       = trim($this->request->post('relevance'));
-        $debris          = trim($this->request->post('debris'));
-        $title           = trim($this->request->post('title'));
-        $probability     = trim($this->request->post('probability'));
-        $stock           = trim($this->request->post('stock'));
-        $winnings_number = trim($this->request->post('winnings_number'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim($this->request->post('id'));
+        // $image           = trim($this->request->post('image'));
+        // $kind            = trim($this->request->post('kind'));
+        // $relevance       = trim($this->request->post('relevance'));
+        // $debris          = trim($this->request->post('debris'));
+        // $title           = trim($this->request->post('title'));
+        // $probability     = trim($this->request->post('probability'));
+        $order = trim($this->request->post('order'));
+        // $winnings_number = trim($this->request->post('winnings_number'));
 
-        $result = $this->app->coupons->saveHdGoods($id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number);
-        $this->apiLog($apiName, [$cmsConId, $id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
+        // $result = $this->app->coupons->saveHdGoods($id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number);
+        // $this->apiLog($apiName, [$cmsConId, $id, $image, $kind, $relevance, $debris, $probability], $result['code'], $cmsConId);
+        if (!empty($order)) {
+            $result = $this->app->coupons->saveHdGoods($id, '', 0, 0, 0, '', 0, 0, 0, $order);
+        } else {
+
+            $result = $this->app->coupons->loseHdGoods($id);
+        }
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 }
