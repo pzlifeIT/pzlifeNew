@@ -325,15 +325,29 @@ class OfflineActivities extends CommonIndex {
         else {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
-        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'title,image,debris,stock,has,winnings_number', true);
+        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'kind,title,image,debris,stock,has,winnings_number', true);
         $new_has    = $have_goods['has'] + 1;
         Db::startTrans();
         try {
             if ($have_goods['debris'] > 1) { //碎片类型的奖品
                 $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1]], 'id,debris');
-                $new_debris  = $has_winning['debris'] + 1;
-                DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);
-                $winning_id = $has_winning['id'];
+                if (!empty($has_winning)) {
+                    $new_debris = $has_winning['debris'] + 1;
+                    DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);
+                    $winning_id = $has_winning['id'];
+                } else {
+                    $winning_id = DbOfflineActivities::addHdLucky([
+                        'uid'         => $uid,
+                        'shop_num'    => $shopNum,
+                        'hd_num'      => $hd_id,
+                        'kind'        => $have_goods['kind'],
+                        'debris'      => 1,
+                        'need_debris' => $have_goods['debris'],
+                        'goods_name'  => $have_goods['title'],
+                        'image_path'  => $have_goods['image'],
+                    ]);
+                }
+
             } else {
                 $winning_id = DbOfflineActivities::addHdLucky([
                     'uid'        => $uid,
@@ -468,7 +482,7 @@ class OfflineActivities extends CommonIndex {
         $uid    = $this->getUidByConId($conId);
         $offect = ($page - 1) * $pagenum;
         if ($is_debris) {
-            $result = DbOfflineActivities::getHdLucky([['uid' ,'=', $uid],['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+            $result = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris', false, ['id' => 'desc'], $offect . ',' . $pagenum);
         } else {
             $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
         }
