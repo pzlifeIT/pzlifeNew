@@ -9,6 +9,7 @@ use app\facade\DbOfflineActivities;
 use app\facade\DbOrder;
 use app\facade\DbShops;
 use app\facade\DbUser;
+use app\facade\DbCoupon;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -344,7 +345,7 @@ class OfflineActivities extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path, 'winning_id' => $winning_id];
         } catch (\Exception $e) {
-            $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
+            // $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             Db::rollback();
             return ['code' => '3005'];
         }
@@ -405,10 +406,11 @@ class OfflineActivities extends CommonIndex {
         //     $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
         // }
         // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
-        if (DbCoupon::getHdGoods('HdGoods', [['hd_id' , '=', $hd_id],['update_time', '>', $timekey]], 'id', true)) {
+        if (DbCoupon::getHdGoods( [['hd_id' , '=', $hd_id],['update_time', '>', $timekey]], 'id', true)) {
             return ['code' => '3006'];
         }
-        $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $hd_id], 'debris,stock,has', false);
+        // echo 1;die;
+        $LuckGoods = DbCoupon::getHdGoods(['hd_id' =>  $hd_id, 'status' => 1], 'id,debris,stock,has');
         $allNum = [];
         foreach ($LuckGoods as $key => $value) {
            $allNum[] = $value['debris'] * $value['stock'] - $value['has'];
@@ -424,9 +426,10 @@ class OfflineActivities extends CommonIndex {
         
         $luckhd = DbCoupon::getHd( ['status' => 2], 'id', true);
         if (!empty($luckhd)) {
-            $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $luckhd['id'], 'status' => 1], '*', false);
+            $LuckGoods = DbCoupon::getHdGoods( ['hd_id' => $luckhd['id'], 'status' => 1], '*', false, ['order' => 'asc']);
             return [
                 'code'      => '200',
+                'hd_id'     => $luckhd['id'],
                 'LuckGoods' => $LuckGoods
             ];
         }

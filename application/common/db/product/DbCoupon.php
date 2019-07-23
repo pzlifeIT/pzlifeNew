@@ -138,8 +138,7 @@ class DbCoupon {
     }
 
     public function getHdGoods( $where, $field, $row = false, $orderBy = '', $limit = '') {
-        $obj = HdGoods::field($field);
-        $obj = $obj->where($where);
+        $obj = HdGoods::field($field)->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
 
