@@ -330,7 +330,7 @@ class OfflineActivities extends CommonIndex {
         Db::startTrans();
         try {
             if ($have_goods['debris'] > 1) { //碎片类型的奖品
-                $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1]], 'id,debris');
+                $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1], ['uid' , '=',$uid]], 'id,uid,debris',true);
                 if (!empty($has_winning)) {
                     $new_debris = $has_winning['debris'] + 1;
                     DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);

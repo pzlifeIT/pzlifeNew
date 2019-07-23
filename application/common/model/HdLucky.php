@@ -15,10 +15,10 @@ class HdLucky extends Model {
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
     protected $autoWriteTimestamp = true;
-    protected $updateTime = false;//关闭update_time
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//注册时间
         'delete_time' => 'timestamp:Y-m-d H:i:s',//最后更新时间
+        'update_time' => 'timestamp:Y-m-d H:i:s', //更新时间
     ];
     // 模型初始化
     protected static function init() {
