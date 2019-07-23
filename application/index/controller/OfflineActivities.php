@@ -203,7 +203,8 @@ class OfflineActivities extends MyController {
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} [page] 页码
      * @apiParam (入参) {Number} [pageNum] 页码
-     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数
+     * @apiParam (入参) {Number} [is_debris] 查询碎片奖品 1查询，空或者不传则不查
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:is_debris错误
      * @apiSuccess (返回) {String}  winnings 中奖记录
      * @apiSuccess (winnings) {String}  shop_num 奖品编号
      * @apiSuccess (winnings) {String}  goods_name 奖品名称
@@ -213,18 +214,22 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function getUserHdLucky() {
-        $conId   = trim($this->request->post('con_id'));
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pageNum'));
-        $page    = is_numeric($page) ? $page : 1;
-        $pagenum = is_numeric($pagenum) ? $pagenum : 10;
+        $conId     = trim($this->request->post('con_id'));
+        $page      = trim($this->request->post('page'));
+        $pagenum   = trim($this->request->post('pageNum'));
+        $is_debris = trim($this->request->post('is_debris'));
+        $page      = is_numeric($page) ? $page : 1;
+        $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum);
+        if (!empty($is_debris) && $is_debris != 1) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum, $is_debris);
         return $result;
     }
 }
