@@ -455,7 +455,7 @@ class OfflineActivities extends CommonIndex {
 
         $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
         if (!empty($luckhd)) {
-            $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $luckhd['id'], 'status' => 1], '*', false, ['order' => 'asc']);
+            $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $luckhd['id'], 'status' => 1], 'id,image,kind,title', false, ['order' => 'asc']);
             return [
                 'code'      => '200',
                 'hd_id'     => $luckhd['id'],
@@ -493,7 +493,22 @@ class OfflineActivities extends CommonIndex {
         $uid    = $this->getUidByConId($conId);
         $offect = ($page - 1) * $pagenum;
         if ($is_debris) {
-            $result = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+            $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
+            if (!empty($luckhd)) {
+                $LuckGoods = DbCoupon::getHdGoods([['hd_id' , '=', $luckhd['id']], ['status' ,'=', 1], ['debris','>',1],['status','=',1],['kind','<>',4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
+                // print_r($LuckGoods);die;
+            }
+            
+            $result = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris,shop_num', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+            foreach ($LuckGoods as $key => $value) {
+                $LuckGoods[$key]['has'] = 0;
+               foreach ($result as $re => $lt) {
+                   if ($lt['shop_num'] == $value['id']) {
+                         $LuckGoods[$key]['has'] = $lt['debris'];
+                   }
+               }
+            }
+            return ['code' => 200, 'winnings' => $LuckGoods];
         } else {
             $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
         }
