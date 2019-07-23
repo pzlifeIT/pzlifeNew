@@ -456,7 +456,7 @@ class Coupons extends CommonIndex {
         if ($num > 7) {
             return ['code' => '3008'];
         }
-        if ($probability + DbCoupon::sumgetHdGoods(['hd_id' => $hd_id], 'probability') > 1) {
+        if ($probability + DbCoupon::sumgetHdGoods(['hd_id' => $hd_id,'status' =>1], 'probability') > 1) {
             return ['code' => '3009'];
         }
         $data = [];
