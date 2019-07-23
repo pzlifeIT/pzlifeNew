@@ -325,25 +325,27 @@ class OfflineActivities extends CommonIndex {
          else {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
-        $have_goods = DbCoupon::getHdGoods('HdGoods', ['id' => $shopNum], 'debris,stock,has,winnings_number', true);
+        $have_goods = DbCoupon::getHdGoods( ['id' => $shopNum], 'title,image,debris,stock,has,winnings_number', true);
+        $new_has = $have_goods['has'] +1;
         Db::startTrans();
         try {
-            $LuckGoods = $this->LuckGoods();
-            foreach ($LuckGoods['LuckGoods'] as $key => $value) {
-                if ($value['shop_num'] == $shopNum) {
-                    $goods_name = $value['title'];
-                    $image_path = $value['image'];
-                }
+            if ($have_goods['debris'] > 1) {//碎片类型的奖品
+                $has_winning = DbOfflineActivities::getWinning([['shop_num' ,'=', $shopNum],['need_debris' ,'>', 1]],'id,debris');
+                $new_debris = $has_winning['debris'] +1;
+                DbOfflineActivities::updateWinning(['debris' => $new_debris],$has_winning['id']);
+                $winning_id = $has_winning['id'];
+            }else {
+                $winning_id = DbOfflineActivities::addHdLucky([
+                    'uid'        => $uid,
+                    'shop_num'   => $shopNum,
+                    'hd_num'     => $hd_id,
+                    'goods_name' => $have_goods['title'],
+                    'image_path' => $have_goods['image'],
+                ]);
             }
-            $winning_id = DbOfflineActivities::addHdLucky([
-                'uid'        => $uid,
-                'shop_num'   => $shopNum,
-                'hd_num'     => $hd_id,
-                'goods_name' => $goods_name,
-                'image_path' => $image_path,
-            ]);
+            DbCoupon::updateHdGoods(['has' => $new_has],$shopNum);
             Db::commit();
-            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $goods_name, 'image_path' => $image_path, 'winning_id' => $winning_id];
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id];
         } catch (\Exception $e) {
             // $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             Db::rollback();
@@ -362,11 +364,12 @@ class OfflineActivities extends CommonIndex {
         //     6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
         //     8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
         // ];
-        $LuckGoods = DbCoupon::getHdGoods('HdGoods', ['hd_id' => $hd_id], 'probability', false);
+        $LuckGoods = DbCoupon::getHdGoods( ['hd_id' => $hd_id,'status' => 1], 'id,probability', false);
         foreach ($LuckGoods as $key => $value) {
-            $shopList[$key] = bcmul($value['probability'],10000000);
+            $shopList[$value['id']] = bcmul($value['probability'],10000000);
         }
-        $num     = mt_rand(1, 10000000);
+        $max = max($shopList);
+        $num     = mt_rand(1, $max);
         $shopNum = 0;
         foreach ($shopList as $sk => $sl) {
             if ($num <= $sl) {
@@ -378,9 +381,8 @@ class OfflineActivities extends CommonIndex {
         // if ($result <= 0) {
         //     $shopNum = $this->getDraw();
         // }
-        
-        $have_goods = DbCoupon::getHdGoods('HdGoods', ['id' => $shopNum], 'debris,stock,has,winnings_number', true);
-        if ($have_goods['debris'] * $have_goods['stock'] - $have_goods['has'] <= 0) {
+        $have_goods = DbCoupon::getHdGoods( ['id' => $shopNum], 'debris,stock,has,winnings_number', true);
+        if ($have_goods['debris'] * $have_goods['stock'] -$have_goods['has'] <= 0) {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
         $has_shopNum = DbOfflineActivities::sumWinning(['uid' => $uid, 'hd_num' => $hd_id, 'shop_num' => $shopNum], 'debris');
@@ -406,7 +408,7 @@ class OfflineActivities extends CommonIndex {
         //     $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
         // }
         // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
-        if (DbCoupon::getHdGoods( [['hd_id' , '=', $hd_id],['update_time', '>', $timekey]], 'id', true)) {
+        if (!DbCoupon::getHdGoods( [['hd_id' , '=', $hd_id],['update_time', '>', $timekey]], 'id', true)) {
             return ['code' => '3006'];
         }
         // echo 1;die;
