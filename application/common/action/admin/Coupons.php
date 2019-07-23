@@ -451,8 +451,8 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number) {
-        $num = DbCoupon::countgetHdGoods(['hd_id' => $hd_id]);
+    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number, $order) {
+        $num = DbCoupon::countgetHdGoods(['hd_id' => $hd_id, 'status' => 1]);
         if ($num > 7) {
             return ['code' => '3008'];
         }
@@ -469,6 +469,7 @@ class Coupons extends CommonIndex {
             'title'           => $title,
             'probability'     => $probability,
             'stock'           => $stock,
+            'order'           => $order,
             'winnings_number' => $winnings_number,
         ];
         Db::startTrans();
@@ -499,7 +500,7 @@ class Coupons extends CommonIndex {
         }
     }
 
-    public function saveHdGoods($id, $image = '', $kind = '', $relevance = '', $debris = '', $title = '', $probability = '', $stock = 0, $winnings_number = 0) {
+    public function saveHdGoods($id, $image = '', $kind = 0, $relevance = 0, $debris = 0, $title = '', $probability = 0, $stock = 0, $winnings_number = 0, $order = 0) {
         $HdGoods = DbCoupon::getHd(['id' => $id], '*', true);
         if (!$HdGoods) {
             return ['code' => '3000'];
@@ -508,26 +509,29 @@ class Coupons extends CommonIndex {
         if (!empty($image)) {
             $data['image'] = $image;
         }
-        if (!empty($kind)) {
+        if ($kind) {
             $data['kind'] = $kind;
         }
-        if (!empty($relevance)) {
+        if ($relevance) {
             $data['relevance'] = $relevance;
         }
-        if (!empty($debris)) {
+        if ($debris) {
             $data['debris'] = $debris;
         }
         if (!empty($title)) {
             $data['title'] = $title;
         }
-        if (!empty($probability)) {
+        if ($probability) {
             $data['probability'] = $probability;
         }
-        if (!empty($stock)) {
+        if ($stock) {
             $data['stock'] = $stock;
         }
-        if (!empty($winnings_number)) {
+        if ($winnings_number) {
             $data['winnings_number'] = $winnings_number;
+        }
+        if ($order) {
+            $data['order'] = $order;
         }
         Db::startTrans();
         try {
@@ -561,5 +565,10 @@ class Coupons extends CommonIndex {
             Db::rollback();
             return ['code' => '3011']; //修改失败
         }
+    }
+
+    public function loseHdGoods($id){
+        DbCoupon::updateHdGoods(['status' => 2], $id);
+        return ['code' => '200', 'id' => $id];
     }
 }

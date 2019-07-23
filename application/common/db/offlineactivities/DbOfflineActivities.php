@@ -101,4 +101,8 @@ class DbOfflineActivities {
         $hdLucky->save($data);
         return $hdLucky->id;
     }
+
+    public function sumWinning($where, $field){
+        return HdLucky::where($where)->sum($field);
+    }
 }
