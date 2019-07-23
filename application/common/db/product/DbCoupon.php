@@ -136,6 +136,10 @@ class DbCoupon {
         $HdGoods->save($data);
         return $HdGoods->id;
     }
+    public function updateHdGoods($data, $id){
+        $HdGoods = new HdGoods;
+        return $HdGoods->save($data,['id' => $id]);
+    }
 
     public function getHdGoods( $where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = HdGoods::field($field)->where($where);
