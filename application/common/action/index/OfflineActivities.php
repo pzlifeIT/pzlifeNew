@@ -4,12 +4,12 @@ namespace app\common\action\index;
 
 use app\common\action\notify\Note;
 use app\common\action\qrcode\qrcodelogic;
+use app\facade\DbCoupon;
 use app\facade\DbGoods;
 use app\facade\DbOfflineActivities;
 use app\facade\DbOrder;
 use app\facade\DbShops;
 use app\facade\DbUser;
-use app\facade\DbCoupon;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -307,13 +307,13 @@ class OfflineActivities extends CommonIndex {
         // if (Config::get('conf.platform_conf')[Config::get('app.deploy')] == 2) { //测试环境
         //     $u = [23739 => 2, 26683 => 4, 26684 => 6, 26686 => 8];
         // }
-        
-        $uid   = $this->getUidByConId($conId);
+
+        $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3001'];
         }
 //        $uid = 1;
-        if (empty(DbCoupon::getHd( ['status' => 2], 'id', true))){
+        if (empty(DbCoupon::getHd(['status' => 2], 'id', true))) {
             return ['code' => '3006'];
         }
         if ($this->initShopCount($hd_id, $timekey) === false) {
@@ -322,28 +322,29 @@ class OfflineActivities extends CommonIndex {
         //  else if (in_array($uid, array_keys($u))) {
         //     $shopNum = $u[$uid];
         // }
-         else {
+        else {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
-        $have_goods = DbCoupon::getHdGoods( ['id' => $shopNum], 'title,image,debris,stock,has,winnings_number', true);
-        $new_has = $have_goods['has'] +1;
+        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'title,image,debris,stock,has,winnings_number', true);
+        $new_has    = $have_goods['has'] + 1;
         Db::startTrans();
         try {
-            if ($have_goods['debris'] > 1) {//碎片类型的奖品
-                $has_winning = DbOfflineActivities::getWinning([['shop_num' ,'=', $shopNum],['need_debris' ,'>', 1]],'id,debris');
-                $new_debris = $has_winning['debris'] +1;
-                DbOfflineActivities::updateWinning(['debris' => $new_debris],$has_winning['id']);
+            if ($have_goods['debris'] > 1) { //碎片类型的奖品
+                $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1]], 'id,debris');
+                $new_debris  = $has_winning['debris'] + 1;
+                DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);
                 $winning_id = $has_winning['id'];
-            }else {
+            } else {
                 $winning_id = DbOfflineActivities::addHdLucky([
                     'uid'        => $uid,
                     'shop_num'   => $shopNum,
                     'hd_num'     => $hd_id,
+                    'kind'       => $have_goods['kind'],
                     'goods_name' => $have_goods['title'],
                     'image_path' => $have_goods['image'],
                 ]);
             }
-            DbCoupon::updateHdGoods(['has' => $new_has],$shopNum);
+            DbCoupon::updateHdGoods(['has' => $new_has], $shopNum);
             Db::commit();
             return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id];
         } catch (\Exception $e) {
@@ -364,11 +365,11 @@ class OfflineActivities extends CommonIndex {
         //     6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
         //     8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
         // ];
-        $LuckGoods = DbCoupon::getHdGoods( ['hd_id' => $hd_id,'status' => 1], 'id,probability', false);
+        $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,probability', false);
         foreach ($LuckGoods as $key => $value) {
-            $shopList[$value['id']] = bcmul($value['probability'],10000000);
+            $shopList[$value['id']] = bcmul($value['probability'], 10000000);
         }
-        $max = max($shopList);
+        $max     = max($shopList);
         $num     = mt_rand(1, $max);
         $shopNum = 0;
         foreach ($shopList as $sk => $sl) {
@@ -381,12 +382,12 @@ class OfflineActivities extends CommonIndex {
         // if ($result <= 0) {
         //     $shopNum = $this->getDraw();
         // }
-        $have_goods = DbCoupon::getHdGoods( ['id' => $shopNum], 'debris,stock,has,winnings_number', true);
-        if ($have_goods['debris'] * $have_goods['stock'] -$have_goods['has'] <= 0) {
+        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'debris,stock,has,winnings_number', true);
+        if ($have_goods['debris'] * $have_goods['stock'] - $have_goods['has'] <= 0) {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
         $has_shopNum = DbOfflineActivities::sumWinning(['uid' => $uid, 'hd_num' => $hd_id, 'shop_num' => $shopNum], 'debris');
-        if ($has_shopNum >= $have_goods['debris'] * $have_goods['winnings_number'] ){
+        if ($has_shopNum >= $have_goods['debris'] * $have_goods['winnings_number']) {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
         return $shopNum;
@@ -408,14 +409,14 @@ class OfflineActivities extends CommonIndex {
         //     $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
         // }
         // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
-        if (!DbCoupon::getHdGoods( [['hd_id' , '=', $hd_id],['update_time', '>', $timekey]], 'id', true)) {
+        if (!DbCoupon::getHdGoods([['hd_id', '=', $hd_id], ['update_time', '>', $timekey]], 'id', true)) {
             return ['code' => '3006'];
         }
         // echo 1;die;
-        $LuckGoods = DbCoupon::getHdGoods(['hd_id' =>  $hd_id, 'status' => 1], 'id,debris,stock,has');
-        $allNum = [];
+        $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,debris,stock,has');
+        $allNum    = [];
         foreach ($LuckGoods as $key => $value) {
-           $allNum[] = $value['debris'] * $value['stock'] - $value['has'];
+            $allNum[] = $value['debris'] * $value['stock'] - $value['has'];
         }
         $allNum = array_sum($allNum);
         if ($allNum <= 0) {
@@ -425,20 +426,20 @@ class OfflineActivities extends CommonIndex {
     }
 
     public function LuckGoods() {
-        
-        $luckhd = DbCoupon::getHd( ['status' => 2], 'id', true);
+
+        $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
         if (!empty($luckhd)) {
-            $LuckGoods = DbCoupon::getHdGoods( ['hd_id' => $luckhd['id'], 'status' => 1], '*', false, ['order' => 'asc']);
+            $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $luckhd['id'], 'status' => 1], '*', false, ['order' => 'asc']);
             return [
                 'code'      => '200',
                 'hd_id'     => $luckhd['id'],
-                'LuckGoods' => $LuckGoods
+                'LuckGoods' => $LuckGoods,
             ];
         }
         return [
-            'code'      => '3001',
+            'code' => '3001',
         ];
-       
+
     }
 
     public function getHdLucky($big = '') {
@@ -462,16 +463,19 @@ class OfflineActivities extends CommonIndex {
 
     }
 
-    public function getUserHdLucky($conId, $page, $pagenum) {
+    public function getUserHdLucky($conId, $page, $pagenum, $is_debris = 0) {
         $uid    = $this->getUidByConId($conId);
         $offect = ($page - 1) * $pagenum;
-        $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+        if ($is_debris) {
+            $result = DbOfflineActivities::getHdLucky([['uid' ,'=', $uid],['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+        } else {
+            $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+        }
         return ['code' => 200, 'winnings' => $result];
     }
 
-    public function createOrderQrCode($data){
-        
-       
+    public function createOrderQrCode($data) {
+
         $qrcodelogic = new qrcodelogic($data, 470, '取货二维码');
         $qrcodelogic->coverbackground('../public/background.png', 3, 3);
         $qrcodelogic->output();
