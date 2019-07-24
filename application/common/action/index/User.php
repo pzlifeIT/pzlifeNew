@@ -2726,7 +2726,11 @@ class User extends CommonIndex {
             return ['code' => '200', 'data' => $result, 'total' => 0];
         }
         $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
-        $couponIdList      = DbCoupon::getUserCoupon(['uid' => $uid, 'is_use' => 2], 'coupon_id');
+        $couponIdList = DbCoupon::getUserCoupon([
+            ['uid', '=', $uid],
+            ['is_use', '=', 2],
+            ['end_time', '>=', time()],
+        ], 'coupon_id');
         $couponIdList      = array_column($couponIdList, 'coupon_id');//用户拥有的未使用优惠券
         $result['coupons'] = array_map(function ($var) use ($couponIdList) {
             unset($var['pivot']);
