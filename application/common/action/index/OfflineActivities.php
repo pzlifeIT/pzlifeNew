@@ -364,7 +364,8 @@ class OfflineActivities extends CommonIndex {
                     $status = 2;
                     DbUser::addLogIntegral($user_integral);
                     DbUser::modifyIntegral($uid, $have_goods['relevance'], 'inc');
-                    $this->redis->del($userRedisKey . 'userinfo:' . $remittance['uid']);
+                    $userRedisKey = Config::get('rediskey.user.redisKey');
+                    $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 }
                 $winning_id = DbOfflineActivities::addHdLucky([
                     'uid'        => $uid,
@@ -537,13 +538,29 @@ class OfflineActivities extends CommonIndex {
      * @author zyr
      */
     public function userDebrisChange($conId, $use_debris, $chage_debris){
-        $use_goods =  DbOfflineActivities::getHdLucky(['hd_num' => $use_debris,'kind' =>5,'status' => 1], '*', true);
+        $uid    = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $use_goods =  DbOfflineActivities::getHdLucky(['hd_num' => $use_debris,'kind' =>5,'status' => 1, 'uid' => $uid], '*', true);
         if (empty($use_goods)) {
             return ['code' => '3003'];
         }
-        $change_goods = DbOfflineActivities::getHdLucky([['hd_num' ,'=', $chage_debris],['kind' ,'=',5],['status' ,'=', 1],['need_debris','>',1],['debris', '>',1]], '*', true);
+        $change_goods = DbOfflineActivities::getHdLucky([['hd_num' ,'=', $chage_debris],['kind' ,'=',5],['status' ,'=', 1],['need_debris','>',1],['debris', '>',1],['uid', '=', $uid]], '*', true);
         if (empty($change_goods)) {
             return ['code' => '3004'];
+        }
+        Db::startTrans();
+        try {
+
+            Db::commit();
+            return ['code' => '200'];
+            }
+            catch (\Exception $e) {
+
+            exception($e);
+            Db::rollback();
+            return ['code' => '3005'];
         }
     }
 }
