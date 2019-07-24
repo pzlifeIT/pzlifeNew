@@ -600,4 +600,11 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3005'];
         }
     }
+
+    public function userDebrisCompound($conId, $use_id){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+    }
 }
