@@ -1192,6 +1192,9 @@ class User extends CommonIndex {
             case 3:
                 $ctype = '老商城转入积分';
                 break;
+            case 4:
+                $ctype = '抽奖活动积分';
+                break;
             }
             $d['ctype'] = $ctype;
             unset($d['stype']);
