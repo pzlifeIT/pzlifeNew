@@ -206,6 +206,7 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          getUserHdLucky
      * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} [id] 查询具体抽奖详情
      * @apiParam (入参) {Number} [page] 页码
      * @apiParam (入参) {Number} [pageNum] 页码
      * @apiParam (入参) {Number} [is_debris] 查询碎片奖品 1查询，空或者不传则不查
@@ -223,6 +224,7 @@ class OfflineActivities extends MyController {
         $page      = trim($this->request->post('page'));
         $pagenum   = trim($this->request->post('pageNum'));
         $is_debris = trim($this->request->post('is_debris'));
+        $id        = trim($this->request->post('id'));
         $page      = is_numeric($page) ? $page : 1;
         $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
         if (empty($conId)) {
@@ -234,7 +236,7 @@ class OfflineActivities extends MyController {
         if (!empty($is_debris) && $is_debris != 1) {
             return ['code' => '3003'];
         }
-        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum, $is_debris);
+        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum, $is_debris, $id);
         return $result;
     }
 
