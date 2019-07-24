@@ -288,9 +288,9 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function userDebrisCompound() {
-        $apiName    = classBasename($this) . '/' . __function__;
-        $conId      = trim($this->request->post('con_id'));
-        $use_id     = trim($this->request->post('use_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $use_id  = trim($this->request->post('use_id'));
         if (empty($use_id) || !is_numeric($use_id)) {
             return ['code' => '3002'];
         }
@@ -313,15 +313,15 @@ class OfflineActivities extends MyController {
      * @apiSampleRequest /index/OfflineActivities/receivePrize
      * @author rzc
      */
-    public function receivePrize(){
-        $apiName    = classBasename($this) . '/' . __function__;
-        $conId      = trim($this->request->post('con_id'));
-        $receive_id     = trim($this->request->post('receive_id'));
-        $user_address_id     = trim($this->request->post('user_address_id'));
+    public function receivePrize() {
+        $apiName         = classBasename($this) . '/' . __function__;
+        $conId           = trim($this->request->post('con_id'));
+        $receive_id      = trim($this->request->post('receive_id'));
+        $user_address_id = trim($this->request->post('user_address_id'));
         if (empty($receive_id) || !is_numeric($receive_id)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->offlineactivities->receivePrize($conId, $receive_id,$user_address_id);
+        $result = $this->app->offlineactivities->receivePrize($conId, $receive_id, $user_address_id);
         $this->apiLog($apiName, [$conId, $receive_id], $result['code'], $conId);
         return $result;
     }
