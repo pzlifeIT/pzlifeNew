@@ -244,9 +244,10 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          userDebrisChange
      * @apiParam (入参) {Number} con_id
-     * @apiParam (入参) {Number} use_debris 使用碎片的id
-     * @apiParam (入参) {Number} chage_debris 兑换碎片的id
-     *  @apiSuccess (返回) {String}  code 错误码 / 3001:use_debris参数错误 / 3002:chage_debris参数错误 / 3003:您不具有该碎片 / 3004:您暂时无法兑换该碎片
+     * @apiParam (入参) {Number} use_id 使用碎片的id
+     * @apiParam (入参) {Number} use_number 使用碎片的数量
+     * @apiParam (入参) {Number} chage_id 兑换碎片的id
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:use_debris参数错误 / 3002:chage_debris参数错误 / 3003:您不具有该碎片 / 3004:您暂时无法兑换该碎片 / 3005:通用碎片数量不足，
      * @apiSuccess (返回) {String}  winnings 中奖记录
      * @apiSuccess (winnings) {String}  shop_num 奖品编号
      * @apiSuccess (winnings) {String}  goods_name 奖品名称
@@ -256,18 +257,20 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function userDebrisChange() {
-        $apiName = classBasename($this) . '/' . __function__;
+        $apiName      = classBasename($this) . '/' . __function__;
         $conId        = trim($this->request->post('con_id'));
-        $use_debris   = trim($this->request->post('use_debris'));
-        $chage_debris = trim($this->request->post('chage_debris'));
-        if (empty($use_debris) || !is_numeric($use_debris)) {
+        $use_id   = trim($this->request->post('use_id'));
+        $use_number   = trim($this->request->post('use_number'));
+        $chage_id = trim($this->request->post('chage_id'));
+        $use_number   = is_numeric($use_number) ? $use_number : 1;
+        if (empty($use_id) || !is_numeric($use_id)) {
             return ['code' => '3001'];
         }
-        if (empty($chage_debris) || !is_numeric($chage_debris)) {
+        if (empty($chage_id) || !is_numeric($chage_id)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->offlineactivities->userDebrisChange($use_debris,$chage_debris);
-        $this->apiLog($apiName, [$conId], $result['code'], $conId);
+        $result = $this->app->offlineactivities->userDebrisChange($conId, $use_id, $chage_id, $use_number);
+        $this->apiLog($apiName, [$conId, $use_id, $chage_id, $use_number], $result['code'], $conId);
         return $result;
     }
 

@@ -460,6 +460,12 @@ class Coupons extends CommonIndex {
             return ['code' => '3009'];
         }
         $data = [];
+        if ($kind == 5) {
+            if (DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1, 'kind' => 5],'id',true)) {
+                return ['code' => 3010];
+            }
+            $debris = 1;
+        }
         $data = [
             'image'           => $image,
             'hd_id'           => $hd_id,
