@@ -298,4 +298,31 @@ class OfflineActivities extends MyController {
         $this->apiLog($apiName, [$conId, $use_id], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 奖品领取
+     * @apiDescription   receivePrize
+     * @apiGroup         index_OfflineActivities
+     * @apiName          receivePrize
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} receive_id 领奖的奖品ID
+     * @apiParam (入参) {Number} [user_address_id] 地址ID,商品领取需要填写地址
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:receive_id参数错误 / 3003:is_debris错误 / 3004:未查询配送地址 / 3005:领取失败 / 3006:无效的商品或者优惠券 / 3007:有未使用的优惠券 / 3008:已是钻石会员无法领取
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/receivePrize
+     * @author rzc
+     */
+    public function receivePrize(){
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $receive_id     = trim($this->request->post('receive_id'));
+        $user_address_id     = trim($this->request->post('user_address_id'));
+        if (empty($receive_id) || !is_numeric($receive_id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->receivePrize($conId, $receive_id,$user_address_id);
+        $this->apiLog($apiName, [$conId, $receive_id], $result['code'], $conId);
+        return $result;
+    }
 }
