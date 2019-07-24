@@ -378,15 +378,35 @@ class OfflineActivities extends CommonIndex {
                     $userRedisKey = Config::get('rediskey.user.redisKey');
                     $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 }
-                $winning_id = DbOfflineActivities::addHdLucky([
-                    'uid'        => $uid,
-                    'shop_num'   => $shopNum,
-                    'hd_num'     => $hd_id,
-                    'kind'       => $have_goods['kind'],
-                    'goods_name' => $have_goods['title'],
-                    'image_path' => $have_goods['image'],
-                    'status'     => $status,
-                ]);
+                if ($have_goods['kind'] == 5) {
+                    $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum],['uid', '=', $uid]], 'id,uid,debris', true);
+                    if (!empty($has_winning)) {
+                        $new_debris = $has_winning['debris'] + 1;
+                        DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);
+                        $winning_id = $has_winning['id'];
+                    } else {
+                        $winning_id = DbOfflineActivities::addHdLucky([
+                            'uid'         => $uid,
+                            'shop_num'    => $shopNum,
+                            'hd_num'      => $hd_id,
+                            'kind'        => $have_goods['kind'],
+                            'debris'      => 1,
+                            'need_debris' => $have_goods['debris'],
+                            'goods_name'  => $have_goods['title'],
+                            'image_path'  => $have_goods['image'],
+                        ]);
+                    }
+                } else {
+                    $winning_id = DbOfflineActivities::addHdLucky([
+                        'uid'        => $uid,
+                        'shop_num'   => $shopNum,
+                        'hd_num'     => $hd_id,
+                        'kind'       => $have_goods['kind'],
+                        'goods_name' => $have_goods['title'],
+                        'image_path' => $have_goods['image'],
+                        'status'     => $status,
+                    ]);
+                }
             }
             DbCoupon::updateHdGoods(['has' => $new_has], $shopNum);
             Db::commit();
@@ -511,7 +531,7 @@ class OfflineActivities extends CommonIndex {
         if ($is_debris) {
             $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
             if (!empty($luckhd)) {
-                $LuckGoods = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['debris', '>', 1], ['status', '=', 1], ['kind', '<>', 4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
+                $LuckGoods = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['debris', '>', 1], ['kind', '<>', 4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
                 // print_r($LuckGoods);die;
             }
 
@@ -524,7 +544,13 @@ class OfflineActivities extends CommonIndex {
                     }
                 }
             }
-            return ['code' => 200, 'winnings' => $LuckGoods];
+            $General_debris = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['kind', '=', 5]], 'id,image,kind,title,debris', true);
+            $userGeneral_debris = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['shop_num', '=', $General_debris['id']],], 'uid,kind,id,need_debris,debris,shop_num', true);
+            $General_debris['has'] = 0;
+            if ($userGeneral_debris) {
+                $General_debris['has'] = $userGeneral_debris['debris'];
+            }
+            return ['code' => 200, 'General_debris' => $General_debris,'winnings' => $LuckGoods];
         } else {
             $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
         }
@@ -543,31 +569,42 @@ class OfflineActivities extends CommonIndex {
     /**
      * 碎片兑换
      * @param $conId
-     * @param $use_debris
-     * @param $chage_debris
+     * @param $use_id
+     * @param $chage_id
+     * @param $use_number
      * @return array
-     * @author zyr
+     * @author rzc
      */
-    public function userDebrisChange($conId, $use_debris, $chage_debris){
-        $uid    = $this->getUidByConId($conId);
+    public function userDebrisChange($conId, $use_id, $chage_id, $use_number) {
+        $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3000'];
         }
-        $use_goods =  DbOfflineActivities::getHdLucky(['hd_num' => $use_debris,'kind' =>5,'status' => 1, 'uid' => $uid], '*', true);
+        $use_goods = DbOfflineActivities::getHdLucky(['shop_num' => $use_id, 'kind' => 5, 'status' => 1, 'uid' => $uid], '*', true);
         if (empty($use_goods)) {
             return ['code' => '3003'];
         }
-        $change_goods = DbOfflineActivities::getHdLucky([['hd_num' ,'=', $chage_debris],['kind' ,'=',5],['status' ,'=', 1],['need_debris','>',1],['debris', '>',1],['uid', '=', $uid]], '*', true);
+        $change_goods = DbOfflineActivities::getHdLucky([['shop_num', '=', $chage_id], ['status', '=', 1], ['need_debris', '>', 1], ['debris', '>', 1], ['uid', '=', $uid]], '*', true);
         if (empty($change_goods)) {
             return ['code' => '3004'];
         }
+        if ($use_number > $use_goods['debris']){
+            return ['code' => '3005'];
+        }
+        $new_use = [
+            'debris' => $use_goods['debris'] - $use_number,
+        ];
+        $new_change = [
+            'debris' => $change_goods['debris'] + $use_number,
+        ];
+        
         Db::startTrans();
         try {
-
+            DbOfflineActivities::updateWinning($new_use, $use_goods['id']);
+            DbOfflineActivities::updateWinning($new_change, $change_goods['id']);
             Db::commit();
             return ['code' => '200'];
-            }
-            catch (\Exception $e) {
+        } catch (\Exception $e) {
 
             exception($e);
             Db::rollback();

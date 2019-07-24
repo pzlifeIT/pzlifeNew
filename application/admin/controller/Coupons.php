@@ -638,7 +638,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {Number} stock 库存
      * @apiParam (入参) {Number} winnings_number 可中数量(按整个计算)
      * @apiParam (入参) {Number} order 排序
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:活动id有误 / 3002:image有误 / 3003:kind有误 / 3004:relevance有误 / 3005:debris有误 / 3006:title有误 / 3007:probability有误 / 3008:奖品最大设置个数为8 / 3009:总抽奖概率大于1
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:活动id有误 / 3002:image有误 / 3003:kind有误 / 3004:relevance有误 / 3005:debris有误 / 3006:title有误 / 3007:probability有误 / 3008:奖品最大设置个数为8 / 3009:总抽奖概率大于1 / 3010:有效的通用碎片已添加 
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/addHdGoods
      * @return array
