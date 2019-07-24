@@ -399,7 +399,7 @@ class OfflineActivities extends CommonIndex {
             }
             DbCoupon::updateHdGoods(['has' => $new_has], $shopNum);
             Db::commit();
-            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id, 'need_debris' => $have_goods['debris'], 'kind' => $have_goods['kind']];
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id, 'need_debris' => $have_goods['debris'], 'kind' => $have_goods['kind'], 'relevance' => $have_goods['relevance']];
         } catch (\Exception $e) {
             // $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             exception($e);
@@ -430,7 +430,9 @@ class OfflineActivities extends CommonIndex {
             }
 
         }
-
+        if (empty($shopList)) {
+            return ['code' => '3008'];
+        }
         asort($shopList);
         $max     = max($shopList);
         $num     = mt_rand(1, $max);
@@ -480,7 +482,7 @@ class OfflineActivities extends CommonIndex {
 
         $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
         if (!empty($luckhd)) {
-            $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $luckhd['id'], 'status' => 1], 'id,image,kind,title,debris', false, ['order' => 'asc']);
+            $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $luckhd['id'], 'status' => 1], 'id,image,kind,title,debris,relevance', false, ['order' => 'asc']);
             return [
                 'code'      => '200',
                 'hd_id'     => $luckhd['id'],
@@ -606,5 +608,10 @@ class OfflineActivities extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3000'];
         }
+        $change_goods = DbOfflineActivities::getHdLucky([['shop_num', '=', $use_id], ['status', '=', 1], ['need_debris', '>', 1], ['debris', '>', 1], ['uid', '=', $uid]], '*', true);
+        if (empty($change_goods)) {
+            return ['code' => '3004'];
+        }
+        print_r($change_goods);die;
     }
 }
