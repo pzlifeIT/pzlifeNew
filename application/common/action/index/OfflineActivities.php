@@ -72,15 +72,15 @@ class OfflineActivities extends CommonIndex {
         if (empty($shopInfo)) {
             $buid = 1;
         }
-        $goods = $summary['goods_list'][0];
+        $goods        = $summary['goods_list'][0];
         $target_users = $goods['target_users']; //适用人群
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user         = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if ($user['user_identity'] < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
@@ -364,7 +364,6 @@ class OfflineActivities extends CommonIndex {
                 //积分
                 $status = 1;
                 if ($have_goods['kind'] == 4) {
-                    $indexUser     = DbUser::getUserInfo(['id' => $uid], 'integral', true);
                     $user_integral = [];
                     $user_integral = [
                         'result_integral' => $have_goods['relevance'],
@@ -558,6 +557,18 @@ class OfflineActivities extends CommonIndex {
             return ['code' => 200, 'General_debris' => $General_debris, 'winnings' => $LuckGoods];
         } else {
             $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+            foreach ($result as $key => $value) {
+                if ($value['kind'] == 2) {
+                    $goods_sku      = DbGoods::getOneSku([["id", "=", $value['relevance']]], 'spec');
+                    if (!empty($goods_sku)) {
+                        $attr           = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+                        $goods_sku_name = array_column($attr, 'attr_name');
+            
+                        $result[$key]['goods_sku_name'] = implode(',', $goods_sku_name);
+                    }
+                    
+                }
+            }
         }
         return ['code' => 200, 'winnings' => $result];
     }
@@ -632,6 +643,14 @@ class OfflineActivities extends CommonIndex {
         $new_change = [
             'debris' => $change_goods['debris'] - $change_goods['need_debris'],
         ];
+        $goods_sku = [];
+        if ($change_goods['kind'] == 2) {
+            $goods_sku      = DbGoods::getOneSku([["id", "=", $change_goods['relevance']]], 'spec');
+            $attr           = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+            $goods_sku_name = array_column($attr, 'attr_name');
+
+            $goods_sku['goods_sku_name'] = implode(',', $goods_sku_name);
+        }
         Db::startTrans();
         try {
             $winning_id = DbOfflineActivities::addHdLucky([
@@ -646,8 +665,146 @@ class OfflineActivities extends CommonIndex {
             ]);
             DbOfflineActivities::updateWinning($new_change, $change_goods['id']);
             Db::commit();
-            return ['code' => '200'];
+            return ['code' => '200', 'relevance' => $change_goods['relevance'], 'image_path' => $change_goods['image_path'], 'kind' => $change_goods['kind'],'goods_sku' => $goods_sku];
         } catch (\Exception $e) {
+
+            exception($e);
+            Db::rollback();
+            return ['code' => '3005'];
+        }
+    }
+
+    public function receivePrize($conId, $receive_id, $user_address_id = 0) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $change_goods = DbOfflineActivities::getHdLucky([['id', '=', $receive_id], ['uid', '=', $uid], ['need_debris', '=', 1], ['kind']], '*', true);
+        if (empty($change_goods)) {
+            return ['code' => '3003'];
+        }
+        if ($change_goods['kind'] == 2) {//商品类领奖
+            $userAddress = DbUser::getUserAddress('uid,mobile,name,province_id,city_id,area_id,address', ['id' => $user_address_id], true);
+            if (empty($userAddress)) {
+                return ['code' => '3004'];
+            }
+            $goods_sku      = DbGoods::getOneSku([["id", "=", $change_goods['relevance']]], '*');
+            if (empty($goods_sku)) {
+                return ['code' => '3006'];
+            }
+            $goods_data  = DbGoods::getOneGoods(['id' => $goods_sku['goods_id']], 'supplier_id,goods_name');
+            $supplier = DbGoods::getSupplierData('id,tel,name', $goods_data['supplier_id']);
+            $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+            $attr        = array_column($attr, 'attr_name');
+            $goodsData = [
+                'goods_id'     => $goods_sku['goods_id'],
+                'goods_name'   => $goods_data['goods_name'],
+                'sku_id'       => $goods_sku['id'],
+                'sup_id'       => $goods_data['supplier_id'],
+                'boss_uid'     => 1,
+                'goods_price'  => $goods_sku['retail_price'],
+                'margin_price' => 0,
+                'integral'     => 0,
+                'goods_num'    => 1,
+                'sku_json'     => json_encode($attr),
+            ];
+            $orderchild = [
+                    'supplier_id' => $supplier['id'],
+                    'supplier_name' => $supplier['name'],
+            ];
+            $orderNo        = createOrderNo(); //创建订单号
+            $orderData = [
+                'order_no'        => $orderNo,
+                'third_order_id'  => 0,
+                'uid'             => $uid,
+                'order_status'    => 4,
+                'order_money'     => $goods_sku['retail_price'], //订单金额(优惠金额+实际支付的金额)
+                'goods_money'     => $goods_sku['retail_price'], //商品金额
+                'discount_money'  => $goods_sku['retail_price'], //优惠金额
+                'linkman'         => $userAddress['name'],
+                'linkphone'       => $userAddress['mobile'],
+                'province_id'     => $userAddress['province_id'],
+                'city_id'         => $userAddress['city_id'],
+                'area_id'         => $userAddress['area_id'],
+                'address'         => $userAddress['address'],
+                'message'         => '',
+                'pay_time'        => time(),
+            ];
+        }
+        if ($change_goods['kind'] == 1) {//优惠券类领奖
+            $coupon = DbCoupon::getCoupon(['id' => $change_goods['relevance']], 'price,gs_id,level,stype,is_superposition,title,days', true);
+            if (empty($coupon)) {//优惠券不存在
+                return ['code' => '3006'];
+            }
+            $userCoupon = DbCoupon::getUserCoupon([
+                ['coupon_id', '=', $change_goods['relevance']],
+                ['is_use', '=', 2],
+                ['uid', '=', $uid],
+                ['end_time', '>=', time()],
+            ], 'id', true);//未使用的
+            if (!empty($userCoupon)) {//有未使用的优惠券
+                return ['code' => '3007'];
+            }
+            $coupon['uid']       = $uid;
+            $coupon['coupon_id'] = $change_goods['relevance'];
+            $coupon['end_time']  = $coupon['days'] * 24 * 3600 + strtotime(date('Y-m-d'));
+            unset($coupon['days']);
+        }
+        if ($change_goods['kind'] == 3) {//钻石卡类领奖
+            $userInfo = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+            if ($userInfo['user_identity'] > 1) {
+                return ['code' => '3008', 'msg' => '当前身份等级大于或等于钻石会员，无法领取'];
+            }
+            $receiveDiamondvip = [];
+            $receiveDiamondvip = [
+                'uid' => $uid,
+                'source' => 3,
+                'source' => 1,
+            ];
+        }
+        if ($change_goods['kind'] == 4) {//积分类领奖
+            $user_integral = [];
+            $user_integral = [
+                'result_integral' => $change_goods['relevance'],
+                'status'          => 2,
+                'uid'             => $uid,
+                'stype'           => 4,
+                'message'         => '抽奖积分到账',
+            ];
+            
+        }
+        $new_change = [
+            'status' => 2,
+        ];
+        $userRedisKey = Config::get('rediskey.user.redisKey');
+        Db::startTrans();
+        try {
+            if (!empty($orderData)){
+                $orderId = DbOrder::addOrder($orderData);
+                if (empty($orderId)) {
+                    Db::rollback();
+                    return ['code' => '3005'];
+                }
+                $orderchild['order_id'] = $orderId;
+                $order_child_id = DbOrder::addOneOrderChild($orderchild);
+                $goodsData['order_child_id'] = $order_child_id;
+                DbOrder::addOneOrderGood($goodsData);
+            }
+            if (!empty($coupon)) {
+                DbCoupon::addUserCoupon($coupon);
+            }
+            if (!empty($receiveDiamondvip)) {
+                DbUser::updateUser(['user_identity' => 2], $uid);
+            }
+            if (!empty($user_integral)) {
+                DbUser::addLogIntegral($user_integral);
+                DbUser::modifyIntegral($uid, $change_goods['relevance'], 'inc');
+            }
+            DbOfflineActivities::updateWinning($new_change, $change_goods['id']);
+            Db::commit();
+            $this->redis->del($userRedisKey . 'userinfo:' . $uid);
+            return ['code' => '200'];
+            } catch (\Exception $e) {
 
             exception($e);
             Db::rollback();

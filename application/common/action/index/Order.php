@@ -1134,7 +1134,7 @@ class Order extends CommonIndex {
             $pay_money = 30000;
         } elseif ($user_type == 3) {
             $user_type = 1;
-            $pay_money = 108;
+            $pay_money = 118;
             $actype    = 1;
         }
         /* 判断会员身份，低于当前层级可购买升级 */

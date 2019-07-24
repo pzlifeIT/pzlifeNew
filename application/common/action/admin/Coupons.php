@@ -466,6 +466,18 @@ class Coupons extends CommonIndex {
             }
             $debris = 1;
         }
+        if ($kind == 2) {
+            $goods_sku = DbGoods::getOneSku(['id' => $relevance], 'id');
+            if (empty($goods_sku)) {
+                return ['code' => '3012'];
+            }
+        }
+        if ($kind == 1) {
+            $coupon = DbCoupon::getCoupon(['id' => $relevance], 'id', true);
+            if (empty($coupon)) { //优惠券id不存在
+                return ['code' => '3013'];
+            }
+        }
         $data = [
             'image'           => $image,
             'hd_id'           => $hd_id,

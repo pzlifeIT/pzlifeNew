@@ -602,7 +602,7 @@ class Order extends Pzlife {
         Db::startTrans();
         try {
             if ($actype == 1) { //无活动
-                if ($payMoney == 108) {
+                if ($payMoney == 118) {
                     $diamondvip_get                = [];
                     $diamondvip_get['uid']         = $uid;
                     $diamondvip_get['source']      = 1;
