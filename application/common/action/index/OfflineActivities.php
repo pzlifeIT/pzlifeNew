@@ -529,7 +529,7 @@ class OfflineActivities extends CommonIndex {
 
     }
 
-    public function getUserHdLucky($conId, $page, $pagenum, $is_debris = 0) {
+    public function getUserHdLucky($conId, $page, $pagenum, $is_debris = 0, $id = 0) {
         $uid    = $this->getUidByConId($conId);
         $offect = ($page - 1) * $pagenum;
         if ($is_debris) {
@@ -556,21 +556,37 @@ class OfflineActivities extends CommonIndex {
             }
             return ['code' => 200, 'General_debris' => $General_debris, 'winnings' => $LuckGoods];
         } else {
-            $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
-            foreach ($result as $key => $value) {
+            if ($id) {
+                $result = DbOfflineActivities::getHdLucky(['id' => $id], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
                 if ($value['kind'] == 2) {
-                    $goods_sku      = DbGoods::getOneSku([["id", "=", $value['relevance']]], 'spec');
+                    $goods_sku      = DbGoods::getOneSku([["id", "=", $value['relevance']]], 'retail_price,spec');
                     if (!empty($goods_sku)) {
                         $attr           = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
                         $goods_sku_name = array_column($attr, 'attr_name');
             
-                        $result[$key]['goods_sku_name'] = implode(',', $goods_sku_name);
+                        $result['goods_sku_name'] = implode(',', $goods_sku_name);
+                        $result['retail_price'] = $goods_sku['retail_price'];
                     }
-                    
+                }
+            } else {
+                $result = DbOfflineActivities::getHdLucky(['uid' => $uid], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+                foreach ($result as $key => $value) {
+                    if ($value['kind'] == 2) {
+                        $goods_sku      = DbGoods::getOneSku([["id", "=", $value['relevance']]], 'spec');
+                        if (!empty($goods_sku)) {
+                            $attr           = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+                            $goods_sku_name = array_column($attr, 'attr_name');
+                
+                            $result[$key]['goods_sku_name'] = implode(',', $goods_sku_name);
+                        }
+                        
+                    }
                 }
             }
+            
+            return ['code' => 200, 'winnings' => $result];
         }
-        return ['code' => 200, 'winnings' => $result];
+       
     }
 
     public function createOrderQrCode($data) {
