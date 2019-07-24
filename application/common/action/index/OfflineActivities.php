@@ -341,6 +341,7 @@ class OfflineActivities extends CommonIndex {
                         'shop_num'    => $shopNum,
                         'hd_num'      => $hd_id,
                         'kind'        => $have_goods['kind'],
+                        'relevance'   => $have_goods['relevance'],
                         'debris'      => 1,
                         'need_debris' => $have_goods['debris'],
                         'goods_name'  => $have_goods['title'],
@@ -383,6 +384,7 @@ class OfflineActivities extends CommonIndex {
                             'need_debris' => $have_goods['debris'],
                             'goods_name'  => $have_goods['title'],
                             'image_path'  => $have_goods['image'],
+                            'relevance'   => $have_goods['relevance'],
                         ]);
                     }
                 } else {
@@ -391,6 +393,7 @@ class OfflineActivities extends CommonIndex {
                         'shop_num'   => $shopNum,
                         'hd_num'     => $hd_id,
                         'kind'       => $have_goods['kind'],
+                        'relevance'  => $have_goods['relevance'],
                         'goods_name' => $have_goods['title'],
                         'image_path' => $have_goods['image'],
                         'status'     => $status,
@@ -625,6 +628,7 @@ class OfflineActivities extends CommonIndex {
                 'shop_num'   => $change_goods['shop_num'],
                 'hd_num'     => $change_goods['hd_num'],
                 'kind'       => $change_goods['kind'],
+                'relevance'  => $change_goods['relevance'],
                 'goods_name' => $change_goods['goods_name'],
                 'image_path' => $change_goods['image_path'],
                 'status'     => 1,
