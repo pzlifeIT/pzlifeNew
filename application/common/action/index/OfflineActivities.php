@@ -557,7 +557,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => 200, 'General_debris' => $General_debris, 'winnings' => $LuckGoods];
         } else {
             if ($id) {
-                $result = DbOfflineActivities::getHdLucky(['id' => $id], '*', false, ['id' => 'desc'], $offect . ',' . $pagenum);
+                $result = DbOfflineActivities::getHdLucky(['id' => $id], '*', true);
                 if ($result['kind'] == 2) {
                     $goods_sku      = DbGoods::getOneSku([["id", "=", $result['relevance']]], 'retail_price,spec');
                     if (!empty($goods_sku)) {
