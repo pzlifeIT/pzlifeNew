@@ -8,8 +8,8 @@ use app\index\MyController;
 //
 class OfflineActivities extends MyController {
     protected $beforeActionList = [
-       // 'isLogin', //所有方法的前置操作
-         'isLogin' => ['except' => 'getOfflineActivities,createOrderQrCode,LuckGoods,getHdLucky'],//除去getFirstCate其他方法都进行second前置操作
+        // 'isLogin', //所有方法的前置操作
+        'isLogin' => ['except' => 'getOfflineActivities,createOrderQrCode,LuckGoods,getHdLucky'], //除去getFirstCate其他方法都进行second前置操作
         //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
     /**
@@ -236,5 +236,58 @@ class OfflineActivities extends MyController {
         }
         $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum, $is_debris);
         return $result;
+    }
+
+    /**
+     * @api              {post} / 通用碎片兑换其他碎片
+     * @apiDescription   userDebrisChange
+     * @apiGroup         index_OfflineActivities
+     * @apiName          userDebrisChange
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} use_debris 使用碎片的id
+     * @apiParam (入参) {Number} chage_debris 兑换碎片的id
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:use_debris参数错误 / 3002:chage_debris参数错误 / 3003:您不具有该碎片 / 3004:您暂时无法兑换该碎片
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/userDebrisChange
+     * @author rzc
+     */
+    public function userDebrisChange() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId        = trim($this->request->post('con_id'));
+        $use_debris   = trim($this->request->post('use_debris'));
+        $chage_debris = trim($this->request->post('chage_debris'));
+        if (empty($use_debris) || !is_numeric($use_debris)) {
+            return ['code' => '3001'];
+        }
+        if (empty($chage_debris) || !is_numeric($chage_debris)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->userDebrisChange($use_debris,$chage_debris);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 奖品碎片合成
+     * @apiDescription   userDebrisCompound
+     * @apiGroup         index_OfflineActivities
+     * @apiName          userDebrisCompound
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} use_debris 合成ID
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:is_debris错误
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/userDebrisCompound
+     * @author rzc
+     */
+    public function userDebrisCompound() {
+
     }
 }

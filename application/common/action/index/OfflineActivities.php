@@ -341,7 +341,7 @@ class OfflineActivities extends CommonIndex {
         Db::startTrans();
         try {
             if ($have_goods['debris'] > 1) { //碎片类型的奖品
-                $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1], ['uid' , '=',$uid]], 'id,uid,debris',true);
+                $has_winning = DbOfflineActivities::getWinning([['shop_num', '=', $shopNum], ['need_debris', '>', 1], ['uid', '=', $uid]], 'id,uid,debris', true);
                 if (!empty($has_winning)) {
                     $new_debris = $has_winning['debris'] + 1;
                     DbOfflineActivities::updateWinning(['debris' => $new_debris], $has_winning['id']);
@@ -360,6 +360,24 @@ class OfflineActivities extends CommonIndex {
                 }
 
             } else {
+                //积分
+                $status = 1;
+                if ($have_goods['kind'] == 4) {
+                    $indexUser     = DbUser::getUserInfo(['id' => $uid], 'integral', true);
+                    $user_integral = [];
+                    $user_integral = [
+                        'result_integral' => $have_goods['relevance'],
+                        'status'          => 2,
+                        'uid'             => $uid,
+                        'stype'           => 3,
+                        'message'         => '抽奖积分到账',
+                    ];
+                    $status = 2;
+                    DbUser::addLogIntegral($user_integral);
+                    DbUser::modifyIntegral($uid, $have_goods['relevance'], 'inc');
+                    $userRedisKey = Config::get('rediskey.user.redisKey');
+                    $this->redis->del($userRedisKey . 'userinfo:' . $uid);
+                }
                 $winning_id = DbOfflineActivities::addHdLucky([
                     'uid'        => $uid,
                     'shop_num'   => $shopNum,
@@ -367,11 +385,12 @@ class OfflineActivities extends CommonIndex {
                     'kind'       => $have_goods['kind'],
                     'goods_name' => $have_goods['title'],
                     'image_path' => $have_goods['image'],
+                    'status'     => $status,
                 ]);
             }
             DbCoupon::updateHdGoods(['has' => $new_has], $shopNum);
             Db::commit();
-            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id];
+            return ['code' => '200', 'shop_num' => $shopNum, 'goods_name' => $have_goods['title'], 'image_path' => $have_goods['image'], 'winning_id' => $winning_id, 'need_debris' => $have_goods['debris'], 'kind' => $have_goods['kind']];
         } catch (\Exception $e) {
             // $this->redis->hSet($this->redisHdluckyDraw, $shopNum, bcadd($this->redis->hGet($this->redisHdluckyDraw, $shopNum), 1, 0));
             exception($e);
@@ -391,7 +410,7 @@ class OfflineActivities extends CommonIndex {
         //     6 => 10000, //玛蒙德格兰赛干红葡萄酒 2瓶
         //     8 => 10000, //克林伯瑞桃红葡萄酒 2瓶
         // ];
-        $shopList = [];
+        $shopList  = [];
         $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,probability,debris,stock,has,winnings_number', false);
         foreach ($LuckGoods as $key => $value) {
             if ($value['debris'] * $value['stock'] - $value['has'] > 0) {
@@ -400,9 +419,9 @@ class OfflineActivities extends CommonIndex {
                     $shopList[$value['id']] = bcmul($value['probability'], 10000000);
                 }
             }
-            
+
         }
-        
+
         asort($shopList);
         $max     = max($shopList);
         $num     = mt_rand(1, $max);
@@ -492,18 +511,18 @@ class OfflineActivities extends CommonIndex {
         if ($is_debris) {
             $luckhd = DbCoupon::getHd(['status' => 2], 'id', true);
             if (!empty($luckhd)) {
-                $LuckGoods = DbCoupon::getHdGoods([['hd_id' , '=', $luckhd['id']], ['status' ,'=', 1], ['debris','>',1],['status','=',1],['kind','<>',4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
+                $LuckGoods = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['debris', '>', 1], ['status', '=', 1], ['kind', '<>', 4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
                 // print_r($LuckGoods);die;
             }
-            
+
             $result = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris,shop_num', false, ['id' => 'desc'], $offect . ',' . $pagenum);
             foreach ($LuckGoods as $key => $value) {
                 $LuckGoods[$key]['has'] = 0;
-               foreach ($result as $re => $lt) {
-                   if ($lt['shop_num'] == $value['id']) {
-                         $LuckGoods[$key]['has'] = $lt['debris'];
-                   }
-               }
+                foreach ($result as $re => $lt) {
+                    if ($lt['shop_num'] == $value['id']) {
+                        $LuckGoods[$key]['has'] = $lt['debris'];
+                    }
+                }
             }
             return ['code' => 200, 'winnings' => $LuckGoods];
         } else {
@@ -519,5 +538,40 @@ class OfflineActivities extends CommonIndex {
         $qrcodelogic->output();
         exit;
         print_r($qrcodelogic);die;
+    }
+
+    /**
+     * 碎片兑换
+     * @param $conId
+     * @param $use_debris
+     * @param $chage_debris
+     * @return array
+     * @author zyr
+     */
+    public function userDebrisChange($conId, $use_debris, $chage_debris){
+        $uid    = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $use_goods =  DbOfflineActivities::getHdLucky(['hd_num' => $use_debris,'kind' =>5,'status' => 1, 'uid' => $uid], '*', true);
+        if (empty($use_goods)) {
+            return ['code' => '3003'];
+        }
+        $change_goods = DbOfflineActivities::getHdLucky([['hd_num' ,'=', $chage_debris],['kind' ,'=',5],['status' ,'=', 1],['need_debris','>',1],['debris', '>',1],['uid', '=', $uid]], '*', true);
+        if (empty($change_goods)) {
+            return ['code' => '3004'];
+        }
+        Db::startTrans();
+        try {
+
+            Db::commit();
+            return ['code' => '200'];
+            }
+            catch (\Exception $e) {
+
+            exception($e);
+            Db::rollback();
+            return ['code' => '3005'];
+        }
     }
 }
