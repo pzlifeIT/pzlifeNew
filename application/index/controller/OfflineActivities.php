@@ -281,7 +281,7 @@ class OfflineActivities extends MyController {
      * @apiName          userDebrisCompound
      * @apiParam (入参) {Number} con_id
      * @apiParam (入参) {Number} use_id 合成ID
-     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:use_id参数错误 / 3003:is_debris错误
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:use_id参数错误 / 3003:is_debris错误 / 3004:未查询到该奖品碎片记录 / 3005:碎片不够，无法合成
      * @apiSuccess (返回) {String}  winnings 中奖记录
      * @apiSuccess (winnings) {String}  user 用户
      * @apiSampleRequest /index/OfflineActivities/userDebrisCompound
