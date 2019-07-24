@@ -257,12 +257,12 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function userDebrisChange() {
-        $apiName      = classBasename($this) . '/' . __function__;
-        $conId        = trim($this->request->post('con_id'));
-        $use_id   = trim($this->request->post('use_id'));
-        $use_number   = trim($this->request->post('use_number'));
-        $chage_id = trim($this->request->post('chage_id'));
-        $use_number   = is_numeric($use_number) ? $use_number : 1;
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $use_id     = trim($this->request->post('use_id'));
+        $use_number = trim($this->request->post('use_number'));
+        $chage_id   = trim($this->request->post('chage_id'));
+        $use_number = is_numeric($use_number) ? $use_number : 1;
         if (empty($use_id) || !is_numeric($use_id)) {
             return ['code' => '3001'];
         }
@@ -280,17 +280,22 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          userDebrisCompound
      * @apiParam (入参) {Number} con_id
-     * @apiParam (入参) {Number} use_debris 合成ID
-     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:is_debris错误
+     * @apiParam (入参) {Number} use_id 合成ID
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:use_id参数错误 / 3003:is_debris错误
      * @apiSuccess (返回) {String}  winnings 中奖记录
-     * @apiSuccess (winnings) {String}  shop_num 奖品编号
-     * @apiSuccess (winnings) {String}  goods_name 奖品名称
-     * @apiSuccess (winnings) {String}  image_path 图片地址
      * @apiSuccess (winnings) {String}  user 用户
      * @apiSampleRequest /index/OfflineActivities/userDebrisCompound
      * @author rzc
      */
     public function userDebrisCompound() {
-
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $use_id     = trim($this->request->post('use_id'));
+        if (empty($use_id) || !is_numeric($use_id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->userDebrisCompound($conId, $use_id);
+        $this->apiLog($apiName, [$conId, $use_id], $result['code'], $conId);
+        return $result;
     }
 }

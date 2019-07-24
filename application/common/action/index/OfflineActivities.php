@@ -336,7 +336,7 @@ class OfflineActivities extends CommonIndex {
         else {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
-        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'kind,title,image,debris,stock,has,winnings_number', true);
+        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'kind,title,image,debris,stock,has,winnings_number,relevance', true);
         $new_has    = $have_goods['has'] + 1;
         Db::startTrans();
         try {
@@ -609,6 +609,13 @@ class OfflineActivities extends CommonIndex {
             exception($e);
             Db::rollback();
             return ['code' => '3005'];
+        }
+    }
+
+    public function userDebrisCompound($conId, $use_id){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
         }
     }
 }
