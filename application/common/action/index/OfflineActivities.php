@@ -325,7 +325,7 @@ class OfflineActivities extends CommonIndex {
         else {
             $shopNum = $this->getDraw($hd_id, $uid);
         }
-        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'kind,title,image,debris,stock,has,winnings_number', true);
+        $have_goods = DbCoupon::getHdGoods(['id' => $shopNum], 'kind,title,image,debris,stock,has,winnings_number,relevance', true);
         $new_has    = $have_goods['has'] + 1;
         Db::startTrans();
         try {
