@@ -519,7 +519,7 @@ class Coupons extends CommonIndex {
     }
 
     public function saveHdGoods($id, $image = '', $kind = 0, $relevance = 0, $debris = 0, $title = '', $probability = 0, $stock = 0, $winnings_number = 0, $order = 0) {
-        $HdGoods = DbCoupon::getHd(['id' => $id], '*', true);
+        $HdGoods = DbCoupon::getHdGoods(['id' => $id], '*', true);
         if (!$HdGoods) {
             return ['code' => '3000'];
         }
