@@ -735,6 +735,7 @@ class OfflineActivities extends CommonIndex {
             $orderData = [
                 'order_no'       => $orderNo,
                 'third_order_id' => 0,
+                'order_type'     => 3,
                 'uid'            => $uid,
                 'order_status'   => 4,
                 'order_money'    => $goods_sku['retail_price'], //订单金额(优惠金额+实际支付的金额)
