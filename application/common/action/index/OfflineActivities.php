@@ -549,11 +549,14 @@ class OfflineActivities extends CommonIndex {
                 }
             }
             $General_debris        = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['kind', '=', 5]], 'id,image,kind,title,debris', true);
-            $userGeneral_debris    = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['shop_num', '=', $General_debris['id']]], 'uid,kind,id,need_debris,debris,shop_num', true);
-            $General_debris['has'] = 0;
-            if ($userGeneral_debris) {
-                $General_debris['has'] = $userGeneral_debris['debris'];
+            if (!empty($General_debris)){
+                $userGeneral_debris    = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['shop_num', '=', $General_debris['id']]], 'uid,kind,id,need_debris,debris,shop_num', true);
+                $General_debris['has'] = 0;
+                if ($userGeneral_debris) {
+                    $General_debris['has'] = $userGeneral_debris['debris'];
+                }
             }
+            
             return ['code' => 200, 'General_debris' => $General_debris, 'winnings' => $LuckGoods];
         } else {
             if ($id) {
