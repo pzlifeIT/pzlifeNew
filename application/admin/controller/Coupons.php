@@ -606,7 +606,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} hd_id 活动ID
      * @apiParam (入参) {Int} id 奖品ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 /
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/getHdGoods
      * @return array
@@ -699,7 +699,7 @@ class Coupons extends AdminController {
      * @apiParam (入参) {Number} [stock] 库存
      * @apiParam (入参) {Number} [winnings_number] 可中数量(按整个计算)
      * @apiParam (入参) {Number} [order] 排序
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:优惠券活动id有误 / 3002:page有误 / 3003:page_num有误
+     * @apiSuccess (返回) {String} code 200:成功 / 
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/coupons/saveHdGoods
      * @return array
