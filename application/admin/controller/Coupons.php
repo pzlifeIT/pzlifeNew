@@ -669,13 +669,13 @@ class Coupons extends AdminController {
         if (empty($relevance) && in_array($kind, [1, 2])) {
             return ['code' => '3004'];
         }
-        if (empty($debris)) {
+        if (empty($debris) || !is_numeric($debris)) {
             return ['code' => '3005'];
         }
         if (empty($title)) {
             return ['code' => '3006'];
         }
-        if (empty($probability) || $probability > 1) {
+        if (empty($probability) || $probability > 1 || !is_numeric($probability)) {
             return ['code' => '3007'];
         }
         $result = $this->app->coupons->addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number, $order);
