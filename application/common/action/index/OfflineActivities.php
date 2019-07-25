@@ -619,7 +619,7 @@ class OfflineActivities extends CommonIndex {
         if (empty($use_goods)) {
             return ['code' => '3003'];
         }
-        $change_goods = DbOfflineActivities::getHdLucky([['shop_num', '=', $chage_id], ['status', '=', 1], ['need_debris', '>', 1], ['debris', '>', 1], ['uid', '=', $uid]], '*', true);
+        $change_goods = DbOfflineActivities::getHdLucky([['shop_num', '=', $chage_id], ['status', '=', 1], ['need_debris', '>', 1], ['debris', '>', 0], ['uid', '=', $uid]], '*', true);
         if (empty($change_goods)) {
             return ['code' => '3004'];
         }
