@@ -90,12 +90,13 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          saveAddGoods
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过 / 3011:适用人群只能为数字
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiSampleRequest /admin/goods/saveaddgoods
@@ -112,9 +113,11 @@ class Goods extends AdminController {
         $cateId       = trim($this->request->post('cate_id'));//分类id
         $goodsName    = trim($this->request->post('goods_name'));//商品名称
         $goodsType    = trim($this->request->post('goods_type'));//商品类型
+        $targetUsers  = trim($this->request->post('target_users'));//适用人群
         $subtitle     = trim($this->request->post('subtitle'));//标题
         $image        = trim($this->request->post('image'));//商品标题图
         $goodsTypeArr = [1, 2];
+        $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001'];//供应商id只能为数字
         }
@@ -130,6 +133,9 @@ class Goods extends AdminController {
         if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
             return ['code' => '3005'];//商品类型只能为数字
         }
+        if (!empty($targetUsers) && !in_array($targetUsers, $targetUsersArr)) {
+            return ['code' => '3011'];//适用人群只能为数字
+        }
         $data = [
             'supplier_id' => intval($supplierId),
             'cate_id'     => intval($cateId),
@@ -140,6 +146,9 @@ class Goods extends AdminController {
         }
         if (!empty($goodsType)) {
             $data['goods_type'] = intval($goodsType);
+        }
+        if (!empty($targetUsers)) {
+            $data['target_users'] = intval($targetUsers);
         }
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
@@ -163,6 +172,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiSampleRequest /admin/goods/saveupdategoods
@@ -177,9 +187,11 @@ class Goods extends AdminController {
         $cateId       = trim($this->request->post('cate_id'));//分类id
         $goodsName    = trim($this->request->post('goods_name'));//商品名称
         $goodsType    = trim($this->request->post('goods_type'));//商品类型
+        $targetUsers  = trim($this->request->post('target_users'));//适用人群
         $subtitle     = trim($this->request->post('subtitle'));//标题
         $image        = trim($this->request->post('image'));//商品标题图
         $goodsTypeArr = [1, 2];
+        $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001'];//供应商id只能为数字
         }
@@ -199,6 +211,9 @@ class Goods extends AdminController {
         ];
         if (!empty($goodsType)) {
             $data['goods_type'] = intval($goodsType);
+        }
+        if (!empty($targetUsers)) {
+            $data['target_users'] = intval($targetUsers);
         }
         if (!empty($image)) {
             $data['image'] = $image;
@@ -411,6 +426,7 @@ class Goods extends AdminController {
      * @apiSuccess (goods_data) {Number} cate_id 分类id
      * @apiSuccess (goods_data) {String} goods_name 商品名称
      * @apiSuccess (goods_data) {Number} goods_type 普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (goods_data) {Number} target_users 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上
      * @apiSuccess (goods_data) {String} subtitle 天然碱性苏打水
      * @apiSuccess (goods_data) {String} image 标题图
      * @apiSuccess (goods_data) {Number} status 1.上架 2.下架

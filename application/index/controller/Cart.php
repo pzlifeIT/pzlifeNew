@@ -69,7 +69,7 @@ class Cart extends MyController {
      * @apiParam (入参) {Number} goods_skuid 商品SKU_id
      * @apiParam (入参) {Number} goods_num 数量
      * @apiParam (入参) {Number} parent_id 分享者id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数conId / 3003:商品SKU_ID必须是数字 / 3004:购买数量必须是数字 / 3005:该商品钻石会员及以上身份专享 / 3006:库存不足购买数量 / 3007:该商品创业店主及以上身份专享 / 3008:该商品合伙人及以上身份专享 / 3009:缺少参数:uid或者商品SKUID
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
      * @apiSuccess (返回) {Array} data 分类数据

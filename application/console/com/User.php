@@ -585,7 +585,8 @@ class User extends Pzlife {
             Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 2]);
             Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 4]);
             //并设置下期任务
-            $target = ceil($task['has_target'] * 1.1);
+            // $target = ceil($task['has_target'] * 1.1);
+            $target = $task['has_target'] ;
             $add_user_task = [];
             $add_user_task = [
                 'uid'          => $task['uid'],

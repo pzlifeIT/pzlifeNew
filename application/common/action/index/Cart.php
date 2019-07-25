@@ -4,6 +4,7 @@ namespace app\common\action\index;
 
 use app\facade\DbGoods;
 use app\facade\DbShops;
+use app\facade\DbUser;
 use function Qiniu\json_decode;
 use Config;
 
@@ -27,6 +28,10 @@ class Cart extends CommonIndex {
         // phpinfo();
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
+            return ['code' => '3003'];
+        }
+        $user = DbUser::getUserOne(['id' => $uid], 'id,user_identity');
+        if (empty($user)) {
             return ['code' => '3003'];
         }
 
@@ -56,10 +61,19 @@ class Cart extends CommonIndex {
         }
         /* 获取商品基础信息 */
         $where      = [["id", "=", $goods_sku['goods_id']], ["status", "=", 1]];
-        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+        $field      = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
         $goods_data = DbGoods::getOneGoods($where, $field);
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在或者已下架'];
+        }
+        if ($user['user_identity'] < $goods_data['target_users']) {
+            if ($goods_data['target_users'] == 2){
+                return ['code' => 3005, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($goods_data['target_users'] == 3){
+                return ['code' => 3007, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($goods_data['target_users'] == 4){
+                return ['code' => 3008, 'msg' => '该商品合伙人及以上身份专享'];
+            }
         }
 
         /* 获取商品所在分类 */
