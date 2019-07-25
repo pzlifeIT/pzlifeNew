@@ -442,7 +442,7 @@ class OfflineActivities extends AdminController {
      * @apiParam (入参) {String} [id] 中奖ID
      * @apiSuccess (返回) {String} code 200:成功 3001:中奖id错误
      * @apiSuccess (返回) {String} total 总结果条数
-     * @apiSuccess (返回) {String} is_winning 1已领取 2未领取
+     * @apiSuccess (返回) {String} is_winning 1未领取 2已领取
      * @apiSampleRequest /admin/OfflineActivities/getWinnerList
      * @apiParamExample (data) {Array} 返回用户列表
      * [
