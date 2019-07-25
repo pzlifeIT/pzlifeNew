@@ -678,6 +678,7 @@ class Coupons extends AdminController {
         if (empty($probability) || $probability > 1 || !is_numeric($probability)) {
             return ['code' => '3007'];
         }
+        $debris = intval($debris);
         $result = $this->app->coupons->addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number, $order);
         $this->apiLog($apiName, [$cmsConId, $hd_id, $image, $kind, $relevance, $debris, $probability, $stock, $winnings_number, $order], $result['code'], $cmsConId);
         return $result;
