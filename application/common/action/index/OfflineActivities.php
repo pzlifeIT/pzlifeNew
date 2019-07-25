@@ -436,7 +436,7 @@ class OfflineActivities extends CommonIndex {
         $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,probability,debris,stock,has,winnings_number', false);
         foreach ($LuckGoods as $key => $value) {
             if ($value['debris'] * $value['stock'] - $value['has'] > 0) {
-                $has_shopNum = DbOfflineActivities::sumWinning(['uid' => $uid, 'hd_num' => $value['id'], 'shop_num' => $value['id']], 'debris');
+                $has_shopNum = DbOfflineActivities::sumWinning(['uid' => $uid, 'hd_num' => $hd_id, 'shop_num' => $value['id']], 'debris');
                 if ($has_shopNum < $value['debris'] * $value['winnings_number']) {
                     $shopList[$value['id']] = bcmul($value['probability'], 10000000);
                 }
