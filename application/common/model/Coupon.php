@@ -14,6 +14,8 @@ class Coupon extends Model {
     protected $connection = '';
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
+    protected $autoWriteTimestamp = true;
+    protected $updateTime = false;//关闭update_time
     protected $type = [
         'create_time' => 'timestamp:Y-m-d H:i:s',//创建时间
         'start_time'  => 'timestamp:Y-m-d H:i:s',//有效期开始时间
@@ -30,7 +32,6 @@ class Coupon extends Model {
 //    public function getStypeAttr($value) {
 //        return $this->stype[$value];
 //    }
-
     public function setStypeAttr($value) {
         if (!in_array($value, $this->stype)) {
             return $value;
@@ -42,12 +43,14 @@ class Coupon extends Model {
 //    public function getIsSuperpositionAttr($value) {
 //        return $this->isSuperposition[$value];
 //    }
-
     public function setIsSuperpositionAttr($value) {
         if (!in_array($value, $this->isSuperposition)) {
             return $value;
         }
         $isSuperposition = array_flip($this->isSuperposition);
         return $isSuperposition[$value];
+    }
+    public function couponsHd() {
+        return $this->belongsToMany('CouponHd', 'app\\common\\model\\CouponHdRelation', 'coupon_hd_id', 'coupon_id');
     }
 }

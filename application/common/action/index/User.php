@@ -4,6 +4,7 @@ namespace app\common\action\index;
 
 use app\common\action\notify\Note;
 use app\facade\DbAdmin;
+use app\facade\DbCoupon;
 use app\facade\DbImage;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
@@ -2510,7 +2511,7 @@ class User extends CommonIndex {
         if ($this->checkVercode($stype, $mobile, $vercode) === false) {
             return ['code' => '3006']; //验证码错误
         }
-       
+
         if (!empty($this->checkAccount($mobile))) {
             $uid = $this->checkAccount($mobile); //通过手机号获取uid
             Db::startTrans();
@@ -2547,7 +2548,7 @@ class User extends CommonIndex {
         if (empty($wxInfo['unionid'])) {
             return ['code' => '3000'];
         }
-        
+
         $user = DbUser::getUserOne(['unionid' => $wxInfo['unionid']], 'id,mobile');
         if (!empty($user)) {
             $uid = $user['id'];
@@ -2575,7 +2576,7 @@ class User extends CommonIndex {
                 }
                 // return ['code' => '3009'];
             }
-           
+
         }
         if ($wxInfo['sex'] == 0) {
             $wxInfo['sex'] = 3;
@@ -2647,6 +2648,101 @@ class User extends CommonIndex {
             return ['code' => '3007'];
         }
 
+    }
+
+    /**
+     * 用户领取优惠券
+     * @param $conId
+     * @param $couponId
+     * @return array
+     * @author zyr
+     */
+    public function addUserCoupon($conId, $couponId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3002'];
+        }
+        $coupon = DbCoupon::getCoupon(['id' => $couponId], 'price,gs_id,level,stype,is_superposition,title,days', true);
+        if (empty($coupon)) {//优惠券不存在
+            return ['code' => '3003'];
+        }
+        $userCoupon = DbCoupon::getUserCoupon([
+            ['coupon_id', '=', $couponId],
+            ['is_use', '=', 2],
+            ['uid', '=', $uid],
+            ['end_time', '>=', time()],
+        ], 'id', true);//未使用的
+        if (!empty($userCoupon)) {//有未使用的优惠券
+            return ['code' => '3004'];
+        }
+        $coupon['uid']       = $uid;
+        $coupon['coupon_id'] = $couponId;
+        $coupon['end_time']  = $coupon['days'] * 24 * 3600 + strtotime(date('Y-m-d'));
+        unset($coupon['days']);
+        Db::startTrans();
+        try {
+            DbCoupon::addUserCoupon($coupon);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
+    }
+
+    /**
+     * @param $conId
+     * @param $isUse
+     * @return array
+     * @author zyr
+     */
+    public function getUserCouponList($conId, $isUse) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3002'];
+        }
+        $where = [['uid', '=', $uid], ['end_time', '>', time()]];
+        if (in_array($isUse, [1, 2])) {
+            array_push($where, ['is_use', '=', $isUse]);
+        }
+        $userCouponList = DbCoupon::getUserCoupon($where, 'id,price,gs_id,level,title,is_use,create_time,end_time');
+        return ['code' => '200', 'data' => $userCouponList];
+    }
+
+    /**
+     * @param $couponHdId
+     * @param $page
+     * @param $pageNum
+     * @param $conId
+     * @return array
+     * @author zyr
+     */
+    public function getHdCoupon($couponHdId, $page, $pageNum, $conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $offset = $pageNum * ($page - 1);
+        $result = DbCoupon::getCouponByRelation(['id' => $couponHdId, 'status' => 1], $offset, $pageNum);
+        if (empty($result)) {
+            return ['code' => '200', 'data' => $result, 'total' => 0];
+        }
+        $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
+        $couponIdList = DbCoupon::getUserCoupon([
+            ['uid', '=', $uid],
+            ['is_use', '=', 2],
+            ['end_time', '>=', time()],
+        ], 'coupon_id');
+        $couponIdList      = array_column($couponIdList, 'coupon_id');//用户拥有的未使用优惠券
+        $result['coupons'] = array_map(function ($var) use ($couponIdList) {
+            unset($var['pivot']);
+            $var['is_have'] = 2;
+            if (in_array($var['id'], $couponIdList)) {
+                $var['is_have'] = 1;
+            }
+            return $var;
+        }, $result['coupons']);
+        return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
     private function getaccessToken($code) {

@@ -8,7 +8,6 @@
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-
 // 应用容器绑定定义
 return [
     'provinces'         => app\common\action\admin\Provinces::class,
@@ -26,6 +25,7 @@ return [
     'order'             => app\common\action\admin\Order::class,
     'recommend'         => app\common\action\admin\Recommend::class,
     'label'             => app\common\action\admin\Label::class,
-    'modelmessage' => app\common\action\admin\ModelMessage::class,
+    'modelmessage'      => app\common\action\admin\ModelMessage::class,
     'offlineactivities' => app\common\action\admin\OfflineActivities::class,
+    'coupons'           => app\common\action\admin\Coupons::class,
 ];
