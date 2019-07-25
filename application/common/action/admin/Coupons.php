@@ -451,7 +451,7 @@ class Coupons extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addHdGoods($hd_id, $image, $kind, $relevance, $debris, $title, $probability, $stock, $winnings_number, $order) {
+    public function addHdGoods($hd_id, $image, $kind, $relevance,int $debris, $title, $probability, $stock, $winnings_number, $order) {
         $num = DbCoupon::countgetHdGoods(['hd_id' => $hd_id, 'status' => 1]);
         if ($num > 7) {
             return ['code' => '3008'];
@@ -513,6 +513,7 @@ class Coupons extends CommonIndex {
             Db::rollback();
             return ['code' => '3011']; //修改失败
         } catch (\Exception $e) {
+            exception($e);die;
             Db::rollback();
             return ['code' => '3011']; //修改失败
         }
