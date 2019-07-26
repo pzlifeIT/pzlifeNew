@@ -437,6 +437,9 @@ class OfflineActivities extends CommonIndex {
         // ];
         $shopList  = [];
         $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,probability,debris,stock,has,winnings_number', false);
+        if (empty($LuckGoods)) {
+            return ['code' => '3008'];
+        }
         foreach ($LuckGoods as $key => $value) {
             if ($value['debris'] * $value['stock'] - $value['has'] > 0) {
                 $has_shopNum = DbOfflineActivities::sumWinning(['uid' => $uid, 'hd_num' => $hd_id, 'shop_num' => $value['id']], 'debris');
@@ -478,7 +481,7 @@ class OfflineActivities extends CommonIndex {
         //     $this->redis->expire($this->redisHdluckyDraw, strtotime(date('Y-m-d')) + 3600 * 24 - time()); //设置过期
         // }
         // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
-        if (!DbCoupon::getHdGoods([['hd_id', '=', $hd_id], ['update_time', '>', $timekey]], 'id', true)) {
+        if (DbCoupon::getHdGoods([['hd_id', '=', $hd_id], ['update_time', '>', $timekey]], 'id', true)) {
             return false;
         }
         // echo 1;die;
