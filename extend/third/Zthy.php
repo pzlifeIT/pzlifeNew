@@ -14,8 +14,8 @@ class Zthy {
     private $statusArr = [1, 2];
     private $user = [];
     private $urlList = [
-        '1' => 'http://api.zthysms.com/sendSms.do',//单条验证码短信
-        '2' => 'http://api.zthysms.com/sendSmsBatch.do',//营销群发短信
+        '1' => 'http://hy.mix2.zthysms.com/sendSms.do',//单条验证码短信
+        '2' => 'http://hy.mix2.zthysms.com/sendSms.do',//营销群发短信
     ];
 
     function __construct($apiIndex) {
