@@ -479,7 +479,7 @@ class OfflineActivities extends CommonIndex {
         // }
         // $allNum = $this->redis->hGetAll($this->redisHdluckyDraw);
         if (!DbCoupon::getHdGoods([['hd_id', '=', $hd_id], ['update_time', '>', $timekey]], 'id', true)) {
-            return ['code' => '3006'];
+            return false;
         }
         // echo 1;die;
         $LuckGoods = DbCoupon::getHdGoods(['hd_id' => $hd_id, 'status' => 1], 'id,debris,stock,has');
