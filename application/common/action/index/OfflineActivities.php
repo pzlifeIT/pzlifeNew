@@ -324,7 +324,7 @@ class OfflineActivities extends CommonIndex {
             return ['code' => '3001'];
         }
 //        $uid = 1;
-        if (empty(DbCoupon::getHd(['status' => 2], 'id', true))) {
+        if (empty(DbCoupon::getHd(['status' => 2,'id' => $hd_id], 'id', true))) {
             return ['code' => '3006'];
         }
         if ($this->initShopCount($hd_id, $timekey) === false) {
