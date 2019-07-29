@@ -543,7 +543,7 @@ class OfflineActivities extends CommonIndex {
             $General_debris = [];
             $LuckGoods = [];
             if (!empty($luckhd)) {
-                $LuckGoods = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['debris', '>', 1], ['kind', '<>', 4]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
+                $LuckGoods = DbCoupon::getHdGoods([['hd_id', '=', $luckhd['id']], ['status', '=', 1], ['debris', '>', 1]], 'id,image,kind,title,debris', false, ['order' => 'asc']);
                 // print_r($LuckGoods);die;
                     
                 $result = DbOfflineActivities::getHdLucky([['uid', '=', $uid], ['need_debris', '>', 1]], 'uid,kind,id,need_debris,debris,shop_num', false, ['id' => 'desc'], $offect . ',' . $pagenum);
