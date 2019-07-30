@@ -389,4 +389,29 @@ class Rights extends MyController {
         $result = $this->app->rights->userTaskInfo($conId, $taskid, $page, $pageNum);
         return $result;
     }
+
+    /**
+     * @api              {post} / 查询创业圈
+     * @apiDescription   getUserBusinessCircle
+     * @apiGroup         index_rights
+     * @apiName          getUserBusinessCircle
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {String} type 查询类型 1.创业店主 2.钻石会员 3.普通会员
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 /
+     * @apiSuccess (返回) {String} taskprogress
+     * @apiSampleRequest /index/rights/getUserBusinessCircle
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessCircle(){
+        $conId   = trim($this->request->post('con_id'));
+        $type   = trim($this->request->post('type'));
+
+        $typeData = [1, 2, 3];
+        if (!is_numeric($type) || !in_array($type, $typeData)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->rights->getUserBusinessCircle($conId, $type);
+        return $result;
+    }
 }
