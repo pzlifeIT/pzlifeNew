@@ -399,8 +399,14 @@ class Rights extends MyController {
      * @apiParam (入参) {String} type 查询类型 1.创业店主 2.钻石会员 3.普通会员
      * @apiParam (入参) {Number} page 页码
      * @apiParam (入参) {String} page_num 查询记录条数
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 / 3002:该用户无权限查看
-     * @apiSuccess (返回) {String} taskprogress
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 / 3002:该用户无权限查看 / 3003:无效查询
+     * @apiSuccess (返回) {String} total 此次第一排查询累计数据
+     * @apiSuccess (返回) {Array} business 返回数据
+     * @apiSuccess (business) {String} uid 加密后uid
+     * @apiSuccess (business) {String} nick_name 昵称
+     * @apiSuccess (business) {String} avatar 头像
+     * @apiSuccess (business) {String} user_identity 会员身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSuccess (business) {String} count 下级人数
      * @apiSampleRequest /index/rights/getUserBusinessCircle
      * @return array
      * @author rzc
