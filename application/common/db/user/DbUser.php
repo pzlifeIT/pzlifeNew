@@ -659,4 +659,32 @@ class DbUser {
         }
         return $where;
     }
+
+    public function getUserBusinessCircle($where, $limit) {
+        array_push($where, ['delete_time', '=', '0']);
+        $subSql = Db::table('pz_user_relation')
+            ->field('uid,pid,relation')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,u.nick_name,u.avatar,u.user_identity')
+            ->leftJoin([$subSql => 'p'], 'u.id = p.uid')
+            ->where($where)
+            ->order('id desc')
+            ->limit($limit)
+            ->select();
+    }
+
+    public function countUserBusinessCircle($where){
+        array_push($where, ['delete_time', '=', '0']);
+        $subSql = Db::table('pz_user_relation')
+            ->field('uid,pid,relation')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,u.nick_name,u.avatar,u.user_identity')
+            ->leftJoin([$subSql => 'p'], 'u.id = p.uid')
+            ->where($where)
+            ->count();
+    }
 }
