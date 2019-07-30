@@ -363,7 +363,7 @@ $log_invest['cost']       = 5000;
                                     'uid'          => $parent_id,
                                     'title'        => '兼职市场经理升级合伙人任务',
                                     'type'         => 3,
-                                    'target'       => 1000,
+                                    'target'       => 200,
                                     'status'       => 1,
                                     'bonus_status' => 2,
                                     'timekey'      => date('Ym', time()),
@@ -392,11 +392,11 @@ $log_invest['cost']       = 5000;
                                         if ($rela_user['user_market'] == 3) {
                                             $ptype   = 8;
                                             $ptitle  = '兼职市场总监1推广兼职市场经理奖励任务';
-                                            $p_bouns = 2;
+                                            $p_bouns = 3;
                                         } else if ($rela_user['user_market'] == 4) {
                                             $ptype   = 9;
                                             $ptitle  = '兼职市场总监2推广兼职市场经理奖励任务';
-                                            $p_bouns = 3;
+                                            $p_bouns = 5;
                                         }
                                         $p_task = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
                                         if (empty($p_task)) {

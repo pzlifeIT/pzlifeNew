@@ -555,6 +555,7 @@ class User extends Pzlife {
     public function clearUserKeepIdentityTask(){
         $timekey = date('Ym',time());
         $timekey = $timekey - 1; 
+        $timekey = 201907;
         $user_task = Db::query("SELECT * FROM pz_user_task WHERE `type` = 6 AND `status` = 1 AND `timekey` = ".$timekey);
         // print_r($user_task);die;
         if (empty($user_task)) {
@@ -562,6 +563,15 @@ class User extends Pzlife {
         }
         foreach ($user_task as $key => $task) {
             //本期任务未完成
+            //累计创业经理人数1000，变更为永久总监2 
+            $add_up = Db::query("SELECT SUM(`has_target`) FROM pz_user_task WHERE `type` = 6 AND `uid` = ".$task['uid']);
+            if (!empty($add_up)) {
+                if ($add_up[0]['SUM(`has_target`)'] >= 1000) {
+                    Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3]);
+                    Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 4]);
+                    continue;
+                }
+            }
             if ($task['has_target'] < $task['target']) {
                 //任务失败并重置本期任务
                 Db::table('pz_user_task')->where('id',$task['id'])->update(['status' => 3]);
@@ -579,6 +589,7 @@ class User extends Pzlife {
     
                 ];
                 Db::table('pz_user_task')->insert($add_user_task);
+                Db::table('pz_users')->where('id',$task['uid'])->update(['user_market' => 3]);
                 continue;
             }
             //任务完成，
@@ -592,7 +603,7 @@ class User extends Pzlife {
                 'uid'          => $task['uid'],
                 'title'        => '维持兼职市场总监2任务',
                 'type'         => 6,
-                'target'       => $target,
+                'target'       => 10,
                 'status'       => 1,
                 'bonus_status' => 2,
                 'timekey'      => date('Ym', time()),
