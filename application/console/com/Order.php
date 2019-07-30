@@ -203,6 +203,7 @@ class Order extends Pzlife {
         $data         = [];
         $tradingData  = [];
         $integralData = [];
+        // $this->redis->rPush($redisListKey, 971);
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -288,7 +289,7 @@ class Order extends Pzlife {
                 $o['level_uid']    = $uid;
                 $o['to_uid']       = $bossList['first_uid'];
                 $o['stype']        = 1; //分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']        = 1; //分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                $o['layer']        = 1; //分利层级 1.一层(75%) 2.二层(75%*15%) 三层(75%*15%*15%)
                 if ($identity == 2) {
                     $o['bonus_type'] = 1;
                 } else {
@@ -301,7 +302,7 @@ class Order extends Pzlife {
                 $o['level_uid']    = $bossList['first_uid'];
                 $o['to_uid']       = $bossList['second_uid'];
                 $o['stype']        = 1; //分利类型 1.推荐关系分利 2.店铺购买分利
-                $o['layer']        = 2; //分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                $o['layer']        = 2; //分利层级 1.一层(75%) 2.二层(75%*15%) 三层(75%*15%*15%)
                 if ($identity == 2) {
                     $o['bonus_type'] = 2;
                 } else {
@@ -315,9 +316,29 @@ class Order extends Pzlife {
                     $o['to_uid']        = $bossList['third_uid'];
                     $o['level_uid']     = $bossList['second_uid'];
                     $o['stype']         = 1; //分利类型 1.推荐关系分利 2.店铺购买分利
-                    $o['layer']         = 3; //分利层级 1.一层(75) 2.二层(75*15) 三层(75*15*15)
+                    $o['layer']         = 3; //分利层级 1.一层(75%) 2.二层(75%*15%) 三层(75%*15%*15%)
                     $o['bonus_type']    = 3;
                     $o['user_identity'] = 4;
+                    array_push($data, $o);
+                }
+                if ($bossList['fourth_uid'] != 1){
+                    $o['result_price']  = $calculate['fourth_price']; //实际得到分利
+                    $o['to_uid']        = $bossList['fourth_uid'];
+                    $o['level_uid']     = $bossList['first_uid'];
+                    $o['stype']         = 1; //分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 4; //分利层级 1.一层(75%) 2.二层(75%*15%) 3.三层(75%*15%*15%) 4.市场推广奖励(75%*3%)
+                    $o['bonus_type']    = 3;
+                    $o['user_identity'] = 3;
+                    array_push($data, $o);
+                }
+                if ($bossList['fifth_uid'] != 1){
+                    $o['result_price']  = $calculate['fifth_price']; //实际得到分利
+                    $o['to_uid']        = $bossList['fifth_uid'];
+                    $o['level_uid']     = $bossList['second_uid'];
+                    $o['stype']         = 1; //分利类型 1.推荐关系分利 2.店铺购买分利
+                    $o['layer']         = 5; //分利层级 1.一层(75%) 2.二层(75%*15%) 3.三层(75%*15%*15%) 4.市场推广奖励(75%*3%) 5.市场推广奖励(75%*15%*3%)
+                    $o['bonus_type']    = 3;
+                    $o['user_identity'] = 3;
                     array_push($data, $o);
                 }
                 if (key_exists($orderId, $integralData)) {
@@ -327,6 +348,7 @@ class Order extends Pzlife {
                 }
             }
         }
+        print_r($data);die;
         Db::startTrans();
         try {
             if (!empty($data)) {
@@ -418,6 +440,8 @@ class Order extends Pzlife {
         $firstUid  = 1; //默认总店
         $secondUid = 1; //默认总店
         $thirdUid  = 1; //默认总店
+        $fourthUid = 1; //默认总店
+        $fifthUid  = 1; //默认总店
         if ($identity == 1) { //自己是普通会员
             $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
             $myPidIdentity = $this->getIdentity($myPid); //上级的身份(判断是不是分享大v)
@@ -426,6 +450,13 @@ class Order extends Pzlife {
                 $firstUid  = $myPid;
                 $secondUid = $pBossUid;
                 $thirdUid  = $ppUid;
+                if ($myPid != 1) {
+                    $pRelation = $this->getRelation($myPid);
+                    $pPuserMarket = $this->getMarket($pRelation['pid']);
+                    if ($pPuserMarket == 2) {
+                        $fourthUid = $pRelation['pid'];
+                    }
+                }
             } else {
                 $firstUid  = $pBossUid;
                 $secondUid = $ppUid;
@@ -438,6 +469,13 @@ class Order extends Pzlife {
             if ($myPidIdentity == 3) {
                 $secondUid = $myPid;
                 $thirdUid  = $pBossUid;
+                if ($myPid != 1) {
+                    $pRelation = $this->getRelation($myPid);
+                    $pPuserMarket = $this->getMarket($pRelation['pid']);
+                    if ($pPuserMarket == 2) {
+                        $fifthUid = $pRelation['pid'];
+                    }
+                }
             } else {
                 $secondUid = $pBossUid;
                 $thirdUid  = $this->getBoss($pBossUid);
@@ -446,8 +484,18 @@ class Order extends Pzlife {
             $firstUid  = $uid;
             $secondUid = $pBossUid;
             $thirdUid  = $this->getBoss($pBossUid);
+            if ($identity == 3) {
+                $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
+                if ($myPid != 1) {
+                    $pRelation = $this->getRelation($myPid);
+                    $pPuserMarket = $this->getMarket($pRelation['pid']);
+                    if ($pPuserMarket == 2) {
+                        $fourthUid = $pRelation['pid'];
+                    }
+                }
+            }
         }
-        return ['first_uid' => $firstUid, 'second_uid' => $secondUid, 'third_uid' => $thirdUid];
+        return ['first_uid' => $firstUid, 'second_uid' => $secondUid, 'third_uid' => $thirdUid, 'fourth_uid' => $fourthUid, 'fifth_uid' => $fifthUid];
     }
 
     /**
@@ -458,13 +506,19 @@ class Order extends Pzlife {
      * @return array
      */
     private function calculate($marginPrice, $num) {
-        $firstBonus  = 0.75;
-        $secondBonus = 0.15;
-        $thirdBonus  = 0.15;
-        $firstPrice  = bcmul(bcmul($marginPrice, $firstBonus, 5), $num, 2);
-        $secondPrice = bcmul($firstPrice, $secondBonus, 2);
-        $thirdPrice  = bcmul($secondPrice, $thirdBonus, 2);
-        return ['first_price' => $firstPrice, 'second_price' => $secondPrice, 'third_price' => $thirdPrice];
+        $firstBonus  = 0.75;//第一层的0.75
+        $secondBonus = 0.15;//第二层的0.15
+        $thirdBonus  = 0.15;//第三层的0.15
+        $firstPrice  = bcmul(bcmul($marginPrice, $firstBonus, 5), $num, 2);//0.75
+        $secondPrice = bcmul($firstPrice, $secondBonus, 2); //0.75*0.15
+        $thirdPrice  = bcmul($secondPrice, $thirdBonus, 2); //0.75*0.15*0.15
+
+        //兼职经理市场推广奖励
+        $fourthBonus = 0.03;
+        $fourthPrice = bcmul($firstPrice, $fourthBonus, 2); //0.75*0.03
+        $fifthPrice  = bcmul($secondPrice, $fourthPrice, 2); //0.75*0.15*0.03
+
+        return ['first_price' => $firstPrice, 'second_price' => $secondPrice, 'third_price' => $thirdPrice, 'fourth_price' => $fourthPrice, 'fifth_price' => $fifthPrice];
     }
 
     /**
@@ -480,6 +534,21 @@ class Order extends Pzlife {
         $userSql = sprintf("select user_identity from pz_users where delete_time=0 and id=%d", $uid);
         $user    = Db::query($userSql);
         return $user[0]['user_identity'];
+    }
+
+    /**
+     * 获取用户市场推广身份0.没有身份 1.临时兼职市场经理 2.永久兼职市场经理 3.兼职市场总监1 4.兼职市场总监2
+     * @param $uid
+     * @return mixed
+     * @author rzc
+     */
+    private function getMarket($uid){
+        if ($uid == 1) {
+            return 4;
+        }
+        $userSql = sprintf("select user_identity from pz_users where delete_time=0 and id=%d", $uid);
+        $user    = Db::query($userSql);
+        return $user[0]['user_market'];
     }
 
     private function getBoss($uid) {
