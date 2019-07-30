@@ -874,7 +874,7 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] != '4') {
+        if ($user['user_identity'] < '2') {
             return ['code' => '3000']; //boss才有权限查看
         }
         // $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid');
