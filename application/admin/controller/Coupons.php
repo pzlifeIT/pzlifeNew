@@ -525,7 +525,7 @@ class Coupons extends AdminController {
         $title      = trim($this->request->post('title'));
         $start_time = trim($this->request->post('start_time'));
         $end_time   = trim($this->request->post('end_time'));
-        if (empty($title)) {
+        if (empty($title) || mb_strlen($title,'utf8') > 30) {
             return ['code' => '3001'];
         }
         if (date('Y-m-d H:i:s', strtotime($start_time)) == $start_time) {
@@ -672,7 +672,7 @@ class Coupons extends AdminController {
         if (empty($debris) || !is_numeric($debris)) {
             return ['code' => '3005'];
         }
-        if (empty($title) || strlen($title) > 30) {
+        if (empty($title) || mb_strlen($title,'utf8') > 30) {
             return ['code' => '3006'];
         }
         if (empty($probability) || $probability > 1 || !is_numeric($probability)) {
