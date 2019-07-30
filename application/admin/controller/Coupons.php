@@ -672,7 +672,7 @@ class Coupons extends AdminController {
         if (empty($debris) || !is_numeric($debris)) {
             return ['code' => '3005'];
         }
-        if (empty($title)) {
+        if (empty($title) || strlen($title) > 30) {
             return ['code' => '3006'];
         }
         if (empty($probability) || $probability > 1 || !is_numeric($probability)) {
