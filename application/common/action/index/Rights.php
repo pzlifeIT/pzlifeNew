@@ -1083,5 +1083,29 @@ $log_invest['cost']       = 5000;
         $task_invited = DbRights::getTaskInvited(['utask_id' => $taskid], '*', false, ['id' => 'asc'], $offset . ',' . $pageNum);
         return ['code' => '200', 'task_invited' => $task_invited];
     }
+
+    /**
+     * 获取用户创业圈
+     * @param $conId
+     * @param $type
+     * @return mixed
+     * @author rzc
+     */
+    public function getUserBusinessCircle($conId, $type, $page, $pageNum){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3002'];
+        }
+        if ($userInfo['user_market'] == 0) {//创业店主
+            
+        }
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

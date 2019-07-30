@@ -355,7 +355,7 @@ class Rights extends MyController {
      * @apiParam (入参) {String} con_id 用户con_id
      * @apiParam (入参) {String} taskid 任务ID
      * @apiParam (入参) {Number} page 页码
-     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiParam (入参) {Number} page_num 查询记录条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:taskid必须是数字 / 3002:该任务不存在 / 3003:page错误
      * @apiSuccess (返回) {Array} task_invited
      * @apiSuccess (task_invited) {String} id
@@ -397,7 +397,9 @@ class Rights extends MyController {
      * @apiName          getUserBusinessCircle
      * @apiParam (入参) {String} con_id 用户con_id
      * @apiParam (入参) {String} type 查询类型 1.创业店主 2.钻石会员 3.普通会员
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 /
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 / 3002:该用户无权限查看
      * @apiSuccess (返回) {String} taskprogress
      * @apiSampleRequest /index/rights/getUserBusinessCircle
      * @return array
@@ -406,12 +408,22 @@ class Rights extends MyController {
     public function getUserBusinessCircle(){
         $conId   = trim($this->request->post('con_id'));
         $type   = trim($this->request->post('type'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
 
         $typeData = [1, 2, 3];
         if (!is_numeric($type) || !in_array($type, $typeData)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getUserBusinessCircle($conId, $type);
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3003']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->rights->getUserBusinessCircle($conId, $type, $page, $pageNum);
         return $result;
     }
 }
