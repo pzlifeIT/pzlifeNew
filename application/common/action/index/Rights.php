@@ -337,7 +337,7 @@ $log_invest['cost']       = 5000;
                             $up_parent_task = [];
                             $up_parent_task = [
                                 'has_target'  => $parent_user_task['has_target'] + 1,
-                                'bonus'       => $parent_user_task['bonus'] + 8,
+                                'bonus'       => $parent_user_task['bonus'] + 15,
                                 'update_time' => time(),
                             ];
                             if ($parent_user_task['target'] <= $up_parent_task['has_target']) {
@@ -1084,4 +1084,3 @@ $log_invest['cost']       = 5000;
         return ['code' => '200', 'task_invited' => $task_invited];
     }
 }
-/* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
