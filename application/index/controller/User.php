@@ -1857,12 +1857,11 @@ class User extends MyController {
     }
 
     /**
-     * @api              {post} / 查询创业佣金
+     * @api              {post} / 查询创业佣金总计
      * @apiDescription   getUserBusinessMoneyTotal
      * @apiGroup         index_user
      * @apiName          getUserBusinessMoneyTotal
      * @apiParam (入参) {String} con_id
-     * @apiParam (入参) {Int} type 1.可分佣 2.不可分佣(只有渠道的3%收益)
      * @apiSuccess (返回) {String} code 200:成功 / 3001:type参数有误 / 3002:wtype参数错误 / 3003:page有误 / 3004:page_num有误 / 3005:暂无查看权限
      * @apiSuccess (返回) {String} no_price 不可分佣
      * @apiSuccess (返回) {String} can_price 可分佣
