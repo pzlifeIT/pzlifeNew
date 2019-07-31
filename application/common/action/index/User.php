@@ -2806,14 +2806,14 @@ class User extends CommonIndex {
             if ($userInfo['user_market'] != 2) {
                 return ['code' => '3005'];
             }
-            array_push($where,[['layer', 'in','4,5']]);
+            array_push($where,[['layer', 'in','3,4,5']]);
             array_push($where,[['to_uid', '=',$uid]]);
             //总收益
             $all_price = DbUser::sumLogBonus($where, 'result_price');
         }
         if ($type == 1) {
             array_push($where,[['to_uid', '=',$uid]]);
-            array_push($where,[['layer', 'in','1,2,3']]);
+            array_push($where,[['layer', 'in','1,2']]);
             //总收益
             $all_price = DbUser::sumLogBonus($where, 'result_price');
             if ($wtype == 1) {//个人消费收益
@@ -2837,4 +2837,28 @@ class User extends CommonIndex {
         return ['code' => '200', 'all_price' => $all_price, 'own_price' => $own_price, 'vip_price' => $vip_price, 'dimondvip_price' => $dimondvip_price, 'other_price' => $other_price, 'businessmoney' => $result];
     }
 
+    /**
+     * @param $conId
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoneyTotal($conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3005'];
+        }
+    
+            //不可总收益
+        $no_price = DbUser::sumLogBonus([['layer', 'in','3,4,5'],['to_uid', '=',$uid]], 'result_price');
+        //可分佣总收益
+        $can_price = DbUser::sumLogBonus([['layer', 'in','1,2'],['to_uid', '=',$uid]], 'result_price');
+        return ['code' => '200', 'no_price' => $no_price, 'can_price' => $can_price];
+    }
 }
