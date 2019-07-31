@@ -2821,14 +2821,17 @@ class User extends CommonIndex {
             $all_price = DbUser::sumLogBonus($where, 'result_price');
             if ($wtype == 1) {//个人消费收益
                 array_push($where,[['from_uid', '=', $uid]]);
-                $own_price = DbUser::sumLogBonus($where, 'result_price');
+                
             }elseif ($wtype == 2) {
                 array_push($where,[['u.user_identity', '=', 1]]);
-                $vip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+                
             }elseif ($wtype == 3) {
                 array_push($where,[['u.user_identity', '=', 2]]);
-                $dimondvip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+                
             }
+            $own_price = DbUser::sumLogBonus([['to_uid', '=',$uid],['layer', 'in','1,2,3'],['from_uid', '=', $uid]], 'result_price');
+            $vip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+            $dimondvip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
         }
         $offset = ($page - 1) * $pageNum;
         $result = DbUser::getLogBonusGroupOrder($where, $offset.','.$pageNum);
