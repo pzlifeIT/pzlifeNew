@@ -1830,7 +1830,7 @@ class User extends MyController {
      * @apiSuccess (businessmoney) {String} avatar 头像
      * @apiSampleRequest /index/user/getUserBusinessMoney
      * @return array
-     * @author zyr
+     * @author rzc
      */
     public function getUserBusinessMoney(){
         $conId   = trim($this->request->post('con_id'));
@@ -1856,4 +1856,23 @@ class User extends MyController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 查询创业佣金
+     * @apiDescription   getUserBusinessMoneyTotal
+     * @apiGroup         index_user
+     * @apiName          getUserBusinessMoneyTotal
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} type 1.可分佣 2.不可分佣(只有渠道的3%收益)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:type参数有误 / 3002:wtype参数错误 / 3003:page有误 / 3004:page_num有误 / 3005:暂无查看权限
+     * @apiSuccess (返回) {String} no_price 不可分佣
+     * @apiSuccess (返回) {String} can_price 可分佣
+     * @apiSampleRequest /index/user/getUserBusinessMoneyTotal
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoneyTotal(){
+        $conId   = trim($this->request->post('con_id'));
+        $result = $this->app->user->getUserBusinessMoneyTotal($conId);
+        return $result;
+    }
 }
