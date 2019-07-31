@@ -445,12 +445,13 @@ class Order extends Pzlife {
         if ($identity == 1) { //自己是普通会员
             $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
             $myPidIdentity = $this->getIdentity($myPid); //上级的身份(判断是不是分享大v)
+            $myPidMarket   = $this->getMarket($myPid);
             $ppUid         = $this->getBoss($pBossUid);
             if ($myPidIdentity == 3) {
                 $firstUid  = $myPid;
                 $secondUid = $pBossUid;
                 $thirdUid  = $ppUid;
-                if ($myPid != 1) {
+                if ($myPid != 1 && $myPidMarket<1) {
                     $pRelation = $this->getRelation($myPid);
                     $pPuserMarket = $this->getMarket($pRelation['pid']);
                     if ($pPuserMarket == 2) {
@@ -465,11 +466,12 @@ class Order extends Pzlife {
         } else if ($identity == 2) { //自己是钻石会员
             $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
             $myPidIdentity = $this->getIdentity($myPid); //上级的身份(判断是不是分享大v)
+            $myPidMarket   = $this->getMarket($myPid);
             $firstUid      = $uid;
             if ($myPidIdentity == 3) {
                 $secondUid = $myPid;
                 $thirdUid  = $pBossUid;
-                if ($myPid != 1) {
+                if ($myPid != 1 && $myPidMarket<1) {
                     $pRelation = $this->getRelation($myPid);
                     $pPuserMarket = $this->getMarket($pRelation['pid']);
                     if ($pPuserMarket == 2) {
@@ -484,9 +486,10 @@ class Order extends Pzlife {
             $firstUid  = $uid;
             $secondUid = $pBossUid;
             $thirdUid  = $this->getBoss($pBossUid);
+            $myPidMarket   = $this->getMarket($myPid);
             if ($identity == 3) {
                 $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
-                if ($myPid != 1) {
+                if ($myPid != 1 && $myPidMarket<1) {
                     $pRelation = $this->getRelation($myPid);
                     $pPuserMarket = $this->getMarket($pRelation['pid']);
                     if ($pPuserMarket == 2) {
