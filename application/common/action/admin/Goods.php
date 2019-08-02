@@ -904,4 +904,8 @@ class Goods extends CommonIndex {
             $this->redis->zIncrBy($redisKey, 1, $labelLibId);
         }
     }
+
+    public function getSheetOption(){
+        
+    }
 }

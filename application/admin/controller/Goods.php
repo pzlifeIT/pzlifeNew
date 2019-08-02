@@ -611,4 +611,22 @@ class Goods extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $id, $type], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 获取表格内容选项
+     * @apiDescription   getSheetOption
+     * @apiGroup         admin_goods
+     * @apiName          getSheetOption
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 商品id
+     * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSampleRequest /admin/goods/getSheetOption
+     * @author rzc
+     */
+    public function getSheetOption(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $result = $this->app->goods->getSheetOption();
+        return $result;
+    }
 }
