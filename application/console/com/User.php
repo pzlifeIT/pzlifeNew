@@ -555,7 +555,7 @@ class User extends Pzlife {
     public function clearUserKeepIdentityTask(){
         $timekey = date('Ym',time());
         $timekey = $timekey - 1; 
-        $timekey = 201907;
+        // $timekey = 201907;
         $user_task = Db::query("SELECT * FROM pz_user_task WHERE `type` = 6 AND `status` = 1 AND `timekey` = ".$timekey);
         // print_r($user_task);die;
         if (empty($user_task)) {
