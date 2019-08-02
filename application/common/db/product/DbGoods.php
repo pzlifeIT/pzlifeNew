@@ -2,6 +2,7 @@
 
 namespace app\common\db\product;
 
+use app\common\model\AudioSku;
 use app\common\model\GoodsClass;
 use app\common\model\Goods;
 use app\common\model\GoodsClassImage;
@@ -39,6 +40,13 @@ class DbGoods {
         $this->supplierFreightArea   = new SupplierFreightArea();
         $this->goods                 = new Goods();
         $this->goodsAttr             = new GoodsAttr();
+    }
+
+    public function getAudioSkuRelation($where) {
+        $result = AudioSku::field('id,goods_id,market_price,retail_price,cost_price,integral_price,end_time')->with(['audios' => function ($query) {
+            $query->field('audio,audition_time');
+        }])->where($where)->select()->toArray();
+        return $result;
     }
 
     public function getTier($id) {

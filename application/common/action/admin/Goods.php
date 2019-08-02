@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\facade\DbAudios;
 use app\facade\DbImage;
 use app\facade\DbLabel;
 use Overtrue\Pinyin\Pinyin;
@@ -418,6 +419,42 @@ class Goods extends CommonIndex {
         }
     }
 
+    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime) {
+        $where    = [["id", "=", $goodsId]];
+        $field    = "id,goods_type";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != 2) {
+            return ['code' => '3007'];
+        }
+        $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
+        if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+            return ['code' => '3003'];
+        }
+        $skuData = [
+            'goods_id'       => $goodsId,
+            'market_price'   => $marketPrice,
+            'retail_price'   => $retailPrice,
+            'cost_price'     => $costPrice,
+            'integral_price' => $integralPrice,
+            'end_time'       => $endTime * 3600,
+        ];
+        Db::startTrans();
+        try {
+            $audioSkuId = DbAudios::saveAudioSku($skuData);
+            $relation   = [];
+            foreach ($audioIdList as $val) {
+                array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $audioSkuId]);
+            }
+            DbAudios::saveAllAudioSkuRelation($relation);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            print_r($e);
+            Db::rollback();
+            return ['code' => '3008'];//更新失败
+        }
+    }
+
     /**
      * 获取sku列表
      * @param $skuId
@@ -446,25 +483,34 @@ class Goods extends CommonIndex {
     /**
      * 获取一条商品数据
      * @param $id
+     * @param $getType
+     * @param $goodsType
      * @return array
      * @author wujunjie
      * 2019/1/2-16:42
      */
-    public function getOneGoods($id, $getType) {
+    public function getOneGoods($id, $getType, $goodsType) {
         //根据商品id找到商品表里面的基本数据
+        $where    = [["id", "=", $id]];
+        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != $goodsType) {
+            return ['code' => '3005'];//该商品不属于这个类型
+        }
         $goods_data = [];
         if (in_array(1, $getType)) {
-            $where      = [["id", "=", $id]];
-            $field      = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
-            $goods_data = DbGoods::getOneGoods($where, $field);
+            $goods_data = $goodsOne;
             if (empty($goods_data)) {
                 return ["code" => 3000];
             }
             $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
             $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
-            $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
-            $goods_data['supplier_name'] = $supplier['name'];
-            $goods_data['goods_name']   = htmlspecialchars_decode($goods_data['goods_name']);
+            $goods_data['supplier_name'] = '';
+            if ($goodsType == 1) {
+                $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
+                $goods_data['supplier_name'] = $supplier['name'];
+            }
+            $goods_data['goods_name'] = htmlspecialchars_decode($goods_data['goods_name']);
         }
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
@@ -487,9 +533,8 @@ class Goods extends CommonIndex {
                 }
             }
         }
-
         $specAttr = [];
-        if (in_array(2, $getType)) {
+        if (in_array(2, $getType) && $goodsType == 1) {
             $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'id,spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
             foreach ($specAttrRes as $specVal) {
                 $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
@@ -499,13 +544,25 @@ class Goods extends CommonIndex {
                 array_push($specAttr, $specVal);
             }
         }
-
         //根据商品id获取sku表数据
         $sku = [];
         if (in_array(4, $getType)) {
-            $where = [["goods_id", "=", $id], ['status', '=', 1]];
-            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
-            $sku   = DbGoods::getSku($where, $field);
+            if ($goodsType == 1) {
+                $where = [["goods_id", "=", $id], ['status', '=', 1]];
+                $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
+                $sku   = DbGoods::getSku($where, $field);
+            }
+            if ($goodsType == 2) {
+                $sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $id]]);
+                foreach ($sku as &$v) {
+                    $v['end_time'] = $v['end_time'] / 3600;
+                    $v['audios']   = array_map(function ($var) {
+                        unset($var['pivot']);
+                        return $var;
+                    }, $v['audios']);
+                }
+                unset($v);
+            }
         }
         $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
         $source_type         = [1, 2, 3, 4];

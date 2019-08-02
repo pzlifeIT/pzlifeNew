@@ -28,4 +28,5 @@ return [
     'modelmessage'      => app\common\action\admin\ModelMessage::class,
     'offlineactivities' => app\common\action\admin\OfflineActivities::class,
     'coupons'           => app\common\action\admin\Coupons::class,
+    'audios'            => app\common\action\admin\Audios::class,
 ];
