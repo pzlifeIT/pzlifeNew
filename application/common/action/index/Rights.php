@@ -337,7 +337,7 @@ $log_invest['cost']       = 5000;
                             $up_parent_task = [];
                             $up_parent_task = [
                                 'has_target'  => $parent_user_task['has_target'] + 1,
-                                'bonus'       => $parent_user_task['bonus'] + 8,
+                                'bonus'       => $parent_user_task['bonus'] + 15,
                                 'update_time' => time(),
                             ];
                             if ($parent_user_task['target'] <= $up_parent_task['has_target']) {
@@ -363,7 +363,7 @@ $log_invest['cost']       = 5000;
                                     'uid'          => $parent_id,
                                     'title'        => '兼职市场经理升级合伙人任务',
                                     'type'         => 3,
-                                    'target'       => 1000,
+                                    'target'       => 200,
                                     'status'       => 1,
                                     'bonus_status' => 2,
                                     'timekey'      => date('Ym', time()),
@@ -392,11 +392,11 @@ $log_invest['cost']       = 5000;
                                         if ($rela_user['user_market'] == 3) {
                                             $ptype   = 8;
                                             $ptitle  = '兼职市场总监1推广兼职市场经理奖励任务';
-                                            $p_bouns = 2;
+                                            $p_bouns = 3;
                                         } else if ($rela_user['user_market'] == 4) {
                                             $ptype   = 9;
                                             $ptitle  = '兼职市场总监2推广兼职市场经理奖励任务';
-                                            $p_bouns = 3;
+                                            $p_bouns = 5;
                                         }
                                         $p_task = DbRights::getUserTask(['uid' => $parent_userRelation['pid'], 'type' => $ptype, 'timekey' => date('Ym', time())], '*', true);
                                         if (empty($p_task)) {
@@ -452,7 +452,7 @@ $log_invest['cost']       = 5000;
                                 'uid'           => $uid,
                                 'user_identity' => 3,
                                 'timekey'       => date('Ym', time()),
-                                'bonus'         => 8,
+                                'bonus'         => 15,
                             ];
                             DbRights::addTaskInvited($task_invited);
                         }
@@ -467,7 +467,7 @@ $log_invest['cost']       = 5000;
                                 'type'       => 2,
                                 'has_target' => 1,
                                 'status'     => 1,
-                                'bonus'      => 8,
+                                'bonus'      => 15,
                                 'timekey'    => date('Ym', time()),
                             ];
                             $id = DbRights::addUserTask($add_user_task);
@@ -477,7 +477,7 @@ $log_invest['cost']       = 5000;
                             $up_parent_task = [];
                             $up_parent_task = [
                                 'has_target' => $parent_user_task['has_target'] + 1,
-                                'bonus'      => $parent_user_task['bonus'] + 8,
+                                'bonus'      => $parent_user_task['bonus'] + 15,
                             ];
                             DbRights::editUserTask($up_parent_task, $id);
                         }
@@ -488,7 +488,7 @@ $log_invest['cost']       = 5000;
                             'uid'           => $uid,
                             'user_identity' => 3,
                             'timekey'       => date('Ym', time()),
-                            'bonus'         => 8,
+                            'bonus'         => 15,
                         ];
                         DbRights::addTaskInvited($task_invited);
                         $tradingData = [];
@@ -496,13 +496,13 @@ $log_invest['cost']       = 5000;
                             'uid'          => $parent_id,
                             'trading_type' => 2,
                             'change_type'  => 13,
-                            'money'        => 8,
+                            'money'        => 15,
                             'befor_money'  => $parent_info['commission'],
-                            'after_money'  => bcadd($parent_info['commission'], 8, 2),
+                            'after_money'  => bcadd($parent_info['commission'], 15, 2),
                             'message'      => '推广创业店主奖励',
                         ];
                         DbUser::saveLogTrading($tradingData);
-                        DbUser::modifyCommission($parent_id, 8, 'inc');
+                        DbUser::modifyCommission($parent_id, 15, 'inc');
 
                         //判断是否需要写入兼职市场经理升级合伙人任务记录中
                         $upgrade_task = DbRights::getUserTask(['uid' => $parent_id, 'type' => 3, 'status' => 1], '*', true);
@@ -564,7 +564,7 @@ $log_invest['cost']       = 5000;
 
                         //判断是否需要给与额外奖励1200或者每一人12元
                         //测试数量2
-                        $thismonth_num = DbRights::getTaskInvitedCount(['utask_id' => $id, 'timekey' => date('Ym', time())]);
+                        /* $thismonth_num = DbRights::getTaskInvitedCount(['utask_id' => $id, 'timekey' => date('Ym', time())]);
                         if ($thismonth_num >= 100) {
                             $month_task_bonus = DbRights::getUserTask(['uid' => $parent_id, 'type' => 4, 'timekey' => date('Ym', time())], 'id', true);
                             if (empty($month_task_bonus)) {
@@ -879,7 +879,7 @@ $log_invest['cost']       = 5000;
                                     }
                                 }
                             }
-                        }
+                        } */
                     }
 
                 }
@@ -1084,4 +1084,3 @@ $log_invest['cost']       = 5000;
         return ['code' => '200', 'task_invited' => $task_invited];
     }
 }
-/* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
