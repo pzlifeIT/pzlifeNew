@@ -327,6 +327,11 @@ class OfflineActivities extends CommonIndex {
         if (empty(DbCoupon::getHd(['status' => 2,'id' => $hd_id], 'id', true))) {
             return ['code' => '3006'];
         }
+        $starttime = strtotime(date('Y-m-d 0:00:00'),time());
+        $endtime = strtotime(date('Y-m-d 23:59:59'),time());
+        if (DbOfflineActivities::getWinning([['update_time', '>=', $starttime], ['update_time', '<=', $endtime], ['uid', '=', $uid]],'id,uid',true)) {
+            return ['code' => '3009'];
+        }
         if ($this->initShopCount($hd_id, $timekey) === false) {
             return ['code' => '3004'];
         }

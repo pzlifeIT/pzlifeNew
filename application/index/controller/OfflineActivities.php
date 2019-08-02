@@ -149,7 +149,7 @@ class OfflineActivities extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} hd_id 活动ID
      * @apiParam (入参) {Int} timekey 奖品时间戳
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.用户不存在 / 3002.con_id有误 / 3003:已参与抽奖 / 3004:奖品已全部抽完 / 3005:操作失败 / 3006:活动过期，请刷新页面 / 3007:timekey错误 / 3008:已无可中奖品
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.用户不存在 / 3002.con_id有误 / 3003:已参与抽奖 / 3004:奖品已全部抽完 / 3005:操作失败 / 3006:活动过期，请刷新页面 / 3007:timekey错误 / 3008:已无可中奖品 / 3009:今天抽奖次数已用完
      * @apiSuccess (返回) {Int} shop_num 中奖编号
      * @apiSampleRequest /index/OfflineActivities/luckydraw
      * @author zyr
