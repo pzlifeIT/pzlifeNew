@@ -897,13 +897,13 @@ class User extends CommonIndex {
             $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' .$uid . ',%']], 'relation');
         }
         $reg          = [];
-        $regCount = count($userRelation);
-        // foreach ($userRelation as $ur) {
-        //     $rel    = substr($ur['relation'], strlen($uid . ','));
-        //     $uidArr = explode(',', $rel);
-        //     $reg    = array_merge($reg, $uidArr);
-        // }
+        foreach ($userRelation as $ur) {
+            $rel    = substr($ur['relation'], strlen($uid . ','));
+            $uidArr = explode(',', $rel);
+            $reg    = array_merge($reg, $uidArr);
+        }
         // $regCount = count(array_unique($reg));
+        $regCount = count(array_diff(array_unique($reg),[$uid]));
         return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => $regCount];
     }
 
@@ -1196,6 +1196,9 @@ class User extends CommonIndex {
                 break;
             case 3:
                 $ctype = '老商城转入积分';
+                break;
+            case 4:
+                $ctype = '抽奖活动积分';
                 break;
             }
             $d['ctype'] = $ctype;
