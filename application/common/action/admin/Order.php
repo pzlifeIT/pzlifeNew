@@ -521,4 +521,19 @@ class Order extends CommonIndex {
         curl_close($curl);
         return $res;
     }
+
+    /**
+     * 修改订单发货信息
+     * @param $cmsConId
+     * @param $keyword
+     * @return array
+     * @author rzc
+     */
+    public function searchKeywordOrders($cmsConId, $keyword){
+        $adminId = $this->getUidByConId($cmsConId);
+        if (!$this->redis->hget(Config::get('rediskey.cms.redisCmsSearchKeyword') . $adminId,$keyword)) {
+            return ['code' => '3002'];
+        }
+        return $keyword;
+    }
 }
