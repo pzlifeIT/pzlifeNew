@@ -891,7 +891,11 @@ class User extends CommonIndex {
 
         $readCount    = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
         $grantCount   = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
-        $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
+        if ($user['user_identity'] == 4) {
+            $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
+        } else {
+            $userRelation = DbUser::getUserRelation([['relation', 'like', '%'.$uid . ',%']], 'relation');
+        }
         $reg          = [];
         foreach ($userRelation as $ur) {
             $rel    = substr($ur['relation'], strlen($uid . ','));
