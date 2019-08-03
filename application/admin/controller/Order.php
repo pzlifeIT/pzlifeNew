@@ -197,8 +197,8 @@ class Order extends AdminController {
      * @author rzc
      */
     public function getExpressList() {
-        $apiName      = classBasename($this) . '/' . __function__;
-        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
+        $apiName     = classBasename($this) . '/' . __function__;
+        $cmsConId    = trim($this->request->post('cms_con_id')); //操作管理员
         $ExpressList = getExpressList();
         $this->apiLog($apiName, [$cmsConId], 200, $cmsConId);
         return ['code' => 200, 'ExpressList' => $ExpressList];
@@ -328,21 +328,21 @@ class Order extends AdminController {
         return $result;
     }
 
-        /**
+    /**
      * @api              {post} / 订单关键词搜索统计
      * @apiDescription   searchKeywordOrders
      * @apiGroup         admin_Orders
      * @apiName          searchKeywordOrders
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} keyword
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的keyword / 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的keyword /
      * @apiSuccess (返回) {String} order_num 总成交订单
      * @apiSuccess (返回) {String} all_goods_num 总成交数量
      * @apiSuccess (返回) {String} all_goods_price 总成交额
      * @apiSampleRequest /admin/Order/searchKeywordOrders
      * @author rzc
      */
-    public function searchKeywordOrders(){
+    public function searchKeywordOrders() {
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $keyword  = trim($this->request->post('keyword'));
         if (empty($keyword)) {

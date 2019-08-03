@@ -84,9 +84,9 @@ class Admin extends CommonIndex {
         $adminInfo = DbAdmin::getAdminInfo([['id', '<>', 1]], 'id,admin_name,department,stype,status');
         foreach ($adminInfo as &$ai) {
             $ai['group'] = $adminGroup[$ai['id']] ?? [];
-            $keyword = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $ai['id']);
-            $newkeyword = join(',',$keyword);
-            $ai['keyword'] = $newkeyword;
+            // $keyword = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $ai['id']);
+            // $newkeyword = join(',',$keyword);
+            $ai['keyword'] = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $ai['id']);
         }
         unset($ai);
         return ['code' => '200', 'data' => $adminInfo];
