@@ -1,6 +1,7 @@
 .idea
 *.log
 .env
+.vscode
 thinkphp/
 public/doc/
 SQL/

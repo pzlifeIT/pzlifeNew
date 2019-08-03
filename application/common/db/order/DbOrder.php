@@ -103,6 +103,12 @@ class DbOrder {
         return $order->saveAll($data);
     }
 
+    public function addOneOrderChild($data) {
+        $order = new OrderChild();
+        $order->save($data);
+        return  $order->id;
+    }
+
     public function getOrderCount($where) {
         $obj = Orders::where($where);
         return $obj->count();
@@ -127,6 +133,11 @@ class DbOrder {
         return $orderGoods->saveAll($data);
     }
 
+    public function addOneOrderGood($data) {
+        $orderGoods = new OrderGoods();
+        $orderGoods->save($data);
+        return $orderGoods->id;
+    }
     /**
      * 获取订单商品
      * @param $field

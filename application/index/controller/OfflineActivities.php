@@ -7,6 +7,11 @@ use app\index\MyController;
 
 //
 class OfflineActivities extends MyController {
+    protected $beforeActionList = [
+        // 'isLogin', //所有方法的前置操作
+        'isLogin' => ['except' => 'getOfflineActivities,createOrderQrCode,LuckGoods,getHdLucky'], //除去getFirstCate其他方法都进行second前置操作
+        //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+    ];
     /**
      * @api              {post} / 线下活动
      * @apiDescription   getOfflineActivities
@@ -118,12 +123,12 @@ class OfflineActivities extends MyController {
     }
 
     /**
-     * @api              {get} / 6/10期 抽奖奖品
+     * @api              {get} /  抽奖奖品
      * @apiDescription   LuckGoods
      * @apiGroup         index_OfflineActivities
      * @apiName          LuckGoods
      * @apiParam (入参) {Number} con_id
-     *  @apiSuccess (返回) {String}  code 错误码 / 3002 参数为空或者加密参数格式有误
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001 抽奖奖品为空
      * @apiSuccess (返回) {String}  LuckGoods 奖品
      * @apiSuccess (LuckGoods) {String}  shop_num 奖品编号
      * @apiSuccess (LuckGoods) {String}  goods_name 奖品名称
@@ -142,7 +147,9 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          luckyDraw
      * @apiParam (入参) {String} con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.用户不存在 / 3002.con_id有误 / 3003:已参与抽奖 / 3004:奖品已全部抽完 / 3005:操作失败
+     * @apiParam (入参) {String} hd_id 活动ID
+     * @apiParam (入参) {Int} timekey 奖品时间戳
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.用户不存在 / 3002.con_id有误 / 3003:已参与抽奖 / 3004:奖品已全部抽完 / 3005:操作失败 / 3006:活动过期，请刷新页面 / 3007:timekey错误 / 3008:已无可中奖品 / 3009:今天抽奖次数已用完
      * @apiSuccess (返回) {Int} shop_num 中奖编号
      * @apiSampleRequest /index/OfflineActivities/luckydraw
      * @author zyr
@@ -150,13 +157,18 @@ class OfflineActivities extends MyController {
     public function luckyDraw() {
         $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
+        $hd_id   = trim($this->request->post('hd_id'));
+        $timekey = trim($this->request->post('timekey'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3002'];
         }
-        $result = $this->app->offlineactivities->luckyDraw($conId);
+        if (empty($timekey) || !is_numeric($timekey)) {
+            return ['code' => '3007'];
+        }
+        $result = $this->app->offlineactivities->luckyDraw($conId, $hd_id, $timekey);
 //        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
@@ -194,9 +206,11 @@ class OfflineActivities extends MyController {
      * @apiGroup         index_OfflineActivities
      * @apiName          getUserHdLucky
      * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} [id] 查询具体抽奖详情
      * @apiParam (入参) {Number} [page] 页码
      * @apiParam (入参) {Number} [pageNum] 页码
-     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数
+     * @apiParam (入参) {Number} [is_debris] 查询碎片奖品 1查询，空或者不传则不查
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:缺少参数 / 3003:is_debris错误
      * @apiSuccess (返回) {String}  winnings 中奖记录
      * @apiSuccess (winnings) {String}  shop_num 奖品编号
      * @apiSuccess (winnings) {String}  goods_name 奖品名称
@@ -206,18 +220,111 @@ class OfflineActivities extends MyController {
      * @author rzc
      */
     public function getUserHdLucky() {
-        $conId   = trim($this->request->post('con_id'));
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pageNum'));
-        $page    = is_numeric($page) ? $page : 1;
-        $pagenum = is_numeric($pagenum) ? $pagenum : 10;
+        $conId     = trim($this->request->post('con_id'));
+        $page      = trim($this->request->post('page'));
+        $pagenum   = trim($this->request->post('pageNum'));
+        $is_debris = trim($this->request->post('is_debris'));
+        $id        = trim($this->request->post('id'));
+        $page      = is_numeric($page) ? $page : 1;
+        $pagenum   = is_numeric($pagenum) ? $pagenum : 10;
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum);
+        if (!empty($is_debris) && $is_debris != 1) {
+            return ['code' => '3003'];
+        }
+        $result = $this->app->offlineactivities->getUserHdLucky($conId, $page, $pagenum, $is_debris, $id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 通用碎片兑换其他碎片
+     * @apiDescription   userDebrisChange
+     * @apiGroup         index_OfflineActivities
+     * @apiName          userDebrisChange
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} use_id 使用碎片的id
+     * @apiParam (入参) {Number} use_number 使用碎片的数量
+     * @apiParam (入参) {Number} chage_id 兑换碎片的id
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:use_debris参数错误 / 3002:chage_debris参数错误 / 3003:您不具有该碎片 / 3004:您暂时无法兑换该碎片 / 3005:通用碎片数量不足，
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  shop_num 奖品编号
+     * @apiSuccess (winnings) {String}  goods_name 奖品名称
+     * @apiSuccess (winnings) {String}  image_path 图片地址
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/userDebrisChange
+     * @author rzc
+     */
+    public function userDebrisChange() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
+        $use_id     = trim($this->request->post('use_id'));
+        $use_number = trim($this->request->post('use_number'));
+        $chage_id   = trim($this->request->post('chage_id'));
+        $use_number = is_numeric($use_number) ? $use_number : 1;
+        if (empty($use_id) || !is_numeric($use_id)) {
+            return ['code' => '3001'];
+        }
+        if (empty($chage_id) || !is_numeric($chage_id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->userDebrisChange($conId, $use_id, $chage_id, $use_number);
+        $this->apiLog($apiName, [$conId, $use_id, $chage_id, $use_number], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 奖品碎片合成
+     * @apiDescription   userDebrisCompound
+     * @apiGroup         index_OfflineActivities
+     * @apiName          userDebrisCompound
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} use_id 合成ID
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:use_id参数错误 / 3003:is_debris错误 / 3004:未查询到该奖品碎片记录 / 3005:碎片不够，无法合成
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/userDebrisCompound
+     * @author rzc
+     */
+    public function userDebrisCompound() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $use_id  = trim($this->request->post('use_id'));
+        if (empty($use_id) || !is_numeric($use_id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->userDebrisCompound($conId, $use_id);
+        $this->apiLog($apiName, [$conId, $use_id], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 奖品领取
+     * @apiDescription   receivePrize
+     * @apiGroup         index_OfflineActivities
+     * @apiName          receivePrize
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} receive_id 领奖的奖品ID
+     * @apiParam (入参) {Number} [user_address_id] 地址ID,商品领取需要填写地址
+     *  @apiSuccess (返回) {String}  code 错误码 / 3001:con_id长度只能是28位 / 3002:receive_id参数错误 / 3003:is_debris错误 / 3004:未查询配送地址 / 3005:领取失败 / 3006:无效的商品或者优惠券 / 3007:有未使用的优惠券 / 3008:已是钻石会员无法领取
+     * @apiSuccess (返回) {String}  winnings 中奖记录
+     * @apiSuccess (winnings) {String}  user 用户
+     * @apiSampleRequest /index/OfflineActivities/receivePrize
+     * @author rzc
+     */
+    public function receivePrize() {
+        $apiName         = classBasename($this) . '/' . __function__;
+        $conId           = trim($this->request->post('con_id'));
+        $receive_id      = trim($this->request->post('receive_id'));
+        $user_address_id = trim($this->request->post('user_address_id'));
+        if (empty($receive_id) || !is_numeric($receive_id)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->offlineactivities->receivePrize($conId, $receive_id, $user_address_id);
+        $this->apiLog($apiName, [$conId, $receive_id], $result['code'], $conId);
         return $result;
     }
 }

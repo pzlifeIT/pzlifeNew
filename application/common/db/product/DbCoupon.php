@@ -3,6 +3,8 @@
 namespace app\common\db\product;
 
 use app\common\model\Coupon;
+use app\common\model\Hd;
+use app\common\model\HdGoods;
 use app\common\model\CouponHd;
 use app\common\model\CouponHdRelation;
 use app\common\model\UserCoupon;
@@ -106,5 +108,51 @@ class DbCoupon {
     private function countNum($name, $where) {
         $obj = call_user_func_array(['app\\common\\model\\' . $name, 'where'], [$where]);
         return $obj->count();
+    }
+
+    public function getHd( $where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = Hd::field($field);
+        $obj = $obj->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function getHdCount($where) {
+        $obj = Hd::where($where);
+        return $obj->count();
+    }
+    public function saveHd($data){
+        $Hd = new Hd;
+        $Hd->save($data);
+        return $Hd->id;
+    }
+
+    public function updateHd($data, $id){
+        $Hd = new Hd;
+        return $Hd->save($data,['id' => $id]);
+    }
+
+    public function saveHdGoods($data){
+        $HdGoods = new HdGoods;
+        $HdGoods->save($data);
+        return $HdGoods->id;
+    }
+    public function updateHdGoods($data, $id){
+        $HdGoods = new HdGoods;
+        return $HdGoods->save($data,['id' => $id]);
+    }
+
+    public function getHdGoods( $where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = HdGoods::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function countgetHdGoods($where){
+        $obj = HdGoods::where($where);
+        return $obj->count();
+    }
+
+    public function sumgetHdGoods($where,$field){
+        $obj = HdGoods::where($where);
+        return $obj->sum($field);
     }
 }
