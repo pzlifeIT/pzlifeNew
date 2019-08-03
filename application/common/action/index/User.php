@@ -894,8 +894,14 @@ class User extends CommonIndex {
         if ($user['user_identity'] == 4) {
             $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
         } else {
-            $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' . $uid . ',%']], 'relation');
+            $user_Relation = DbUser::getUserRelation([['uid', '=', $uid]], 'relation', true);
+            if ($user_Relation['relation'] == $uid) {
+                $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
+            }else{
+                $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' . $uid . ',%']], 'relation');
+            }
         }
+        // echo Db::getLastSql();die;
         $reg = [];
         foreach ($userRelation as $ur) {
             $rel    = substr($ur['relation'], strlen($uid . ','));
