@@ -729,6 +729,9 @@ class DbUser {
         if (empty($price)) {
             return 0;
         }
+        if (empty($price[0]['price'])) {
+            return 0;
+        }
         return $price[0]['price'];
     }
 }
