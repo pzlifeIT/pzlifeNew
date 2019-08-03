@@ -897,12 +897,13 @@ class User extends CommonIndex {
             $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' .$uid . ',%']], 'relation');
         }
         $reg          = [];
-        foreach ($userRelation as $ur) {
-            $rel    = substr($ur['relation'], strlen($uid . ','));
-            $uidArr = explode(',', $rel);
-            $reg    = array_merge($reg, $uidArr);
-        }
-        $regCount = count(array_unique($reg));
+        $regCount = count($userRelation);
+        // foreach ($userRelation as $ur) {
+        //     $rel    = substr($ur['relation'], strlen($uid . ','));
+        //     $uidArr = explode(',', $rel);
+        //     $reg    = array_merge($reg, $uidArr);
+        // }
+        // $regCount = count(array_unique($reg));
         return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => $regCount];
     }
 
