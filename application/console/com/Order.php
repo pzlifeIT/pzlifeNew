@@ -203,7 +203,7 @@ class Order extends Pzlife {
         $data         = [];
         $tradingData  = [];
         $integralData = [];
-        $this->redis->rPush($redisListKey, 1156);
+        // $this->redis->rPush($redisListKey, 1156);
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
