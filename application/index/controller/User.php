@@ -1806,4 +1806,72 @@ class User extends MyController {
         $this->apiLog($apiName, [$conId, $couponHdId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 查询创业佣金
+     * @apiDescription   getUserBusinessMoney
+     * @apiGroup         index_user
+     * @apiName          getUserBusinessMoney
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} type 1.可分佣 2.不可分佣(只有渠道的3%收益)
+     * @apiParam (入参) {Int} [wtype] 可分佣的类型 1.个人消费收益 2.直属普通会员收益 3.直属钻石会员收益
+     * @apiParam (入参) {Int} [page] 当前页(默认1)
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:type参数有误 / 3002:wtype参数错误 / 3003:page有误 / 3004:page_num有误 / 3005:暂无查看权限
+     * @apiSuccess (返回) {String} all_price 总金额
+     * @apiSuccess (返回) {String} own_price 个人消费金额返利
+     * @apiSuccess (返回) {String} vip_price 普通会员消费收益
+     * @apiSuccess (返回) {String} dimondvip_price 钻石会员消费收益
+     * @apiSuccess (返回) {String} other_price 其他收益（暂无）
+     * @apiSuccess (返回) {Array} businessmoney 列表信息
+     * @apiSuccess (businessmoney) {String} order_no 订单号
+     * @apiSuccess (businessmoney) {String} price 返利金额
+     * @apiSuccess (businessmoney) {String} nick_name 昵称
+     * @apiSuccess (businessmoney) {String} avatar 头像
+     * @apiSampleRequest /index/user/getUserBusinessMoney
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoney(){
+        $conId   = trim($this->request->post('con_id'));
+        $type    = trim($this->request->post('type'));
+        $wtype   = trim($this->request->post('wtype'));
+        $page       = trim($this->request->post('page'));
+        $pageNum    = trim($this->request->post('page_num'));
+        if (!is_numeric($type) || !in_array($type, [1, 2])) {
+            return ['code' => '3001'];
+        }
+        if (!empty($wtype) && !in_array($wtype, [1, 2, 3])) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($page) && !empty($page)) {
+            return ["code" => '3003'];
+        }
+        if (!is_numeric($pageNum) && !empty($pageNum)) {
+            return ["code" => '3004'];
+        }
+        $page    = $page > 0 ? intval($page) : 1;
+        $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
+        $result = $this->app->user->getUserBusinessMoney($conId, $type, $wtype, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询创业佣金总计
+     * @apiDescription   getUserBusinessMoneyTotal
+     * @apiGroup         index_user
+     * @apiName          getUserBusinessMoneyTotal
+     * @apiParam (入参) {String} con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:type参数有误 / 3002:wtype参数错误 / 3003:page有误 / 3004:page_num有误 / 3005:暂无查看权限
+     * @apiSuccess (返回) {String} no_price 不可分佣
+     * @apiSuccess (返回) {String} can_price 可分佣
+     * @apiSampleRequest /index/user/getUserBusinessMoneyTotal
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoneyTotal(){
+        $conId   = trim($this->request->post('con_id'));
+        $result = $this->app->user->getUserBusinessMoneyTotal($conId);
+        return $result;
+    }
 }

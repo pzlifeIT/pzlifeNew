@@ -290,7 +290,7 @@ class DbUser {
      * @author zyr
      */
     public function modifyBounty($uid, $bounty, $modify = 'dec') {
-        $user           = Users::get($uid);
+        $user         = Users::get($uid);
         $user->bounty = [$modify, $bounty];
         $user->save();
     }
@@ -658,5 +658,77 @@ class DbUser {
             ];
         }
         return $where;
+    }
+
+    public function getUserBusinessCircle($where, $limit) {
+        array_push($where, ['delete_time', '=', '0']);
+        $subSql = Db::table('pz_user_relation')
+            ->field('uid,pid,relation')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,u.nick_name,u.avatar,u.user_identity')
+            ->leftJoin([$subSql => 'p'], 'u.id = p.uid')
+            ->where($where)
+            ->order('id desc')
+            ->limit($limit)
+            ->select();
+    }
+
+    public function countUserBusinessCircle($where) {
+        array_push($where, ['delete_time', '=', '0']);
+        $subSql = Db::table('pz_user_relation')
+            ->field('uid,pid,relation')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('uid,u.nick_name,u.avatar,u.user_identity')
+            ->leftJoin([$subSql => 'p'], 'u.id = p.uid')
+            ->where($where)
+            ->count();
+    }
+
+    public function getLogBonusGroupOrder($where, $limit) {
+        array_push($where, ['delete_time', '=', '0']);
+        // $obj = LogBonus::field('level_uid,sum(result_price) as price')->where($where);
+        // return $obj->group('level_uid')->limit($limit)->order('price desc')->select()->toArray();
+        // $subSql = Db::table('pz_log_bonus')
+        //     ->field('level_uid,sum(result_price) as price')
+        //     ->where($where)
+        //     ->group('level_uid')
+        //     ->order('price desc')
+        //     ->buildSql();
+
+        $subSql = Db::table('pz_log_bonus')
+            ->field('order_no,to_uid,layer,from_uid,level_uid,sum(result_price) as price')
+            ->group('order_no,to_uid,layer,from_uid,level_uid')
+            ->order('price desc')
+            ->buildSql();
+        return Db::table('pz_users')
+            ->alias('u')
+            ->field('order_no,to_uid,layer,from_uid,level_uid,from_uid,p.price,u.nick_name,u.avatar,u.user_identity')
+            ->leftJoin([$subSql => 'p'], 'u.id = p.from_uid')
+            ->order('p.price desc,id desc')
+            ->where($where)
+            ->limit($limit)
+            ->select();
+    }
+
+    public function sumLogBonus($where, $field) {
+        array_push($where, ['delete_time', '=', '0']);
+        $LogBonus = new LogBonus;
+        return $LogBonus::where($where)->sum($field);
+    }
+    public function sumLogBonusBy($where) {
+        $price = Db::query("SELECT Sum(pz_log_bonus.result_price) AS price 
+        FROM pz_log_bonus LEFT JOIN 
+        pz_users ON pz_log_bonus.level_uid = pz_users.id 
+        WHERE pz_log_bonus.to_uid = ".$where['to_uid']." 
+        AND pz_log_bonus.layer IN (".$where['layer'].") 
+        AND pz_users.user_identity =  ".$where['user_identity']);
+        if (empty($price)) {
+            return 0;
+        }
+        return $price[0]['price'];
     }
 }

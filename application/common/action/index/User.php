@@ -874,7 +874,7 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] != '4') {
+        if ($user['user_identity'] < '2') {
             return ['code' => '3000']; //boss才有权限查看
         }
         // $diamonUserList = DbUser::getUserRelation([['pid', '=', $uid], ['is_boss', '=', '2']], 'uid');
@@ -911,7 +911,7 @@ class User extends CommonIndex {
         if (empty($user)) {
             return ['code' => '3003'];
         }
-        if ($user['user_identity'] != '4') {
+        if ($user['user_identity'] < '2') {
             return ['code' => '3000']; //boss才有权限查看
         }
         $offset = ($page - 1) * $pageNum;
@@ -2779,4 +2779,89 @@ class User extends CommonIndex {
         return $result;
     }
 
+    /**
+     * @param $conId
+     * @param $type
+     * @param $wtype
+     * @param $page
+     * @param $pageNum
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoney($conId, int $type, $wtype = 0, int $page, int $pageNum){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3005'];
+        }
+        $where = [];
+        $own_price = 0;
+        $vip_price = 0;
+        $dimondvip_price = 0;
+        $other_price = 0; 
+        if ($type == 2) {
+            if ($userInfo['user_market'] != 2) {
+                return ['code' => '3005'];
+            }
+            array_push($where,[['layer', 'in','3,4,5']]);
+            array_push($where,[['to_uid', '=',$uid]]);
+            //总收益
+            $all_price = DbUser::sumLogBonus($where, 'result_price');
+        }
+        if ($type == 1) {
+            array_push($where,[['to_uid', '=',$uid]]);
+            array_push($where,[['layer', 'in','1,2']]);
+            //总收益
+            $all_price = DbUser::sumLogBonus($where, 'result_price');
+            if ($wtype == 1) {//个人消费收益
+                array_push($where,[['from_uid', '=', $uid]]);
+                
+            }elseif ($wtype == 2) {
+                array_push($where,[['u.user_identity', '=', 1]]);
+                
+            }elseif ($wtype == 3) {
+                array_push($where,[['u.user_identity', '=', 2]]);
+                
+            }
+            $own_price = DbUser::sumLogBonus([['to_uid', '=',$uid],['layer', 'in','1,2,3'],['from_uid', '=', $uid]], 'result_price');
+            $vip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+            $dimondvip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+        }
+        $offset = ($page - 1) * $pageNum;
+        $result = DbUser::getLogBonusGroupOrder($where, $offset.','.$pageNum);
+        
+        // echo Db::getLastSql();die;
+        return ['code' => '200', 'all_price' => $all_price, 'own_price' => $own_price, 'vip_price' => $vip_price, 'dimondvip_price' => $dimondvip_price, 'other_price' => $other_price, 'businessmoney' => $result];
+    }
+
+    /**
+     * @param $conId
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoneyTotal($conId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3005'];
+        }
+    
+            //不可总收益
+        $no_price = DbUser::sumLogBonus([['layer', 'in','3,4,5'],['to_uid', '=',$uid]], 'result_price');
+        //可分佣总收益
+        $can_price = DbUser::sumLogBonus([['layer', 'in','1,2'],['to_uid', '=',$uid]], 'result_price');
+        return ['code' => '200', 'no_price' => $no_price, 'can_price' => $can_price];
+    }
 }
