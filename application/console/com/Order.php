@@ -203,7 +203,7 @@ class Order extends Pzlife {
         $data         = [];
         $tradingData  = [];
         $integralData = [];
-        $this->redis->rPush($redisListKey, 1156);
+        // $this->redis->rPush($redisListKey, 1164);
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -434,7 +434,7 @@ class Order extends Pzlife {
             if ($identity != 1) {
                 $firstUid = $uid;
             }
-            return ['first_uid' => $firstUid, 'second_uid' => 1, 'third_uid' => 1];
+            return ['first_uid' => $firstUid, 'second_uid' => 1, 'third_uid' => 1, 'fourth_uid' => 1, 'fifth_uid' => 1];
         }
         $firstUid  = 1; //默认总店
         $secondUid = 1; //默认总店
