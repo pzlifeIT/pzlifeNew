@@ -521,4 +521,29 @@ class Order extends CommonIndex {
         curl_close($curl);
         return $res;
     }
+
+    /**
+     * 修改订单发货信息
+     * @param $cmsConId
+     * @param $keyword
+     * @return array
+     * @author rzc
+     */
+    public function searchKeywordOrders($cmsConId, $keyword){
+        $adminId = $this->getUidByConId($cmsConId);
+        if (!$this->redis->hget(Config::get('rediskey.cms.redisCmsSearchKeyword') . $adminId,$keyword)) {
+            return ['code' => '3002'];
+        }
+        $order_num = DbOrder::getOrderGoodsGroup($keyword);
+        $all_goods_num = 0;
+        $all_goods_price = 0;
+        $all_order_num = count($order_num);
+        if (!empty($order_num)) {
+            foreach ($order_num as $order => $value) {
+                $all_goods_num = bcadd($all_goods_num, $value['goods_num']);
+                $all_goods_price = bcadd($all_goods_price, $value['goods_price'], 2);
+            }
+        }
+        return ['code' => '200', 'order_num' => $all_order_num, 'all_goods_num' => $all_goods_num, 'all_goods_price' => $all_goods_price];
+    }
 }
