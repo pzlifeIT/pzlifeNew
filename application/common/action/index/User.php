@@ -487,7 +487,7 @@ class User extends CommonIndex {
         ], 'cost'); //招商加盟收益
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 8, 11, 12 , 13]],
+            ['change_type', 'in', [3, 4, 5, 8, 11, 12, 13]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //商券总额
@@ -707,7 +707,7 @@ class User extends CommonIndex {
         }
         $commissionAll = DbUser::getLogTradingSum([
             ['trading_type', '=', '2'],
-            ['change_type', 'in', [3, 4, 5, 8, 11, 12 , 13]],
+            ['change_type', 'in', [3, 4, 5, 8, 11, 12, 13]],
             ['money', '>', 0],
             ['uid', '=', $uid],
         ], 'money'); //佣金总额
@@ -889,21 +889,21 @@ class User extends CommonIndex {
         // $userCount = bcsub($allCount, $diamondRing, 2);
         // return ['code' => '200', 'diamon_count' => $diamondRing, 'user_count' => $userCount, 'all_user' => $allCount];
 
-        $readCount    = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
-        $grantCount   = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
+        $readCount  = DbUser::getUserReadSum([['view_uid', '=', $uid]], 'read_count');
+        $grantCount = DbUser::getUserReadSum([['view_uid', '=', $uid], ['nick_name', '<>', '']], 'read_count');
         if ($user['user_identity'] == 4) {
             $userRelation = DbUser::getUserRelation([['relation', 'like', $uid . ',%']], 'relation');
         } else {
-            $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' .$uid . ',%']], 'relation');
+            $userRelation = DbUser::getUserRelation([['relation', 'like', '%,' . $uid . ',%']], 'relation');
         }
-        $reg          = [];
+        $reg = [];
         foreach ($userRelation as $ur) {
             $rel    = substr($ur['relation'], strlen($uid . ','));
             $uidArr = explode(',', $rel);
             $reg    = array_merge($reg, $uidArr);
         }
-        // $regCount = count(array_unique($reg));
-        $regCount = count(array_diff(array_unique($reg),[$uid]));
+        $regCount = count(array_unique($reg));
+        // $regCount = count(array_diff(array_unique($reg), [$uid]));
         return ['code' => '200', 'read_count' => $readCount, 'grant_count' => $grantCount, 'reg_count' => $regCount];
     }
 
@@ -1704,8 +1704,8 @@ class User extends CommonIndex {
             }
             // echo $result;die;
         } else {
-            $result = json_decode($result,true);
-            return ['code' => $result['errcode'],'errmsg' => $result['errmsg']];
+            $result = json_decode($result, true);
+            return ['code' => $result['errcode'], 'errmsg' => $result['errmsg']];
 
         }
     }
@@ -2527,15 +2527,15 @@ class User extends CommonIndex {
             $uid = $this->checkAccount($mobile); //通过手机号获取uid
             Db::startTrans();
             try {
-                $conId = $this->createConId();
+                $conId     = $this->createConId();
                 $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
                 DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
                 $this->redis->zAdd($this->redisConIdTime, time(), $conId);
                 $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
-               if ($conUid === false) {
-                   $this->redis->zDelete($this->redisConIdTime, $conId);
-                   $this->redis->hDel($this->redisConIdUid, $conId);
-                   Db::rollback();
+                if ($conUid === false) {
+                    $this->redis->zDelete($this->redisConIdTime, $conId);
+                    $this->redis->hDel($this->redisConIdUid, $conId);
+                    Db::rollback();
                 }
                 $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
                 // $this->saveOpenid($uid, $wxInfo['openid'], 2);
@@ -2566,15 +2566,15 @@ class User extends CommonIndex {
             if (!empty($user['mobile'])) { //该微信号已绑定
                 Db::startTrans();
                 try {
-                    $conId = $this->createConId();
+                    $conId     = $this->createConId();
                     $userconID = DbUser::getUserCon(['uid' => $uid], 'id', true);
                     DbUser::updateUserCon(['con_id' => $conId], ['id' => $userconID['id']]);
                     $this->redis->zAdd($this->redisConIdTime, time(), $conId);
                     $conUid = $this->redis->hSet($this->redisConIdUid, $conId, $uid);
-                   if ($conUid === false) {
-                       $this->redis->zDelete($this->redisConIdTime, $conId);
-                       $this->redis->hDel($this->redisConIdUid, $conId);
-                       Db::rollback();
+                    if ($conUid === false) {
+                        $this->redis->zDelete($this->redisConIdTime, $conId);
+                        $this->redis->hDel($this->redisConIdUid, $conId);
+                        Db::rollback();
                     }
                     $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
                     // $this->saveOpenid($uid, $wxInfo['openid'], 2);
@@ -2674,7 +2674,7 @@ class User extends CommonIndex {
             return ['code' => '3002'];
         }
         $coupon = DbCoupon::getCoupon(['id' => $couponId], 'price,gs_id,level,stype,is_superposition,title,days', true);
-        if (empty($coupon)) {//优惠券不存在
+        if (empty($coupon)) { //优惠券不存在
             return ['code' => '3003'];
         }
         $userCoupon = DbCoupon::getUserCoupon([
@@ -2682,8 +2682,8 @@ class User extends CommonIndex {
             ['is_use', '=', 2],
             ['uid', '=', $uid],
             ['end_time', '>=', time()],
-        ], 'id', true);//未使用的
-        if (!empty($userCoupon)) {//有未使用的优惠券
+        ], 'id', true); //未使用的
+        if (!empty($userCoupon)) { //有未使用的优惠券
             return ['code' => '3004'];
         }
         $coupon['uid']       = $uid;
@@ -2697,7 +2697,7 @@ class User extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//领取失败
+            return ['code' => '3005']; //领取失败
         }
     }
 
@@ -2738,13 +2738,13 @@ class User extends CommonIndex {
         if (empty($result)) {
             return ['code' => '200', 'data' => $result, 'total' => 0];
         }
-        $count             = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
+        $count        = DbCoupon::countCouponHdRelation([['coupon_hd_id', '=', $couponHdId]]);
         $couponIdList = DbCoupon::getUserCoupon([
             ['uid', '=', $uid],
             ['is_use', '=', 2],
             ['end_time', '>=', time()],
         ], 'coupon_id');
-        $couponIdList      = array_column($couponIdList, 'coupon_id');//用户拥有的未使用优惠券
+        $couponIdList      = array_column($couponIdList, 'coupon_id'); //用户拥有的未使用优惠券
         $result['coupons'] = array_map(function ($var) use ($couponIdList) {
             unset($var['pivot']);
             $var['is_have'] = 2;
@@ -2793,7 +2793,7 @@ class User extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getUserBusinessMoney($conId, int $type, $wtype = 0, int $page, int $pageNum){
+    public function getUserBusinessMoney($conId, int $type, $wtype = 0, int $page, int $pageNum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
             return ['code' => '3004'];
@@ -2805,42 +2805,42 @@ class User extends CommonIndex {
         if ($userInfo['user_identity'] != 3) {
             return ['code' => '3005'];
         }
-        $where = [];
-        $own_price = 0;
-        $vip_price = 0;
+        $where           = [];
+        $own_price       = 0;
+        $vip_price       = 0;
         $dimondvip_price = 0;
-        $other_price = 0; 
+        $other_price     = 0;
         if ($type == 2) {
             if ($userInfo['user_market'] != 2) {
                 return ['code' => '3005'];
             }
-            array_push($where,[['layer', 'in','3,4,5']]);
-            array_push($where,[['to_uid', '=',$uid]]);
+            array_push($where, [['layer', 'in', '3,4,5']]);
+            array_push($where, [['to_uid', '=', $uid]]);
             //总收益
             $all_price = DbUser::sumLogBonus($where, 'result_price');
         }
         if ($type == 1) {
-            array_push($where,[['to_uid', '=',$uid]]);
-            array_push($where,[['layer', 'in','1,2']]);
+            array_push($where, [['to_uid', '=', $uid]]);
+            array_push($where, [['layer', 'in', '1,2']]);
             //总收益
             $all_price = DbUser::sumLogBonus($where, 'result_price');
-            if ($wtype == 1) {//个人消费收益
-                array_push($where,[['from_uid', '=', $uid]]);
-                
-            }elseif ($wtype == 2) {
-                array_push($where,[['u.user_identity', '=', 1]]);
-                
-            }elseif ($wtype == 3) {
-                array_push($where,[['u.user_identity', '=', 2]]);
-                
+            if ($wtype == 1) { //个人消费收益
+                array_push($where, [['from_uid', '=', $uid]]);
+
+            } elseif ($wtype == 2) {
+                array_push($where, [['u.user_identity', '=', 1]]);
+
+            } elseif ($wtype == 3) {
+                array_push($where, [['u.user_identity', '=', 2]]);
+
             }
-            $own_price = DbUser::sumLogBonus([['to_uid', '=',$uid],['layer', 'in','1,2,3'],['from_uid', '=', $uid]], 'result_price');
-            $vip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
+            $own_price       = DbUser::sumLogBonus([['to_uid', '=', $uid], ['layer', 'in', '1,2,3'], ['from_uid', '=', $uid]], 'result_price');
+            $vip_price       = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
             $dimondvip_price = DbUser::sumLogBonusBy(['user_identity' => '1', 'to_uid' => $uid, 'layer' => '1,2,3']);
         }
         $offset = ($page - 1) * $pageNum;
-        $result = DbUser::getLogBonusGroupOrder($where, $offset.','.$pageNum);
-        
+        $result = DbUser::getLogBonusGroupOrder($where, $offset . ',' . $pageNum);
+
         // echo Db::getLastSql();die;
         return ['code' => '200', 'all_price' => $all_price, 'own_price' => $own_price, 'vip_price' => $vip_price, 'dimondvip_price' => $dimondvip_price, 'other_price' => $other_price, 'businessmoney' => $result];
     }
@@ -2850,7 +2850,7 @@ class User extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getUserBusinessMoneyTotal($conId){
+    public function getUserBusinessMoneyTotal($conId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
             return ['code' => '3004'];
@@ -2862,11 +2862,11 @@ class User extends CommonIndex {
         if ($userInfo['user_identity'] != 3) {
             return ['code' => '3005'];
         }
-    
-            //不可总收益
-        $no_price = DbUser::sumLogBonus([['layer', 'in','3,4,5'],['to_uid', '=',$uid]], 'result_price');
+
+        //不可总收益
+        $no_price = DbUser::sumLogBonus([['layer', 'in', '3,4,5'], ['to_uid', '=', $uid]], 'result_price');
         //可分佣总收益
-        $can_price = DbUser::sumLogBonus([['layer', 'in','1,2'],['to_uid', '=',$uid]], 'result_price');
+        $can_price = DbUser::sumLogBonus([['layer', 'in', '1,2'], ['to_uid', '=', $uid]], 'result_price');
         return ['code' => '200', 'no_price' => $no_price, 'can_price' => $can_price];
     }
 }
