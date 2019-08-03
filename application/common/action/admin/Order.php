@@ -534,6 +534,6 @@ class Order extends CommonIndex {
         if (!$this->redis->hget(Config::get('rediskey.cms.redisCmsSearchKeyword') . $adminId,$keyword)) {
             return ['code' => '3002'];
         }
-        return $keyword;
+        
     }
 }

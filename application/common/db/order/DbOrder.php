@@ -353,6 +353,18 @@ class DbOrder {
         }
         return $obj->select()->toArray();
     }
+
+    public function getOrderGoodsGroupCount( $where, $group = false, $distinct = false) {
+        $obj = OrderGoods::where($where);
+
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
+        if ($group) {
+            $obj = $obj->group($group);
+        }
+        return $obj->count();
+    }
 }
 
 
