@@ -355,7 +355,7 @@ class Rights extends MyController {
      * @apiParam (入参) {String} con_id 用户con_id
      * @apiParam (入参) {String} taskid 任务ID
      * @apiParam (入参) {Number} page 页码
-     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiParam (入参) {Number} page_num 查询记录条数
      * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:taskid必须是数字 / 3002:该任务不存在 / 3003:page错误
      * @apiSuccess (返回) {Array} task_invited
      * @apiSuccess (task_invited) {String} id
@@ -387,6 +387,49 @@ class Rights extends MyController {
         $page    = intval($page);
         $pageNum = intval($pageNum);
         $result = $this->app->rights->userTaskInfo($conId, $taskid, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询创业圈
+     * @apiDescription   getUserBusinessCircle
+     * @apiGroup         index_rights
+     * @apiName          getUserBusinessCircle
+     * @apiParam (入参) {String} con_id 用户con_id
+     * @apiParam (入参) {String} type 查询类型 1.创业店主 2.钻石会员 3.普通会员
+     * @apiParam (入参) {Number} page 页码
+     * @apiParam (入参) {String} page_num 查询记录条数
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:用户不存在 / 3001:type类型错误 / 3002:该用户无权限查看 / 3003:无效查询
+     * @apiSuccess (返回) {String} total 此次第一排查询累计数据
+     * @apiSuccess (返回) {Array} business 返回数据
+     * @apiSuccess (business) {String} uid 加密后uid
+     * @apiSuccess (business) {String} nick_name 昵称
+     * @apiSuccess (business) {String} avatar 头像
+     * @apiSuccess (business) {String} user_identity 会员身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiSuccess (business) {String} count 下级人数
+     * @apiSampleRequest /index/rights/getUserBusinessCircle
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessCircle(){
+        $conId   = trim($this->request->post('con_id'));
+        $type   = trim($this->request->post('type'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+
+        $typeData = [1, 2, 3];
+        if (!is_numeric($type) || !in_array($type, $typeData)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3003']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->rights->getUserBusinessCircle($conId, $type, $page, $pageNum);
         return $result;
     }
 }

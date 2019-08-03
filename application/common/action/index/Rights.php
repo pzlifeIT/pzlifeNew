@@ -1083,4 +1083,50 @@ $log_invest['cost']       = 5000;
         $task_invited = DbRights::getTaskInvited(['utask_id' => $taskid], '*', false, ['id' => 'asc'], $offset . ',' . $pageNum);
         return ['code' => '200', 'task_invited' => $task_invited];
     }
+
+    /**
+     * 获取用户创业圈
+     * @param $conId
+     * @param $type
+     * @return mixed
+     * @author rzc
+     */
+    public function getUserBusinessCircle($conId, $type, $page, $pageNum){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3000'];
+        }
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3002'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $where = [];
+        array_push($where,['pid' ,'=', $uid]);
+        
+        if ($type == 1) {
+            if ($userInfo['user_market'] == 0) {//创业店主
+               return ['code' => '3003'];
+           }
+           array_push($where,['user_identity' ,'=', 3]);
+        }
+        if ($type == 2) {
+            array_push($where,['user_identity' ,'=', 2]);
+        }
+        if ($type == 3) {
+            array_push($where,['user_identity' ,'=', 1]);
+        }
+        $business = DbUser::getUserBusinessCircle($where, $offset.','.$pageNum);
+        $total = DbUser::countUserBusinessCircle($where);
+        if (!empty($business)) {
+            foreach ($business as $key => $value) {
+                $business[$key]['count'] = DbUser::countUserBusinessCircle([['relation','like','%,'.$value['uid'].',%']]);
+                $business[$key]['uid'] = enUid($business[$key]['uid']);
+            }
+        }
+        return ['code' => '200', 'total' => $total, 'business' => $business];
+    }
 }
