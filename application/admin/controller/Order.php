@@ -336,8 +336,9 @@ class Order extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {String} keyword
      * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的keyword / 
-     * @apiSuccess (返回) {String} totle 总结果条数
-     * @apiSuccess (data) {object_array} data
+     * @apiSuccess (返回) {String} order_num 总成交订单
+     * @apiSuccess (返回) {String} all_goods_num 总成交数量
+     * @apiSuccess (返回) {String} all_goods_price 总成交额
      * @apiSampleRequest /admin/Order/searchKeywordOrders
      * @author rzc
      */
