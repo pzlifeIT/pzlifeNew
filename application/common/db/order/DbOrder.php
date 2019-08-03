@@ -329,6 +329,30 @@ class DbOrder {
         }
         return $obj->toArray();
     }
+
+    /**
+     * 获取订单商品
+     * @param $field
+     * @param $where
+     * @param $group
+     * @param $distinct
+     * @param $row
+     * @return array
+     */
+    public function getOrderGoodsGroup($field, $where, $group = false, $distinct = false, $row = false) {
+        $obj = OrderGoods::field($field)->where($where);
+
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
+        if ($group) {
+            $obj = $obj->group($group);
+        }
+        if ($row === true) {
+            return $obj->findOrEmpty()->toArray();
+        }
+        return $obj->select()->toArray();
+    }
 }
 
 
