@@ -203,7 +203,7 @@ class Order extends Pzlife {
         $data         = [];
         $tradingData  = [];
         $integralData = [];
-        // $this->redis->rPush($redisListKey, 971);
+        $this->redis->rPush($redisListKey, 1156);
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
@@ -348,7 +348,6 @@ class Order extends Pzlife {
                 }
             }
         }
-        print_r($data);die;
         Db::startTrans();
         try {
             if (!empty($data)) {
@@ -483,12 +482,12 @@ class Order extends Pzlife {
                 $thirdUid  = $this->getBoss($pBossUid);
             }
         } else if ($identity == 3 || $identity == 4) {
+            $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
             $firstUid  = $uid;
             $secondUid = $pBossUid;
             $thirdUid  = $this->getBoss($pBossUid);
             $myPidMarket   = $this->getMarket($myPid);
             if ($identity == 3) {
-                $myPid         = $myRelation['pid'] ?: 1; //直属上级uid
                 if ($myPid != 1 && $myPidMarket<1) {
                     $pRelation = $this->getRelation($myPid);
                     $pPuserMarket = $this->getMarket($pRelation['pid']);
@@ -549,7 +548,7 @@ class Order extends Pzlife {
         if ($uid == 1) {
             return 4;
         }
-        $userSql = sprintf("select user_identity from pz_users where delete_time=0 and id=%d", $uid);
+        $userSql = sprintf("select user_market from pz_users where delete_time=0 and id=%d", $uid);
         $user    = Db::query($userSql);
         return $user[0]['user_market'];
     }
