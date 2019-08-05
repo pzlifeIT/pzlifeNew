@@ -393,7 +393,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} attr_id 属性id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:规格不能为空 /3006:该商品未绑定这个属性 / 3007:提交失败/ 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:属性id必须为数字 / 3002:商品id必须为数字 / 3003:属性不存在 / 3004:商品不存在 / 3005:积分必须为大于或等于0的数字 /3006:该商品未绑定这个属性 / 3007:提交失败/ 3008:没有任何操作 / 3009:提交的属性分类和商品分类不同 / 3013:商品下架才能编辑
      * @apiSampleRequest /admin/goods/delgoodsspec
      * @return array
      * @author zyr
@@ -418,6 +418,156 @@ class Goods extends AdminController {
     }
 
     /**
+     * @api              {post} / 添加音频类商品的sku
+     * @apiDescription   addAudioSku
+     * @apiGroup         admin_goods
+     * @apiName          addAudioSku
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {String} audio_id_list 音频内容id列表(1,2,3,4逗号分割)
+     * @apiParam (入参) {Decimal} market_price 市场价
+     * @apiParam (入参) {Decimal} retail_price 零售价
+     * @apiParam (入参) {Decimal} cost_price 成本价
+     * @apiParam (入参) {Number} integral_price 积分售价
+     * @apiParam (入参) {Number} end_time 结束时间(按小时记)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败
+     * @apiSampleRequest /admin/goods/addaudiosku
+     * @return array
+     * @author zyr
+     */
+    public function addAudioSku() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $goodsId       = trim($this->request->post('goods_id'));//商品id
+        $audioIdList   = trim($this->request->post('audio_id_list'));//audio主键
+        $marketPrice   = trim($this->request->post('market_price'));//市场价
+        $retailPrice   = trim($this->request->post('retail_price'));//零售价
+        $costPrice     = trim($this->request->post('cost_price'));//成本价
+        $integralPrice = trim($this->request->post('integral_price', 0));//积分售价
+        $endTime       = trim($this->request->post('end_time'));//结束时间(按小时记)
+        if (!is_numeric($goodsId)) {
+            return ['code' => '3002'];//商品id必须为数字
+        }
+        $audioIdList = explode(',', $audioIdList);
+        $audioIdList = array_map(function ($v) {
+            if (is_numeric($v) && intval($v) > 0) {
+                return intval($v);
+            }
+            return 0;
+        }, $audioIdList);
+        if (in_array(0, $audioIdList)) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0) {//价格必须为大于或等于0的数字
+            return ['code' => '3004'];
+        }
+        if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+            return ['code' => '3005'];
+        }
+        $marketPrice = floatval($marketPrice);
+        $retailPrice = floatval($retailPrice);
+        $costPrice   = floatval($costPrice);
+        if (!is_numeric($endTime) || intval($endTime) < 0) {
+            return ['code' => '3006'];
+        }
+        //$audioIdList = implode(',', $audioIdList);
+        $result = $this->app->goods->addAudioSku(intval($goodsId), $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime);
+        $this->apiLog($apiName, [$cmsConId, $goodsId, implode(',', $audioIdList), $marketPrice, $retailPrice, $costPrice, $integralPrice], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改音频类商品的sku
+     * @apiDescription   saveAudioSku
+     * @apiGroup         admin_goods
+     * @apiName          saveAudioSku
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} sku_id 音频sku_id
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {String} [audio_id_list] 音频内容id列表(1,2,3,4逗号分割)
+     * @apiParam (入参) {Decimal} [market_price] 市场价
+     * @apiParam (入参) {Decimal} [retail_price] 零售价
+     * @apiParam (入参) {Decimal} cost[_price 成本价
+     * @apiParam (入参) {Number} [integral_price] 积分售价
+     * @apiParam (入参) {Number} [end_time] 结束时间(按小时记)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败
+     * @apiSampleRequest /admin/goods/saveAudioSku
+     * @return array
+     * @author rzc
+     */
+    public function saveAudioSku(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $sku_id        = trim($this->request->post('sku_id'));//商品id
+        $goodsId       = trim($this->request->post('goods_id'));//商品id
+        $audioIdList   = trim($this->request->post('audio_id_list'));//audio主键
+        $marketPrice   = trim($this->request->post('market_price'));//市场价
+        $retailPrice   = trim($this->request->post('retail_price'));//零售价
+        $costPrice     = trim($this->request->post('cost_price'));//成本价
+        $integralPrice = trim($this->request->post('integral_price', 0));//积分售价
+        $endTime       = trim($this->request->post('end_time'));//结束时间(按小时记)
+        if (!is_numeric($goodsId) || !is_numeric($sku_id)) {
+            return ['code' => '3002'];//商品id必须为数字
+        }
+        if (!empty($audioIdList)){
+            $audioIdList = explode(',', $audioIdList);
+            $audioIdList = array_map(function ($v) {
+                if (is_numeric($v) && intval($v) > 0) {
+                    return intval($v);
+                }
+                return 0;
+            }, $audioIdList);
+            if (in_array(0, $audioIdList)) {
+                return ['code' => '3001'];
+            }
+        }
+        if (!empty($marketPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($retailPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($costPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($costPrice) || floatval($costPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($integralPrice)){
+            if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+                return ['code' => '3005'];
+            }
+        }
+        $marketPrice = floatval($marketPrice);
+        $retailPrice = floatval($retailPrice);
+        $costPrice   = floatval($costPrice);
+        if (!empty($endTime)) {
+            if (!is_numeric($endTime) || intval($endTime) < 0) {
+                return ['code' => '3006'];
+            }
+        }
+        //$audioIdList = implode(',', $audioIdList);
+        $result = $this->app->goods->saveAudioSku(intval($goodsId), intval($sku_id), $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime);
+        if (!empty($audioIdList)) {
+            $audioIdList = implode(',', $audioIdList);
+        }else{
+            $audioIdList = '';
+        }
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $sku_id, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice], $result['code'], $cmsConId);
+        return $result;
+
+    }
+
+    /**
      * @api              {post} / 获取一个商品数据
      * @apiDescription   getOneGoods
      * @apiGroup         admin_goods
@@ -425,7 +575,8 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 商品id
      * @apiParam (入参) {Number} [get_type] 获取内容类型 1.只获取goods_data 2. 获取spec_attr 3.获取images_detatil和images_carousel  4.获取sku   默认为1,2,3,4
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002:id必须是数字 / 3003:get_type错误
+     * @apiParam (入参) {Number} [goods_type] 1.普通商品 2.音频商品
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:商品基本数据获取失败 /3002:id必须是数字 / 3003:get_type错误 / 3004:goods_type错误 / 3005:该商品不属于这个类型
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSuccess (返回) {Array} goods_data 商品数据
      * @apiSuccess (返回) {Array} images_detatil 商品详情图
@@ -465,12 +616,14 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function getOneGoods() {
-        $apiName    = classBasename($this) . '/' . __function__;
-        $cmsConId   = trim($this->request->post('cms_con_id')); //操作管理员
-        $getTypeArr = [1, 2, 3, 4];
-        $id         = trim(input("post.id"));
-        $getType    = trim($this->request->post('get_type'));
-        $getType    = empty($getType) ? '1,2,3,4' : $getType;
+        $apiName      = classBasename($this) . '/' . __function__;
+        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
+        $getTypeArr   = [1, 2, 3, 4];
+        $id           = trim(input("post.id"));
+        $getType      = trim($this->request->post('get_type'));
+        $getType      = empty($getType) ? '1,2,3,4' : $getType;
+        $goodsType    = trim($this->request->post('goods_type', 1));
+        $goodsTypeArr = [1, 2];
         if (!is_numeric($id)) {
             return ["code" => 3002];
         }
@@ -480,8 +633,11 @@ class Goods extends AdminController {
                 return ['code' => '3003'];
             }
         }
-        $res = $this->app->goods->getOneGoods($id, $getType);
-        $this->apiLog($apiName, [$cmsConId, $id, $getType], $res['code'], $cmsConId);
+        if (!in_array($goodsType, $goodsTypeArr)) {
+            return ['code' => '3004'];
+        }
+        $res = $this->app->goods->getOneGoods($id, $getType, $goodsType);
+        $this->apiLog($apiName, [$cmsConId, $id, $getType, $goodsType], $res['code'], $cmsConId);
         return $res;
     }
 
