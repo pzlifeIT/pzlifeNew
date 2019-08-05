@@ -419,6 +419,17 @@ class Goods extends CommonIndex {
         }
     }
 
+    /**
+     * 添加商品的音频商品规格属性
+     * @param $goodsId
+     * @param $audioIdList
+     * @param $marketPrice
+     * @param $retailPrice
+     * @param $costPrice
+     * @param $integralPrice
+     * @param $endTime
+     * @return array
+     */
     public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime) {
         $where    = [["id", "=", $goodsId]];
         $field    = "id,goods_type";
@@ -450,6 +461,77 @@ class Goods extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             print_r($e);
+            Db::rollback();
+            return ['code' => '3008'];//更新失败
+        }
+    }
+
+    /**
+     * 修改商品的音频商品规格属性
+     * @param $goodsId
+     * @param $sku_id
+     * @param $audioIdList
+     * @param $marketPrice
+     * @param $retailPrice
+     * @param $costPrice
+     * @param $integralPrice
+     * @param $endTime
+     * @return array
+     */
+    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime =0){
+        $where    = [["id", "=", $goodsId]];
+        $field    = "id,goods_type";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != 2) {
+            return ['code' => '3007'];
+        }
+        if (!DbAudios::getAudiosSku(['id' => $sku_id], 'id', true)){
+            return ['code' => '3009'];
+        }
+        $relation   = [];
+        $delrelation = [];
+        if (!empty($audioIdList)){
+            $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
+            if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+                return ['code' => '3003'];
+            }
+            $has_relation = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'id');
+            foreach ($has_relation as $value) {
+                array_push($delrelation,$value['id']);
+            }
+            foreach ($audioIdList as $val) {
+                array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $sku_id]);
+            }
+        }
+        $data = [];
+        if ($marketPrice) {
+            $data['market_price'] = $marketPrice;
+        }
+        if ($retailPrice) {
+            $data['retail_price'] = $retailPrice;
+        }
+        if ($costPrice) {
+            $data['cost_price'] = $costPrice;
+        }
+        if ($integralPrice) {
+            $data['integral_price'] = $integralPrice;
+        }
+        if ($endTime) {
+            $data['end_time'] = $endTime * 3600;
+        }
+        Db::startTrans();
+        try {
+            DbAudios::updateAudiosSku($data, $sku_id);
+            if (!empty($delrelation)) {
+                $del = DbAudios::delAudioSkuRelation($delrelation);
+            }
+            if (!empty($relation)) {
+                DbAudios::saveAllAudioSkuRelation($relation);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3008'];//更新失败
         }

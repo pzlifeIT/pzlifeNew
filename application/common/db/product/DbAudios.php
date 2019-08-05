@@ -18,6 +18,10 @@ class DbAudios extends Db {
         $audio->save($data,['id'=>$id]);
     }
 
+    public function countAudio($where){
+        return Audio::where($where)->count();
+    }
+
     public function saveAudioSku($data){
         $audioSku = new AudioSku();
         $audioSku->save($data);
@@ -27,5 +31,24 @@ class DbAudios extends Db {
     public function saveAllAudioSkuRelation($data){
         $audioSkuRelation = new AudioSkuRelation;
         $audioSkuRelation->saveAll($data);
+    }
+
+    public function getAudioSkuRelation($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = AudioSkuRelation::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function delAudioSkuRelation($ids){
+        return AudioSkuRelation::destroy($ids);
+    }
+
+    public function getAudiosSku($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = AudioSku::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function updateAudiosSku($data, $id){
+        $audioSku = new AudioSku;
+        return $audioSku->save($data, ['id' => $id]);
     }
 }

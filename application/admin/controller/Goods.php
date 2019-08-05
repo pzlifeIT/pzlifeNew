@@ -466,6 +466,94 @@ class Goods extends AdminController {
     }
 
     /**
+     * @api              {post} / 修改音频类商品的sku
+     * @apiDescription   saveAudioSku
+     * @apiGroup         admin_goods
+     * @apiName          saveAudioSku
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} sku_id 音频sku_id
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {String} [audio_id_list] 音频内容id列表(1,2,3,4逗号分割)
+     * @apiParam (入参) {Decimal} [market_price] 市场价
+     * @apiParam (入参) {Decimal} [retail_price] 零售价
+     * @apiParam (入参) {Decimal} cost[_price 成本价
+     * @apiParam (入参) {Number} [integral_price] 积分售价
+     * @apiParam (入参) {Number} [end_time] 结束时间(按小时记)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败
+     * @apiSampleRequest /admin/goods/saveAudioSku
+     * @return array
+     * @author rzc
+     */
+    public function saveAudioSku(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $sku_id        = trim($this->request->post('sku_id'));//商品id
+        $goodsId       = trim($this->request->post('goods_id'));//商品id
+        $audioIdList   = trim($this->request->post('audio_id_list'));//audio主键
+        $marketPrice   = trim($this->request->post('market_price'));//市场价
+        $retailPrice   = trim($this->request->post('retail_price'));//零售价
+        $costPrice     = trim($this->request->post('cost_price'));//成本价
+        $integralPrice = trim($this->request->post('integral_price', 0));//积分售价
+        $endTime       = trim($this->request->post('end_time'));//结束时间(按小时记)
+        if (!is_numeric($goodsId) || !is_numeric($sku_id)) {
+            return ['code' => '3002'];//商品id必须为数字
+        }
+        if (!empty($audioIdList)){
+            $audioIdList = explode(',', $audioIdList);
+            $audioIdList = array_map(function ($v) {
+                if (is_numeric($v) && intval($v) > 0) {
+                    return intval($v);
+                }
+                return 0;
+            }, $audioIdList);
+            if (in_array(0, $audioIdList)) {
+                return ['code' => '3001'];
+            }
+        }
+        if (!empty($marketPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($retailPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($costPrice)) {//价格必须为大于或等于0的数字
+            if (!is_numeric($costPrice) || floatval($costPrice) < 0) {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($integralPrice)){
+            if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+                return ['code' => '3005'];
+            }
+        }
+        $marketPrice = floatval($marketPrice);
+        $retailPrice = floatval($retailPrice);
+        $costPrice   = floatval($costPrice);
+        if (!empty($endTime)) {
+            if (!is_numeric($endTime) || intval($endTime) < 0) {
+                return ['code' => '3006'];
+            }
+        }
+        //$audioIdList = implode(',', $audioIdList);
+        $result = $this->app->goods->saveAudioSku(intval($goodsId), intval($sku_id), $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime);
+        if (!empty($audioIdList)) {
+            $audioIdList = implode(',', $audioIdList);
+        }else{
+            $audioIdList = '';
+        }
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $sku_id, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice], $result['code'], $cmsConId);
+        return $result;
+
+    }
+
+    /**
      * @api              {post} / 获取一个商品数据
      * @apiDescription   getOneGoods
      * @apiGroup         admin_goods
