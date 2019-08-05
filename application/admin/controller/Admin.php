@@ -1463,14 +1463,14 @@ class Admin extends AdminController {
 
     /**
      * @api              {post} / 删除管理员绑定搜索关键词
-     * @apiDescription   getAllManagerSearchKeyword
+     * @apiDescription   delManagerSearchKeyword
      * @apiGroup         admin_admin
-     * @apiName          getAllManagerSearchKeyword
+     * @apiName          delManagerSearchKeyword
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} admin_id 管理员id
      * @apiParam (入参) {String} keyword 关键词
      * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
-     * @apiSampleRequest /admin/admin/getAllManagerSearchKeyword
+     * @apiSampleRequest /admin/admin/delManagerSearchKeyword
      * @author rzc
      */
     public function delManagerSearchKeyword(){
