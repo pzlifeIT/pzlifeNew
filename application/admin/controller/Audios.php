@@ -39,6 +39,7 @@ class Audios extends AdminController {
      * @apiName          audiosList
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} [page] 当前页(默认1)
+     * @apiParam (入参) {Int} all 1查询全部
      * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
      * @apiSuccess (返回) {String} code 200:成功 /3001:更新失败
      * @apiSampleRequest /admin/audios/audioslist
@@ -51,11 +52,12 @@ class Audios extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
+        $all    = trim($this->request->post('all'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
         $page    = $page > 0 ? intval($page) : 1;
         $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
-        $result  = $this->app->audios->audiosList($page, $pageNum);
+        $result  = $this->app->audios->audiosList($page, $pageNum, $all);
         $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
         return $result;
     }

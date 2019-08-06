@@ -453,6 +453,7 @@ class Goods extends CommonIndex {
     /**
      * 添加商品的音频商品规格属性
      * @param $goodsId
+     * @param $name
      * @param $audioIdList
      * @param $marketPrice
      * @param $retailPrice
@@ -461,7 +462,7 @@ class Goods extends CommonIndex {
      * @param $endTime
      * @return array
      */
-    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime) {
+    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name) {
         $where    = [["id", "=", $goodsId]];
         $field    = "id,goods_type";
         $goodsOne = DbGoods::getOneGoods($where, $field);
@@ -474,6 +475,7 @@ class Goods extends CommonIndex {
         }
         $skuData = [
             'goods_id'       => $goodsId,
+            'name'           => $name,
             'market_price'   => $marketPrice,
             'retail_price'   => $retailPrice,
             'cost_price'     => $costPrice,
@@ -501,6 +503,7 @@ class Goods extends CommonIndex {
      * 修改商品的音频商品规格属性
      * @param $goodsId
      * @param $sku_id
+     * @param $name
      * @param $audioIdList
      * @param $marketPrice
      * @param $retailPrice
@@ -509,7 +512,7 @@ class Goods extends CommonIndex {
      * @param $endTime
      * @return array
      */
-    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime =0){
+    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime = 0, $name = ''){
         $where    = [["id", "=", $goodsId]];
         $field    = "id,goods_type,status";
         $goodsOne = DbGoods::getOneGoods($where, $field);
@@ -552,6 +555,9 @@ class Goods extends CommonIndex {
         }
         if ($endTime) {
             $data['end_time'] = $endTime * 3600;
+        }
+        if (!empty($name)) {
+            $data['name'] = $name;
         }
         Db::startTrans();
         try {
@@ -621,13 +627,11 @@ class Goods extends CommonIndex {
             }
             $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
             $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
-            $goods_data['supplier_name'] = '';
-            if ($goodsType == 1) {
-                $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
-                $goods_data['supplier_name'] = $supplier['name'];
-            }
             $goods_data['goods_name'] = htmlspecialchars_decode($goods_data['goods_name']);
         }
+        $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
+        $goods_data['supplier_name'] = '';
+        $goods_data['supplier_name'] = $supplier['name'];
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
         $imagesCarousel = [];
