@@ -88,7 +88,7 @@ class Goods extends CommonIndex {
         }
         /* 返回商品基本信息 （从商品库中直接查询）*/
         $where      = [["id", "=", $goods_id], ["status", "=", 1]];
-        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+        $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,share_image,status";
         $goods_data = DbGoods::getOneGoods($where, $field);
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在'];

@@ -106,12 +106,13 @@ class Goods extends CommonIndex {
             return ['code' => '3008'];
         }
         $logImage = [];
+        $logShareImage = [];
         if (!empty($goodsId)) {//更新操作
             $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
             if (!empty($goodsRepe)) {//商品name重复
                 return ['code' => '3006', 'goods_id' => $goodsRepe['id']];
             }
-            $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image');
+            $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image,share_image');
             $oldLogImage = [];
             if (!empty($data['image'])) {//提交了图片
                 $image    = filtraImage(Config::get('qiniu.domain'), $data['image']);
@@ -128,6 +129,21 @@ class Goods extends CommonIndex {
                 }
                 $data['image'] = $image;
             }
+            $oldLogShareImage = [];
+            if (!empty($data['share_image'])) {
+                $share_image = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
+                $logShareImage    = DbImage::getLogImage($share_image, 2); //判断时候有未完成的图片
+                if (empty($logShareImage)) {//分享图片不存在
+                    return ['code' => '3012'];//分享图片没有上传过
+                }
+                $oldShareImage = $goods['share_image'];
+                if (!empty($oldShareImage)) {
+                    if (stripos($oldShareImage, 'http') === false) {//新版本图片
+                        $oldLogShareImage = DbImage::getLogImage($oldShareImage, 1);//之前在使用的图片日志
+                    }
+                }
+                $data['share_image'] = $share_image;
+            }
 //            print_r($oldLogImage);die;
             Db::startTrans();
             try {
@@ -137,6 +153,12 @@ class Goods extends CommonIndex {
                 }
                 if (!empty($oldLogImage)) {
                     DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+                }
+                if (!empty($logShareImage)) {
+                    DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
+                }
+                if (!empty($oldLogShareImage)) {
+                    DbImage::updateLogImageStatus($oldLogShareImage, 3);//更新状态为弃用
                 }
                 if ($updateRes) {
                     Db::commit();
@@ -154,10 +176,19 @@ class Goods extends CommonIndex {
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3010'];//图片没有上传过
             }
+            if (isset($data['share_image'])) {
+                $share_image    = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
+                $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
+                if (empty($logShareImage)) {//图片不存在
+                    return ['code' => '3012'];//图片没有上传过
+                }
+                $data['share_image'] = $share_image;
+            }
             Db::startTrans();
             try {
                 $data['image'] = $image;
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
                 $gId = DbGoods::addGoods($data);//添加后的商品id
                 if ($gId === false) {
                     Db::rollback();

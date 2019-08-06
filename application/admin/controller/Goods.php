@@ -7,8 +7,8 @@ use app\admin\AdminController;
 class Goods extends AdminController {
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -60,8 +60,9 @@ class Goods extends AdminController {
         $goodsType     = empty($goodsType) ? 0 : $goodsType;
         $status        = empty($status) ? 0 : $status;
         $goodsId       = empty($goodsId) ? 0 : $goodsId;
-        $goodsTypeAttr = [0, 1, 2];//0为不查询
-        $statusAttr    = [0, 1, 2];//0为不查询
+
+        $goodsTypeAttr = [0, 1, 2]; //0为不查询
+        $statusAttr    = [0, 1, 2]; //0为不查询
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
@@ -88,7 +89,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          saveAddGoods
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过 / 3011:适用人群只能为数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过 / 3011:适用人群只能为数字 / 3012:分享图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
@@ -97,6 +98,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
+     * @apiParam (入参) {String} [share_image] 商品分享标题图
      * @apiSampleRequest /admin/goods/saveaddgoods
      * @return array
      * @author zyr
@@ -107,32 +109,33 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $supplierId     = trim($this->request->post('supplier_id'));//供应商id
-        $cateId         = trim($this->request->post('cate_id'));//分类id
-        $goodsName      = trim($this->request->post('goods_name'));//商品名称
-        $goodsType      = trim($this->request->post('goods_type'));//商品类型
-        $targetUsers    = trim($this->request->post('target_users'));//适用人群
-        $subtitle       = trim($this->request->post('subtitle'));//标题
-        $image          = trim($this->request->post('image'));//商品标题图
+        $supplierId     = trim($this->request->post('supplier_id')); //供应商id
+        $cateId         = trim($this->request->post('cate_id')); //分类id
+        $goodsName      = trim($this->request->post('goods_name')); //商品名称
+        $goodsType      = trim($this->request->post('goods_type')); //商品类型
+        $targetUsers    = trim($this->request->post('target_users')); //适用人群
+        $subtitle       = trim($this->request->post('subtitle')); //标题
+        $image          = trim($this->request->post('image')); //商品标题图
+        $share_image    = trim($this->request->post('share_image')); //商品标题图
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
-            return ['code' => '3001'];//供应商id只能为数字
+            return ['code' => '3001']; //供应商id只能为数字
         }
         if (!is_numeric($cateId)) {
-            return ['code' => '3002'];//分类id只能为数字
+            return ['code' => '3002']; //分类id只能为数字
         }
         if (empty($goodsName)) {
-            return ['code' => '3003'];//商品名称不能空
+            return ['code' => '3003']; //商品名称不能空
         }
         if (empty($image)) {
-            return ['code' => '3004'];//标题图不能空
+            return ['code' => '3004']; //标题图不能空
         }
         if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
-            return ['code' => '3005'];//商品类型只能为数字
+            return ['code' => '3005']; //商品类型只能为数字
         }
         if (!empty($targetUsers) && !in_array($targetUsers, $targetUsersArr)) {
-            return ['code' => '3011'];//适用人群只能为数字
+            return ['code' => '3011']; //适用人群只能为数字
         }
         $data = [
             'supplier_id' => intval($supplierId),
@@ -150,6 +153,9 @@ class Goods extends AdminController {
         }
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
+        }
+        if (!empty($share_image)) {
+            $data['share_image'] = $share_image;
         }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
@@ -163,7 +169,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          saveUpdateGoods
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过 / 3012:分享图片没有上传过
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} supplier_id 供应商id
@@ -173,6 +179,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
+     * @apiParam (入参) {String} [share_image] 商品分享标题图
      * @apiSampleRequest /admin/goods/saveupdategoods
      * @return array
      * @author zyr
@@ -180,27 +187,28 @@ class Goods extends AdminController {
     public function saveUpdateGoods() {
         $apiName        = classBasename($this) . '/' . __function__;
         $cmsConId       = trim($this->request->post('cms_con_id')); //操作管理员
-        $goodsId        = trim($this->request->post('goods_id'));//商品id
-        $supplierId     = trim($this->request->post('supplier_id'));//供应商id
-        $cateId         = trim($this->request->post('cate_id'));//分类id
-        $goodsName      = trim($this->request->post('goods_name'));//商品名称
-        $goodsType      = trim($this->request->post('goods_type'));//商品类型
-        $targetUsers    = trim($this->request->post('target_users'));//适用人群
-        $subtitle       = trim($this->request->post('subtitle'));//标题
-        $image          = trim($this->request->post('image'));//商品标题图
+        $goodsId        = trim($this->request->post('goods_id')); //商品id
+        $supplierId     = trim($this->request->post('supplier_id')); //供应商id
+        $cateId         = trim($this->request->post('cate_id')); //分类id
+        $goodsName      = trim($this->request->post('goods_name')); //商品名称
+        $goodsType      = trim($this->request->post('goods_type')); //商品类型
+        $targetUsers    = trim($this->request->post('target_users')); //适用人群
+        $subtitle       = trim($this->request->post('subtitle')); //标题
+        $image          = trim($this->request->post('image')); //商品标题图
+        $share_image    = trim($this->request->post('share_image')); //商品标题图
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
-            return ['code' => '3001'];//供应商id只能为数字
+            return ['code' => '3001']; //供应商id只能为数字
         }
         if (!is_numeric($cateId)) {
-            return ['code' => '3002'];//分类id只能为数字
+            return ['code' => '3002']; //分类id只能为数字
         }
         if (empty($goodsName)) {
-            return ['code' => '3003'];//商品名称不能空
+            return ['code' => '3003']; //商品名称不能空
         }
         if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
-            return ['code' => '3005'];//商品类型只能为数字
+            return ['code' => '3005']; //商品类型只能为数字
         }
         $data = [
             'supplier_id' => intval($supplierId),
@@ -211,6 +219,9 @@ class Goods extends AdminController {
             $data['goods_type'] = intval($goodsType);
         }
         if (!empty($targetUsers)) {
+            if (!is_numeric($targetUsers) || !in_array($targetUsers, $targetUsersArr)) {
+                return ['code' => '3011']; //适用人群只能为数字
+            }
             $data['target_users'] = intval($targetUsers);
         }
         if (!empty($image)) {
@@ -218,6 +229,9 @@ class Goods extends AdminController {
         }
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
+        }
+        if (!empty($share_image)) {
+            $data['share_image'] = $share_image;
         }
         //调用方法存商品表
         $res = $this->app->goods->saveGoods($data, $goodsId);
@@ -293,38 +307,38 @@ class Goods extends AdminController {
             return ['code' => '3100'];
         }
         $skuId         = trim($this->request->post('sku_id'));
-        $stock         = trim($this->request->post('stock'));//库存
-        $freightId     = trim($this->request->post('freight_id'));//运费模版
-        $marketPrice   = trim($this->request->post('market_price'));//市场价
-        $retailPrice   = trim($this->request->post('retail_price'));//零售价
-        $costPrice     = trim($this->request->post('cost_price'));//成本价
-        $marginPrice   = trim($this->request->post('margin_price'));//其他运费成本
-        $integralPrice = trim($this->request->post('integral_price'));//积分售价
-        $weight        = trim($this->request->post('weight'));//重量
-        $volume        = trim($this->request->post('volume'));//体积
-        $skuImage      = trim($this->request->post('sku_image'));//规格详情图
-        if (!is_numeric($skuId) || !is_numeric($freightId)) {//id必须为数字
+        $stock         = trim($this->request->post('stock')); //库存
+        $freightId     = trim($this->request->post('freight_id')); //运费模版
+        $marketPrice   = trim($this->request->post('market_price')); //市场价
+        $retailPrice   = trim($this->request->post('retail_price')); //零售价
+        $costPrice     = trim($this->request->post('cost_price')); //成本价
+        $marginPrice   = trim($this->request->post('margin_price')); //其他运费成本
+        $integralPrice = trim($this->request->post('integral_price')); //积分售价
+        $weight        = trim($this->request->post('weight')); //重量
+        $volume        = trim($this->request->post('volume')); //体积
+        $skuImage      = trim($this->request->post('sku_image')); //规格详情图
+        if (!is_numeric($skuId) || !is_numeric($freightId)) { //id必须为数字
             return ['code' => '3001'];
         }
         $freightId = intval($freightId);
         if ($freightId <= 0) {
             return ['code' => '3014'];
         }
-        if (!is_numeric($stock) || intval($stock) < 0) {//库存必须为大于或等于0的数字
+        if (!is_numeric($stock) || intval($stock) < 0) { //库存必须为大于或等于0的数字
             return ['code' => '3002'];
         }
-        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || !is_numeric($marketPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || floatval($marginPrice) < 0) {//价格必须为大于或等于0的数字
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || !is_numeric($marketPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || floatval($marginPrice) < 0) { //价格必须为大于或等于0的数字
             return ['code' => '3003'];
         }
-        if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+        if (!is_numeric($integralPrice) || intval($integralPrice) < 0) { //积分必须为大于或等于0的数字
             return ['code' => '3004'];
         }
         $retailPrice = floatval($retailPrice);
         $costPrice   = floatval($costPrice);
         if ($retailPrice < bcadd($costPrice, $marginPrice, 2)) {
-            return ['code' => '3006'];//零售价不能小于成本价
+            return ['code' => '3006']; //零售价不能小于成本价
         }
-        $data   = [
+        $data = [
             'stock'          => $stock,
             'freight_id'     => $freightId,
             'market_price'   => $marketPrice,
@@ -358,13 +372,13 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $goodsId = trim($this->request->post('goods_id'));//商品id
-        $attrId  = trim($this->request->post('attr_id'));//属性id
+        $goodsId = trim($this->request->post('goods_id')); //商品id
+        $attrId  = trim($this->request->post('attr_id')); //属性id
         if (!is_numeric($goodsId)) {
-            return ['code' => '3002'];//商品id必须为数字
+            return ['code' => '3002']; //商品id必须为数字
         }
         if (!is_numeric($attrId)) {
-            return ['code' => '3001'];//属性id必须为数字
+            return ['code' => '3001']; //属性id必须为数字
         }
         $result = $this->app->goods->addGoodsSpec(intval($attrId), intval($goodsId));
         $this->apiLog($apiName, [$cmsConId, $goodsId, $attrId], $result['code'], $cmsConId);
@@ -390,13 +404,13 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $goodsId = trim($this->request->post('goods_id'));//商品id
-        $attrId  = trim($this->request->post('attr_id'));//属性id
+        $goodsId = trim($this->request->post('goods_id')); //商品id
+        $attrId  = trim($this->request->post('attr_id')); //属性id
         if (!is_numeric($goodsId)) {
-            return ['code' => '3002'];//商品id必须为数字
+            return ['code' => '3002']; //商品id必须为数字
         }
         if (!is_numeric($attrId)) {
-            return ['code' => '3001'];//属性id必须为数字
+            return ['code' => '3001']; //属性id必须为数字
         }
         $result = $this->app->goods->delGoodsSpec(intval($attrId), intval($goodsId));
         $this->apiLog($apiName, [$cmsConId, $goodsId, $attrId], $result['code'], $cmsConId);
@@ -631,6 +645,7 @@ class Goods extends AdminController {
      * 删除商品
      */
 //    public function delGoods() {
+<<<<<<< HEAD
 //        $id = trim(input("post.id"));
 //        if (!is_numeric($id)) {
 //            return ["msg" => "参数错误", "code" => 3002];
@@ -638,6 +653,16 @@ class Goods extends AdminController {
 //        $res = $this->app->goods->delGoods($id);
 //        return $res;
 //    }
+=======
+    //        $id = trim(input("post.id"));
+    //        if (!is_numeric($id)) {
+    //            return ["msg" => "参数错误", "code" => 3002];
+    //        }
+    //        $res = $this->app->goods->delGoods($id);
+    //        return $res;
+    //    }
+
+>>>>>>> goods_share_image
     /**
      * @api              {post} / 提交商品详情和轮播图
      * @apiDescription   uploadGoodsImages
@@ -658,18 +683,18 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $imageTypeArr = [1, 2];//1.详情图 2.轮播图
+        $imageTypeArr = [1, 2]; //1.详情图 2.轮播图
         $goodsId      = trim($this->request->post('goods_id'));
         $imageType    = trim($this->request->post('image_type'));
         $images       = $this->request->post('images');
         if (!is_numeric($imageType) || !in_array(intval($imageType), $imageTypeArr)) {
-            return ['code' => '3001'];//图片类型有误
+            return ['code' => '3001']; //图片类型有误
         }
         if (!is_numeric($goodsId)) {
-            return ['code' => '3002'];//商品id只能是数字
+            return ['code' => '3002']; //商品id只能是数字
         }
         if (empty($images)) {
-            return ['code' => '3003'];//图片不能空
+            return ['code' => '3003']; //图片不能空
         }
         $result = $this->app->goods->uploadGoodsImages($goodsId, $imageType, $images);
         $this->apiLog($apiName, [$cmsConId, $goodsId, $imageType, $images], $result['code'], $cmsConId);
@@ -696,7 +721,7 @@ class Goods extends AdminController {
         }
         $imagePath = trim($this->request->post('image_path'));
         if (empty($imagePath)) {
-            return ['code' => '3001'];//图片不能为空
+            return ['code' => '3001']; //图片不能为空
         }
         $result = $this->app->goods->delGoodsImage($imagePath);
         $this->apiLog($apiName, [$cmsConId, $imagePath], $result['code'], $cmsConId);
@@ -722,10 +747,10 @@ class Goods extends AdminController {
         $imagePath = trim($this->request->post('image_path'));
         $orderBy   = trim($this->request->post('order_by'));
         if (empty($imagePath)) {
-            return ['code' => '3001'];//图片不能为空
+            return ['code' => '3001']; //图片不能为空
         }
         if (!is_numeric($orderBy)) {
-            return ['code' => '3003'];//排序字段只能为数字
+            return ['code' => '3003']; //排序字段只能为数字
         }
         $result = $this->app->goods->sortImageDetail($imagePath, intval($orderBy));
         $this->apiLog($apiName, [$cmsConId, $imagePath, $orderBy], $result['code'], $cmsConId);
