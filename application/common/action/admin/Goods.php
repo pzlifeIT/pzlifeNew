@@ -480,10 +480,13 @@ class Goods extends CommonIndex {
      */
     public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime =0){
         $where    = [["id", "=", $goodsId]];
-        $field    = "id,goods_type";
+        $field    = "id,goods_type,status";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != 2) {
             return ['code' => '3007'];
+        }
+        if ($goodsOne['status'] == 1) {
+            return ['code' => '3011'];
         }
         if (!DbAudios::getAudiosSku(['id' => $sku_id], 'id', true)){
             return ['code' => '3009'];
