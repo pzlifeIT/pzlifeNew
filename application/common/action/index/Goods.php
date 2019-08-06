@@ -147,16 +147,32 @@ class Goods extends CommonIndex {
             $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
         } else if ($goods_data['goods_type'] == 2) {
             $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id]]);
+            $integral_active = [];
+            $brokerage       = [];
+            $min_integral_active               = [0];
+            $min_brokerage                     = [0];
+            
             foreach ($goods_sku as &$v) {
                 $v['end_time'] = $v['end_time'] / 3600;
                 $v['audios']   = array_map(function ($var) {
                     unset($var['pivot']);
                     return $var;
                 }, $v['audios']);
-                $v['brokerage']       = bcmul(getDistrProfits($v['retail_price'], $v['cost_price'], $v['margin_price']), 0.75, 2);
-                $v['integral_active'] = bcmul(bcsub(bcsub($v['retail_price'], $v['cost_price'], 4), $v['margin_price'], 2), 2, 0);
+                $v['brokerage']       = bcmul(getDistrProfits($v['retail_price'], $v['cost_price'], 0), 0.75, 2);
+                $v['integral_active'] = bcmul(bcsub(bcsub($v['retail_price'], $v['cost_price'], 4), 0, 2), 2, 0);
+                $integral_active[] = $v['integral_active'];
+                $brokerage[]       = $v['brokerage'];
             }
             unset($v);
+            $goods_data['max_brokerage'] = max($brokerage);
+            $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
+            $goods_data['max_integral_active'] = max($integral_active);
+            if (empty(array_diff($integral_active, $min_integral_active))) {
+                $goods_data['min_integral_active'] = 0;
+            } else {
+                $goods_data['min_integral_active'] = min(array_diff($integral_active, $min_integral_active));
+                // $goods_sku = $goods_sku;
+            }
             
         }
         $goodsInfo                   = [
