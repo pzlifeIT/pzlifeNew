@@ -585,7 +585,7 @@ class Goods extends AdminController {
                 return ['code' => '3006'];
             }
         }
-        if (!empty($name) && mb_substr($name, 'utf8') > 30) {
+        if (!empty($name) && mb_strlen($name, 'utf8') > 30) {
             return ['code' => '3012'];
         }
         //$audioIdList = implode(',', $audioIdList);
