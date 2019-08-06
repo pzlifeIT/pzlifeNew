@@ -645,13 +645,14 @@ class Goods extends AdminController {
      * 删除商品
      */
 //    public function delGoods() {
-    //        $id = trim(input("post.id"));
-    //        if (!is_numeric($id)) {
-    //            return ["msg" => "参数错误", "code" => 3002];
-    //        }
-    //        $res = $this->app->goods->delGoods($id);
-    //        return $res;
-    //    }
+
+//        $id = trim(input("post.id"));
+//        if (!is_numeric($id)) {
+//            return ["msg" => "参数错误", "code" => 3002];
+//        }
+//        $res = $this->app->goods->delGoods($id);
+//        return $res;
+//    }
 
     /**
      * @api              {post} / 提交商品详情和轮播图

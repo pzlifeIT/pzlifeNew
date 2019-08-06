@@ -176,7 +176,7 @@ class Goods extends CommonIndex {
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3010'];//图片没有上传过
             }
-            if ($data['share_image']) {
+            if (isset($data['share_image'])) {
                 $share_image    = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
                 $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
                 if (empty($logShareImage)) {//图片不存在
