@@ -504,6 +504,7 @@ class Goods extends CommonIndex {
         if (empty($sku)){
             return ['code' => '200', 'sku' => []];
         }
+        $sku['end_time'] = $sku['end_time'] / 3600;
         $sku['audioIdList'] = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'audio_pri_id');
         return ['code' => '200', 'sku' => $sku];
     }
