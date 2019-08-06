@@ -43,7 +43,7 @@ class DbGoods {
     }
 
     public function getAudioSkuRelation($where) {
-        $result = AudioSku::field('id,goods_id,market_price,retail_price,cost_price,integral_price,end_time')->with(['audios' => function ($query) {
+        $result = AudioSku::field('id,goods_id,name,market_price,retail_price,cost_price,integral_price,end_time')->with(['audios' => function ($query) {
             $query->field('audio,audition_time');
         }])->where($where)->select()->toArray();
         return $result;
