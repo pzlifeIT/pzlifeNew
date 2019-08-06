@@ -485,6 +485,29 @@ class Goods extends AdminController {
     }
 
     /**
+     * @api              {post} / 获取商品的音频sku
+     * @apiDescription   getGoodsAudioSku
+     * @apiGroup         admin_goods
+     * @apiName          getGoodsAudioSku
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} sku_id 音频sku_id
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3002:商品id和sku_id必须为数字 / 
+     * @apiSampleRequest /admin/goods/getGoodsAudioSku
+     * @return array
+     * @author rzc
+     */
+    public function getGoodsAudioSku(){
+        $sku_id        = trim($this->request->post('sku_id'));//商品id
+        $goodsId       = trim($this->request->post('goods_id'));//商品id
+        if (!is_numeric($sku_id) || !is_numeric($goodsId) || intval($sku_id) || intval($goodsId)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->goods->getGoodsAudioSku($sku_id, $goodsId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 修改音频类商品的sku
      * @apiDescription   saveAudioSku
      * @apiGroup         admin_goods
