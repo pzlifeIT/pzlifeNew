@@ -94,6 +94,17 @@ class Goods extends CommonIndex {
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
         $redisGoodsDetailKey         = $this->redisGoodsDetail . $goods_id . ':' . $source;
+        /* 查询商品轮播图 */
+        $where        = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
+        $field        = "goods_id,source_type,image_type,image_path,order_by";
+        $goods_banner = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+
+        /* 查询商品详情图 */
+        $where         = [["goods_id", "=", $goods_id], ["image_type", "=", 1], ["source_type", "IN", "1," . $source]];
+        $field         = "goods_id,source_type,image_type,image_path,order_by";
+        $goods_details = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+        $goods_sku = [];
+        $goods_spec = [];
         if ($goods_data['goods_type'] == 1) {
             $goods_data['goods_name']    = htmlspecialchars_decode($goods_data['goods_name']);
             $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
@@ -112,15 +123,7 @@ class Goods extends CommonIndex {
             $goods_data['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $goods_data['max_retail_price'] = DbGoods::getOneSkuMost($where, 2, $field);
     
-            /* 查询商品轮播图 */
-            $where        = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
-            $field        = "goods_id,source_type,image_type,image_path,order_by";
-            $goods_banner = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
-    
-            /* 查询商品详情图 */
-            $where         = [["goods_id", "=", $goods_id], ["image_type", "=", 1], ["source_type", "IN", "1," . $source]];
-            $field         = "goods_id,source_type,image_type,image_path,order_by";
-            $goods_details = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+            
     
             /* 商品对应规格及SKU价格 */
             list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
@@ -142,24 +145,27 @@ class Goods extends CommonIndex {
             }
             $goods_data['max_brokerage'] = max($brokerage);
             $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
-            $goodsInfo                   = [
-                'goods_data'    => $goods_data,
-                'goods_banner'  => $goods_banner,
-                'goods_details' => $goods_details,
-                'goods_spec'    => $goods_spec,
-                'goods_sku'     => $goods_sku,
-            ];
         } else if ($goods_data['goods_type'] == 2) {
-            $sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id]]);
-            foreach ($sku as &$v) {
+            $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id]]);
+            foreach ($goods_sku as &$v) {
                 $v['end_time'] = $v['end_time'] / 3600;
                 $v['audios']   = array_map(function ($var) {
                     unset($var['pivot']);
                     return $var;
                 }, $v['audios']);
+                $v['brokerage']       = bcmul(getDistrProfits($v['retail_price'], $v['cost_price'], $v['margin_price']), 0.75, 2);
+                $v['integral_active'] = bcmul(bcsub(bcsub($v['retail_price'], $v['cost_price'], 4), $v['margin_price'], 2), 2, 0);
             }
             unset($v);
+            
         }
+        $goodsInfo                   = [
+            'goods_data'    => $goods_data,
+            'goods_banner'  => $goods_banner,
+            'goods_details' => $goods_details,
+            'goods_spec'    => $goods_spec,
+            'goods_sku'     => $goods_sku
+        ];
         $this->redis->setEx($redisGoodsDetailKey, 86400, json_encode($goodsInfo));
         $goodsInfo['goods_data']['goods_name'] = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
         $result                                = array_merge(['code' => '200'], $goodsInfo);
