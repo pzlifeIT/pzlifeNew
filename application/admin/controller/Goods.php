@@ -500,7 +500,7 @@ class Goods extends AdminController {
     public function getGoodsAudioSku(){
         $sku_id        = trim($this->request->post('sku_id'));//商品id
         $goodsId       = trim($this->request->post('goods_id'));//商品id
-        if (!is_numeric($sku_id) || !is_numeric($goodsId) || intval($sku_id) || intval($goodsId)) {
+        if (!is_numeric($sku_id) || !is_numeric($goodsId) || intval($sku_id) < 1 || intval($goodsId) < 1) {
             return ['code' => '3002'];
         }
         $result = $this->app->goods->getGoodsAudioSku($sku_id, $goodsId);
