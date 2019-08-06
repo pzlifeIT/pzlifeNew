@@ -475,7 +475,7 @@ class Goods extends AdminController {
         if (!is_numeric($endTime) || intval($endTime) < 0) {
             return ['code' => '3006'];
         }
-        if (empty($name) || mb_substr($name,'utf8') > 30) {
+        if (empty($name) || mb_strlen($name,'utf8') > 30) {
             return ['code' => '3009'];
         }
         //$audioIdList = implode(',', $audioIdList);
