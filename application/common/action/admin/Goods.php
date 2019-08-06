@@ -500,7 +500,7 @@ class Goods extends CommonIndex {
     }
 
     public function getGoodsAudioSku($sku_id, $goodsId){
-        $sku = DbAudios::getAudiosSku(['id' => $sku_id, 'goodsId' => $goodsId], '*', true);
+        $sku = DbAudios::getAudiosSku(['id' => $sku_id, 'goods_id' => $goodsId], '*', true);
         if (empty($sku)){
             return ['code' => '200', 'sku' => []];
         }
