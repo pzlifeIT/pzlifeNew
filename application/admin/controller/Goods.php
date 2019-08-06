@@ -493,7 +493,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Decimal} cost[_price 成本价
      * @apiParam (入参) {Number} [integral_price] 积分售价
      * @apiParam (入参) {Number} [end_time] 结束时间(按小时记)
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:修改失败 / 3009:该skuid不存在 / 3010:该用户没有权限 / 3011:上架商品无法编辑
      * @apiSampleRequest /admin/goods/saveAudioSku
      * @return array
      * @author rzc
