@@ -59,9 +59,13 @@ class Audios extends CommonIndex {
         }
     }
 
-    public function audiosList($page, $pageNum) {
+    public function audiosList($page, $pageNum, $all = 0) {
         $offset = $pageNum * ($page - 1);
-        $result = DbAudios::getAudio([], 'id,audio_id,album_id,name,article_name,audio,audition_time', false, 'id desc', $offset . ',' . $pageNum);
+        if ($all == 1) {
+            $result = DbAudios::getAudio([], 'id,audio_id,album_id,name,article_name,audio,audition_time', false, 'id desc');
+        } else {
+            $result = DbAudios::getAudio([], 'id,audio_id,album_id,name,article_name,audio,audition_time', false, 'id desc', $offset . ',' . $pageNum);
+        }
         $count  = DbAudios::countAudio();
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
