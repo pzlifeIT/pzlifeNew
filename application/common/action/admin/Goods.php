@@ -499,6 +499,15 @@ class Goods extends CommonIndex {
         }
     }
 
+    public function getGoodsAudioSku($sku_id, $goodsId){
+        $sku = DbAudios::getAudiosSku(['id' => $sku_id, 'goodsId' => $goodsId], '*', true);
+        if (empty($sku)){
+            return ['code' => '200', 'sku' => []];
+        }
+        $sku['audioIdList'] = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'audio_pri_id');
+        return ['code' => '200', 'sku' => $sku];
+    }
+
     /**
      * 修改商品的音频商品规格属性
      * @param $goodsId
