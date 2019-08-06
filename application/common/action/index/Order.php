@@ -1008,7 +1008,7 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
-                            $commission                    = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 5), $goods_num['goods_num'], 2), 2);
+                            $commission                    = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                         }
                     }
                 }
@@ -1066,7 +1066,7 @@ class Order extends CommonIndex {
                         }
                         $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                     += $goods['integral'] * $goods_num['goods_num'];
-                        $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 5), $goods_num['goods_num'], 2), 2);
+                        $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                     }
                 }
             }
