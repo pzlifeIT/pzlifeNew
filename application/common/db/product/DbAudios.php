@@ -18,7 +18,7 @@ class DbAudios extends Db {
         $audio->save($data,['id'=>$id]);
     }
 
-    public function countAudio($where){
+    public function countAudio($where = []){
         return Audio::where($where)->count();
     }
 

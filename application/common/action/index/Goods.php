@@ -93,61 +93,73 @@ class Goods extends CommonIndex {
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在'];
         }
-        $goods_data['goods_name']    = htmlspecialchars_decode($goods_data['goods_name']);
-        $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
         $redisGoodsDetailKey         = $this->redisGoodsDetail . $goods_id . ':' . $source;
-        if ($this->redis->exists($redisGoodsDetailKey)) {
-            $goodsInfo                                = json_decode($this->redis->get($redisGoodsDetailKey), true);
-            $goodsInfo['goods_data']['supplier_desc'] = $goods_data['supplier_desc'];
-            $goodsInfo['goods_data']['goods_name']    = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
-            $result                                   = array_merge(['code' => '200'], $goodsInfo);
-            return $result;
+        if ($goods_data['goods_type'] == 1) {
+            $goods_data['goods_name']    = htmlspecialchars_decode($goods_data['goods_name']);
+            $goods_data['supplier_desc'] = DbGoods::getSupplierData('desc', $goods_data['supplier_id'])['desc'];
+            if ($this->redis->exists($redisGoodsDetailKey)) {
+                $goodsInfo                                = json_decode($this->redis->get($redisGoodsDetailKey), true);
+                $goodsInfo['goods_data']['supplier_desc'] = $goods_data['supplier_desc'];
+                $goodsInfo['goods_data']['goods_name']    = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
+                $result                                   = array_merge(['code' => '200'], $goodsInfo);
+                return $result;
+            }
+            $where                          = ['goods_id' => $goods_id, 'status' => 1];
+            $field                          = 'market_price';
+            $goods_data['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            $goods_data['max_market_price'] = DbGoods::getOneSkuMost($where, 2, $field);
+            $field                          = 'retail_price';
+            $goods_data['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            $goods_data['max_retail_price'] = DbGoods::getOneSkuMost($where, 2, $field);
+    
+            /* 查询商品轮播图 */
+            $where        = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
+            $field        = "goods_id,source_type,image_type,image_path,order_by";
+            $goods_banner = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+    
+            /* 查询商品详情图 */
+            $where         = [["goods_id", "=", $goods_id], ["image_type", "=", 1], ["source_type", "IN", "1," . $source]];
+            $field         = "goods_id,source_type,image_type,image_path,order_by";
+            $goods_details = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+    
+            /* 商品对应规格及SKU价格 */
+            list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
+            $integral_active = [];
+            $brokerage       = [];
+            // print_r($goods_sku);die;
+            foreach ($goods_sku as $key => $value) {
+                $integral_active[] = $value['integral_active'];
+                $brokerage[]       = $value['brokerage'];
+            }
+            $min_integral_active               = [0];
+            $min_brokerage                     = [0];
+            $goods_data['max_integral_active'] = max($integral_active);
+            if (empty(array_diff($integral_active, $min_integral_active))) {
+                $goods_data['min_integral_active'] = 0;
+            } else {
+                $goods_data['min_integral_active'] = min(array_diff($integral_active, $min_integral_active));
+                // $goods_sku = $goods_sku;
+            }
+            $goods_data['max_brokerage'] = max($brokerage);
+            $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
+            $goodsInfo                   = [
+                'goods_data'    => $goods_data,
+                'goods_banner'  => $goods_banner,
+                'goods_details' => $goods_details,
+                'goods_spec'    => $goods_spec,
+                'goods_sku'     => $goods_sku,
+            ];
+        } else if ($goods_data['goods_type'] == 2) {
+            $sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id]]);
+            foreach ($sku as &$v) {
+                $v['end_time'] = $v['end_time'] / 3600;
+                $v['audios']   = array_map(function ($var) {
+                    unset($var['pivot']);
+                    return $var;
+                }, $v['audios']);
+            }
+            unset($v);
         }
-        $where                          = ['goods_id' => $goods_id, 'status' => 1];
-        $field                          = 'market_price';
-        $goods_data['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
-        $goods_data['max_market_price'] = DbGoods::getOneSkuMost($where, 2, $field);
-        $field                          = 'retail_price';
-        $goods_data['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
-        $goods_data['max_retail_price'] = DbGoods::getOneSkuMost($where, 2, $field);
-
-        /* 查询商品轮播图 */
-        $where        = [["goods_id", "=", $goods_id], ["image_type", "=", 2], ["source_type", "IN", "1," . $source]];
-        $field        = "goods_id,source_type,image_type,image_path,order_by";
-        $goods_banner = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
-
-        /* 查询商品详情图 */
-        $where         = [["goods_id", "=", $goods_id], ["image_type", "=", 1], ["source_type", "IN", "1," . $source]];
-        $field         = "goods_id,source_type,image_type,image_path,order_by";
-        $goods_details = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
-
-        /* 商品对应规格及SKU价格 */
-        list($goods_spec, $goods_sku) = $this->getGoodsSku($goods_id);
-        $integral_active = [];
-        $brokerage       = [];
-        // print_r($goods_sku);die;
-        foreach ($goods_sku as $key => $value) {
-            $integral_active[] = $value['integral_active'];
-            $brokerage[]       = $value['brokerage'];
-        }
-        $min_integral_active               = [0];
-        $min_brokerage                     = [0];
-        $goods_data['max_integral_active'] = max($integral_active);
-        if (empty(array_diff($integral_active, $min_integral_active))) {
-            $goods_data['min_integral_active'] = 0;
-        } else {
-            $goods_data['min_integral_active'] = min(array_diff($integral_active, $min_integral_active));
-            // $goods_sku = $goods_sku;
-        }
-        $goods_data['max_brokerage'] = max($brokerage);
-        $goods_data['min_brokerage'] = min(array_diff($brokerage, $min_brokerage));
-        $goodsInfo                   = [
-            'goods_data'    => $goods_data,
-            'goods_banner'  => $goods_banner,
-            'goods_details' => $goods_details,
-            'goods_spec'    => $goods_spec,
-            'goods_sku'     => $goods_sku,
-        ];
         $this->redis->setEx($redisGoodsDetailKey, 86400, json_encode($goodsInfo));
         $goodsInfo['goods_data']['goods_name'] = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);
         $result                                = array_merge(['code' => '200'], $goodsInfo);
