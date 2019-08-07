@@ -598,9 +598,9 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/sendModelMessage
      * @author rzc
      */
-    public function sendModelMessage(){
-        $conId       = trim($this->request->post('con_id'));
-        $orderNo     = trim($this->request->post('order_no'));
+    public function sendModelMessage() {
+        $conId   = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -608,7 +608,106 @@ class Order extends MyController {
             return ['code' => '3002'];
         }
         // print_r($conId);die;
-        $result = $this->app->order->sendModelMessage( $orderNo, $conId);
+        $result = $this->app->order->sendModelMessage($orderNo, $conId);
         return $result;
+    }
+
+    /**
+     * @api              {post} / 音频立即购买结算页
+     * @apiDescription   quickSettlementAudio
+     * @apiGroup         index_order
+     * @apiName          quickSettlementAudio
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} [buid] 推荐人
+     * @apiParam (入参) {Number} sku_id 购买的skuid
+     * @apiParam (入参) {Number} goods_id 音频商品id
+     * @apiParam (入参) {Number} num 购买数量
+     * @apiParam (入参) {Number} [user_coupon_id] 优惠券ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
+     * @apiSuccess (返回) {Float} discount_money 优惠金额
+     * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
+     * @apiSuccess (返回) {Float} total_freight_price 运费总价
+     * @apiSuccess (返回) {Float} total_price 价格总计
+     * @apiSuccess (返回) {Array} supplier_list 供应商分组
+     * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
+     * @apiSuccess (返回) {Float} balance 账户的商券余额
+     * @apiSuccess (supplier_list) {Int} id 供应商id
+     * @apiSuccess (supplier_list) {String} name 供应商name
+     * @apiSuccess (supplier_list) {String} image 供应商image
+     * @apiSuccess (supplier_list) {String} title 供应商title
+     * @apiSuccess (supplier_list) {String} desc 供应商详情
+     * @apiSuccess (supplier_list) {Array} shop_list 购买店铺分组
+     * @apiSuccess (shop_list) {Int} id 店铺id
+     * @apiSuccess (shop_list) {Int} uid 店铺boss的uid
+     * @apiSuccess (shop_list) {String} shop_name 店铺名称
+     * @apiSuccess (shop_list) {String} shop_image 店铺image
+     * @apiSuccess (shop_list) {Array} goods_list 店铺购买的商品列表
+     * @apiSuccess (goods_list) {Int} id skuid
+     * @apiSuccess (goods_list) {Int} goods_id 商品id
+     * @apiSuccess (goods_list) {Float} market_price 市场价
+     * @apiSuccess (goods_list) {Float} retail_price 零售价
+     * @apiSuccess (goods_list) {Int} integral_active 积分赠送
+     * @apiSuccess (goods_list) {String} sku_image sku图片
+     * @apiSuccess (goods_list) {String} goods_name 商品名称
+     * @apiSuccess (goods_list) {Int} goods_type 商品类型
+     * @apiSuccess (goods_list) {String} subtitle 商品标题
+     * @apiSuccess (goods_list) {Array} attr 属性列表
+     * @apiSuccess (goods_list) {Float} rebate 单品返利
+     * @apiSuccess (goods_list) {Int} integral 赠送积分
+     * @apiSuccess (goods_list) {Int} buySum 购买数量
+     * @apiSuccess (goods_list[audios]) {String} audio 音频播放地址
+     * @apiSuccess (goods_list[audios]) {String} audition_time 试听时间(秒)
+     * @apiSuccess (goods_list[audios]) {String} name 音频名称
+     * @apiSuccess (goods_list[audios][pivot]) {String} audio_pri_id 音频id
+     * @apiSampleRequest /index/order/quickSettlementAudio
+     * @author rzc
+     */
+    public function quickSettlementAudio() {
+        $conId        = trim($this->request->post('con_id'));
+        $buid         = trim($this->request->post('buid'));
+        $sku_id       = trim($this->request->post('sku_id'));
+        $goods_id     = trim($this->request->post('goods_id'));
+        $num          = trim($this->request->post('num'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
+        if (empty($sku_id) || !is_numeric($sku_id) || intval($sku_id) < 1) {
+            return ['code' => '3001'];
+        }
+        if (empty($goods_id) || !is_numeric($goods_id) || intval($goods_id) < 1) {
+            return ['code' => '3002'];
+        }
+        if (empty($num) || !is_numeric($num) || intval($num) < 1) {
+            return ['code' => '3003'];
+        }
+        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result = $this->app->order->quickSettlementAudio($conId, $buid, intval($sku_id), intval($num), intval($goods_id), intval($userCouponId));
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 音频快速购买通道
+     * @apiDescription   quickCreateAudioOrder
+     * @apiGroup         index_order
+     * @apiName          quickCreateAudioOrder
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} buid 推荐人
+     * @apiParam (入参) {Number} sku_id 购买的skuid
+     * @apiParam (入参) {Number} goods_id 音频商品id
+     * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
+     * @apiParam (入参) {Number} [num] 购买数量
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
+     * @apiSampleRequest /index/order/quickCreateAudioOrder
+     * @author rzc
+     */
+    public function quickCreateAudioOrder() {
+        $conId    = trim($this->request->post('con_id'));
+        $buid     = trim($this->request->post('buid'));
+        $sku_id   = trim($this->request->post('sku_id'));
+        $goods_id = trim($this->request->post('goods_id'));
+        $pay_type = trim($this->request->post('pay_type'));
+        $num      = trim($this->request->post('num'));
     }
 }
