@@ -623,7 +623,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} goods_id 音频商品id
      * @apiParam (入参) {Number} num 购买数量
      * @apiParam (入参) {Number} [user_coupon_id] 优惠券ID
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.goods_id错误 / 3003:num错误 / 3004:uid错误 / 3005:商品商品不存在或者已下架 / 3006:该商品sku不存在 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
      * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
      * @apiSuccess (返回) {Float} discount_money 优惠金额
