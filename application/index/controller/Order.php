@@ -698,7 +698,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} goods_id 音频商品id
      * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
      * @apiParam (入参) {Number} [num] 购买数量
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.goods_id错误 / 3003:num错误 / 3004:uid错误 / 3005:商品商品不存在或者已下架 / 3006:该商品sku不存在 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/quickCreateAudioOrder
@@ -711,5 +711,18 @@ class Order extends MyController {
         $goods_id = trim($this->request->post('goods_id'));
         $pay_type = trim($this->request->post('pay_type'));
         $num      = trim($this->request->post('num'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
+        if (empty($sku_id) || !is_numeric($sku_id) || intval($sku_id) < 1) {
+            return ['code' => '3001'];
+        }
+        if (empty($goods_id) || !is_numeric($goods_id) || intval($goods_id) < 1) {
+            return ['code' => '3002'];
+        }
+        if (empty($num) || !is_numeric($num) || intval($num) < 1) {
+            return ['code' => '3003'];
+        }
+        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result = $this->app->order->quickCreateAudioOrder($conId, $buid, intval($sku_id), intval($num), intval($goods_id), intval($userCouponId));
+        return $result;
     }
 }
