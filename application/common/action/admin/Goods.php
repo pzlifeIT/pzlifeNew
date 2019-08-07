@@ -839,7 +839,7 @@ class Goods extends CommonIndex {
     public function upDown(int $id, int $type) {
         //判断传过来的id是否有效
         $where     = [["id", "=", $id]];
-        $field     = "goods_name,cate_id";
+        $field     = "goods_name,cate_id,goods_type";
         $res       = DbGoods::getOneGoods($where, $field);
         $labelName = $res['goods_name'];
         if (empty($res)) {
@@ -871,8 +871,10 @@ class Goods extends CommonIndex {
                     }
                 }
             }
-            if ($stockAll <= 0) {
-                return ['code' => '3003'];//没有可售库存
+            if ($res['goods_type'] == 1) {
+                if ($stockAll <= 0) {
+                    return ['code' => '3003'];//没有可售库存
+                }
             }
             //1.详情图 2.轮播图
             $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
