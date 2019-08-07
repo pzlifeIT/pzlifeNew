@@ -1555,12 +1555,13 @@ class Order extends CommonIndex {
         $goodsSku['supplier_id'] = $goods['supplier_id'];
         $goodsSku['goods_name']  = $goods['goods_name'];
         $goodsSku['goods_type']  = $goods['goods_type'];
-        $goodsSku['target_users']  = $goods['target_users'];
+        $goodsSku['target_users'] = $goods['target_users'];
         $goodsSku['subtitle']    = $goods['subtitle'];
         $goodsSku['status']      = $goods['status'];
-        $goodsSku['buySum']     = $num;
-        $goodsSku['shopBuySum'] = [$shopId => $num];
-        $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
+        $goodsSku['buySum']      = $num;
+        $goodsSku['end_time']    = $goodsSku['end_time'] * $num;
+        $goodsSku['shopBuySum']  = [$shopId => $num];
+        $totalGoodsPrice         = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
         $couponPrice = 0;
         if (!empty($userCouponId)) {//有优惠券
             $userCoupon = DbCoupon::getUserCoupon([
@@ -1595,6 +1596,197 @@ class Order extends CommonIndex {
         $discountMoney = $couponPrice;
         $totalPrice    = bcsub($totalGoodsPrice, $discountMoney, 2);
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => [$goodsSku]];
+    }
+
+    public function quickCreateAudioOrder($conId, $buid, int $sku_id, int $num, int $goods_id, $payType, int $userCouponId = 0){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $user_identity = $balance['user_identity'];
+        $balance = $balance['balance'] ?? 0;
+        $summary = $this->quickAudioSummary($uid, $buid, $sku_id, $num, $goods_id, $userCouponId);
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        $goods = $summary['goods_list'][0];
+        $target_users = $goods['target_users']; //适用人群
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if ($user['user_identity'] < $target_users) {
+            if ($target_users == 2){
+                return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($target_users == 3){
+                return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($target_users == 4){
+                return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
+            }
+        }
+        $attr = [];
+        foreach ($goods['audios'] as $key => $value) {
+            $attr[] = $value['pivot']['audio_pri_id'];
+        }
+        $user_audioData = [];
+        $user_audio_updateData = [];
+        $audio_time = [];
+        foreach ($attr as $at => $ar) {
+            $u_audio = DbAudios::getUserAudio(['uid' => $uid,'audio_id' => $ar],'id,end_time',true);
+            if ($u_audio) {//更新
+                if ($u_audio['end_time'] >= time()){
+                    $audio_time[$ar]      = $u_audio['end_time'] - time() + $goods['end_time'];
+                    $u_audio['end_time'] += $goods['end_time'];
+                }else {
+                    $u_audio['end_time'] = $goods['end_time']+time();
+                    $audio_time[$ar]     = $goods['end_time'];
+                }
+                $up_data = [
+                    'end_time' => $u_audio['end_time'],
+                ];
+                array_push($user_audio_updateData,[$ar => $up_data]);
+                unset($user_audio);
+            }else {
+                $user_audio = [
+                    'uid' => $uid,
+                    'audio_id' => $ar,
+                    'end_time' => $goods['end_time']+time(),
+                ];
+                array_push($user_audioData,$user_audio);
+                $audio_time[$ar] = $goods['end_time'];
+                unset($user_audio);
+            }
+        }
+        $orderGoodsData = [];
+        foreach ($goods['shopBuySum'] as $kgl => $gl) {
+            for ($i = 0; $i < $gl; $i++) {
+                $goodsData = [
+                    'goods_id'     => $goods['goods_id'],
+                    'goods_name'   => $goods['goods_name'],
+                    'sku_id'       => $goods['id'],
+                    'sup_id'       => $goods['supplier_id'],
+                    'boss_uid'     => $buid,
+                    'goods_type'   => $goods['goods_type'],
+                    'goods_price'  => $goods['retail_price'],
+                    'margin_price' => getDistrProfits($goods['retail_price'], $goods['cost_price'], 0),
+                    'integral'     => $goods['integral'],
+                    'goods_num'    => 1,
+                    'sku_json'     => json_encode($attr),
+                ];
+                array_push($orderGoodsData, $goodsData);
+            }
+        }
+        $supplier             = DbGoods::getSupplier('id,name', [['id', '=', $goods['supplier_id']]]);
+        $supplierData         = [];
+        foreach ($supplier as $sval) {
+            $sval['express_money'] = 0;
+            $sval['supplier_id']   = $sval['id'];
+            $sval['supplier_name'] = $sval['name'];
+            unset($sval['id']);
+            unset($sval['name']);
+            array_push($supplierData, $sval);
+        }
+         /*
+         * 子订单内容
+         */
+        $orderNo        = createOrderNo(); //创建订单号
+        $deductionMoney = 0; //商票抵扣金额
+        $thirdMoney     = 0; //第三方支付金额
+        $isPay          = false;
+        $tradingData    = []; //交易日志
+        if ($payType == 2) { //商票支付
+            $userInfo = DbUser::getUserInfo(['id' => $uid], 'balance,balance_freeze', true);
+            if ($userInfo['balance_freeze'] == '2') { //商票未冻结
+                if ($summary['total_price'] > $userInfo['balance']) {
+                    $deductionMoney = $userInfo['balance'] > 0 ? $userInfo['balance'] : 0; //可支付的商票
+                    $thirdMoney     = bcsub($summary['total_price'], $deductionMoney, 2);
+                } else {
+                    $isPay          = true; //可以直接商票支付完成
+                    $deductionMoney = $summary['total_price'];
+                }
+            } else {
+                $thirdMoney = $summary['total_price'];
+            }
+            $tradingData = [
+                'uid'          => $uid,
+                'trading_type' => 1,
+                'change_type'  => 1,
+                'money'        => -$deductionMoney,
+                'befor_money'  => $userInfo['balance'],
+                'after_money'  => bcsub($userInfo['balance'], $deductionMoney, 2),
+                'message'      => '',
+                'create_time'  => time(),
+            ];
+        } else if ($payType == 1) { //第三方支付
+            $thirdMoney = $summary['total_price'];
+        }
+        $orderData = [
+            'order_no'        => $orderNo,
+            'third_order_id'  => 0,
+            'uid'             => $uid,
+            'order_status'    => $isPay ? 4 : 1,
+            'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney, //商票抵扣金额
+            'pay_money'       => $summary['total_price'], //实际支付(第三方支付金额+商票抵扣金额)
+            'goods_money'     => $summary['total_goods_price'], //商品金额
+            'third_money'     => $thirdMoney, //第三方支付金额
+            'discount_money'  => $summary['discount_money'], //优惠金额
+            'pay_type'        => $payType,
+            'third_pay_type'  => 2, //第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
+            'message'         => '',
+            'pay_time'        => $isPay ? time() : 0,
+        ];
+        $stockSku = [$sku_id => $goods['buySum']];
+        Db::startTrans();
+        try {
+            $orderId = DbOrder::addOrder($orderData);
+            if (empty($orderId)) {
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+            foreach ($supplierData as $sdkey => $sdval) {
+                $supplierData[$sdkey]['order_id'] = $orderId;
+            }
+            $childOrder    = DbOrder::addOrderChilds($supplierData);
+            $childSupplier = $childOrder->toArray();
+            $childSupplier = array_column($childSupplier, 'id', 'supplier_id');
+            foreach ($orderGoodsData as $ogdK => $ogdV) {
+                $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
+            }
+            DbOrder::addOrderGoods($orderGoodsData);
+            DbGoods::decStock($stockSku);
+            DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
+            if (!empty($tradingData)) {
+                DbOrder::addLogTrading($tradingData);
+            }
+            if (!empty($userCouponId)) {
+                DbCoupon::updateUserCoupon([
+                    'is_use'   => 1,
+                    'order_id' => $orderId,
+                ], $userCouponId);
+            }
+            if ($isPay) {
+                $redisListKey = Config::get('rediskey.order.redisOrderBonus');
+                $this->redis->rPush($redisListKey, $orderId);
+                $redisaudioKey = Config::get('rediskey.audio.redisAudioVisual');
+                if (!empty($user_audioData)) {
+                    DbAudios::addUserAudio($user_audioData);
+                }
+                if (!empty($user_audio_updateData)) {
+                    foreach ($user_audio_updateData as $up => $audio_u) {
+                        DbAudios::updateUserAudio($audio_u,$up);
+                    }
+                }
+                foreach ($audio_time as $audio => $time) {
+                    $this->redis->set($redisaudioKey.$uid.':'.$audio, $audio);
+                    $this->redis->expire($redisaudioKey.$uid.':'.$audio, $time);
+                }
+            }
+            $this->resetUserInfo($uid);
+            Db::commit();
+            return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3009'];
+        }
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
