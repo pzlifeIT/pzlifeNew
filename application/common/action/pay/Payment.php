@@ -7,6 +7,7 @@ use app\common\action\notify\Note;
 use app\facade\DbOrder;
 use app\facade\DbUser;
 use app\facade\DbRights;
+use app\facade\DbAudios;
 use cache\Phpredis;
 use Config;
 use pay\wxpay\WxMiniprogramPay;
