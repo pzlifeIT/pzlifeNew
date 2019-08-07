@@ -46,5 +46,8 @@ return [
     ],
     'active'=>[//活动
         'redisHdluckyDraw'=>'index:offlineActivities:luckyDraw',
+    ],
+    'audio'=>[//活动
+        'redisAudioVisual'        => 'index:audio:visual:list:',//音频视听
     ]
 ];

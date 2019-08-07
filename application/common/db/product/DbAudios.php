@@ -6,6 +6,7 @@ use app\common\db\Db;
 use app\common\model\Audio;
 use app\common\model\AudioSku;
 use app\common\model\AudioSkuRelation;
+use app\common\model\UserAudio;
 
 class DbAudios extends Db {
     public function saveAllAudios($data) {
@@ -50,5 +51,20 @@ class DbAudios extends Db {
     public function updateAudiosSku($data, $id){
         $audioSku = new AudioSku;
         return $audioSku->save($data, ['id' => $id]);
+    }
+
+    public function getUserAudio($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = UserAudio::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function updateUserAudio($data, $id){
+        $UserAudio = new UserAudio;
+        return $UserAudio->save($data, ['id' => $id]);
+    }
+
+    public function addUserAudio($data){
+        $UserAudio = new UserAudio;
+        $UserAudio->saveAll($data);
     }
 }

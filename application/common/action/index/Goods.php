@@ -149,11 +149,18 @@ class Goods extends CommonIndex {
             $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id]]);
             $integral_active = [];
             $brokerage       = [];
+            $market_price    = [];
+            $retail_price    = [];
             $min_integral_active               = [0];
             $min_brokerage                     = [0];
+            $min_market_price                  = [0];
+            $min_retail_price                  = [0];
             
             foreach ($goods_sku as &$v) {
                 $v['end_time'] = $v['end_time'] / 3600;
+                foreach ($v['audios'] as $key => $value) {
+                    $v['audios'][$key]['id'] = $value['pivot']['audio_pri_id'];
+                }
                 $v['audios']   = array_map(function ($var) {
                     unset($var['pivot']);
                     return $var;
@@ -162,6 +169,8 @@ class Goods extends CommonIndex {
                 $v['integral_active'] = bcmul(bcsub(bcsub($v['retail_price'], $v['cost_price'], 4), 0, 2), 2, 0);
                 $integral_active[] = $v['integral_active'];
                 $brokerage[]       = $v['brokerage'];
+                $market_price[]    = $v['market_price'];
+                $retail_price[]    = $v['retail_price'];
             }
             unset($v);
             $goods_data['max_brokerage'] = max($brokerage);
@@ -173,6 +182,11 @@ class Goods extends CommonIndex {
                 $goods_data['min_integral_active'] = min(array_diff($integral_active, $min_integral_active));
                 // $goods_sku = $goods_sku;
             }
+
+            $goods_data['min_market_price'] = min(array_diff($market_price, $min_market_price));
+            $goods_data['max_market_price'] = max($market_price);
+            $goods_data['min_retail_price'] = min(array_diff($retail_price, $min_retail_price));
+            $goods_data['max_retail_price'] = max($retail_price);
             
         }
         $goodsInfo                   = [
