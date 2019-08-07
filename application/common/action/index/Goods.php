@@ -308,17 +308,36 @@ class Goods extends CommonIndex {
             $result[$key]['min_market_price'] = DbGoods::getOneSkuMost($where, 1, $field);
             $field                            = 'retail_price';
             $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+            $retail_price    = [];
+            $brokerage       = [];
+            $integral_active = [];
             // print_r($value['id']);die;
-            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+            if ($value['goods_type'] == 1) {
+                list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+
+                if ($goods_sku) {
+                    foreach ($goods_sku as $goods => $sku) {
+    
+                        $retail_price[$sku['id']]    = $sku['retail_price'];
+                        $brokerage[$sku['id']]       = $sku['brokerage'];
+                        $integral_active[$sku['id']] = $sku['integral_active'];
+                    }
+                    $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
+                    $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
+    
+                } else {
+                    $result[$key]['min_brokerage']       = 0;
+                    $result[$key]['min_integral_active'] = 0;
+                }
+            }else if ($value['goods_type'] == 2){
+                $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $value['id']]]);
+            }
             if ($goods_sku) {
-                $retail_price    = [];
-                $brokerage       = [];
-                $integral_active = [];
                 foreach ($goods_sku as $goods => $sku) {
 
                     $retail_price[$sku['id']]    = $sku['retail_price'];
-                    $brokerage[$sku['id']]       = $sku['brokerage'];
-                    $integral_active[$sku['id']] = $sku['integral_active'];
+                    $brokerage[$sku['id']]       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], 0), 0.75, 2);
+                    $integral_active[$sku['id']] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), 0, 2), 2, 0);
                 }
                 $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
                 $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];

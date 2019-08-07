@@ -8,6 +8,7 @@ use app\facade\DbOrder;
 use app\facade\DbProvinces;
 use app\facade\DbShops;
 use app\facade\DbUser;
+use app\facade\DbAudios;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -1454,6 +1455,146 @@ class Order extends CommonIndex {
         $res = curl_exec($curl);
         curl_close($curl);
         return $res;
+    }
+
+    
+    public function quickSettlementAudio($conId, $buid = '', $skuId, $num, $goods_id, $userCouponId = 0){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3004'];
+        }
+        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $user_identity = $balance['user_identity'];
+        $balance = $balance['balance'] ?? 0;
+        $summary = $this->quickAudioSummary($uid, $buid, $skuId, $num, $goods_id, $userCouponId);
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        $goods = $summary['goods_list'][0];
+        $target_users = $goods['target_users']; //适用人群
+        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        if ($user['user_identity'] < $target_users) {
+            if ($target_users == 2){
+                return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
+            }elseif ($target_users == 3){
+                return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
+            }elseif ($target_users == 4){
+                return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
+            }
+        }
+        $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
+        if (empty($shopList)) {
+            $shopList = DbShops::getShops([['id', '=', '1']], 'id,uid,shop_name,shop_image'); //不是boss就查总店
+        }
+        $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
+        $supplierId   = $summary['goods_list'][0]['supplier_id']; //供应商id
+        $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+        $supplier = [];
+        foreach ($supplierList as $sl) {
+            $glList = [];
+            $sList  = []; //门店
+            foreach ($summary['goods_list'] as $gl) {
+                if ($gl['supplier_id'] == $sl['id']) {
+                    unset($gl['freight_id']);
+                    unset($gl['cost_price']);
+                    unset($gl['margin_price']);
+                    unset($gl['weight']);
+                    unset($gl['volume']);
+                    unset($gl['spec']);
+                    unset($gl['status']);
+                    unset($gl['stock']);
+                    unset($gl['supplier_id']);
+                    unset($gl['buySum']);
+                    unset($gl['shopBuySum']);
+                    $glList[$gl['id']] = $gl;
+//                    $shopKey           = array_keys($cart[$gl['id']]['track']);
+                    $shopKey = array_keys($shopList);
+                    foreach ($shopKey as $s) {
+                        if (!isset($sList[$s])) {
+                            $sList[] = $shopList[$s];
+                        }
+                    }
+                }
+            }
+            foreach ($sList as $sk => $s) {
+                $ggList = [];
+                foreach ($glList as $kg => $g) {
+                    if (in_array($s['id'], array_keys($shopList))) {
+                        $bSum        = $num; //店铺购买的数量
+                        $g['buySum'] = $bSum;
+                        $ggList[] = $g;
+                    }
+                }
+                $sList[$sk]['goods_list'] = $ggList;
+            }
+            $sl['shop_list'] = $sList;
+            array_push($supplier, $sl);
+        }
+        unset($summary['goods_list']);
+        $summary['supplier_list']      = $supplier;
+        $summary['balance']            = $balance;
+        return $summary;
+    }
+
+    private function quickAudioSummary($uid, $buid, $skuId, $num, $goods_id, $userCouponId) {
+        $goods = DbGoods::getOneGoods(['id' => $goods_id, 'goods_type' => 2, 'status' => 1], 'goods_type,supplier_id,target_users,cate_id,goods_name,subtitle,status');
+        if (empty($goods)) {
+            return ['code' => '3005'];
+        }
+        $goodsSku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id],['id', '=', $skuId]]);
+        if (empty($goodsSku)) {
+            return ['code' => '3006'];
+        }
+        $goodsSku = $goodsSku[0];
+        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        if (empty($shopInfo)) {
+            $shopId = 1;
+        } else {
+            $shopId = $shopInfo['id'];
+        }
+        $goodsSku['supplier_id'] = $goods['supplier_id'];
+        $goodsSku['goods_name']  = $goods['goods_name'];
+        $goodsSku['goods_type']  = $goods['goods_type'];
+        $goodsSku['target_users']  = $goods['target_users'];
+        $goodsSku['subtitle']    = $goods['subtitle'];
+        $goodsSku['status']      = $goods['status'];
+        $goodsSku['buySum']     = $num;
+        $goodsSku['shopBuySum'] = [$shopId => $num];
+        $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
+        $couponPrice = 0;
+        if (!empty($userCouponId)) {//有优惠券
+            $userCoupon = DbCoupon::getUserCoupon([
+                ['id', '=', $userCouponId],
+                ['uid', '=', $uid],
+                ['is_use', '=', 2],//未使用的
+                ['end_time', '>', time()],//未过期的
+            ], 'id,price,gs_id,level', true);
+            if (empty($userCoupon)) {
+                return ['code' => '3013'];
+            }
+            if ($userCoupon['level'] == 1) {//单品券
+                if ($userCoupon['gs_id'] != $goodsSku['goods_id']) {
+                    return ['code' => '3013'];
+                }
+            }
+            if ($userCoupon['level'] == 2) {//专题券
+                $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
+                $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
+                if (!in_array($goodsSku['goods_id'], $couponGoodsIdList)) {
+                    return ['code' => '3013'];
+                }
+            }
+            $couponPrice = $userCoupon['price'];
+        }
+        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], 0);//可分配利润
+        $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
+        $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], 0);
+        if ($totalGoodsPrice <= 0) {
+            return ['code' => '3009'];
+        }
+        $discountMoney = $couponPrice;
+        $totalPrice    = bcsub($totalGoodsPrice, $discountMoney, 2);
+        return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => [$goodsSku]];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
