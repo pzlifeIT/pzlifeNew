@@ -1670,6 +1670,7 @@ class Order extends CommonIndex {
                     'margin_price' => getDistrProfits($goods['retail_price'], $goods['cost_price'], 0),
                     'integral'     => $goods['integral'],
                     'goods_num'    => 1,
+                    'buy_time'     => $goods['end_time'] / $num,
                     'sku_json'     => json_encode($attr),
                 ];
                 array_push($orderGoodsData, $goodsData);
@@ -1723,7 +1724,8 @@ class Order extends CommonIndex {
             'order_no'        => $orderNo,
             'third_order_id'  => 0,
             'uid'             => $uid,
-            'order_status'    => $isPay ? 4 : 1,
+            'order_type'      => 4,
+            'order_status'    => $isPay ? 5 : 1,
             'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
             'deduction_money' => $deductionMoney, //商票抵扣金额
             'pay_money'       => $summary['total_price'], //实际支付(第三方支付金额+商票抵扣金额)
