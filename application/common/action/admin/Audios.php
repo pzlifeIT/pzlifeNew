@@ -10,7 +10,6 @@ class Audios extends CommonIndex {
         $audioId       = 2;
         $url           = $this->tingluoSignurl($audioId);
         $data          = sendRequest($url);
-        print_r($data);die;
         $data          = json_decode($data, true);
         $data          = $data['data'];
         $audioIdList   = array_column($data, 'audio_id');//喜马拉雅获取的最新audio_id
