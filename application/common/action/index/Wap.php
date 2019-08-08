@@ -193,7 +193,6 @@ class Wap extends CommonIndex {
         $send_data['data'] = $new_data;
         $access_token = $this->getTinluoAccessToken();
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
-        print_r(json_encode($send_data,true));die;
         $result = $this->sendRequest2($requestUrl, $send_data);
         return json_decode($result,true);
     }
