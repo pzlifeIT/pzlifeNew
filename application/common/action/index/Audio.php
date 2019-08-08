@@ -40,7 +40,7 @@ class Audio extends CommonIndex {
         }else if ($status == 2){
             array_push($where,['end_time', '<=', time()]);
         }
-        $audio = DbAudios::getUserAudioRelation(['uid' => $uid],'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc'],$offset.','.$pagenum);
+        $audio = DbAudios::getUserAudioRelation($where,'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc'],$offset.','.$pagenum);
         foreach ($audio as $key => $value) {
             $audio[$key]['end_time'] = date('Y-m-d H:i:s', $value['end_time']);
         }
