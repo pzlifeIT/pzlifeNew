@@ -574,7 +574,7 @@ class Goods extends AdminController {
             }
         }
         if (!empty($integralPrice)){
-            if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
+            if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($integralPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
                 return ['code' => '3005'];
             }
         }
