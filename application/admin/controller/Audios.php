@@ -69,7 +69,7 @@ class Audios extends AdminController {
      * @apiName          editAudio
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} id
-     * @apiParam (入参) {Int} audition_time
+     * @apiParam (入参) {Int} audition_time(秒)
      * @apiSuccess (返回) {String} code 200:成功 / 3001:参数id有误 / 3002:参数audition_time有误 / 3003:更新失败
      * @apiSampleRequest /admin/audios/editaudio
      * @return array
@@ -86,7 +86,7 @@ class Audios extends AdminController {
         if (!is_numeric($id) || intval($id) <= 0) {//参数id有误
             return ["code" => '3001'];
         }
-        if (!is_numeric($auditionTime) || intval($auditionTime) <= 0) {//参数audition_time有误
+        if (!is_numeric($auditionTime) || intval($auditionTime) < 0) {//参数audition_time有误
             return ["code" => '3002'];
         }
         $result = $this->app->audios->editAudio($id, $auditionTime);

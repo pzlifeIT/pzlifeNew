@@ -228,6 +228,76 @@ class Payment {
                                 break;
                             }
                         } */
+                       // 测试代码开始
+                        // $orderRes['id'] = 1219;
+                        $uid = $orderRes['uid'];
+                        $order_list = DbOrder::getOrderDetail(['o.id' => $orderRes['id']], '*');
+                        // print_r($order_list);die;
+                        $user_audioData = [];
+                        $user_audio_updateData = [];
+                        $audio_time = [];
+                        $sku_list = [];
+                        foreach ($order_list as $key => $value) {
+                            if ($value['goods_type'] == 2) {
+                                $sku = json_decode($value['sku_json']);
+                                foreach ($sku as $s => $ku) {
+                                    if (!in_array($ku,$sku_list)) {
+                                        $sku_list[] = $ku;
+                                        $audio_time[$ku] = $value['buy_time'];
+                                    } else {
+                                        $audio_time[$ku] = $audio_time[$ku] + $value['buy_time'];
+                                    }
+                                }
+                            }
+                        }
+                        $new_audio_time = [];
+                        if (!empty($audio_time)) {
+                            foreach ($audio_time as $audio => $time) {
+                                $u_audio = DbAudios::getUserAudio(['uid' => $uid,'audio_id' => $audio],'id,end_time',true);
+                                if ($u_audio) {//更新
+                                    if ($u_audio['end_time'] >= time()){
+                                        $new_audio_time[$audio]      = $u_audio['end_time'] - time() + $time;
+                                        $u_audio['end_time'] += $time;
+                                    }else {
+                                        $u_audio['end_time'] = $time+time();
+                                        $new_audio_time[$audio]     = $time;
+                                    }
+                                    $up_data = [
+                                        'end_time' => $u_audio['end_time'],
+                                    ];
+                                    // array_push($user_audio_updateData,[$u_audio['id'] => $up_data]);
+                                    $user_audio_updateData[$u_audio['id']] = $up_data;
+                                    unset($user_audio);
+                                }else {
+                                    $user_audio = [
+                                        'uid' => $uid,
+                                        'audio_id' => $audio,
+                                        'end_time' => $time+time(),
+                                    ];
+                                    array_push($user_audioData,$user_audio);
+                                    $new_audio_time[$audio] = $time;
+                                    unset($user_audio);
+                                }
+                            }
+                        }
+                        $redisaudioKey = Config::get('rediskey.audio.redisAudioVisual');
+                        if (!empty($user_audioData)) {
+                            DbAudios::addUserAudio($user_audioData);
+                        }
+                        if (!empty($user_audio_updateData)) {
+                            foreach ($user_audio_updateData as $up => $audio_u) {
+                                DbAudios::updateUserAudio($audio_u,$up);
+                            }
+                        }
+                        if (!empty($new_audio_time)) {
+                            foreach ($new_audio_time as $audio => $time) {
+                                $this->redis->set($redisaudioKey.$uid.':'.$audio, $audio);
+                                $this->redis->expire($redisaudioKey.$uid.':'.$audio, $time);
+                            }
+                        }
+                        unset($uid);
+                        DbOrder::updataOrder(['order_status' => 5], $orderRes['id']);
+                //测试代码结束
 
                     }
                     if (!empty($memOrderData)) {

@@ -1643,7 +1643,7 @@ class Order extends CommonIndex {
                 $up_data = [
                     'end_time' => $u_audio['end_time'],
                 ];
-                array_push($user_audio_updateData,[$ar => $up_data]);
+                $user_audio_updateData[$u_audio['id']] = $up_data;
                 unset($user_audio);
             }else {
                 $user_audio = [
