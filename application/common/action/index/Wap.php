@@ -189,12 +189,13 @@ class Wap extends CommonIndex {
             $new_data[$key]['value'] = $value;
             $new_data[$key]['color'] = $color;
         }
+        // print_r($new_data);die;
         $send_data['data'] = $new_data;
         $access_token = $this->getTinluoAccessToken();
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
-        // print_r(json_encode($send_data,true));die;
+        print_r(json_encode($send_data,true));die;
         $result = $this->sendRequest2($requestUrl, $send_data);
-        return $result;
+        return json_decode($result,true);
     }
 
     function sendRequest2($requestUrl, $data = []) {
@@ -214,18 +215,14 @@ class Wap extends CommonIndex {
     }
 
     protected function getTinluoAccessToken() {
-       
-            $appid = Config::get('conf.weixin_miniprogram_appid');
-            // $appid         = 'wx1771b2e93c87e22c';
-            $secret = Config::get('conf.weixin_miniprogram_appsecret');
-            // $secret        = '1566dc764f46b71b33085ba098f58317';
-            $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
-            $requsest_subject = json_decode(sendRequest($requestUrl), true);
-            $access_token     = $requsest_subject['access_token'];
-            if (!$access_token) {
-                return false;
-            }
-
+        $appid         = 'wxae80a5994b43e4f5';
+        $secret        = '3db5446fbaa011416174b45d86adfd19';
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+        $requsest_subject = json_decode(sendRequest($requestUrl), true);
+        $access_token     = $requsest_subject['access_token'];
+        if (!$access_token) {
+            return false;
+        }
         return $access_token;
     }
 }

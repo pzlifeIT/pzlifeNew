@@ -3,7 +3,6 @@
 namespace app\index\controller;
 
 use app\index\MyController;
-use function Qiniu\json_decode;
 
 /**
  * 短信通知
@@ -192,15 +191,16 @@ class Wap extends MyController {
      * @author rzc
      */
     public function sendModelMessage() {
-        $access_token = trim($this->request->get('access_token'));
-        $template_id  = trim($this->request->get('template_id'));
-        $touser       = trim($this->request->get('touser'));
-        $url          = trim($this->request->get('url'));
-        $data         = trim($this->request->get('data'));
-        $color        = trim($this->request->get('color'));
-        if (empty($access_token)) {
-            return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
-        }
+        $access_token = trim($this->request->post('access_token'));
+        $template_id  = trim($this->request->post('template_id'));
+        $touser       = trim($this->request->post('touser'));
+        $url          = trim($this->request->post('url'));
+        $data         = $this->request->post('data');
+        $color        = trim($this->request->post('color'));
+        // if (empty($access_token)) {
+        //     return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
+        // }
+        
         if (empty($template_id)) {
             return ['code' => '3002','Error' => 'template_id is none'];
         }
@@ -210,7 +210,8 @@ class Wap extends MyController {
         if (empty($data)) {
             return ['code' => '3004','Error' => 'data is none'];
         }
-        $data = json_decode($data,true);
+        // $data = json_decode($data,true);
+        // print_r($touser);die;
         $result = $this->app->wap->sendModelMessage($access_token, $template_id, $touser, $url, $data, $color);
         return $result;
     }
