@@ -10,6 +10,7 @@ class Audios extends CommonIndex {
         $audioId       = 2;
         $url           = $this->tingluoSignurl($audioId);
         $data          = sendRequest($url);
+        print_r($data);die;
         $data          = json_decode($data, true);
         $data          = $data['data'];
         $audioIdList   = array_column($data, 'audio_id');//喜马拉雅获取的最新audio_id
@@ -28,6 +29,8 @@ class Audios extends CommonIndex {
                     'name'         => !empty($audioList[$v]['name']) ? trim($audioList[$v]['name']) : '',
                     'article_name' => !empty($audioList[$v]['article_name']) ? trim($audioList[$v]['article_name']) : '',
                     'audio'        => !empty($audioList[$v]['xm_file_url']) ? trim($audioList[$v]['xm_file_url']) : '',
+                    'audio_length'        => !empty($audioList[$v]['audio_length']) ? trim($audioList[$v]['audio_length']) : 0,
+                    'audio_length_text'        => !empty($audioList[$v]['audio_length_text']) ? trim($audioList[$v]['audio_length_text']) : '',
                 ];
                 if (in_array($arr, $result)) {//相同的不用更新
                     continue;
@@ -41,6 +44,8 @@ class Audios extends CommonIndex {
                 'name'         => !empty($audioList[$v]['name']) ? trim($audioList[$v]['name']) : '',
                 'article_name' => !empty($audioList[$v]['article_name']) ? trim($audioList[$v]['article_name']) : '',
                 'audio'        => !empty($audioList[$v]['xm_file_url']) ? trim($audioList[$v]['xm_file_url']) : '',
+                'audio_length'        => !empty($audioList[$v]['audio_length']) ? trim($audioList[$v]['audio_length']) : 0,
+                'audio_length_text'        => !empty($audioList[$v]['audio_length_text']) ? trim($audioList[$v]['audio_length_text']) : '',
             ]);
         }
         Db::startTrans();

@@ -431,7 +431,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Decimal} cost_price 成本价
      * @apiParam (入参) {Number} integral_price 积分售价
      * @apiParam (入参) {Number} end_time 结束时间(按小时记)
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:规格不能为空 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败 / 3009:name为空或者超出30个字符长度
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字且长度不超过8位数 / 3005:积分必须为大于或等于0的数字，且长度不超过10 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:添加失败 / 3009:name为空或者超出30个字符长度
      * @apiSampleRequest /admin/goods/addaudiosku
      * @return array
      * @author zyr
@@ -463,10 +463,10 @@ class Goods extends AdminController {
         if (in_array(0, $audioIdList)) {
             return ['code' => '3001'];
         }
-        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0) {//价格必须为大于或等于0的数字
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || mb_strlen($marketPrice,'utf8') > 8 || mb_strlen($retailPrice,'utf8') > 8 || mb_strlen($costPrice,'utf8') > 8) {//价格必须为大于或等于0的数字
             return ['code' => '3004'];
         }
-        if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+        if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
             return ['code' => '3005'];
         }
         $marketPrice = floatval($marketPrice);
@@ -522,7 +522,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Decimal} cost[_price 成本价
      * @apiParam (入参) {Number} [integral_price] 积分售价
      * @apiParam (入参) {Number} [end_time] 结束时间(按小时记)
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字 / 3005:积分必须为大于或等于0的数字 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:更新失败 / 3009:该sku不存在 / 3010:该用户没有权限 / 3011:已上架商品无法编辑 / 3012:name长度超出30
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:音频内容id列表有误 / 3002:商品id和sku_id必须为数字 / 3003:音频不存在无法添加 / 3004:价格必须为大于或等于0的数字,并且价格长度不超过8位数 / 3005:积分必须为大于或等于0的数字且长度不超过10位 / 3006:结束时间有误 / 3007:商品不是音频商品 / 3008:更新失败 / 3009:该sku不存在 / 3010:该用户没有权限 / 3011:已上架商品无法编辑 / 3012:name长度超出30
      * @apiSampleRequest /admin/goods/saveAudioSku
      * @return array
      * @author rzc
@@ -557,23 +557,24 @@ class Goods extends AdminController {
                 return ['code' => '3001'];
             }
         }
+        if (mb_strlen($marketPrice,'utf8') > 8) {}
         if (!empty($marketPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0) {
+            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0 || mb_strlen($marketPrice,'utf8') > 8) {
                 return ['code' => '3004'];
             }
         }
         if (!empty($retailPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0) {
+            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0 || mb_strlen($retailPrice,'utf8') > 8) {
                 return ['code' => '3004'];
             }
         }
         if (!empty($costPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($costPrice) || floatval($costPrice) < 0) {
+            if (!is_numeric($costPrice) || floatval($costPrice) < 0 || mb_strlen($costPrice,'utf8') > 8) {
                 return ['code' => '3004'];
             }
         }
         if (!empty($integralPrice)){
-            if (!is_numeric($integralPrice) || intval($integralPrice) < 0) {//积分必须为大于或等于0的数字
+            if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
                 return ['code' => '3005'];
             }
         }
