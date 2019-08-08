@@ -176,4 +176,56 @@ class Wap extends CommonIndex {
 
         return $jsapi_ticket;
     }
+
+    public function sendModelMessage($access_token, $template_id, $touser, $url = '', $data, $color = ''){
+        $send_data = [];
+        $color = $color ? $color : '#173177';
+        $send_data = [
+            'touser' => $touser,
+            'template_id' => $template_id,
+            'url' => $url,
+        ];
+        foreach ($data as $key => $value) {
+            $new_data[$key]['value'] = $value;
+            $new_data[$key]['color'] = $color;
+        }
+        $send_data['data'] = $new_data;
+        $access_token = $this->getTinluoAccessToken();
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
+        // print_r(json_encode($send_data,true));die;
+        $result = $this->sendRequest2($requestUrl, $send_data);
+        return $result;
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
+    }
+
+    protected function getTinluoAccessToken() {
+       
+            $appid = Config::get('conf.weixin_miniprogram_appid');
+            // $appid         = 'wx1771b2e93c87e22c';
+            $secret = Config::get('conf.weixin_miniprogram_appsecret');
+            // $secret        = '1566dc764f46b71b33085ba098f58317';
+            $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+            $requsest_subject = json_decode(sendRequest($requestUrl), true);
+            $access_token     = $requsest_subject['access_token'];
+            if (!$access_token) {
+                return false;
+            }
+
+        return $access_token;
+    }
 }

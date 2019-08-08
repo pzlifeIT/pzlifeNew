@@ -3,6 +3,7 @@
 namespace app\index\controller;
 
 use app\index\MyController;
+use function Qiniu\json_decode;
 
 /**
  * 短信通知
@@ -14,7 +15,7 @@ class Wap extends MyController {
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,sendModelMessage'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -72,13 +73,13 @@ class Wap extends MyController {
         // $mobile  = trim($this->request->post('mobile'));
         // $vercode = trim($this->request->post('vercode'));
         // $nick_name  = trim($this->request->post('nick_name'));
-        $sex        = trim($this->request->post('sex'));
-        $age        = trim($this->request->post('age'));
-        $signinfo   = trim($this->request->post('signinfo'));
-        $promote_id = trim($this->request->post('promote_id'));
-        $conId      = trim($this->request->post('con_id'));
-        $study_name  = trim($this->request->post('study_name'));
-        $study_mobile  = trim($this->request->post('study_mobile'));
+        $sex          = trim($this->request->post('sex'));
+        $age          = trim($this->request->post('age'));
+        $signinfo     = trim($this->request->post('signinfo'));
+        $promote_id   = trim($this->request->post('promote_id'));
+        $conId        = trim($this->request->post('con_id'));
+        $study_name   = trim($this->request->post('study_name'));
+        $study_mobile = trim($this->request->post('study_mobile'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -103,7 +104,7 @@ class Wap extends MyController {
         if (!in_array($sex, [1, 2])) {
             return ['code' => '3009'];
         }
-        
+
         if (!is_numeric($age)) {
             return ['code' => '3010'];
         }
@@ -117,9 +118,9 @@ class Wap extends MyController {
         if (empty($study_name)) {
             return ['code' => '3012'];
         }
-        $mobile = '';
+        $mobile    = '';
         $nick_name = '';
-        $result = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $study_name, $study_mobile);
+        $result    = $this->app->wap->SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $study_name, $study_mobile);
         $this->apiLog($apiName, [$conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo], $result['code'], '');
         return $result;
     }
@@ -171,6 +172,46 @@ class Wap extends MyController {
             return ['code' => 3001];
         }
         $result = $this->app->wap->getJsapiTicket($url);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 外部公众号发送模板消息
+     * @apiDescription  sendModelMessage
+     * @apiGroup         index_wap
+     * @apiName          sendModelMessage
+     * @apiParam (入参) {string} access_token ACCESS_TOKEN
+     * @apiParam (入参) {string} template_id 模板消息ID
+     * @apiParam (入参) {string} touser 接收者openid
+     * @apiParam (入参) {string} [url] 模板跳转链接（海外帐号没有跳转能力）
+     * @apiParam (入参) {string} data 模板数据
+     * @apiParam (入参) {string} [color] 模板内容字体颜色，不填默认为黑色
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/sendModelMessage
+     * @author rzc
+     */
+    public function sendModelMessage() {
+        $access_token = trim($this->request->get('access_token'));
+        $template_id  = trim($this->request->get('template_id'));
+        $touser       = trim($this->request->get('touser'));
+        $url          = trim($this->request->get('url'));
+        $data         = trim($this->request->get('data'));
+        $color        = trim($this->request->get('color'));
+        if (empty($access_token)) {
+            return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
+        }
+        if (empty($template_id)) {
+            return ['code' => '3002','Error' => 'template_id is none'];
+        }
+        if (empty($touser)) {
+            return ['code' => '3003','Error' => 'touser is none'];
+        }
+        if (empty($data)) {
+            return ['code' => '3004','Error' => 'data is none'];
+        }
+        $data = json_decode($data,true);
+        $result = $this->app->wap->sendModelMessage($access_token, $template_id, $touser, $url, $data, $color);
         return $result;
     }
 }
