@@ -463,7 +463,7 @@ class Goods extends AdminController {
         if (in_array(0, $audioIdList)) {
             return ['code' => '3001'];
         }
-        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || mb_strlen($marketPrice,'utf8') > 8 || mb_strlen($retailPrice,'utf8') > 8 || mb_strlen($costPrice,'utf8') > 8) {//价格必须为大于或等于0的数字
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || mb_strlen($marketPrice,'utf8') > 11 || mb_strlen($retailPrice,'utf8') > 11 || mb_strlen($costPrice,'utf8') > 11) {//价格必须为大于或等于0的数字
             return ['code' => '3004'];
         }
         if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
@@ -559,17 +559,17 @@ class Goods extends AdminController {
         }
         if (mb_strlen($marketPrice,'utf8') > 8) {}
         if (!empty($marketPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0 || mb_strlen($marketPrice,'utf8') > 8) {
+            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0 || mb_strlen($marketPrice,'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
         if (!empty($retailPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0 || mb_strlen($retailPrice,'utf8') > 8) {
+            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0 || mb_strlen($retailPrice,'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
         if (!empty($costPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($costPrice) || floatval($costPrice) < 0 || mb_strlen($costPrice,'utf8') > 8) {
+            if (!is_numeric($costPrice) || floatval($costPrice) < 0 || mb_strlen($costPrice,'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
