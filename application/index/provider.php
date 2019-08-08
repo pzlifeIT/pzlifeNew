@@ -25,4 +25,5 @@ return [
     'indexLog'          => app\common\action\index\IndexLog::class,
     'wap'               => app\common\action\index\Wap::class,
     'wechattweets'      => app\common\action\index\WechatTweets::class,
+    'audio'             => app\common\action\index\Audio::class,
 ];

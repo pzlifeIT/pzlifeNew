@@ -24,4 +24,8 @@ class UserAudio extends Model {
     protected static function init() {
         //TODO:初始化内容
     }
+
+    public function audio() {
+        return $this->belongsTo('audio', 'audio_id', 'id');
+    }
 }
