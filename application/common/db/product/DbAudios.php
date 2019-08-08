@@ -71,7 +71,7 @@ class DbAudios extends Db {
     public function getUserAudioRelation($where, $field, $row = false, $orderBy = '', $limit = ''){
         $obj = UserAudio::field($field)->with([
             'audio'      => function ($query) {
-                $query->field('id,name,audio,audition_time')->where(['delete_time' => 0]);
+                $query->field('id,name,audio,audition_time,audio_length,audio_length_text')->where(['delete_time' => 0]);
             },
         ])->where($where);
         return getResult($obj, $row, $orderBy, $limit);
