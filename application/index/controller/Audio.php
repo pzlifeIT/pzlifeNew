@@ -18,6 +18,7 @@ class Audio extends MyController {
      * @apiGroup         index_audio
      * @apiName          getUserAudioList
      * @apiParam (入参) {String} con_id 默认第一页开始
+     * @apiParam (入参) {String} status 1有效 2无效
      * @apiParam (入参) {String} [page] 默认第一页开始
      * @apiParam (入参) {String} [pageNum] 每页显示结果
      * @apiSuccess (返回) {String} code 200:成功  3001:con_id长度只能是32位 / 3002:conId有误 / 3003:page和pagenum必须是数字 / 4001:获取微信认证KEY失败
@@ -37,6 +38,7 @@ class Audio extends MyController {
      */
     public function getUserAudioList() {
         $conId   = trim($this->request->post('con_id'));
+        $status  = trim($this->request->post('status'));
         $page    = trim($this->request->post('page'));
         $pagenum = trim($this->request->post('pageNum'));
         $page    = $page ? $page : 1;
@@ -44,7 +46,7 @@ class Audio extends MyController {
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => '3003'];
         }
-        $result = $this->app->audio->getUserAudioList($conId, $page, $pagenum);
+        $result = $this->app->audio->getUserAudioList($conId, $status, $page, $pagenum);
         return $result;
     }
 

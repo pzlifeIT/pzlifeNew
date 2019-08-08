@@ -24,7 +24,7 @@ class Audio extends CommonIndex {
      * @author rzc
      */
 
-    public function getUserAudioList($conId, $page, $pagenum) {
+    public function getUserAudioList($conId, $status, $page, $pagenum) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3003'];
@@ -32,6 +32,13 @@ class Audio extends CommonIndex {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => '200', 'WeChatList' => []];
+        }
+        $where = [];
+        array_push($where,['uid', '=', $uid]);
+        if ($status == 1) {
+            array_push($where,['end_time', '>', time()]);
+        }else if ($status == 2){
+            array_push($where,['end_time', '<=', time()]);
         }
         $audio = DbAudios::getUserAudioRelation(['uid' => $uid],'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc'],$offset.','.$pagenum);
         foreach ($audio as $key => $value) {
