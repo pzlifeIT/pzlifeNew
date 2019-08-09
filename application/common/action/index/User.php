@@ -10,6 +10,7 @@ use app\facade\DbOrder;
 use app\facade\DbProvinces;
 use app\facade\DbRights;
 use app\facade\DbUser;
+use app\facade\DbGoods;
 use Config;
 use Env;
 use think\Db;
@@ -2709,6 +2710,9 @@ class User extends CommonIndex {
             array_push($where, ['is_use', '=', $isUse]);
         }
         $userCouponList = DbCoupon::getUserCoupon($where, 'id,price,gs_id,level,title,is_use,create_time,end_time');
+        foreach ($userCouponList as $key => $value) {
+            $userCouponList['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
+        }
         return ['code' => '200', 'data' => $userCouponList];
     }
 
@@ -2745,6 +2749,9 @@ class User extends CommonIndex {
             }
             return $var;
         }, $result['coupons']);
+        foreach ($result as $key => $value) {
+            $result['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
+        }
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
 
