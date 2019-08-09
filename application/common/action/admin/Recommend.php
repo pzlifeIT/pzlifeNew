@@ -388,21 +388,44 @@ class Recommend extends CommonIndex {
         if (empty($goods_data)) {
             return [];
         }
-        list($goods_spec, $goods_sku) = $this->getGoodsSku($goodsid);
-        if ($goods_sku) {
-            foreach ($goods_sku as $goods => $sku) {
-
-                $retail_price[$sku['id']]    = $sku['retail_price'];
-                $brokerage[$sku['id']]       = $sku['brokerage'];
-                $integral_active[$sku['id']] = $sku['integral_active'];
+        $retail_price = [];
+        $brokerage = [];
+        $integral_active = [];
+        if ($goods_data['goods_type'] == 1) {
+            list($goods_spec, $goods_sku) = $this->getGoodsSku($goodsid);
+            if ($goods_sku) {
+                foreach ($goods_sku as $goods => $sku) {
+    
+                    $retail_price[$sku['id']]    = $sku['retail_price'];
+                    $brokerage[$sku['id']]       = $sku['brokerage'];
+                    $integral_active[$sku['id']] = $sku['integral_active'];
+                }
+                $goods_data['retail_price']        = min($retail_price);
+                $goods_data['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
+                $goods_data['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
+            } else {
+                $goods_data['min_brokerage']       = 0;
+                $goods_data['min_integral_active'] = 0;
+                $goods_data['retail_price']        = 0;
             }
-            $goods_data['retail_price']        = min($retail_price);
-            $goods_data['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
-            $goods_data['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
-        } else {
-            $goods_data['min_brokerage']       = 0;
-            $goods_data['min_integral_active'] = 0;
-            $goods_data['retail_price']        = 0;
+
+        }else if ($goods_data['goods_type'] == 2) {//音频商品
+            $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_data['id']]]);
+            $goods_data['min_retail_price'] = DbAudios::getOneAudioSkuMost(['goods_id', '=', $goods_data['id']], 1, 'retail_price');
+            if ($goods_sku) {
+                foreach ($goods_sku as $goods => $sku) {
+
+                    $retail_price[$sku['id']]    = $sku['retail_price'];
+                    $brokerage[$sku['id']]       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], 0), 0.75, 2);
+                    $integral_active[$sku['id']] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), 0, 2), 2, 0);
+                }
+                $goods_data['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
+                $goods_data['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
+
+            } else {
+                $goods_data['min_brokerage']       = 0;
+                $goods_data['min_integral_active'] = 0;
+            }
         }
         return $goods_data;
     }
