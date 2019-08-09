@@ -557,7 +557,7 @@ class Goods extends CommonIndex {
         if (empty($goodsIdRes)) {
             return ['code' => 200, 'data' => []];
         }
-        $field  = 'id,goods_name,subtitle,image';
+        $field  = 'id,goods_name,subtitle,image,goods_type';
         $where  = [['status', '=', 1], ['id', 'IN', $goodsIdRes]];
         $result = DbGoods::getGoodsList2($where, $field);
         if (empty($result)) {
