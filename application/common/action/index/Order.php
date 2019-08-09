@@ -1705,6 +1705,9 @@ class Order extends CommonIndex {
                 }
             } else {
                 $thirdMoney = $summary['total_price'];
+                if ($thirdMoney = 0) {
+                    $isPay          = true; //无需支付
+                }
             }
             $tradingData = [
                 'uid'          => $uid,
