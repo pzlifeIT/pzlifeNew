@@ -2725,7 +2725,7 @@ class User extends CommonIndex {
         }
         $userCouponList = DbCoupon::getUserCoupon($where, 'id,price,gs_id,level,title,is_use,create_time,end_time');
         foreach ($userCouponList as $key => $value) {
-            $userCouponList['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
+            $userCouponList[$key]['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
         }
         return ['code' => '200', 'data' => $userCouponList];
     }
@@ -2763,8 +2763,8 @@ class User extends CommonIndex {
             }
             return $var;
         }, $result['coupons']);
-        foreach ($result as $key => $value) {
-            $result['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
+        foreach ($result['coupons'] as $key => $value) {
+            $result['coupons'][$key]['goods_type'] = DbGoods::getOneGoods(['id' => $value['gs_id']],'goods_type')['goods_type'];
         }
         return ['code' => '200', 'data' => $result, 'total' => $count];
     }
