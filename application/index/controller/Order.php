@@ -696,6 +696,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} goods_id 音频商品id
      * @apiParam (入参) {Number} pay_type 支付方式 1.所有第三方支付 2.商券支付
      * @apiParam (入参) {Number} num 购买数量
+     * @apiParam (入参) {Number} user_coupon_id 使用优惠券ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.goods_id错误 / 3003:num错误 / 3004:uid错误 / 3005:商品商品不存在或者已下架 / 3006:该商品sku不存在 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付

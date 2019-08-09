@@ -1722,6 +1722,9 @@ class Order extends CommonIndex {
             ];
         } else if ($payType == 1) { //第三方支付
             $thirdMoney = $summary['total_price'];
+            if ($thirdMoney == 0) {
+                $isPay          = true; //无需支付
+            }
         }
         $orderData = [
             'order_no'        => $orderNo,
