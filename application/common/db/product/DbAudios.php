@@ -58,9 +58,9 @@ class DbAudios extends Db {
     public function getOneAudioSkuMost($where, $most, $field) {
         /* 最小 */
         if ($most == 1) {
-            return GoodsSku::where($where)->min($field);
+            return AudioSku::where($where)->min($field);
         } elseif ($most == 2) {
-            return GoodsSku::where($where)->max($field);
+            return AudioSku::where($where)->max($field);
         }
 
     }
