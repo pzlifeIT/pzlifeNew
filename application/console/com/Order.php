@@ -215,9 +215,6 @@ class Order extends Pzlife {
             if (empty($orderRes)) {
                 exit('order_id_error'); //订单id有误
             }
-            if ($orderRes['order_type'] == 4) {
-                $order_change[] = $orderRes['id'];
-            }
             $uid      = $orderRes['uid']; //购买人的uid
             $orderNo  = $orderRes['order_no']; //购买订单号
             $identity = $this->getIdentity($uid); //获取自己的身份
@@ -337,11 +334,7 @@ class Order extends Pzlife {
                 Db::name('log_bonus')->insertAll($data);
                 Db::name('log_integral')->insertAll(array_values($integralData));
             }
-            if (!empty($order_change)) {
-                foreach ($order_change as $key => $value) {
-                    Db::name('order')->where(['id'=> $value])->update(['order_status' => 6]);
-                }
-            }
+            
             Db::commit();
             exit('ok!');
         } catch (\Exception $e) {

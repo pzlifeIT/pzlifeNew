@@ -296,7 +296,7 @@ class Payment {
                             }
                         }
                         unset($uid);
-                        DbOrder::updataOrder(['order_status' => 5], $orderRes['id']);
+                        DbOrder::updataOrder(['order_status' => 6], $orderRes['id']);
                 //测试代码结束
 
                     }

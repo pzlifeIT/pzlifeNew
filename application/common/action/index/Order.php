@@ -1725,7 +1725,7 @@ class Order extends CommonIndex {
             'third_order_id'  => 0,
             'uid'             => $uid,
             'order_type'      => 4,
-            'order_status'    => $isPay ? 5 : 1,
+            'order_status'    => $isPay ? 6 : 1,
             'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
             'deduction_money' => $deductionMoney, //商票抵扣金额
             'pay_money'       => $summary['total_price'], //实际支付(第三方支付金额+商票抵扣金额)

@@ -48,6 +48,23 @@ class DbAudios extends Db {
         return getResult($obj, $row, $orderBy, $limit);
     }
 
+    /**
+     * 获取一条商品规格某字段最值
+     * @param $where
+     * @param $field
+     * @return array
+     * @author rzc
+     */
+    public function getOneAudioSkuMost($where, $most, $field) {
+        /* 最小 */
+        if ($most == 1) {
+            return GoodsSku::where($where)->min($field);
+        } elseif ($most == 2) {
+            return GoodsSku::where($where)->max($field);
+        }
+
+    }
+
     public function updateAudiosSku($data, $id){
         $audioSku = new AudioSku;
         return $audioSku->save($data, ['id' => $id]);
