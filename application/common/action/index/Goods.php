@@ -4,6 +4,7 @@ namespace app\common\action\index;
 
 use app\facade\DbGoods;
 use app\facade\DbLabel;
+use app\facade\DbAudios;
 use Config;
 use think\Db;
 
@@ -348,9 +349,9 @@ class Goods extends CommonIndex {
                 $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $value['id']]]);
                 $where                            = ['goods_id' => $value['id']];
                 $field                            = 'market_price';
-                $result[$key]['min_market_price'] = DbGoods::getOneAudioSkuMost($where, 1, $field);
+                $result[$key]['min_market_price'] = DbAudios::getOneAudioSkuMost($where, 1, $field);
                 $field                            = 'retail_price';
-                $result[$key]['min_retail_price'] = DbGoods::getOneAudioSkuMost($where, 1, $field);
+                $result[$key]['min_retail_price'] = DbAudios::getOneAudioSkuMost($where, 1, $field);
                 if ($goods_sku) {
                     foreach ($goods_sku as $goods => $sku) {
 
@@ -440,9 +441,9 @@ class Goods extends CommonIndex {
             }else if ($value['goods_type'] == 2){
                 $where                            = ['goods_id' => $value['id']];
                 $field                            = 'market_price';
-                $result[$key]['min_market_price'] = DbGoods::getOneAudioSkuMost($where, 1, $field);
+                $result[$key]['min_market_price'] = DbAudios::getOneAudioSkuMost($where, 1, $field);
                 $field                            = 'retail_price';
-                $result[$key]['min_retail_price'] = DbGoods::getOneAudioSkuMost($where, 1, $field);
+                $result[$key]['min_retail_price'] = DbAudios::getOneAudioSkuMost($where, 1, $field);
                 $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $value['id']]]);
                 if ($goods_sku) {
                     foreach ($goods_sku as $goods => $sku) {
@@ -564,25 +565,46 @@ class Goods extends CommonIndex {
         }
         foreach ($result as $key => $value) {
             $result[$key]['goods_name']       = htmlspecialchars_decode($value['goods_name']);
-            $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
-            $field                            = 'market_price';
-            $field                            = 'retail_price';
-            $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
-            list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
-            if ($goods_sku) {
-                $retail_price    = [];
-                $brokerage       = [];
-                $integral_active = [];
-                foreach ($goods_sku as $goods => $sku) {
-
-                    $retail_price[$sku['id']]    = $sku['retail_price'];
-                    $brokerage[$sku['id']]       = $sku['brokerage'];
-                    $integral_active[$sku['id']] = $sku['integral_active'];
+            $retail_price    = [];
+            $brokerage       = [];
+            $integral_active = [];
+            if ($value['goods_type'] == 1) {
+                $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
+                $field                            = 'market_price';
+                $field                            = 'retail_price';
+                $result[$key]['min_retail_price'] = DbGoods::getOneSkuMost($where, 1, $field);
+                list($goods_spec, $goods_sku) = $this->getGoodsSku($value['id']);
+                if ($goods_sku) {
+                    foreach ($goods_sku as $goods => $sku) {
+    
+                        $retail_price[$sku['id']]    = $sku['retail_price'];
+                        $brokerage[$sku['id']]       = $sku['brokerage'];
+                        $integral_active[$sku['id']] = $sku['integral_active'];
+                    }
+                    $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
+                } else {
+                    $result[$key]['min_brokerage']       = 0;
+                    $result[$key]['min_integral_active'] = 0;
                 }
-                $result[$key]['min_brokerage'] = $brokerage[array_search(min($retail_price), $retail_price)];
-            } else {
-                $result[$key]['min_brokerage']       = 0;
-                $result[$key]['min_integral_active'] = 0;
+            } else if ($value['goods_type'] == 2) {
+                $field                            = 'retail_price';
+                $where                            = ['goods_id' => $value['id']];
+                $result[$key]['min_retail_price'] = DbAudios::getOneAudioSkuMost($where, 1, $field);
+                $goods_sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $value['id']]]);
+                if ($goods_sku) {
+                    foreach ($goods_sku as $goods => $sku) {
+
+                        $retail_price[$sku['id']]    = $sku['retail_price'];
+                        $brokerage[$sku['id']]       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], 0), 0.75, 2);
+                        $integral_active[$sku['id']] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), 0, 2), 2, 0);
+                    }
+                    $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
+                    $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
+
+                } else {
+                    $result[$key]['min_brokerage']       = 0;
+                    $result[$key]['min_integral_active'] = 0;
+                }
             }
         }
         array_multisort($goodsIdRes, SORT_ASC, $result);
