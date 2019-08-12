@@ -294,9 +294,10 @@ class Payment {
                                 $this->redis->set($redisaudioKey.$uid.':'.$audio, $audio);
                                 $this->redis->expire($redisaudioKey.$uid.':'.$audio, $time);
                             }
-                        }
+                            
                         unset($uid);
                         DbOrder::updataOrder(['order_status' => 6], $orderRes['id']);
+                        }
                 //测试代码结束
 
                     }
