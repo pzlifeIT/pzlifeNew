@@ -1051,7 +1051,7 @@ class DbGoods {
         if ($image === true) {
             $obj = $obj->with([
                 'goodsSubjectImage' => function ($query) {
-                    $query->field('subject_id,source_type,image_path');
+                    $query->field('subject_id,source_type,image_path,share_image_path');
                 }]);
         }
         if ($row === true) {
