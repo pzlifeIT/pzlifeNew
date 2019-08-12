@@ -2,6 +2,7 @@
 
 namespace app\common\action\admin;
 
+use app\facade\DbAudios;
 use app\facade\DbImage;
 use app\facade\DbLabel;
 use Overtrue\Pinyin\Pinyin;
@@ -175,7 +176,7 @@ class Goods extends CommonIndex {
             if (empty($logImage)) {//图片不存在
                 return ['code' => '3010'];//图片没有上传过
             }
-            if ($data['share_image']) {
+            if (isset($data['share_image'])) {
                 $share_image    = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
                 $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
                 if (empty($logShareImage)) {//图片不存在
@@ -450,6 +451,143 @@ class Goods extends CommonIndex {
     }
 
     /**
+     * 添加商品的音频商品规格属性
+     * @param $goodsId
+     * @param $name
+     * @param $audioIdList
+     * @param $marketPrice
+     * @param $retailPrice
+     * @param $costPrice
+     * @param $integralPrice
+     * @param $endTime
+     * @return array
+     */
+    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name) {
+        $where    = [["id", "=", $goodsId]];
+        $field    = "id,goods_type";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != 2) {
+            return ['code' => '3007'];
+        }
+        $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
+        if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+            return ['code' => '3003'];
+        }
+        $skuData = [
+            'goods_id'       => $goodsId,
+            'name'           => $name,
+            'market_price'   => $marketPrice,
+            'retail_price'   => $retailPrice,
+            'cost_price'     => $costPrice,
+            'integral_price' => $integralPrice,
+            'end_time'       => $endTime * 3600,
+        ];
+        Db::startTrans();
+        try {
+            $audioSkuId = DbAudios::saveAudioSku($skuData);
+            $relation   = [];
+            foreach ($audioIdList as $val) {
+                array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $audioSkuId]);
+            }
+            DbAudios::saveAllAudioSkuRelation($relation);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            print_r($e);
+            Db::rollback();
+            return ['code' => '3008'];//更新失败
+        }
+    }
+
+    public function getGoodsAudioSku($sku_id, $goodsId){
+        $sku = DbAudios::getAudiosSku(['id' => $sku_id, 'goods_id' => $goodsId], '*', true);
+        if (empty($sku)){
+            return ['code' => '200', 'sku' => []];
+        }
+        $sku['end_time'] = $sku['end_time'] / 3600;
+        $sku['audioIdList'] = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'audio_pri_id');
+        return ['code' => '200', 'sku' => $sku];
+    }
+
+    /**
+     * 修改商品的音频商品规格属性
+     * @param $goodsId
+     * @param $sku_id
+     * @param $name
+     * @param $audioIdList
+     * @param $marketPrice
+     * @param $retailPrice
+     * @param $costPrice
+     * @param $integralPrice
+     * @param $endTime
+     * @return array
+     */
+    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime = 0, $name = ''){
+        $where    = [["id", "=", $goodsId]];
+        $field    = "id,goods_type,status";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != 2) {
+            return ['code' => '3007'];
+        }
+        if ($goodsOne['status'] == 1) {
+            return ['code' => '3011'];
+        }
+        if (!DbAudios::getAudiosSku(['id' => $sku_id], 'id', true)){
+            return ['code' => '3009'];
+        }
+        $relation   = [];
+        $delrelation = [];
+        if (!empty($audioIdList)){
+            $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
+            if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+                return ['code' => '3003'];
+            }
+            $has_relation = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'id');
+            foreach ($has_relation as $value) {
+                array_push($delrelation,$value['id']);
+            }
+            foreach ($audioIdList as $val) {
+                array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $sku_id]);
+            }
+        }
+        $data = [];
+        if ($marketPrice) {
+            $data['market_price'] = $marketPrice;
+        }
+        if ($retailPrice) {
+            $data['retail_price'] = $retailPrice;
+        }
+        if ($costPrice) {
+            $data['cost_price'] = $costPrice;
+        }
+        if ($integralPrice) {
+            $data['integral_price'] = $integralPrice;
+        }
+        if ($endTime) {
+            $data['end_time'] = $endTime * 3600;
+        }
+        if (!empty($name)) {
+            $data['name'] = $name;
+        }
+        Db::startTrans();
+        try {
+            DbAudios::updateAudiosSku($data, $sku_id);
+            if (!empty($delrelation)) {
+                $del = DbAudios::delAudioSkuRelation($delrelation);
+            }
+            if (!empty($relation)) {
+                DbAudios::saveAllAudioSkuRelation($relation);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            exception($e);
+            Db::rollback();
+            return ['code' => '3008'];//更新失败
+        }
+    }
+
+    /**
      * 获取sku列表
      * @param $skuId
      * @return array
@@ -477,26 +615,33 @@ class Goods extends CommonIndex {
     /**
      * 获取一条商品数据
      * @param $id
+     * @param $getType
+     * @param $goodsType
      * @return array
      * @author wujunjie
      * 2019/1/2-16:42
      */
-    public function getOneGoods($id, $getType) {
+    public function getOneGoods($id, $getType, $goodsType) {
         //根据商品id找到商品表里面的基本数据
+        $where    = [["id", "=", $id]];
+        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
+        $goodsOne = DbGoods::getOneGoods($where, $field);
+        if ($goodsOne['goods_type'] != $goodsType) {
+            return ['code' => '3005'];//该商品不属于这个类型
+        }
         $goods_data = [];
         if (in_array(1, $getType)) {
-            $where      = [["id", "=", $id]];
-            $field      = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,share_image,status";
-            $goods_data = DbGoods::getOneGoods($where, $field);
+            $goods_data = $goodsOne;
             if (empty($goods_data)) {
                 return ["code" => 3000];
             }
             $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
             $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
-            $supplier                    = DbGoods::getOneSupplier(['id' => $goods_data['supplier_id']], 'name');
-            $goods_data['supplier_name'] = $supplier['name'];
-            $goods_data['goods_name']   = htmlspecialchars_decode($goods_data['goods_name']);
+            $goods_data['goods_name'] = htmlspecialchars_decode($goods_data['goods_name']);
         }
+        $supplier                    = DbGoods::getOneSupplier(['id' => $goodsOne['supplier_id']], 'name');
+        $goods_data['supplier_name'] = '';
+        $goods_data['supplier_name'] = $supplier['name'];
         //根据商品id找到商品图片表里面的数据
         $imagesDetatil  = [];
         $imagesCarousel = [];
@@ -518,9 +663,8 @@ class Goods extends CommonIndex {
                 }
             }
         }
-
         $specAttr = [];
-        if (in_array(2, $getType)) {
+        if (in_array(2, $getType) && $goodsType == 1) {
             $specAttrRes = DbGoods::getGoodsSpecAttr(['goods_id' => $id], 'id,spec_id,attr_id', 'id,cate_id,spe_name', 'id,spec_id,attr_name');
             foreach ($specAttrRes as $specVal) {
                 $specVal['spec_name'] = $specVal['goods_spec']['spe_name'];
@@ -530,13 +674,25 @@ class Goods extends CommonIndex {
                 array_push($specAttr, $specVal);
             }
         }
-
         //根据商品id获取sku表数据
         $sku = [];
         if (in_array(4, $getType)) {
-            $where = [["goods_id", "=", $id], ['status', '=', 1]];
-            $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
-            $sku   = DbGoods::getSku($where, $field);
+            if ($goodsType == 1) {
+                $where = [["goods_id", "=", $id], ['status', '=', 1]];
+                $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
+                $sku   = DbGoods::getSku($where, $field);
+            }
+            if ($goodsType == 2) {
+                $sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $id]]);
+                foreach ($sku as &$v) {
+                    $v['end_time'] = $v['end_time'] / 3600;
+                    $v['audios']   = array_map(function ($var) {
+                        unset($var['pivot']);
+                        return $var;
+                    }, $v['audios']);
+                }
+                unset($v);
+            }
         }
         $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
         $source_type         = [1, 2, 3, 4];
@@ -683,7 +839,7 @@ class Goods extends CommonIndex {
     public function upDown(int $id, int $type) {
         //判断传过来的id是否有效
         $where     = [["id", "=", $id]];
-        $field     = "goods_name,cate_id";
+        $field     = "goods_name,cate_id,goods_type";
         $res       = DbGoods::getOneGoods($where, $field);
         $labelName = $res['goods_name'];
         if (empty($res)) {
@@ -715,8 +871,10 @@ class Goods extends CommonIndex {
                     }
                 }
             }
-            if ($stockAll <= 0) {
-                return ['code' => '3003'];//没有可售库存
+            if ($res['goods_type'] == 1) {
+                if ($stockAll <= 0) {
+                    return ['code' => '3003'];//没有可售库存
+                }
             }
             //1.详情图 2.轮播图
             $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');

@@ -204,12 +204,13 @@ class Order extends Pzlife {
         $tradingData  = [];
         $integralData = [];
         // $this->redis->rPush($redisListKey, 1164);
+        $order_change = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
                 break;
             }
-            $orderSql = sprintf("select id,uid,order_no,deduction_money from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
+            $orderSql = sprintf("select id,uid,order_no,deduction_money,order_type from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
             $orderRes = Db::query($orderSql);
             $orderRes = $orderRes[0];
             if (empty($orderRes)) {
@@ -354,6 +355,7 @@ class Order extends Pzlife {
                 Db::name('log_bonus')->insertAll($data);
                 Db::name('log_integral')->insertAll(array_values($integralData));
             }
+            
             Db::commit();
             exit('ok!');
         } catch (\Exception $e) {
