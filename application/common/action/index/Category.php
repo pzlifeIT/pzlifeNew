@@ -56,4 +56,17 @@ class Category{
         return ["code"=>200,"data"=>$cate_tree];
         
     }
+
+    public function getSubjectDetail(int $subjectId){
+        $where       = ['id' => $subjectId];
+        $field       = 'id,pid,subject,status,tier,order_by';
+        $subjectList = DbGoods::getSubject($where, $field, true, true);
+        if (empty($subjectList)) {
+            return ['code' => '3000'];
+        }
+        $subjectList['subject_image'] = $subjectList['goods_subject_image'][0]['image_path'] ?? '';
+        $subjectList['subject_share_image'] = $subjectList['goods_subject_image'][0]['share_image_path'] ?? '';
+        unset($subjectList['goods_subject_image']);
+        return ['code' => '200', 'data' => $subjectList];
+    }
 }
