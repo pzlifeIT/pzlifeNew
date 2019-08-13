@@ -197,9 +197,9 @@ class Wap extends MyController {
         $url          = trim($this->request->post('url'));
         $data         = $this->request->post('data');
         $color        = trim($this->request->post('color'));
-        // if (empty($access_token)) {
-        //     return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
-        // }
+        if (empty($access_token)) {
+            return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
+        }
         
         if (empty($template_id)) {
             return ['code' => '3002','Error' => 'template_id is none'];
