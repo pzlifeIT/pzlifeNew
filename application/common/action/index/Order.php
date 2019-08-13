@@ -1595,6 +1595,9 @@ class Order extends CommonIndex {
         }
         $discountMoney = $couponPrice;
         $totalPrice    = bcsub($totalGoodsPrice, $discountMoney, 2);
+        if ($totalPrice <= 0) {
+            $totalPrice = 0;
+        }
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => [$goodsSku]];
     }
 
@@ -1792,7 +1795,7 @@ class Order extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
-            exception($e);
+            // exception($e);
             Db::rollback();
             return ['code' => '3009'];
         }
