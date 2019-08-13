@@ -1070,10 +1070,16 @@ class Order extends CommonIndex {
                 foreach ($order_goods_num as $ogn => $goods_num) {
                     if ($goods_num['sku_id'] == $goods['sku_id']) {
                         $order_goods[$og]['goods_num'] = $goods_num['goods_num'];
-                        if (empty($goods['sku_image'])) {
+                        if ($goods['goods_type'] == 1) {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
+                            $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
+                        } else if ($goods['goods_type'] == 2) {
+                            $order_goods[$og]['sku_image'] = '';
+                            $order_goods[$og]['sku_json'] = DbAudios::getAudio([['id','in',join(',',json_decode($order_goods[$og]['sku_json'], true))]],'id,name,audio,audition_time,audio_length_text');
+                           
+                            // print_r(json_encode($sku_json));die;
                         }
-                        $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'], true);
+                        
                         $integral                     += $goods['integral'] * $goods_num['goods_num'];
                         $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                     }
