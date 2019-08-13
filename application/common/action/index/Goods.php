@@ -311,6 +311,7 @@ class Goods extends CommonIndex {
         if (empty($result)) {
             return ['code' => 200, 'data' => []];
         }
+        
         // print_r($result);die;
         /* 获取每条商品的SKU,后期列表开放加入购物车释放 */
         foreach ($result as $key => $value) {
@@ -340,7 +341,7 @@ class Goods extends CommonIndex {
                     }
                     $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
                     $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
-    
+                    unset($retail_price);
                 } else {
                     $result[$key]['min_brokerage']       = 0;
                     $result[$key]['min_integral_active'] = 0;
@@ -359,14 +360,19 @@ class Goods extends CommonIndex {
                         $brokerage[$sku['id']]       = bcmul(getDistrProfits($sku['retail_price'], $sku['cost_price'], 0), 0.75, 2);
                         $integral_active[$sku['id']] = bcmul(bcsub(bcsub($sku['retail_price'], $sku['cost_price'], 4), 0, 2), 2, 0);
                     }
+                    // print_r($brokerage);
+                    // print_r(array_search(min($retail_price), $retail_price));
                     $result[$key]['min_brokerage']       = $brokerage[array_search(min($retail_price), $retail_price)];
                     $result[$key]['min_integral_active'] = $integral_active[array_search(min($retail_price), $retail_price)];
-
+                    // echo $value['id'];die;
+                    unset($retail_price);
                 } else {
                     $result[$key]['min_brokerage']       = 0;
                     $result[$key]['min_integral_active'] = 0;
                 }
             }
+            
+            
         }
         return ['code' => 200, 'data' => $result];
     }
