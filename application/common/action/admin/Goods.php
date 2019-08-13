@@ -551,24 +551,25 @@ class Goods extends CommonIndex {
             }
         }
         $data = [];
-        if ($marketPrice) {
+        if (isset($marketPrice)) {
             $data['market_price'] = $marketPrice;
         }
-        if ($retailPrice) {
+        if (isset($retailPrice)) {
             $data['retail_price'] = $retailPrice;
         }
-        if ($costPrice) {
+        if (isset($costPrice)) {
             $data['cost_price'] = $costPrice;
         }
-        if ($integralPrice) {
+        if (isset($integralPrice)) {
             $data['integral_price'] = $integralPrice;
         }
-        if ($endTime) {
+        if (isset($endTime)) {
             $data['end_time'] = $endTime * 3600;
         }
         if (!empty($name)) {
             $data['name'] = $name;
         }
+        //print_r($data);die;
         Db::startTrans();
         try {
             DbAudios::updateAudiosSku($data, $sku_id);
@@ -624,7 +625,7 @@ class Goods extends CommonIndex {
     public function getOneGoods($id, $getType, $goodsType) {
         //根据商品id找到商品表里面的基本数据
         $where    = [["id", "=", $id]];
-        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status";
+        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != $goodsType) {
             return ['code' => '3005'];//该商品不属于这个类型

@@ -335,7 +335,6 @@ class Order extends CommonIndex {
         }
     }
 
-
     private function quickSummary($uid, $buid, $skuId, $num, $cityId, $userCouponId) {
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status');
         if (empty($goodsSku)) {
@@ -1010,7 +1009,7 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_image'] = DbGoods::getOneGoodsSku(['id' => $goods['sku_id']], 'sku_image', true)['sku_image'];
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
-                            $commission                    = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 4), $goods_num['goods_num'], 2), 2);
+                            $commission                    = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                         }
                     }
                 }
@@ -1068,7 +1067,7 @@ class Order extends CommonIndex {
                         }
                         $order_goods[$og]['sku_json'] = json_decode($order_goods[$og]['sku_json'], true);
                         $integral                     += $goods['integral'] * $goods_num['goods_num'];
-                        $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 4), $goods_num['goods_num'], 2), 2);
+                        $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                     }
                 }
             }
@@ -1591,7 +1590,7 @@ class Order extends CommonIndex {
         $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], 0);//可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], 0);
-        if ($totalGoodsPrice <= 0) {
+        if ($totalGoodsPrice < 0) {
             return ['code' => '3009'];
         }
         $discountMoney = $couponPrice;
@@ -1793,6 +1792,7 @@ class Order extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3009'];
         }

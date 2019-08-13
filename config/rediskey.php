@@ -47,6 +47,9 @@ return [
     'active'=>[//活动
         'redisHdluckyDraw'=>'index:offlineActivities:luckyDraw',
     ],
+    'cms'         => [
+        'redisCmsSearchKeyword' => 'cms:search:keyword:', //用户购物车信息
+    ],
     'audio'=>[//活动
         'redisAudioVisual'        => 'index:audio:visual:list:',//音频视听
     ]

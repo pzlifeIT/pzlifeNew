@@ -61,6 +61,7 @@ class Admin extends CommonIndex {
         $group                   = DbAdmin::getPermissionsGroup([['id', 'in', $adminGroup]], 'group_name');
         $group                   = array_column($group, 'group_name');
         $adminInfo['group_name'] = $group;
+        $adminInfo['keyword'] = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $adminId);
         return ['code' => '200', 'data' => $adminInfo];
     }
 
@@ -83,6 +84,9 @@ class Admin extends CommonIndex {
         $adminInfo = DbAdmin::getAdminInfo([['id', '<>', 1]], 'id,admin_name,department,stype,status');
         foreach ($adminInfo as &$ai) {
             $ai['group'] = $adminGroup[$ai['id']] ?? [];
+            // $keyword = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $ai['id']);
+            // $newkeyword = join(',',$keyword);
+            $ai['keyword'] = $this->redis->hgetall(Config::get('rediskey.cms.redisCmsSearchKeyword') . $ai['id']);
         }
         unset($ai);
         return ['code' => '200', 'data' => $adminInfo];
@@ -1572,5 +1576,39 @@ class Admin extends CommonIndex {
     public function getPermissionsApiOne($cmsConId, $id) {
         $data = DbAdmin::getPermissionsApi([['id', '=', $id]], 'id,stype,cn_name,content', true);
         return ['code' => '200', 'data' => $data];
+    }
+
+    /**
+     * 添加订单搜索关键词
+     * @param $admin_id
+     * @param $keyword
+     * @return array
+     * @author zyr
+     */
+    public function bindManagerSearchKeyword($admin_id, $keyword){
+        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id],'id',true);
+        if (empty($admin_user)) {
+            return ['code' => '3001'];
+        }
+        $redissearchkeyword = Config::get('rediskey.cms.redisCmsSearchKeyword');
+        $this->redis->hset($redissearchkeyword . $admin_id, $keyword, $keyword);
+        return ['code' => '200'];
+    }
+
+    /**
+     * 删除订单搜索关键词
+     * @param $admin_id
+     * @param $keyword
+     * @return array
+     * @author zyr
+     */
+    public function delManagerSearchKeyword($admin_id, $keyword){
+        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id],'id',true);
+        if (empty($admin_user)) {
+            return ['code' => '3001'];
+        }
+        $redissearchkeyword = Config::get('rediskey.cms.redisCmsSearchKeyword');
+        $this->redis->hdel($redissearchkeyword . $admin_id, $keyword);
+        return ['code' => '200'];
     }
 }

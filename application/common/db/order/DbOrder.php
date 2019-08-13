@@ -340,6 +340,40 @@ class DbOrder {
         }
         return $obj->toArray();
     }
+
+    /**
+     * 获取订单商品
+     * @param $field
+     * @param $where
+     * @param $group
+     * @param $distinct
+     * @param $row
+     * @return array
+     */
+    public function getOrderGoodsGroup($goods_name) {
+        $result = Db::query("SELECT
+        SUM(`og`.`goods_num`) AS `goods_num`,
+        SUM(`og`.`goods_price`) AS `goods_price`,
+        `og`.`order_child_id`,
+        `oc`.`order_id`
+        FROM
+        pz_order_goods AS og
+        INNER JOIN pz_order_child AS oc ON `og`.`order_child_id` = `oc`.`id`
+        INNER JOIN pz_orders AS o ON `oc`.`order_id` = `o`.`id`
+        WHERE
+        `o`.`order_status` IN (4, 5, 6) AND
+        `og`.`goods_name` = '".$goods_name."' 
+        GROUP BY
+		`oc`.`order_id`,
+		`og`.`order_child_id`,
+		`goods_num`,
+        `goods_price`");
+        if (empty($result)) {
+            return [];
+        }
+        return $result;
+    }
+
 }
 
 

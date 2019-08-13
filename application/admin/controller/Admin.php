@@ -1429,4 +1429,66 @@ class Admin extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 管理员绑定搜索关键词
+     * @apiDescription   bindManagerSearchKeyword
+     * @apiGroup         admin_admin
+     * @apiName          bindManagerSearchKeyword
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} admin_id 管理员id
+     * @apiParam (入参) {String} keyword 关键词
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/bindManagerSearchKeyword
+     * @author rzc
+     */
+    public function bindManagerSearchKeyword(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $admin_id = trim($this->request->post('admin_id'));
+        $keyword  = trim($this->request->post('keyword'));
+        if (!is_numeric($admin_id) || $admin_id < 1) {
+            return ['code' => '3001'];
+        }
+        if (empty($keyword)) {
+            return ['code' => '302'];
+        }
+        $result = $this->app->admin->bindManagerSearchKeyword($admin_id, $keyword);
+        $this->apiLog($apiName, [$cmsConId, $admin_id, $keyword], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 删除管理员绑定搜索关键词
+     * @apiDescription   delManagerSearchKeyword
+     * @apiGroup         admin_admin
+     * @apiName          delManagerSearchKeyword
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} admin_id 管理员id
+     * @apiParam (入参) {String} keyword 关键词
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/delManagerSearchKeyword
+     * @author rzc
+     */
+    public function delManagerSearchKeyword(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $admin_id = trim($this->request->post('admin_id'));
+        $keyword  = trim($this->request->post('keyword'));
+        if (!is_numeric($admin_id) || $admin_id < 1) {
+            return ['code' => '3001'];
+        }
+        if (empty($keyword)) {
+            return ['code' => '302'];
+        }
+        $result = $this->app->admin->delManagerSearchKeyword($admin_id, $keyword);
+        $this->apiLog($apiName, [$cmsConId, $admin_id, $keyword], $result['code'], $cmsConId);
+        return $result;
+    }
 }

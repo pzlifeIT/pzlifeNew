@@ -72,15 +72,15 @@ class OfflineActivities extends CommonIndex {
         if (empty($shopInfo)) {
             $buid = 1;
         }
-        $goods = $summary['goods_list'][0];
+        $goods        = $summary['goods_list'][0];
         $target_users = $goods['target_users']; //适用人群
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user         = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if ($user['user_identity'] < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
