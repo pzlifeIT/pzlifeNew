@@ -982,7 +982,7 @@ class Order extends CommonIndex {
         if ($offset < 0) {
             return ['code' => '3000'];
         }
-        $field = 'id,order_no,third_order_id,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
+        $field = 'id,order_no,third_order_id,order_status,order_money,order_type,deduction_money,pay_money,goods_money,discount_money,deduction_money,third_money';
         $where = ['uid' => $uid];
         if ($order_status) {
             $where = ['uid' => $uid, 'order_status' => $order_status];
@@ -1011,7 +1011,9 @@ class Order extends CommonIndex {
                                 $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             } else if ($goods['goods_type'] == 2) {
                                 $order_goods[$og]['sku_image'] = '';
-                                $sku_json = DbAudios::getAudio();
+                                $order_goods[$og]['sku_json'] = DbAudios::getAudio([['id','in',join(',',json_decode($order_goods[$og]['sku_json'], true))]],'id,name,audio,audition_time,audio_length_text');
+                               
+                                // print_r(json_encode($sku_json));die;
                             }
                             
                             $integral                      += $goods['integral'] * $goods_num['goods_num'];
