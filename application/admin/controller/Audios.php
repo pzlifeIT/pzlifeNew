@@ -49,9 +49,9 @@ class Audios extends AdminController {
     public function audiosList() {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
-        if ($this->checkPermissions($cmsConId, $apiName) === false) {
-            return ['code' => '3100'];
-        }
+        // if ($this->checkPermissions($cmsConId, $apiName) === false) {
+        //     return ['code' => '3100'];
+        // }
         $all    = trim($this->request->post('all'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
