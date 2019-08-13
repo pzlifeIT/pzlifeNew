@@ -387,6 +387,7 @@ function getExpressList() {
         'youzhengguonei' => '中国邮政',
         'rufengda'       => '如风达',
         'wanxiangwuliu'  => '万象物流',
+        'suer'           => '速尔',
         'SJPS'           => '商家派送',
     ];
     return $ExpressList;
