@@ -1590,7 +1590,7 @@ class Order extends CommonIndex {
         $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], 0);//可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], 0);
-        if ($totalGoodsPrice <= 0) {
+        if ($totalGoodsPrice < 0) {
             return ['code' => '3009'];
         }
         $discountMoney = $couponPrice;
