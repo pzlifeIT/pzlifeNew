@@ -32,9 +32,11 @@ class Category extends AdminController {
      * 2018/12/24-11:43
      */
     public function getCateList() {
-        $typeArr = [1, 2, 3];
-        $type    = trim(input("post.type"));
-        $type    = empty($type) ? 1 : intval($type);
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $typeArr  = [1, 2, 3];
+        $type     = trim(input("post.type"));
+        $type     = empty($type) ? 1 : intval($type);
         if (!in_array($type, $typeArr)) {
             return ['code' => 3002];
         }
@@ -48,6 +50,7 @@ class Category extends AdminController {
         $pageNum   = trim(input("post.page_num"));
         $pageNum   = empty($pageNum) ? 10 : intval($pageNum);//每页条数
         $cate_date = $this->app->category->getCateList($type, $pid, $page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $type, $pid, $page, $pageNum], $cate_date['code'], $cmsConId);
         return $cate_date;
     }
 
@@ -71,7 +74,10 @@ class Category extends AdminController {
      * 2018/12/24-13:58
      */
     public function addCatePage() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $page = $this->app->category->addCatePage();
+        $this->apiLog($apiName, [$cmsConId], $page['code'], $cmsConId);
         return $page;
     }
 
@@ -92,6 +98,11 @@ class Category extends AdminController {
      * 2018/12/24-14:32
      */
     public function saveAddCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [1, 2];//1.启用  2.停用
         $pid       = trim(input("post.pid"));
         $type_name = trim(input("post.type_name"));
@@ -105,6 +116,7 @@ class Category extends AdminController {
             return ["code" => 3002];
         }
         $result = $this->app->category->saveAddCate($pid, $type_name, $status, $image);
+        $this->apiLog($apiName, [$cmsConId, $pid, $type_name, $status, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -131,11 +143,14 @@ class Category extends AdminController {
      * 2018/12/24-14:56
      */
     public function editCatePage() {
-        $id = trim(input("post.id"));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $id       = trim(input("post.id"));
         if (empty(is_numeric($id))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
         $result = $this->app->category->editCatePage($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -156,6 +171,11 @@ class Category extends AdminController {
      * 2018/12/24-16:56
      */
     public function saveEditCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [0, 1, 2];//1.启用  2.停用
         $id        = trim(input("post.id"));
         $type_name = trim(input("post.type_name"));
@@ -169,6 +189,7 @@ class Category extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->category->saveEditCate($id, $type_name, $status, $image);
+        $this->apiLog($apiName, [$cmsConId, $id, $type_name, $status, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -190,20 +211,26 @@ class Category extends AdminController {
      * @apiParam (入参) {Number} id 当前分类id
      * @apiParam (入参) {Number} type 操作类型 1 启用 /2 停用
      * @apiParam (入参) {String} type_name 分类名称
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:停用失败 / 3002:参数错误 / 3003:有子分类 / 3004:该分类下有属性关系
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiSampleRequest /admin/category/stopstartcate
      * @author wujunjie
      * 2018/12/28-9:32
      */
     public function stopStartCate() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id   = trim(input("post.id"));
         $type = trim(input("post.type"));//类型 1启用 2停用
         if (empty(is_numeric($id)) || empty(is_numeric($type))) {
             return ["msg" => "参数错误", "code" => 3002];
         }
-        $res = $this->app->category->stopStart($id, $type);
-        return $res;
+        $result = $this->app->category->stopStart($id, $type);
+        $this->apiLog($apiName, [$cmsConId, $id, $type], $result['code'], $cmsConId);
+        return $result;
     }
 
     /**
@@ -222,7 +249,10 @@ class Category extends AdminController {
      * 2018/12/25-10:42
      */
     public function getThreeCate() {
-        $res = $this->app->category->getThreeCate();
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $res      = $this->app->category->getThreeCate();
+        $this->apiLog($apiName, [$cmsConId], $res['code'], $cmsConId);
         return $res;
     }
 
@@ -245,12 +275,16 @@ class Category extends AdminController {
      * @return array
      */
     public function allCateList() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $statusArr = [1, 2, 3];
         $status    = trim(input("post.status"));
         $status    = empty($status) ? 3 : intval($status);
         if (!in_array($status, $statusArr)) {
             return ['code' => 3001];
         }
-        return $this->app->category->allCateList($status);
+        $result = $this->app->category->allCateList($status);
+        $this->apiLog($apiName, [$cmsConId, $status], $result['code'], $cmsConId);
+        return $result;
     }
 }

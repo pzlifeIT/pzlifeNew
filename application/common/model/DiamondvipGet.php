@@ -6,6 +6,7 @@ use think\Model;
 use think\model\concern\SoftDelete;
 
 class DiamondvipGet extends Model {
+    use SoftDelete;
     protected $pk = 'id';
     // 设置当前模型对应的完整数据表名称
     protected $table = 'pz_diamondvip_get';

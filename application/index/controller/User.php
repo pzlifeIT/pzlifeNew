@@ -7,7 +7,7 @@ use app\index\MyController;
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead'], //除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead,wxaccredit,wxregister'], //除去getFirstCate其他方法都进行second前置操作
         //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -25,13 +25,15 @@ class User extends MyController {
      * @author zyr
      */
     public function indexMain() {
-        $conId = trim($this->request->post('con_id'));
-        $buid  = trim($this->request->post('buid'));
-        $buid  = empty(deUid($buid)) ? 1 : deUid($buid);
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $buid    = trim($this->request->post('buid'));
+        $buid    = empty(deUid($buid)) ? 1 : deUid($buid);
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
         $res = $this->app->user->indexMain($conId, $buid);
+        $this->apiLog($apiName, [$conId, $buid], $res['code'], $conId);
         return $res;
     }
 
@@ -50,6 +52,7 @@ class User extends MyController {
      * @author zyr
      */
     public function login() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $mobile   = trim($this->request->post('mobile'));
         $password = trim($this->request->post('password'));
         $buid     = trim($this->request->post('buid'));
@@ -61,6 +64,7 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $res = $this->app->user->login($mobile, $password, $buid);
+        $this->apiLog($apiName, [$mobile, $password, $buid], $res['code'], '');
         return $res;
     }
 
@@ -76,13 +80,14 @@ class User extends MyController {
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3006:验证码错误 / 3009:该微信号已绑定手机号
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误  / 3002:code码错误 / 3004:验证码格式有误 / 3005:新用户需授权 / 3006:验证码错误 / 3009:该微信号已绑定手机号
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/quicklogin
      * @return array
      * @author zyr
      */
     public function quickLogin() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $mobile        = trim($this->request->post('mobile'));
         $vercode       = trim($this->request->post('vercode'));
         $code          = trim($this->request->post('code'));
@@ -103,6 +108,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->quickLogin($mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid);
+        $this->apiLog($apiName, [$mobile, $vercode, $code, $encrypteddata, $iv, $platform, $buid], $result['code'], '');
 //        $dd       = [$result, ['mobile' => $mobile, 'vercode' => $vercode, 'buid' => $buid]];
         //        Db::table('pz_log_error')->insert(['title' => '/index/user/getintegraldetail', 'data' => json_encode($dd)]);
         return $result;
@@ -121,13 +127,14 @@ class User extends MyController {
      * @apiParam (入参) {String} iv
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册
+     * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 / 3005:密码强度不够 / 3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册 / 3009:新用户需授权
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/register
      * @return array
      * @author zyr
      */
     public function register() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $mobile        = trim($this->request->post('mobile'));
         $code          = trim($this->request->post('code'));
         $vercode       = trim($this->request->post('vercode'));
@@ -152,6 +159,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $result   = $this->app->user->register($mobile, $vercode, $password, $code, $encrypteddata, $iv, $platform, $buid);
+        $this->apiLog($apiName, [$mobile, $code, $vercode, $password, $encrypteddata, $iv, $platform, $buid], $result['code'], '');
         return $result;
     }
 
@@ -170,6 +178,7 @@ class User extends MyController {
      * @author zyr
      */
     public function resetPassword() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $mobile   = trim($this->request->post('mobile'));
         $vercode  = trim($this->request->post('vercode'));
         $password = trim($this->request->post('password'));
@@ -183,6 +192,7 @@ class User extends MyController {
             return ['code' => '3005'];
         }
         $result = $this->app->user->resetPassword($mobile, $vercode, $password);
+        $this->apiLog($apiName, [$mobile, $vercode, $password], $result['code'], '');
         return $result;
     }
 
@@ -192,7 +202,7 @@ class User extends MyController {
      * @apiGroup         index_user
      * @apiName          sendVercode
      * @apiParam (入参) {String} mobile 接收的手机号
-     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证
+     * @apiParam (入参) {Number} stype 验证码类型 1.注册 2.修改密码 3.快捷登录 4.银行卡绑卡验证 5.报名手机验证码
      * @apiSuccess (返回) {String} code 200:成功  3001:手机格式有误 / 3002:发送类型有误 / 3003:一分钟内不能重复发送 / 3004:短信发送失败
      * @apiSuccess (返回) {Array} data 用户信息
      * @apiSampleRequest /index/user/sendvercode
@@ -200,7 +210,8 @@ class User extends MyController {
      * @author zyr
      */
     public function sendVercode() {
-        $stypeArr = [1, 2, 3, 4];
+        $apiName  = classBasename($this) . '/' . __function__;
+        $stypeArr = [1, 2, 3, 4, 5];
         $mobile   = trim($this->request->post('mobile'));
         $stype    = trim($this->request->post('stype'));
         if (!checkMobile($mobile)) {
@@ -210,6 +221,7 @@ class User extends MyController {
             return ['code' => '3002']; //手机格式有误
         }
         $result = $this->app->user->sendVercode($mobile, $stype);
+        $this->apiLog($apiName, [$mobile, $stype], $result['code'], '');
         return $result;
     }
 
@@ -236,7 +248,7 @@ class User extends MyController {
      * @apiSuccess (data) {String} email 邮箱
      * @apiSuccess (data) {Date} last_time 最后登录时间
      * @apiSuccess (data) {Date} create_time 注册时间
-     * @apiSuccess (data) {Double} balance 商票
+     * @apiSuccess (data) {Double} balance 商券
      * @apiSuccess (data) {Double} commission 佣金
      * @apiSuccess (data) {Number} integral 剩余积分
      * @apiSuccess (data) {Double} bounty 奖励金
@@ -245,7 +257,8 @@ class User extends MyController {
      * @author zyr
      */
     public function getUser() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -253,6 +266,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $res = $this->app->user->getUser($conId);
+        $this->apiLog($apiName, [$conId], $res['code'], $conId);
         return $res;
     }
 
@@ -264,13 +278,14 @@ class User extends MyController {
      * @apiParam (入参) {String} code 微信code
      * @apiParam (入参) {String} [platform] 1.小程序 2.公众号(默认1)
      * @apiParam (入参) {String} [buid] 推荐人uid
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户或未绑定手机号 / 3001:code码错误 / 3002:没有手机号的老用户 / 3003:登录失败 / 3004:微信公众号token获取失败
      * @apiSuccess (data) {String} con_id
      * @apiSampleRequest /index/user/loginuserbywx
      * @return array
      * @author zyr
      */
     public function loginUserByWx() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $code        = trim($this->request->post('code'));
         $platform    = trim($this->request->post('platform'));
         $buid        = trim($this->request->post('buid'));
@@ -281,6 +296,7 @@ class User extends MyController {
         }
         $platform = in_array($platform, $platformArr) ? intval($platform) : 1;
         $res      = $this->app->user->loginUserByWx($code, $platform, $buid);
+        $this->apiLog($apiName, [$code, $platform, $buid], $res['code'], '');
         return $res;
     }
 
@@ -293,10 +309,10 @@ class User extends MyController {
      * @apiSuccess (返回) {String} code 200:成功 3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:用户不存在 / 3004:用户不是boss
      * @apiSuccess (返回) {Array} data 店铺首页信息
      * @apiSuccess (返回) {Decimal} balance_all 实际得到分利
-     * @apiSuccess (返回) {Decimal} balance 商票余额
+     * @apiSuccess (返回) {Decimal} balance 商券余额
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} integral 积分余额
-     * @apiSuccess (返回) {Decimal} balance_use 已使用商票
+     * @apiSuccess (返回) {Decimal} balance_use 已使用商券
      * @apiSuccess (返回) {Decimal} no_bonus 未到账
      * @apiSuccess (返回) {Decimal} bonus 已到账
      * @apiSuccess (返回) {Decimal} bonus_all 总收益
@@ -306,7 +322,8 @@ class User extends MyController {
      * @author zyr
      */
     public function getBossShop() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -314,6 +331,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getBossShop($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -346,6 +364,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserBonus() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $conId     = trim($this->request->post('con_id'));
         $status    = trim($this->request->post('status'));
         $stype     = trim($this->request->post('stype'));
@@ -370,6 +389,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getUserBonus($conId, $status, $stype, $page, $pageNum, $year, $month);
+        $this->apiLog($apiName, [$conId, $status, $stype, $page, $pageNum, $year, $month], $result['code'], $conId);
         return $result;
     }
 
@@ -384,13 +404,14 @@ class User extends MyController {
      * @apiSuccess (返回) {Array} data
      * @apiSuccess (data) {Decimal} money 金额
      * @apiSuccess (data) {Date} create_time 到账时间
-     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商票 8.后台充值操作 9.后台开通boss预扣款
+     * @apiSuccess (data) {Date} change_type 1.消费 2.取消订单退还 3.充值 4.层级分利 5.购买会员分利 6.提现 7.转商券 8.后台充值操作 9.后台开通boss预扣款
      * @apiSuccess (data) {String} ctype 描述
      * @apiSampleRequest /index/user/getshopcommission
      * @return array
      * @author zyr
      */
     public function getShopCommission() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -403,6 +424,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getShopCommission($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -416,12 +438,13 @@ class User extends MyController {
      * @apiSuccess (返回) {Decimal} commission 佣金余额
      * @apiSuccess (返回) {Decimal} commission_all 佣金总额
      * @apiSuccess (返回) {Decimal} commission_extract 提现
-     * @apiSuccess (返回) {Decimal} commission_to_balance 转商票
+     * @apiSuccess (返回) {Decimal} commission_to_balance 转商券
      * @apiSampleRequest /index/user/getshopcommissionsum
      * @return array
      * @author zyr
      */
     public function getShopCommissionSum() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -430,11 +453,12 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getShopCommissionSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
     /**
-     * @api              {post} / 获取店铺商票明细
+     * @api              {post} / 获取店铺商券明细
      * @apiDescription   getShopBalance
      * @apiGroup         index_user
      * @apiName          getShopBalance
@@ -444,7 +468,7 @@ class User extends MyController {
      * @apiParam (入参) {Int} [page_num] 每页数量 默认10
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
      * @apiSuccess (返回) {Array} data 分利列表
-     * @apiSuccess (返回) {Decimal} money 商票金额
+     * @apiSuccess (返回) {Decimal} money 商券金额
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {String} ctype 类型
      * @apiSuccess (返回) {json} create_time 明细生成时间
@@ -453,6 +477,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getShopBalance() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
         $page     = trim($this->request->post('page'));
@@ -470,25 +495,27 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getShopBalance($conId, $stype, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $stype, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
     /**
-     * @api              {post} / 个人中心我的商票
+     * @api              {post} / 个人中心我的商券
      * @apiDescription   getShopBalanceSum
      * @apiGroup         index_user
      * @apiName          getShopBalanceSum
      * @apiParam (入参) {String} con_id
      * @apiSuccess (返回) {String} code 200:成功 3000:没有分利信息 /3001:con_id长度只能是32位 / 3002:缺少con_id /3003:用户不存在 / 3004:类型错误
-     * @apiSuccess (返回) {Decimal} balance 商票余额
-     * @apiSuccess (返回) {Decimal} balanceUse 已用商票
-     * @apiSuccess (返回) {Decimal} balanceAll 商票总额
-     * @apiSuccess (返回) {Decimal} noBbonus 待到账商票
+     * @apiSuccess (返回) {Decimal} balance 商券余额
+     * @apiSuccess (返回) {Decimal} balanceUse 已用商券
+     * @apiSuccess (返回) {Decimal} balanceAll 商券总额
+     * @apiSuccess (返回) {Decimal} noBbonus 待到账商券
      * @apiSampleRequest /index/user/getshopbalancesum
      * @return array
      * @author zyr
      */
     public function getShopBalanceSum() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -497,6 +524,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getShopBalanceSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -515,6 +543,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserSocialSum() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -523,6 +552,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserSocialSum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -541,6 +571,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getRead() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -553,6 +584,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getRead($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -580,6 +612,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserSocial() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $conId    = trim($this->request->post('con_id'));
         $stype    = trim($this->request->post('stype'));
         $page     = trim($this->request->post('page'));
@@ -597,6 +630,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getUserSocial($conId, $stype, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $stype, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -621,6 +655,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getMerchants() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -633,6 +668,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getMerchants($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -654,6 +690,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getOtherEarn() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -666,6 +703,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getOtherEarn($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -687,6 +725,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getIntegralDetail() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -699,6 +738,7 @@ class User extends MyController {
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->user->getIntegralDetail($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -721,6 +761,7 @@ class User extends MyController {
      * @author zyr
      */
     public function getUserNextLevel() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('page_num'));
@@ -733,6 +774,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserNextLevel($conId, intval($page), intval($pageNum));
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -750,6 +792,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserAddress() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
@@ -764,6 +807,7 @@ class User extends MyController {
             }
         }
         $result = $this->app->user->getUserAddress($conId, $address_id);
+        $this->apiLog($apiName, [$conId, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -786,6 +830,7 @@ class User extends MyController {
      * @author rzc
      */
     public function addUserAddress() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
@@ -803,6 +848,7 @@ class User extends MyController {
             return ['code' => '3003']; //手机格式有误
         }
         $result = $this->app->user->addUserAddress($conId, $province_name, $city_name, $area_name, $address, $mobile, $name);
+        $this->apiLog($apiName, [$conId, $province_name, $city_name, $area_name, $address, $mobile, $name], $result['code'], $conId);
         return $result;
     }
 
@@ -826,6 +872,7 @@ class User extends MyController {
      * @author rzc
      */
     public function updateUserAddress() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $conId         = trim($this->request->post('con_id'));
         $province_name = trim($this->request->post('province_name'));
         $city_name     = trim($this->request->post('city_name'));
@@ -844,6 +891,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->updateUserAddress($conId, $province_name, $city_name, $area_name, $address, $name, $mobile, $address_id);
+        $this->apiLog($apiName, [$conId, $province_name, $city_name, $area_name, $address, $mobile, $name, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -862,6 +910,7 @@ class User extends MyController {
      */
 
     public function updateUserAddressDefault() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $address_id = trim($this->request->post('address_id'));
         if (empty($conId)) {
@@ -874,6 +923,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->updateUserAddressDefault($conId, $address_id);
+        $this->apiLog($apiName, [$conId, $address_id], $result['code'], $conId);
         return $result;
     }
 
@@ -893,10 +943,11 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserQrcode() {
-        $page  = trim($this->request->get('page'));
-        $scene = trim($this->request->get('scene'));
-        $conId = trim($this->request->get('con_id'));
-        $stype = trim($this->request->get('stype'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->get('con_id'));
+        $page    = trim($this->request->get('page'));
+        $scene   = trim($this->request->get('scene'));
+        $stype   = trim($this->request->get('stype'));
         // print_r(Config::get('conf.image_path'));die;
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -917,6 +968,7 @@ class User extends MyController {
             return ['code' => '3010', 'msg' => '二维码类型 只能为1,2'];
         }
         $result = $this->app->user->getQrcode($conId, $page, $scene, $stype);
+        $this->apiLog($apiName, [$conId, $page, $scene, $stype], $result['code'], $conId);
         return $result;
     }
 
@@ -936,6 +988,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserOrderCount() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->get('con_id'));
 
         if (empty($conId)) {
@@ -945,6 +998,7 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getUserOrderCount($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
 
     }
@@ -967,6 +1021,7 @@ class User extends MyController {
      * @author rzc
      */
     public function addUserBankcard() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
@@ -1006,6 +1061,7 @@ class User extends MyController {
             return ['code' => '3011'];
         }
         $result = $this->app->user->addUserBankcard($conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
+        $this->apiLog($apiName, [$conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode], $result['code'], $conId);
         return $result;
     }
 
@@ -1043,6 +1099,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserBankcards() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $id          = trim($this->request->post('id'));
         $is_transfer = trim($this->request->post('is_transfer'));
@@ -1063,8 +1120,8 @@ class User extends MyController {
             }
         }
         $result = $this->app->user->getUserBankcards($conId, $id, $is_transfer);
+        $this->apiLog($apiName, [$conId, $id, $is_transfer], $result['code'], $conId);
         return $result;
-
     }
 
     /**
@@ -1086,8 +1143,9 @@ class User extends MyController {
      * @author rzc
      */
     public function editUserBankcards() {
-        $id          = trim($this->request->post('id'));
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
+        $id          = trim($this->request->post('id'));
         $user_name   = trim($this->request->post('user_name'));
         $bank_mobile = trim($this->request->post('bank_mobile'));
         $bank_card   = trim($this->request->post('bank_card'));
@@ -1129,6 +1187,7 @@ class User extends MyController {
             return ['code' => '3011'];
         }
         $result = $this->app->user->editUserBankcards($id, $conId, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode, $bankcard_message);
+        $this->apiLog($apiName, [$conId, $id, $user_name, $bank_mobile, $bank_card, $bank_key_id, $bank_add, $vercode], $result['code'], $conId);
         return $result;
     }
 
@@ -1146,9 +1205,10 @@ class User extends MyController {
      * @author rzc
      */
     public function changeUserBankcardStatus() {
-        $id     = trim($this->request->post('id'));
-        $conId  = trim($this->request->post('con_id'));
-        $status = trim($this->request->post('status'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1159,6 +1219,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->changeUserBankcardStatus($conId, intval($id), intval($status));
+        $this->apiLog($apiName, [$conId, $id, $status], $result['code'], $conId);
         return $result;
     }
 
@@ -1177,7 +1238,10 @@ class User extends MyController {
      * @author rzc
      */
     public function getInvoice() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         $result = $this->app->user->getInvoice();
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
@@ -1196,6 +1260,7 @@ class User extends MyController {
      * @author rzc
      */
     public function commissionTransferCash() {
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1216,6 +1281,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, $invoice);
+        $this->apiLog($apiName, [$conId, $bankcard_id, $money, $invoice], $result['code'], $conId);
         return $result;
     }
 
@@ -1227,12 +1293,14 @@ class User extends MyController {
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} bankcard_id 用户登录bankcard_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3002:conId为空 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于提现 / 3006:未查询到该银行卡 / 3007:单笔提现金额不能低于2000，不能高于200000 / 3008:该银行卡暂不可用 / 3009:未获取到设置提现比率无法提现 / 3010:暂时无法提现
      * @apiSampleRequest /index/user/bountyTransferCash
      * @return array
      * @author rzc
      */
     public function bountyTransferCash() {
+        return ['code' => '3010'];
+        $apiName     = classBasename($this) . '/' . __function__;
         $conId       = trim($this->request->post('con_id'));
         $bankcard_id = trim($this->request->post('bankcard_id'));
         $money       = trim($this->request->post('money'));
@@ -1249,6 +1317,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferCash($conId, intval($bankcard_id), $money, 2, 4);
+        $this->apiLog($apiName, [$conId, $bankcard_id, $money], $result['code'], $conId);
         return $result;
     }
 
@@ -1263,9 +1332,9 @@ class User extends MyController {
      * @apiParam (入参) {Number} [min_money] 用户转出最小金额
      * @apiParam (入参) {Number} [max_money] 用户转出最大金额
      * @apiParam (入参) {Number} [invoice] 是否提供发票 1:提供 2:不提供
-     * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商票
-     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消
+     * @apiParam (入参) {Number} [wtype] 提现方式 1.银行 2.支付宝 3.微信 4.商券
+     * @apiParam (入参) {Number} [stype] 类型 1.佣金转商券 2.佣金提现 3.奖励金转商券 4. 奖励金提现
+     * @apiParam (入参) {Number} [status] 状态 1.待处理 2.已完成 3.取消 4.查询为不取消的信息
      * @apiParam (入参) {String} [start_time] 开始时间
      * @apiParam (入参) {String} [end_time] 结束时间
      * @apiParam (入参) {String} [id] 查询ID（查看详情时返回单条数据）
@@ -1282,8 +1351,8 @@ class User extends MyController {
      * @apiSuccess (log_transfer) {String} bank_mobile 银行开户手机号
      * @apiSuccess (log_transfer) {String} user_name 银行开户人
      * @apiSuccess (log_transfer) {String} status 状态 1.待处理 2.已完成 3.取消
-     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商票 2.佣金提现 3.奖励金转商票 4. 奖励金提现
-     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商票
+     * @apiSuccess (log_transfer) {String} stype 类型 1.佣金转商券 2.佣金提现 3.奖励金转商券 4. 奖励金提现
+     * @apiSuccess (log_transfer) {String} wtype 提现方式 1.银行 2.支付宝 3.微信 4.商券
      * @apiSuccess (log_transfer) {String} money 转出处理金额
      * @apiSuccess (log_transfer) {String} proportion 税率比例
      * @apiSuccess (log_transfer) {String} invoice 是否提供发票 1:提供 2:不提供
@@ -1297,6 +1366,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getLogTransfer() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $conId      = trim($this->request->post('con_id'));
         $bank_card  = trim($this->request->post('bank_card'));
         $bank_name  = trim($this->request->post('bank_name'));
@@ -1377,11 +1447,12 @@ class User extends MyController {
             }
         }
         if (!empty($status)) {
-            if (!in_array($status, [1, 2, 3])) {
+            if (!in_array($status, [1, 2, 3, 4])) {
                 return ['code' => '3012'];
             }
         }
         $result = $this->app->user->getLogTransfer($conId, $bank_card, $bank_name, $min_money, $max_money, $invoice, $status, $wtype, $stype, $start_time, $end_time, intval($page), intval($pageNum), intval($id));
+        $this->apiLog($apiName, [$conId, $bank_card, $bank_name, $min_money, $max_money, $invoice, $status, $wtype, $stype, $start_time, $end_time, $id, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -1404,7 +1475,8 @@ class User extends MyController {
      * @author rzc
      */
     public function getAdminBank() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1412,24 +1484,26 @@ class User extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->getAdminBank();
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 
     /**
-     * @api              {post} / 佣金转商票
+     * @api              {post} / 佣金转商券
      * @apiDescription   commissionTransferBalance
      * @apiGroup         index_user
      * @apiName          commissionTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商券 / 3006:转商券失败
      * @apiSampleRequest /index/user/commissionTransferBalance
      * @return array
      * @author rzc
      */
     public function commissionTransferBalance() {
-        $conId = trim($this->request->post('con_id'));
-        $money = trim($this->request->post('money'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
+        $money   = trim($this->request->post('money'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -1443,22 +1517,24 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferBalance($conId, $money, 1);
+        $this->apiLog($apiName, [$conId, $money], $result['code'], $conId);
         return $result;
     }
 
     /**
-     * @api              {post} / 奖励金转商票
+     * @api              {post} / 奖励金转商券
      * @apiDescription   bountyTransferBalance
      * @apiGroup         index_user
      * @apiName          bountyTransferBalance
      * @apiParam (入参) {String} con_id 用户登录con_id
      * @apiParam (入参) {Number} money 用户转出金额
-     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商票 / 3006:转商票失败
+     * @apiSuccess (返回) {String} code 200:成功 3000:没有该用户 / 3001:con_id长度只能是28位 / 3003:money必须为数字 / 3004:提现金额不能小于0 / 3005:没有足够的余额用于转商券 / 3006:转商券失败
      * @apiSampleRequest /index/user/bountyTransferBalance
      * @return array
      * @author rzc
      */
     public function bountyTransferBalance() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId = trim($this->request->post('con_id'));
         $money = trim($this->request->post('money'));
         if (empty($conId)) {
@@ -1474,6 +1550,7 @@ class User extends MyController {
             return ['code' => '3004'];
         }
         $result = $this->app->user->commissionTransferBalance($conId, $money, 2);
+        $this->apiLog($apiName, [$conId, $money], $result['code'], $conId);
         return $result;
     }
 
@@ -1503,6 +1580,7 @@ class User extends MyController {
      * @author rzc
      */
     public function bountyDetail() {
+        $apiName = classBasename($this) . '/' . __function__;
         $conId   = trim($this->request->post('con_id'));
         $page    = trim($this->request->post('page'));
         $pageNum = trim($this->request->post('pageNum'));
@@ -1518,6 +1596,7 @@ class User extends MyController {
             return ['code' => '3003'];
         }
         $result = $this->app->user->bountyDetail($conId, $page, $pageNum);
+        $this->apiLog($apiName, [$conId, $page, $pageNum], $result['code'], $conId);
         return $result;
     }
 
@@ -1540,6 +1619,7 @@ class User extends MyController {
      * @author rzc
      */
     public function getUserRead() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $code          = trim($this->request->post('code'));
         $encrypteddata = trim($this->request->post('encrypteddata'));
         $iv            = trim($this->request->post('iv'));
@@ -1553,6 +1633,67 @@ class User extends MyController {
         $view_uid = deUid($view_uid);
         $view_uid = $view_uid ? $view_uid : 1;
         $result   = $this->app->user->userRead($code, $encrypteddata, $iv, $view_uid);
+        $this->apiLog($apiName, [$code, $encrypteddata, $iv, $view_uid], $result['code'], '');
         return $result;
     }
+
+        /**
+     * @api              {post} / 微信公众号授权
+     * @apiDescription   wxaccredit
+     * @apiGroup         index_user
+     * @apiName          wxaccredit
+     * @apiParam (入参) {Number} redirect_uri 授权后重定向的回调链接地址
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 / 3001:redirect_uri跳转路径为空 / 3002:code有误
+     * @apiSampleRequest /index/user/wxaccredit
+     * @author rzc
+     */
+    public function wxaccredit() {
+        // $code         = trim($this->request->post('code'));
+        $apiName      = classBasename($this) . '/' . __function__;
+        $redirect_uri = trim($this->request->post('redirect_uri'));
+        // if (strlen($code) != 32) {
+        //     return ['code' => '3002']; //code有误
+        // }
+        if (empty($redirect_uri)) {
+            return ['code' => '3001'];
+        }
+        $redirect_uri = urlencode($redirect_uri);
+        $result       = $this->app->user->wxaccredit($redirect_uri);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 微信CODE注册登陆（公众号）
+     * @apiDescription   wxregister
+     * @apiGroup         index_user
+     * @apiName          wxregister
+     * @apiParam (入参) {String} code 微信code码
+     * @apiParam (入参) {String} mobile 接受验证码的手机号
+     * @apiParam (入参) {String} vercode 验证码
+     * @apiParam (入参) {String} [buid] 推荐人uid
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:手机格式有误 / 3002:code码错误 / 3004:验证码格式有误 /3006:验证码错误 / 3007 注册失败 / 3008:手机号已被注册 / 3009:新用户需授权
+     * @apiSampleRequest /index/user/wxregister
+     * @author rzc
+     */
+    public function wxregister() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $mobile  = trim($this->request->post('mobile'));
+        $code    = trim($this->request->post('code'));
+        $vercode = trim($this->request->post('vercode'));
+        $buid    = trim($this->request->post('buid'));
+        $buid    = empty(deUid($buid)) ? 1 : deUid($buid);
+        if (checkMobile($mobile) === false) {
+            return ['code' => '3001']; //手机号格式错误
+        }
+        if (strlen($code) != 32) {
+            return ['code' => '3002']; //code有误
+        }
+        if (checkVercode($vercode) === false) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->user->wxregister($mobile, $vercode, $code, $buid);
+        $this->apiLog($apiName, [$mobile, $vercode, $code,$buid], $result['code'], '');
+        return $result;
+    }
+
 }

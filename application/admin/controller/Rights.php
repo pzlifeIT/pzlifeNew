@@ -21,8 +21,8 @@ class Rights extends AdminController {
      * @apiParam (入参) {Number} mobile 会员手机号
      * @apiParam (入参) {String} linkman 会员姓名
      * @apiParam (入参) {Number} stock 库存
-     * @apiParam (入参) {Numeric} coupon_money 被分享用户将获得活动商票
-     * @apiParam (入参) {Number} redmoney_status 商票状态 1:直接领取 2:分享激活后获得
+     * @apiParam (入参) {Numeric} coupon_money 被分享用户将获得活动商券
+     * @apiParam (入参) {Number} redmoney_status 商券状态 1:直接领取 2:分享激活后获得
      * @apiParam (入参) {Number} type 使用类型 1:分享使用 2:绑定二维码链接
      * @apiSuccess (返回) {String} code 200:成功 / 3001:手机号格式错误 / 3002:stock或者coupon_money或者redmoney_status或者type必须是数字 / 3005:超出金额设置范围
      * @apiSuccess (data) {object_array} data 结果
@@ -36,6 +36,11 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function creatBossShareDiamondvip() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $mobile          = trim($this->request->post('mobile'));
         $linkman         = trim($this->request->post('linkman'));
         $stock           = trim($this->request->post('stock'));
@@ -52,6 +57,7 @@ class Rights extends AdminController {
             return ['code' => '3005'];
         }
         $result = $this->app->rights->creatBossShareDiamondvip($mobile, $linkman, intval($stock), intval($redmoney_status), intval($type), $coupon_money);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $linkman, $stock, $coupon_money, $redmoney_status, $type], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -80,8 +86,10 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function getBossShareDiamondvip() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim($this->request->post('page'));
+        $pagenum  = trim($this->request->post('pagenum'));
 
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
@@ -90,6 +98,7 @@ class Rights extends AdminController {
         }
 
         $result = $this->app->rights->getBossShareDiamondvip($page, $pagenum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -118,12 +127,18 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function passBossShareDiamondvip() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id     = trim($this->request->post('id'));
         $status = trim($this->request->post('status'));
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => 3001];
         }
         $result = $this->app->rights->passBossShareDiamondvip($id, $status);
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -166,6 +181,8 @@ class Rights extends AdminController {
      * 2018/12/26-18:04
      */
     public function getShopApplyList() {
+        $apiName         = classBasename($this) . '/' . __function__;
+        $cmsConId        = trim($this->request->post('cms_con_id')); //操作管理员
         $page            = trim(input("post.page"));
         $pageNum         = trim(input("post.page_num"));
         $status          = trim(input("post.status"));
@@ -187,7 +204,7 @@ class Rights extends AdminController {
         $target_uid = deUid($target_uid);
         $refe_uid   = deUid($refe_uid);
         if (!empty($target_mobile)) {
-            if (checkIdcard($target_mobile) == false) {
+            if (checkMobile($target_mobile) == false) {
                 return ['code' => '3001'];
             }
         }
@@ -203,17 +220,18 @@ class Rights extends AdminController {
         //     return ['code' => '3004'];
         // }
         $result = $this->app->rights->getShopApplyList($page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $status, $target_uid, $target_uname, $target_nickname, $target_sex, $target_mobile, $target_idcard, $refe_uid, $refe_uname, $shop_id, $refe_type], $result['code'], $cmsConId);
         return $result;
     }
 
     /**
-     * @api              {post} / 审核申请开通BOSS
+     * @api              {post} / 财务审核申请开通BOSS
      * @apiDescription   auditShopApply
      * @apiGroup         admin_Rights
      * @apiName          auditShopApply
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 分享钻石会员机会ID
-     * @apiParam (入参) {Number} status 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
+     * @apiParam (入参) {Number} status 申请进度  2:财务审核通过  4 审核不通过
      * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限
      * @apiSuccess (data) {object_array} data 结果
      * @apiSuccess (data) {String} id 用户ID
@@ -226,10 +244,14 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function auditShopApply() {
-        $cmsConId = trim($this->request->post('cms_con_id'));
-        $id       = trim($this->request->post('id'));
-        $status   = trim($this->request->post('status'));
-        $message  = trim($this->request->post('message'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
         if (empty($id)) {
             return ['code' => '3002'];
         }
@@ -239,10 +261,57 @@ class Rights extends AdminController {
         if (!is_numeric($id) || !is_numeric($status)) {
             return ['code' => '3001'];
         }
-        if (!in_array($status, [2, 3, 4])) {
+        if (!in_array($status, [2, 4])) {
             return ['code' => '3004'];
         }
         $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message], $result['code'], $cmsConId);
+        return $result;
+
+    }
+
+    /**
+     * @api              {post} / 经理审核申请开通BOSS
+     * @apiDescription   auditManagerShopApply
+     * @apiGroup         admin_Rights
+     * @apiName          auditManagerShopApply
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 分享钻石会员机会ID
+     * @apiParam (入参) {Number} status 申请进度  3:经理审核通过 4 审核不通过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id和status必须是数字 / 3002:id为空  / 3003:传入status错误 / 3004:错误的申请状态 / 3005:已审核的无法再次进行相同的审核结果 / 3006:审核失败 / 3007:没有操作权限
+     * @apiSuccess (data) {object_array} data 结果
+     * @apiSuccess (data) {String} id 用户ID
+     * @apiSampleRequest /admin/Rights/auditManagerShopApply
+     * @apiParamExample (data) {Array} 返回用户列表
+     * [
+     * "code":"200",返回code码
+     *
+     * ]
+     * @author rzc
+     */
+    public function auditManagerShopApply() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id      = trim($this->request->post('id'));
+        $status  = trim($this->request->post('status'));
+        $message = trim($this->request->post('message'));
+        if (empty($id)) {
+            return ['code' => '3002'];
+        }
+        if (empty($status)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($id) || !is_numeric($status)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($status, [3, 4])) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->rights->auditShopApply($id, $status, $message, $cmsConId);
+        $this->apiLog($apiName, [$cmsConId, $id, $status, $message], $result['code'], $cmsConId);
         return $result;
 
     }
@@ -256,9 +325,9 @@ class Rights extends AdminController {
      * @apiParam (入参) {Number} [page] 当前页 默认1
      * @apiParam (入参) {Number} [page_num] 每页数量 默认10
      * @apiParam (入参) {Number} [status] 申请进度  2:财务审核通过 3:经理审核通过 4 审核不通过
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字  
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:pageNum,$page和status必须是数字
      * @apiSuccess (data) {object_array} diamondvipNetPush 结果
-     * @apiSuccess (diamondvipNetPush) {String} id 
+     * @apiSuccess (diamondvipNetPush) {String} id
      * @apiSuccess (diamondvipNetPush) {String} typeid BOSSid
      * @apiSuccess (diamondvipNetPush) {String} type  统计类型,钻石网推:diamondvipNetPush
      * @apiSuccess (diamondvipNetPush) {String} timekey 关联时间索引
@@ -279,16 +348,19 @@ class Rights extends AdminController {
      * @author rzc
      */
     public function getDiamondvipNetPush() {
-        $page            = trim(input("post.page"));
-        $pageNum         = trim(input("post.page_num"));
-        $status          = trim(input("post.status"));
-        $page    = empty($page) ? 1 : $page;
-        $pageNum = empty($pageNum) ? 10 : $pageNum;
-        $status = empty($status) ? 1 : $status;
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page     = trim(input("post.page"));
+        $pageNum  = trim(input("post.page_num"));
+        $status   = trim(input("post.status"));
+        $page     = empty($page) ? 1 : $page;
+        $pageNum  = empty($pageNum) ? 10 : $pageNum;
+        $status   = empty($status) ? 1 : $status;
         if (!is_numeric($page) || !is_numeric($status) || !is_numeric($pageNum)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->rights->getDiamondvipNetPush($page,$pageNum,$status);
+        $result = $this->app->rights->getDiamondvipNetPush($page, $pageNum, $status);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum, $status], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -311,8 +383,9 @@ class Rights extends AdminController {
      * ]
      * @author rzc
      */
-    public function auditDiamondvipBounty(){
-        $cmsConId = trim($this->request->post('cms_con_id'));
+    public function auditDiamondvipBounty() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $id       = trim($this->request->post('id'));
         $status   = trim($this->request->post('status'));
         if (!is_numeric($id) || !is_numeric($status)) {
@@ -324,8 +397,8 @@ class Rights extends AdminController {
         if (empty($id)) {
             return ['code' => '3002'];
         }
-        $result = $this->app->rights->auditDiamondvipBounty($id,$status);
-        $this->apiLog(classBasename($this) . '/' . __function__, [$cmsConId, $id], $result['code'], $cmsConId);
+        $result = $this->app->rights->auditDiamondvipBounty($id, $status);
+        $this->apiLog($apiName, [$cmsConId, $id, $status], $result['code'], $cmsConId);
         return $result;
     }
 }

@@ -149,11 +149,14 @@ class Cart extends CommonIndex {
                     /* print_r($goods_data); */
                    
                     /* 获取购物车购买规格属性 */
-                    $attr_field = 'id,spec_id,attr_name';
-                    $attr_where = [['id', 'in', $goods_sku['spec']]];
+                    // $attr_field = 'id,spec_id,attr_name';
+                    // $attr_where = [['id', 'in', $goods_sku['spec']]];
 
-                    $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
+                    // $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
+                    $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+                    $goods_sku_name        = array_column($attr, 'attr_name');
 
+                    $goods_sku['goods_sku_name'] = implode(',',$goods_sku_name);
                     
                     /*  print_r($goods_sku_name);die; */
 
@@ -179,7 +182,8 @@ class Cart extends CommonIndex {
                     $cart_buy['status']        = $goods_data['status'];
                     $cart_buy['track_id']      = $goods_data['track_id'];
                     $cart_buy['buy_num']       = $goods_data['buy_num'];
-                    $cart_buy['brokerage']     =  bcmul(bcmul(bcmul(bcsub(bcsub($goods_sku['retail_price'],$goods_sku['cost_price'],4),$goods_sku['margin_price'],2),0.9,2),0.75,2),$goods_data['buy_num'],2);
+                    
+                    $cart_buy['brokerage']     =  bcmul(bcmul(getDistrProfits($goods_sku['retail_price'],$goods_sku['cost_price'],$goods_sku['margin_price']), 0.75, 2),$goods_data['buy_num'],2);
 
                      /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
                      if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {

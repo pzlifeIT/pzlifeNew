@@ -2,6 +2,7 @@
 
 namespace app\common\db\shop;
 
+use app\common\model\LogDemotion;
 use app\common\model\Shops;
 use app\common\model\ShopGoods;
 use app\common\model\Goods;
@@ -98,6 +99,37 @@ class DbShops {
     }
 
     /**
+     * 降级处理记录
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc
+     * @param string $limit
+     * @return array
+     * @author zyr
+     */
+    public function getLogDemotion($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '') {
+        $obj = LogDemotion::field($field)->where($where);
+        if (!empty($orderBy) && !empty($sc)) {
+            $obj = $obj->order($orderBy, $sc);
+        }
+        if (!empty($limit)) {
+            $obj = $obj->limit($limit);
+        }
+        if ($row === true) {
+            $obj = $obj->findOrEmpty();
+        } else {
+            $obj = $obj->select();
+        }
+        return $obj->toArray();
+    }
+
+    public function getLogDemotionCount($where){
+        return LogDemotion::where($where)->count();
+    }
+
+    /**
      * 添加店铺商品
      * @param $data 
      * @return array
@@ -144,5 +176,28 @@ class DbShops {
         $ShopGoods = new ShopGoods;
         // return $ShopGoods->where('id',$id)->delete();
         return $ShopGoods->destroy($id);
+    }
+
+    /**
+     * 删除店铺
+     * @param $id
+     * @return bool
+     * @author zyr
+     */
+    public function deleteShop($id){
+        $shop = new Shops();
+        return $shop->destroy($id);
+    }
+
+    /**
+     * 添加降级处理记录
+     * @param $data
+     * @return mixed
+     * @author zyr
+     */
+    public function addLogDemotion($data){
+        $logDemotion = new LogDemotion;
+        $logDemotion->save($data);
+        return $logDemotion->id;
     }
 }

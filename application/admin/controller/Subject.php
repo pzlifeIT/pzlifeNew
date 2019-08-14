@@ -26,6 +26,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function addSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [1, 2];//1.启用  2.停用
         $pid       = trim($this->request->post('pid'));
         $subject   = trim($this->request->post('subject'));
@@ -42,6 +47,7 @@ class Subject extends AdminController {
             return ["code" => '3003'];
         }
         $result = $this->app->subject->addSubject(intval($pid), intval($status), $subject, $image);
+        $this->apiLog($apiName, [$cmsConId, $pid, $subject, $status, $image], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -61,6 +67,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function editSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $statusArr = [0, 1, 2];//1.启用  2.停用
         $id        = trim($this->request->post('id'));
         $subject   = trim($this->request->post('subject'));
@@ -79,6 +90,7 @@ class Subject extends AdminController {
             return ["code" => '3003'];
         }
         $result = $this->app->subject->editSubject(intval($id), intval($status), $subject, $image, intval($orderBy));
+        $this->apiLog($apiName, [$cmsConId, $id, $subject, $status, $image, $orderBy], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -99,6 +111,8 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getAllSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
         $stype    = trim($this->request->post('stype'));
         $stype    = empty($stype) ? 1 : $stype;
@@ -106,6 +120,7 @@ class Subject extends AdminController {
             return ['code' => '3001'];//stype参数有误
         }
         $result = $this->app->subject->getAllSubject(intval($stype));
+        $this->apiLog($apiName, [$cmsConId, $stype], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -122,6 +137,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function subjectGoodsAssoc() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId   = trim($this->request->post('goods_id'));
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($goodsId)) {
@@ -131,6 +151,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->subjectGoodsAssoc(intval($goodsId), intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -148,6 +169,8 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getGoodsSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
         $goodsId  = trim($this->request->post('goods_id'));
         $stype    = trim($this->request->post('stype'));
@@ -158,6 +181,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->getGoodsSubject(intval($goodsId), intval($stype));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $stype], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -177,11 +201,14 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function getSubjectDetail() {
+        $apiName   = classBasename($this) . '/' . __function__;
+        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($subjectId)) {
             return ["code" => '3001'];
         }
         $result = $this->app->subject->getSubjectDetail(intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -197,11 +224,17 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function delGoodsSubject() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($subjectId)) {
             return ["code" => '3001'];
         }
         $result = $this->app->subject->delGoodsSubject(intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -218,6 +251,11 @@ class Subject extends AdminController {
      * @author zyr
      */
     public function delGoodsSubjectAssoc() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $goodsId   = trim($this->request->post('goods_id'));
         $subjectId = trim($this->request->post('subject_id'));
         if (!is_numeric($goodsId)) {
@@ -227,6 +265,7 @@ class Subject extends AdminController {
             return ["code" => '3002'];
         }
         $result = $this->app->subject->delGoodsSubjectAssoc(intval($goodsId), intval($subjectId));
+        $this->apiLog($apiName, [$cmsConId, $goodsId, $subjectId], $result['code'], $cmsConId);
         return $result;
     }
 }

@@ -49,17 +49,84 @@ class User extends AdminController {
      * @author rzc
      */
     public function getUsers() {
-        $page    = trim($this->request->post('page'));
-        $pagenum = trim($this->request->post('pagenum'));
-        $mobile = trim($this->request->post('mobile'));
-        if (!empty($mobile)){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pagenum  = trim($this->request->post('pagenum'));
+        $mobile   = trim($this->request->post('mobile'));
+        if (!empty($mobile)) {
             if (checkMobile($mobile) == false) {
-                return ['code' =>'3001'];
+                return ['code' => '3001'];
             }
         }
-        $result = $this->app->user->getUsers($page, $pagenum , $mobile);
+        $result = $this->app->user->getUsers($page, $pagenum, $mobile);
+        $this->apiLog($apiName, [$cmsConId, $page, $pagenum], $result['code'], $cmsConId);
         return $result;
     }
 
+    /**
+     * @api              {post} / boss降级处理
+     * @apiDescription   userDemotion
+     * @apiGroup         admin_Users
+     * @apiName          userDemotion
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} mobile 降级boss的手机号
+     * @apiParam (入参) {Int} user_identity 降级后用户身份 1.普通,2.钻石会员
+     * @apiParam (入参) {String} content 降级原因描述
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:手机格式有误 / 3002:只能降级为钻石或普通会员 / 3003:只有boss可以降级 / 3004:有未完成订单 / 3006:修改失败
+     * @apiSuccess (返回) {Array} order_list 未完成订单列表
+     * @apiSuccess (order_list) {String} order_no 订单号
+     * @apiSampleRequest /admin/user/userdemotion
+     * @author zyr
+     */
+    public function userDemotion() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $mobile          = trim($this->request->post('mobile'));
+        $userIdentity    = trim($this->request->post('user_identity'));
+        $content         = trim($this->request->post('content'));
+        $userIdentityArr = [1, 2];
+        if (!checkMobile($mobile)) {
+            return ['code' => '3001'];
+        }
+        if (!in_array($userIdentity, $userIdentityArr)) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->userDemotion($mobile, $userIdentity, $content);
+        $this->apiLog($apiName, [$cmsConId, $mobile, $userIdentity, $content], $result['code'], $cmsConId);
+        return $result;
+    }
 
+    /**
+     * @api              {post} / boss降级处理列表
+     * @apiDescription   userDemotionList
+     * @apiGroup         admin_Users
+     * @apiName          userDemotionList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page
+     * @apiParam (入参) {Int} page_num
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSuccess (返回) {Int} uid 降级的uid
+     * @apiSuccess (返回) {Int} after_identity 降级后的身份
+     * @apiSuccess (返回) {Int} boss_uid 降级后的上级boss
+     * @apiSuccess (返回) {Int} content 降级原因描述
+     * @apiSuccess (返回) {Array} uid_list 降级前可获取收益的会员列表
+     * @apiSuccess (返回) {Array} order_list 降级后未处理订单列表
+     * @apiSampleRequest /admin/user/userdemotionlist
+     * @author zyr
+     */
+    public function userDemotionList() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        $page     = is_numeric($page) ? $page : 1;
+        $pageNum  = is_numeric($pageNum) ? $pageNum : 10;
+        $result   = $this->app->user->userDemotionList($page, $pageNum);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
 }

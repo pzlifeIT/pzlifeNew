@@ -13,9 +13,13 @@ class Zthy {
     private $market;
     private $statusArr = [1, 2];
     private $user = [];
+    private $urlList = [
+        '1' => 'http://api.zthysms.com/sendSms.do',//单条验证码短信
+        '2' => 'http://api.zthysms.com/sendSmsBatch.do',//营销群发短信
+    ];
 
-    function __construct() {
-        $this->apiUrl  = 'http://www.api.zthysms.com/sendSms.do';
+    function __construct($apiIndex) {
+        $this->apiUrl  = $this->urlList[$apiIndex];
         $this->user[1] = ['username' => Config::get('sms.usernameVerifi'), 'password' => Config::get('sms.passwordVerifi')];
         $this->user[2] = ['username' => Config::get('sms.usernameMarket'), 'password' => Config::get('sms.passwordMarket')];
     }
@@ -61,7 +65,7 @@ class Zthy {
      * @param $isTranscoding |是否需要转 $isTranscoding 是否需要转utf-8 默认 false
      * @return mixed
      */
-    public function sendSMS(int $status, $type = 'post', $isTranscoding = false) {
+    public function sendSMS(int $status, $type = 'POST', $isTranscoding = false) {
         if (!in_array($status, $this->statusArr)) {
             return ['code' => '3000'];//短信类型有误
         }

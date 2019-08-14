@@ -122,4 +122,18 @@ class MyController extends Controller {
         }
         exit(json_encode(['code' => '5000']));
     }
+
+    /**
+     * 接口日志
+     * @param $apiName
+     * @param $param
+     * @param $code
+     * @param $conId
+     * @return mixed
+     * @author zyr
+     */
+    protected function apiLog($apiName, $param, $code, $conId) {
+        $result = $this->app->indexLog->apiRequestLog($apiName, $param, $code, $conId);
+        return $result;
+    }
 }

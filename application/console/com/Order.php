@@ -238,6 +238,9 @@ class Order extends Pzlife {
             $user    = Db::query($userSql);
             $user    = $user[0];
             foreach ($orderGoods as $ogVal) {
+                if ($ogVal['margin_price'] <= 0) {
+                    continue;
+                }
                 $o = [
                     'order_no'     => $orderNo,
                     'from_uid'     => $uid,
@@ -374,7 +377,7 @@ class Order extends Pzlife {
     public function memberOrderSettlement() {
         $this->orderInit();
         $redisListKey = Config::get('redisKey.order.redisMemberOrder');
-        // $this->redis->rPush($redisListKey, 40);
+        // $this->redis->rPush($redisListKey, 90);
         $memberOrderId = $this->redis->lPop($redisListKey); //购买会员的订单id
         if (empty($memberOrderId)) {
             exit('member_order_null');
@@ -605,7 +608,13 @@ class Order extends Pzlife {
                     $diamondvip_get['source']      = 1;
                     $diamondvip_get['share_uid']   = $from_uid;
                     $diamondvip_get['create_time'] = time();
-                    Db::name('diamondvip_get')->insert($diamondvip_get);
+                    $this_user_diamond = Db::query('SELECT `id` FROM pz_diamondvip_get WHERE `uid` = '.$uid . ' AND `share_uid` ='.$from_uid );
+                    // print_r( $this_user_diamond);die;
+                    if ($this_user_diamond) {
+                        Db::name('diamondvip_get')->where('id',$this_user_diamond[0]['id'])->update(['source'=>1]);
+                    } else {
+                        Db::name('diamondvip_get')->insert($diamondvip_get);
+                    }
                     Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
                     $this->redis->del($userRedisKey . 'userinfo:' . $uid);
                 } elseif ($payMoney == 100) {
@@ -714,12 +723,12 @@ class Order extends Pzlife {
                     $from_diamondvip_get['create_time'] = time();
                     Db::name('diamondvip_get')->insert($from_diamondvip_get);
                     if ($from_user['user_identity'] > 1) {
-                        $from_balance = $from_user['bounty'] + 40;
-                        Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                        $from_balance = $from_user['balance'] + 40;
+                        Db::name('users')->where('id', $from_uid)->update(['balance' => $from_balance]);
                         Db::name('log_trading')->insert(
                             [
                                 'uid'          => $from_uid,
-                                'trading_type' => 3,
+                                'trading_type' => 1,
                                 'change_type'  => 5,
                                 'order_no'     => $memberOrder,
                                 'money'        => 40,
@@ -751,16 +760,16 @@ class Order extends Pzlife {
                             Db::name('diamondvip_get')->where('id', $fromDiamondvipGet['id'])->update(['status' => 1]);
                             }
                         }else{
-                            $from_balance = $from_user['bounty'] + 40;
-                            Db::name('users')->where('id', $from_uid)->update(['bounty' => $from_balance]);
+                            $from_balance = $from_user['balance'] + 40;
+                            Db::name('users')->where('id', $from_uid)->update(['bobalanceunty' => $from_balance]);
                             Db::name('log_trading')->insert(
                                 [
                                     'uid'          => $from_uid,
-                                    'trading_type' => 3,
+                                    'trading_type' => 1,
                                     'change_type'  => 5,
                                     'order_no'     => $memberOrder,
                                     'money'        => 40,
-                                    'befor_money'  => $from_user['bounty'],
+                                    'befor_money'  => $from_user['balance'],
                                     'after_money'  => $from_balance,
                                     'create_time'  => time(),
                                 ]
@@ -801,17 +810,23 @@ class Order extends Pzlife {
                     // print_r(date('Ym', time()));die;
 
                 }
-                $diamondvip_get                = [];
-                $diamondvip_get['uid']         = $uid;
-                $diamondvip_get['share_uid']   = $from_uid;
-                $diamondvip_get['source']      = 2;
-                $diamondvip_get['create_time'] = time();
-                if ($from_user['user_identity'] < 2) {
-                    $diamondvip_get['bounty_status'] = 2;
-                }else{
-                    $diamondvip_get['bounty_status'] = 1;
-                }
-                Db::name('diamondvip_get')->insert($diamondvip_get);
+                $this_user_diamond = Db::query('SELECT `id` FROM pz_diamondvip_get WHERE `uid` = '.$uid);
+                if (!empty($this_user_diamond)) {
+                    Db::name('diamondvip_get')->where('id',$this_user_diamond[0]['id'])->update(['source'=>2,'bounty_status' => 2,'status' => 2,'share_uid' => $from_uid]);
+                } else {
+                    $diamondvip_get                = [];
+                    $diamondvip_get['uid']         = $uid;
+                    $diamondvip_get['share_uid']   = $from_uid;
+                    $diamondvip_get['source']      = 2;
+                    $diamondvip_get['create_time'] = time();
+                    if ($from_user['user_identity'] < 2) {
+                        $diamondvip_get['bounty_status'] = 2;
+                    }else{
+                        $diamondvip_get['bounty_status'] = 1;
+                    }
+                    Db::name('diamondvip_get')->insert($diamondvip_get);
+                } 
+            
                 Db::name('users')->where('id', $uid)->update(['user_identity' => 2]);
                 $this->redis->del($userRedisKey . 'userinfo:' . $uid);
             }

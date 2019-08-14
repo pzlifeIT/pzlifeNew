@@ -244,7 +244,7 @@ class DbUser {
     }
 
     /**
-     * 改商票余额
+     * 改商券余额
      * @param $uid
      * @param $balance
      * @param string $modify 增加/减少 inc/dec
@@ -612,7 +612,7 @@ class DbUser {
         $where = $this->getLogOpenbossWhere($mobile, $nickName);
         return Db::table('pz_log_openboss')
             ->alias('lo')
-            ->field('lo.money,u.nick_name,u.mobile,a.admin_name,lo.create_time,lo.message')
+            ->field('lo.money,u.nick_name,u.mobile,a.admin_name,from_unixtime(lo.create_time) as create_time,lo.message')
             ->join(['pz_users' => 'u'], 'lo.uid=u.id')
             ->join(['pz_admin' => 'a'], 'lo.admin_id=a.id')
             ->whereOr($where)

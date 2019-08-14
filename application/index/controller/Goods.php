@@ -30,10 +30,12 @@ class Goods extends MyController {
      * @author rzc
      */
     public function getCategoryGoods() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $cate_id   = trim($this->request->post('cate_id'));
         $page      = trim($this->request->post('page'));
         $page_num  = trim($this->request->post('page_num'));
         $goodslist = $this->app->goods->getCategoryGoods($cate_id, $page, $page_num);
+        $this->apiLog($apiName, [$cate_id, $page, $page_num], $goodslist['code'], '');
         return $goodslist;
     }
 
@@ -92,9 +94,11 @@ class Goods extends MyController {
      * @author rzc
      */
     public function getGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $goods_id = trim($this->request->post('goods_id'));
         $source   = trim($this->request->post('source'));
         $result   = $this->app->goods->getGoodsinfo($goods_id, intval($source));
+        $this->apiLog($apiName, [$goods_id, $source], $result['code'], '');
         return $result;
     }
 
@@ -124,6 +128,7 @@ class Goods extends MyController {
      * @author rzc
      */
     public function getSubjectGoods() {
+        $apiName    = classBasename($this) . '/' . __function__;
         $subject_id = trim($this->request->post('subject_id'));
         $page       = trim($this->request->post('page'));
         $page_num   = trim($this->request->post('page_num'));
@@ -131,6 +136,7 @@ class Goods extends MyController {
             return ['code' => '3001'];
         }
         $goodslist = $this->app->goods->getSubjectGoods($subject_id, $page, $page_num);
+        $this->apiLog($apiName, [$subject_id, $page, $page_num], $goodslist['code'], '');
         return $goodslist;
     }
 
@@ -161,6 +167,7 @@ class Goods extends MyController {
      * @author rzc
      */
     public function getSearchGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $search   = trim($this->request->post('search'));
         $page     = trim($this->request->post('page'));
         $page_num = trim($this->request->post('page_num'));
@@ -173,6 +180,7 @@ class Goods extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->goods->getSearchGoods($search, $page, $page_num);
+        $this->apiLog($apiName, [$search, $page, $page_num], $result['code'], '');
         return $result;
     }
 
@@ -203,15 +211,17 @@ class Goods extends MyController {
      * @author zyr
      */
     public function getSearchGoodsByLabel() {
+        $apiName   = classBasename($this) . '/' . __function__;
         $labelName = trim($this->request->post('label_name')); //标签id
-        $page    = trim($this->request->post('page'));
-        $pageNum = trim($this->request->post('page_num'));
-        if(empty($labelName)){
+        $page      = trim($this->request->post('page'));
+        $pageNum   = trim($this->request->post('page_num'));
+        if (empty($labelName)) {
             return ['code' => '3001']; //搜索内容不能空
         }
         $page    = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
         $result  = $this->app->goods->getSearchGoodsByLabel(strtolower($labelName), $page, $pageNum);
+        $this->apiLog($apiName, [$labelName, $page, $pageNum], $result['code'], '');
         return $result;
     }
 
@@ -228,8 +238,10 @@ class Goods extends MyController {
      * @author zyr
      */
     public function searchLabel() {
+        $apiName       = classBasename($this) . '/' . __function__;
         $searchContent = trim($this->request->post('search_content')); //搜索内容
         $result        = $this->app->goods->searchLabel(strtolower($searchContent));
+        $this->apiLog($apiName, [$searchContent], $result['code'], '');
         return $result;
     }
 
@@ -253,6 +265,7 @@ class Goods extends MyController {
      * @author zyr
      */
     public function goodsRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
         $goodsId  = trim($this->request->post('goods_id'));
         $goodsNum = trim($this->request->post('goods_num'));
         if (!is_numeric($goodsId)) {
@@ -264,6 +277,7 @@ class Goods extends MyController {
         $goodsId  = intval($goodsId);
         $goodsNum = is_numeric($goodsNum) ? intval($goodsNum) : 6;
         $result   = $this->app->goods->goodsRecommend($goodsId, $goodsNum);
+        $this->apiLog($apiName, [$goodsId, $goodsNum], $result['code'], '');
         return $result;
     }
 }

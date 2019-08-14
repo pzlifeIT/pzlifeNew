@@ -313,7 +313,7 @@ class Category extends CommonIndex {
             $field = "id";
             $res   = DbGoods::getOneSpec($where, $field);
             if ($res) {
-                return ["msg" => "请先解除该分类下的属性关系", "code" => 3003];
+                return ["msg" => "请先解除该分类下的属性关系", "code" => 3004];
             }
         }
         $data = [

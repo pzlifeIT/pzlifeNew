@@ -29,6 +29,7 @@ class Cart extends MyController {
      * @apiSuccess (valid) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
      * @apiSuccess (valid) {String} title 主标题
      * @apiSuccess (valid) {String} subtitle 副标题
+     * @apiSuccess (valid) {String} goods_sku_name 规格
      * @apiSuccess (valid) {String} image 商品标题图
      * @apiSuccess (返回) {Array} failure 失效效商品
      * @apiSuccess (failure) {String} id 商品ID
@@ -38,12 +39,14 @@ class Cart extends MyController {
      * @apiSuccess (failure) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
      * @apiSuccess (failure) {String} title 主标题
      * @apiSuccess (failure) {String} subtitle 副标题
+     * @apiSuccess (failure) {String} goods_sku_name 规格
      * @apiSuccess (failure) {String} image 商品标题图
      * @apiSampleRequest /index/cart/getUserCart
      * @author rzc
      */
     public function getUserCart() {
-        $conId = trim($this->request->post('con_id'));
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -53,8 +56,8 @@ class Cart extends MyController {
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
         // $uid = $this->app->user->deUid($paramUid);
         $result = $this->app->cart->getUserCart($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
-
     }
 
     /**
@@ -82,11 +85,12 @@ class Cart extends MyController {
      * @author rzc
      */
     public function addUserCart() {
+        $apiName     = classBasename($this) . '/' . __function__;
+        $conId       = trim($this->request->post('con_id'));
         $goods_skuid = trim($this->request->post('goods_skuid'));
         $goods_num   = trim($this->request->post('goods_num'));
-        $parent_id    = trim($this->request->post('parent_id'));
+        $parent_id   = trim($this->request->post('parent_id'));
         // $track_id    = $track_id ? $track_id : 1;
-        $conId       = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -105,7 +109,8 @@ class Cart extends MyController {
             return ['code' => '3004', 'msg' => '购买数量必须是数字'];
         }
         $parent_id = empty(deUid($parent_id)) ? 1 : deUid($parent_id);
-        $result = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
+        $result    = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
+        $this->apiLog($apiName, [$conId, $goods_skuid, $goods_num], $result['code'], $conId);
         return $result;
     }
 
@@ -134,11 +139,12 @@ class Cart extends MyController {
      * @author rzc
      */
     public function updateUserCart() {
+        $apiName     = classBasename($this) . '/' . __function__;
+        $conId       = trim($this->request->post('con_id'));
         $goods_skuid = trim($this->request->post('goods_skuid'));
         $goods_num   = trim($this->request->post('goods_num'));
         $track_id    = trim($this->request->post('track_id'));
         $track_id    = $track_id ? $track_id : 1;
-        $conId       = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -161,6 +167,7 @@ class Cart extends MyController {
             return ['code' => '3005', 'msg' => '足迹ID必须是数字'];
         }
         $result = $this->app->cart->updateCartGoods($conId, intval($goods_skuid), intval($goods_num), intval($track_id));
+        $this->apiLog($apiName, [$conId, $goods_skuid, $goods_num, $track_id], $result['code'], $conId);
         return $result;
     }
 
@@ -188,12 +195,13 @@ class Cart extends MyController {
      * @author rzc
      */
     public function editUserCart() {
+        $apiName    = classBasename($this) . '/' . __function__;
+        $conId      = trim($this->request->post('con_id'));
         $del_skuid  = trim($this->request->post('del_skuid'));
         $del_shopid = trim($this->request->post('del_shopid'));
         // RVYvaEw2Wk1TeXlnUjdlb2RHc3ZEZz09
         // $uid = $this->app->user->enUid($paramUid);
         // echo $uid;die;
-        $conId = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -201,6 +209,7 @@ class Cart extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->cart->editUserCart($conId, $del_shopid, $del_skuid);
+        $this->apiLog($apiName, [$conId, $del_skuid, $del_shopid], $result['code'], $conId);
         return $result;
     }
 
@@ -215,8 +224,9 @@ class Cart extends MyController {
      * @apiSampleRequest /index/cart/getUserCartNum
      * @author rzc
      */
-    public function getUserCartNum(){
-        $conId = trim($this->request->post('con_id'));
+    public function getUserCartNum() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId   = trim($this->request->post('con_id'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -224,6 +234,7 @@ class Cart extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->cart->getUserCartNum($conId);
+        $this->apiLog($apiName, [$conId], $result['code'], $conId);
         return $result;
     }
 }

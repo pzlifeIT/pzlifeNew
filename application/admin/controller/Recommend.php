@@ -91,7 +91,10 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
         $result = $this->app->recommend->getRecommend();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -122,6 +125,11 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function addRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $model_id        = trim($this->request->post('model_id'));
         $title           = trim($this->request->post('title'));
         $image_path      = trim($this->request->post('image_path'));
@@ -236,6 +244,7 @@ class Recommend extends AdminController {
             unset($data['is_show']);
         }
         $result = $this->app->recommend->addRecommend($data);
+        $this->apiLog($apiName, [$cmsConId, $model_id, $image_path, $parent_id, $jump_type, $jump_content, $show_type, $show_data, $show_days, $model_order, $model_son_order, $tier, $is_show], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -256,12 +265,15 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommendId() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $model_id = trim($this->request->post('model_id'));
         $tier     = trim($this->request->post('tier'));
         if (!is_numeric($tier) || !is_numeric($model_id)) {
             return ['code' => '3001'];
         }
         $result = $this->app->recommend->getRecommendId($model_id, $tier);
+        $this->apiLog($apiName, [$cmsConId, $model_id, $tier], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -311,11 +323,14 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function getRecommendInfo() {
-        $id = trim($this->request->post('id'));
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = trim($this->request->post('id'));
         if (!$id || !is_numeric($id)) {
             return ['code' => 3001];
         }
         $result = $this->app->recommend->getRecommendInfo($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -346,6 +361,11 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function updateRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id              = trim($this->request->post('id'));
         $model_id        = trim($this->request->post('model_id'));
         $title           = trim($this->request->post('title'));
@@ -456,6 +476,7 @@ class Recommend extends AdminController {
             unset($data['is_show']);
         }
         $result = $this->app->recommend->saveRecommend($data, $id);
+        $this->apiLog($apiName, [$cmsConId, $id, $model_id, $title, $image_path, $parent_id, $jump_type, $jump_content, $show_type, $show_data, $show_days, $model_order, $model_son_order, $tier, $is_show], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -475,11 +496,40 @@ class Recommend extends AdminController {
      * @author rzc
      */
     public function delRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
         $id = trim($this->request->post('id'));
         if (!is_numeric($id)) {
             return ['code' => '3001'];
         }
         $result = $this->app->recommend->delRecommend($id);
+        $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 更新推荐
+     * @apiDescription   delRecommend
+     * @apiGroup         admin_Recommend
+     * @apiName          resetRecommend
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 删除内容对应ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:查询结果为空，无法更改 
+     * @apiSampleRequest /admin/Recommend/resetRecommend
+     * @apiParamExample (data) {Array} 返回
+     * [
+     * "code":"200",返回code码
+     * ]
+     * @author rzc
+     */
+    public function resetRecommend() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $result   = $this->app->recommend->resetRecommend();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 }
