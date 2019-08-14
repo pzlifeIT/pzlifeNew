@@ -242,9 +242,33 @@ class TemporaryScript extends Pzlife {
        exit('ok!!');
     }
 
+    public function getUserRelation($mobile){
+        $user    = Db::query("SELECT id,nick_name,user_identity,mobile FROM pz_users WHERE mobile = '".$mobile."' AND delete_time=0 ");
+        $user_relation = Db::query("SELECT * FROM pz_user_relation WHERE uid = ".$user[0]['id']." AND delete_time=0 ");
+        $relation = explode(',',$user_relation[0]['relation']);
+        $UserRelation = [];
+        rsort($relation);
+        foreach ($relation as $key => $value) {
+            $v_user = Db::query("SELECT id,nick_name,user_identity,mobile FROM pz_users WHERE id = '".$value."' AND delete_time=0 ");
+            if ($v_user[0]['user_identity'] == 1){
+                $v_user[0]['user_identity'] = '普通会员';
+            } else if ($v_user[0]['user_identity'] == 2){
+                $v_user[0]['user_identity'] = '钻石会员';
+            } else if ($v_user[0]['user_identity'] == 3){
+                $v_user[0]['user_identity'] = '创业会员';
+            } else if ($v_user[0]['user_identity'] == 4){
+                $v_user[0]['user_identity'] = '合伙人';
+            }
+            unset($v_user[0]['id']);
+            $UserRelation[] = $v_user[0];
+        }
+
+        print_r($UserRelation);die;
+    }
+
     /**
      * 标签库redis缓存脚本
-     */
+     */ 
     public function labelScript() {
         $goodsRelation = Db::query('select lgr.label_lib_id from pz_label_goods_relation as lgr join pz_goods as g on lgr.goods_id=g.id where g.delete_time=0 and lgr.delete_time=0 and g.status=1');
         $labelIdList   = array_values(array_unique(array_column($goodsRelation, 'label_lib_id')));
