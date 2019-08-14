@@ -11,6 +11,7 @@ use app\facade\DbProvinces;
 use app\facade\DbRights;
 use app\facade\DbUser;
 use app\facade\DbGoods;
+use app\facade\DbSup;
 use Config;
 use Env;
 use think\Db;
@@ -117,6 +118,7 @@ class User extends CommonIndex {
         }
         $updateData = [];
         $addData    = [];
+        $up_onlie   = [];
         $uid        = $this->checkAccount($mobile); //通过手机号获取uid
         if (empty($uid)) { //该手机未注册过
             if (empty($wxInfo['unionid'])) {
@@ -141,6 +143,11 @@ class User extends CommonIndex {
                     'nick_name' => $wxInfo['nickname'],
                     'avatar'    => $wxInfo['avatarurl'], //$wxInfo['unionid'],
                 ];
+                $onlin_user = DbSup::getOlineMarketingUser(['mobile' => $mobile],'id,user_identity',true);
+                if (!empty($onlin_user)) {
+                    $addData['user_identity'] = $onlin_user['user_identity'];
+                    $up_onlie = ['is_register' => 2];
+                }
             }
         }
         $userCon = [];
@@ -203,6 +210,9 @@ class User extends CommonIndex {
             $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype);
             DbUser::updateUser(['last_time' => time()], $uid);
             $this->saveOpenid($uid, $wxInfo['openid'], $platform);
+            if (!empty($up_onlie)) {
+                DbSup::updateOlineMarketingUser($up_onlie,$onlin_user['id']);
+            }
             Db::commit();
             return ['code' => '200', 'con_id' => $conId];
         } catch (\Exception $e) {

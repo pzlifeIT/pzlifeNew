@@ -7,6 +7,7 @@ use app\common\model\SupPromote;
 use app\common\model\SupPromoteSignUp;
 use app\common\model\SupPromoteShareLog;
 use app\common\model\PromoteImage;
+use app\common\model\OlineMarketingUser;
 
 class DbSup {
     public function __construct() {
@@ -154,5 +155,31 @@ class DbSup {
         $supAdmin = new SupAdmin();
         return $supAdmin->save(['sup_passwd' => $newPasswd], ['id' => $id]);
 
+    }
+
+    public function saveOlineMarketingUser($data){
+        $OlineMarketingUser = new OlineMarketingUser;
+        $OlineMarketingUser->save($data);
+        return $OlineMarketingUser->id;
+    }
+
+    /**
+     * 获取分享日志
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $limit
+     * @return mixed
+     * @author rzc
+     */
+    public function getOlineMarketingUser($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = OlineMarketingUser()::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function updateOlineMarketingUser($data,$id){
+        $OlineMarketingUser = new OlineMarketingUser;
+        return $OlineMarketingUser->save($data,['id' => $id]);
     }
 }

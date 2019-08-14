@@ -14,7 +14,7 @@ class Wap extends MyController {
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,sendModelMessage'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,sendModelMessage,onlineMarketingUser'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -215,4 +215,44 @@ class Wap extends MyController {
         $result = $this->app->wap->sendModelMessage($access_token, $template_id, $touser, $url, $data, $color);
         return $result;
     }
-}
+
+    /**
+     * @api              {post} / 线上推广钻石临时接口
+     * @apiDescription  onlineMarketingUser
+     * @apiGroup         index_wap
+     * @apiName          onlineMarketingUser
+     * @apiParam (入参) {String} avatar 头像
+     * @apiParam (入参) {String} nick_name 昵称
+     * @apiParam (入参) {Number} mobile 手机号
+     * @apiParam (入参) {Number} user_identity 用户身份1.普通,2.钻石会员3.创业店主4.boss合伙人
+     * @apiParam (入参) {String} platform 来源：SJ：宋建
+     * @apiSuccess (返回) {String} code 200:成功  /  3001:手机号格式错误 / 3002:用户推广身份错误 / 3003:非法来源 / 3004:手机号已存在 / 3005:数据回滚,添加失败 / 3006:请填写姓名 / 3007:请上传头像
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/onlineMarketingUser
+     * @author rzc
+     */
+    public function onlineMarketingUser(){
+        $avatar        = trim($this->request->post('avatar'));
+        $nick_name     = trim($this->request->post('nick_name'));
+        $mobile        = trim($this->request->post('mobile'));
+        $user_identity = trim($this->request->post('user_identity'));
+        $platform      = trim($this->request->post('platform'));
+        if (checkMobile($mobile) === false) {
+            return ['code' => '3001', 'Errormsg' => 'mobile check false']; //手机号格式错误
+        }
+        if (!in_array($user_identity,[1,2,3,4])) {
+            return ['code' => '3002', 'Errormsg' => 'user_identity false'];
+        }
+        if (!in_array($platform,['SJ'])) {
+            return ['code' => '3003', 'Errormsg' => 'platform false'];
+        }
+        if (empty($nick_name)){
+            return ['code' => '3006', 'Errormsg' => 'nick_name is null'];
+        }
+        if (empty($avatar)){
+            return ['code' => '3007', 'Errormsg' => 'avatar is null'];
+        }
+        $result = $this->app->wap->onlineMarketingUser($avatar, $nick_name, $mobile, $user_identity, $platform);
+        return $result;
+    }
+}       

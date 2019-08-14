@@ -65,7 +65,7 @@ class Wap extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo,  $study_name, $study_mobile) {
+    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo, $study_name, $study_mobile) {
         // $stype = 5;
         // if ($this->checkVercode($stype, $mobile, $vercode) === false) {
         //     return ['code' => '3008']; //验证码错误
@@ -78,20 +78,20 @@ class Wap extends CommonIndex {
         if (empty($promote)) {
             return ['code' => '3003']; //推广活动不存在
         }
-        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'study_name' => $study_name, 'study_mobile' => $study_mobile,'uid' => $uid], true);
+        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'study_name' => $study_name, 'study_mobile' => $study_mobile, 'uid' => $uid], true);
         if (!empty($promotesignup)) {
             return ['code' => '3005'];
         }
         $data = [
-            'uid'        => $uid,
-            'promote_id' => $promote_id,
-            'mobile'     => $mobile,
-            'nick_name'  => $nick_name,
-            'sex'        => $sex,
-            'age'        => $age,
-            'signinfo'   => $signinfo,
+            'uid'          => $uid,
+            'promote_id'   => $promote_id,
+            'mobile'       => $mobile,
+            'nick_name'    => $nick_name,
+            'sex'          => $sex,
+            'age'          => $age,
+            'signinfo'     => $signinfo,
             'study_name'   => $study_name,
-            'study_mobile'   => $study_mobile,
+            'study_mobile' => $study_mobile,
         ];
         DbSup::saveSupPromoteSignUp($data);
         // $this->redis->del($this->redisKey . 'vercode:' . $mobile . ':' . $stype); //成功后删除验证码
@@ -177,13 +177,13 @@ class Wap extends CommonIndex {
         return $jsapi_ticket;
     }
 
-    public function sendModelMessage($access_token, $template_id, $touser, $url = '', $data, $color = ''){
+    public function sendModelMessage($access_token, $template_id, $touser, $url = '', $data, $color = '') {
         $send_data = [];
-        $color = $color ? $color : '#173177';
+        $color     = $color ? $color : '#173177';
         $send_data = [
-            'touser' => $touser,
+            'touser'      => $touser,
             'template_id' => $template_id,
-            'url' => $url,
+            'url'         => $url,
         ];
         foreach ($data as $key => $value) {
             $new_data[$key]['value'] = $value;
@@ -193,8 +193,8 @@ class Wap extends CommonIndex {
         $send_data['data'] = $new_data;
         // $access_token = $this->getTinluoAccessToken();
         $requestUrl = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' . $access_token;
-        $result = $this->sendRequest2($requestUrl, $send_data);
-        return json_decode($result,true);
+        $result     = $this->sendRequest2($requestUrl, $send_data);
+        return json_decode($result, true);
     }
 
     function sendRequest2($requestUrl, $data = []) {
@@ -214,14 +214,39 @@ class Wap extends CommonIndex {
     }
 
     protected function getTinluoAccessToken() {
-        $appid         = 'wxae80a5994b43e4f5';
-        $secret        = '3db5446fbaa011416174b45d86adfd19';
-        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
+        $appid            = 'wxae80a5994b43e4f5';
+        $secret           = '3db5446fbaa011416174b45d86adfd19';
+        $requestUrl       = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
         $requsest_subject = json_decode(sendRequest($requestUrl), true);
         $access_token     = $requsest_subject['access_token'];
         if (!$access_token) {
             return false;
         }
         return $access_token;
+    }
+
+    public function onlineMarketingUser($avatar, $nick_name, $mobile, $user_identity, $platform) {
+        $has_mobile = DbSup::getOlineMarketingUser(['mobile' => $mobile], 'id', true);
+        if (!empty($has_mobile)) {
+            return ['code' => '3004', 'Errormsg' => 'mobile has register'];
+        }
+        $data = [];
+        $data = [
+            'nick_name'     => $nick_name,
+            'mobile'        => $mobile,
+            'avatar'        => $avatar,
+            'user_identity' => $user_identity,
+            'platform'      => $platform,
+            'is_register'   => 1,
+        ];
+        Db::startTrans();
+        try {
+            DbSup::saveOlineMarketingUser($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+        }
     }
 }
