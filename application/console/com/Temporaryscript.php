@@ -208,8 +208,22 @@ class TemporaryScript extends Pzlife {
             } */
 
             /* 将爱心传播-友珍(15848209233)钻石购买关系挂在请叫我Mr.cai(18555858157)下面  2019/04/12 */
-            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 15848209233 AND delete_time=0 ");
+        /*     $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 15848209233 AND delete_time=0 ");
             $up_user = Db::query("SELECT * FROM pz_users WHERE mobile = 18555858157 AND delete_time=0 ");
+            if (!empty($user) && !empty($up_user)) {
+                $up_relation = Db::query("SELECT * FROM pz_user_relation WHERE uid = ".$up_user[0]['id']." AND delete_time=0 ");
+                if ($up_user[0]['user_identity'] == 4) {
+                    $have_up_relation =  $up_user[0]['id'].','.$user[0]['id'];
+                } else {
+                    $have_up_relation = $up_relation[0]['relation'].','.$user[0]['id'];
+                }
+                Db::table('pz_user_relation')->where(['uid' => $user[0]['id']])->update(['pid' => $up_user[0]['id'],'relation' => $have_up_relation]);
+            } */
+
+/* 将邱详云(13816768739)钻石购买关系挂在黄炜华(13917222366)下面  2019/04/12 */
+            $user    = Db::query("SELECT * FROM pz_users WHERE mobile = 13816768739 AND delete_time=0 ");
+            $up_user = Db::query("SELECT * FROM pz_users WHERE mobile = 13917222366 AND delete_time=0 ");
+            
             if (!empty($user) && !empty($up_user)) {
                 $up_relation = Db::query("SELECT * FROM pz_user_relation WHERE uid = ".$up_user[0]['id']." AND delete_time=0 ");
                 if ($up_user[0]['user_identity'] == 4) {
