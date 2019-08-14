@@ -174,7 +174,7 @@ class DbSup {
      * @author rzc
      */
     public function getOlineMarketingUser($where, $field, $row = false, $orderBy = '', $limit = ''){
-        $obj = OlineMarketingUser()::field($field)->where($where);
+        $obj = OlineMarketingUser::field($field)->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
 
