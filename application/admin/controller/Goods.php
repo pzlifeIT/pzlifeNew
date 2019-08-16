@@ -702,5 +702,24 @@ class Goods extends AdminController {
         return $result;
     }
 
+    /**
+     * @api              {post} / 获取表格详情
+     * @apiDescription   getSheetInfo
+     * @apiGroup         admin_goods
+     * @apiName          getSheetInfo
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 表格id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSampleRequest /admin/goods/getSheetInfo
+     * @author rzc
+     */
+    public function getSheetInfo(){
+        $id       = trim($this->request->post('id'));
+        if (empty($id) || !is_numeric($id) || intval($id) < 1){
+            return ['code' => 3001];
+        }
+        $result   = $this->app->goods->getSheetInfo($id);
+        return $result;
+    }
 
 }

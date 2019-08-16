@@ -12,6 +12,8 @@ class SheetOptionRelation extends Model {
     protected $table = 'pz_sheet_option_relation';
     // 设置当前模型的数据库连接
     protected $connection = '';
+    protected $deleteTime = 'delete_time';
+    protected $defaultSoftDelete = 0;
     protected $autoWriteTimestamp = true;
     protected $updateTime = false;//关闭update_time
     protected $type = [
@@ -23,7 +25,7 @@ class SheetOptionRelation extends Model {
         //TODO:初始化内容
     }
 
-//    public function goodsSpec() {
-//        return $this->belongsTo('goodsSpec');
-//    }
+   public function sheetOption() {
+       return $this->belongsTo('sheetOption', 'option_id', 'id');
+   }
 }

@@ -1216,7 +1216,11 @@ class DbGoods {
     }
 
     public function getSheetOptionRelation($where, $field, $row = false, $orderBy = '', $limit = ''){
-        $obj = SheetOptionRelation::field($field)->where($where);
+        $obj = SheetOptionRelation::field($field)->with([
+            'sheetOption' => function($query){
+                $query->field('id,name,title,type,create_time');
+            },
+        ])->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
 

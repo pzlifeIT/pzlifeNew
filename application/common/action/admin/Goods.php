@@ -1227,12 +1227,16 @@ class Goods extends CommonIndex {
     }
 
     public function editSheet($name = '', $id, $options = []){
-        if (DbGoods::getSheet([['name' , '=', $name],['id','<>',$id]], 'id',true)) {
-            return ['code' => '3001'];
+        if (!empty($name)) {
+            if (DbGoods::getSheet([['name' , '=', $name],['id','<>',$id]], 'id',true)) {
+                return ['code' => '3001'];
+            }
         }
         Db::startTrans();
         try {
-            DbGoods::saveSheet(['name' => $name],$id);
+            if (!empty($name)){
+                DbGoods::saveSheet(['name' => $name],$id);
+            }
             if ($id && $options){
                 DbGoods::delSheetOptionRelation(['sheet_id' => $id]);
                 $sheet_options = [];
@@ -1248,7 +1252,20 @@ class Goods extends CommonIndex {
             Db::rollback();
             return ['code' => '3005'];//领取失败
         }
-        DbGoods::saveSheet(['name' => $name],$id);
-        return ['code' => '200'];
+       
+    }
+
+    public function getSheetInfo($id){
+        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+        if (empty($sheet)) {
+            return ['code' => '200', 'sheet' =>[]];
+        }
+        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_optionsList = [];
+        foreach ($sheet_options as $key => $value) {
+            $sheet_optionsList[] = $value['sheet_option'];
+        }
+        $sheet['options'] = $sheet_optionsList;
+        return ['code' => '200', 'sheet' =>$sheet];
     }
 }
