@@ -24,7 +24,7 @@ class Audio extends CommonIndex {
      * @author rzc
      */
 
-    public function getUserAudioList($conId, $status, $page, $pagenum) {
+    public function getUserAudioList($conId, $status, $page, $pagenum, $getall) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3003'];
@@ -40,7 +40,11 @@ class Audio extends CommonIndex {
         }else if ($status == 2){
             array_push($where,['end_time', '<=', time()]);
         }
-        $audio = DbAudios::getUserAudioRelation($where,'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc'],$offset.','.$pagenum);
+        if ($getall == 1) {
+            $audio = DbAudios::getUserAudioRelation($where,'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc']);
+        }else{
+            $audio = DbAudios::getUserAudioRelation($where,'id,audio_id,end_time,create_time,update_time',false,['id' => 'desc'],$offset.','.$pagenum);
+        }
         foreach ($audio as $key => $value) {
             $audio[$key]['end_time'] = date('Y-m-d H:i:s', $value['end_time']);
         }
