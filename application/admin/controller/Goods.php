@@ -678,7 +678,7 @@ class Goods extends AdminController {
     }
 
     /**
-     * @api              {post} / 添加表格模板
+     * @api              {post} / 修改表格模板
      * @apiDescription   editSheet
      * @apiGroup         admin_goods
      * @apiName          editSheet
