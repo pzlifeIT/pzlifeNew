@@ -618,8 +618,6 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getSheetOption
      * @apiParam (入参) {String} cms_con_id
-     * @apiParam (入参) {Number} id 商品id
-     * @apiParam (入参) {Number} type 上下架状态 1上架 / 2下架
      * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
      * @apiSampleRequest /admin/goods/getSheetOption
      * @author rzc
@@ -629,4 +627,80 @@ class Goods extends AdminController {
         $result = $this->app->goods->getSheetOption();
         return $result;
     }
+
+    /**
+     * @api              {post} / 获取表格模板
+     * @apiDescription   getSheet
+     * @apiGroup         admin_goods
+     * @apiName          getSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [page]
+     * @apiParam (入参) {Number} [pageNum]
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSampleRequest /admin/goods/getSheet
+     * @author rzc
+     */
+    public function getSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page          = trim($this->request->post('page'));
+        $pageNum       = trim($this->request->post('pageNum'));
+        $page          = empty($page) ? 1 : $page;
+        $pageNum       = empty($pageNum) ? 10 : $pageNum;
+        $result = $this->app->goods->getSheet($page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加表格模板
+     * @apiDescription   addSheet
+     * @apiGroup         admin_goods
+     * @apiName          addSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} name 表格名称
+     * @apiParam (入参) {Number} options 选项ID，用‘,’连接
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:存在相同名称的表格 / 3002:表格名称为空 / 3003:options为空
+     * @apiSampleRequest /admin/goods/addSheet
+     * @author rzc
+     */
+    public function addSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $name     = trim($this->request->post('name'));
+        $options  = trim($this->request->post('options'));
+        if (empty($name)){
+            return ['code' => '3002'];
+        }
+        if (empty($options)){
+            return ['code' => '3003'];
+        }
+        $options = explode(',',$options);
+        $result   = $this->app->goods->addSheet($name, $options);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加表格模板
+     * @apiDescription   editSheet
+     * @apiGroup         admin_goods
+     * @apiName          editSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [name] 表格名称
+     * @apiParam (入参) {Number} [options] 选项ID，用‘,’连接
+     * @apiParam (入参) {Number} id 表格id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSampleRequest /admin/goods/editSheet
+     * @author rzc
+     */
+    public function editSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $name     = trim($this->request->post('name'));
+        $options  = trim($this->request->post('options'));
+        $id       = trim($this->request->post('id'));
+        if (!empty($options)){
+            $options = explode(',',$options);
+        }
+        $result   = $this->app->goods->editSheet($name, $id, $options);
+        return $result;
+    }
+
+
 }
