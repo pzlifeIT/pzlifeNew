@@ -95,10 +95,12 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
-     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 音频商品(默认1) 3 健康商品
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
+     * @apiParam (入参) {String} [share_image] 商品分享标题图
+     * @apiParam (入参) {String} [sheet_id] 商品表格ID
      * @apiSampleRequest /admin/goods/saveaddgoods
      * @return array
      * @author zyr
@@ -109,14 +111,16 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
-        $cateId       = trim($this->request->post('cate_id'));//分类id
-        $goodsName    = trim($this->request->post('goods_name'));//商品名称
-        $goodsType    = trim($this->request->post('goods_type'));//商品类型
-        $targetUsers  = trim($this->request->post('target_users'));//适用人群
-        $subtitle     = trim($this->request->post('subtitle'));//标题
-        $image        = trim($this->request->post('image'));//商品标题图
-        $goodsTypeArr = [1, 2];
+        $supplierId     = trim($this->request->post('supplier_id')); //供应商id
+        $cateId         = trim($this->request->post('cate_id')); //分类id
+        $goodsName      = trim($this->request->post('goods_name')); //商品名称
+        $goodsType      = trim($this->request->post('goods_type')); //商品类型
+        $targetUsers    = trim($this->request->post('target_users')); //适用人群
+        $subtitle       = trim($this->request->post('subtitle')); //标题
+        $image          = trim($this->request->post('image')); //商品标题图
+        $share_image    = trim($this->request->post('share_image')); //商品分享图片
+        $sheet_id    = trim($this->request->post('sheet_id')); //商品分享图片
+        $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001'];//供应商id只能为数字
@@ -152,6 +156,12 @@ class Goods extends AdminController {
         }
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
+        }
+        if (!empty($share_image)) {
+            $data['share_image'] = $share_image;
+        }
+        if (!empty($sheet_id)){
+            $data['goods_sheet'] = intval($sheet_id);
         }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);

@@ -104,6 +104,10 @@ class Goods extends CommonIndex {
         if (empty($supplier)) {//供应商id不存在
             return ['code' => '3008'];
         }
+        $goods_sheet = Db::getSheet(['id' => $data['goods_sheet']],'id',true);
+        if (empty($goods_sheet)){
+            return ['code' => '3013'];
+        }
         $logImage = [];
         if (!empty($goodsId)) {//更新操作
             $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
