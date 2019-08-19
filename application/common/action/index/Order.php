@@ -1536,7 +1536,7 @@ class Order extends CommonIndex {
                             $res = checkIdcard($value);
                             break;
                         case "medicare_card" :
-                            $res = strlen($value) != 16 ? false : true;
+                            $res = strlen($value) > 16 ? false : true;
                             break;
                         case "mobile":
                             $res = checkMobile($value);
@@ -1552,13 +1552,19 @@ class Order extends CommonIndex {
                     }
             }
         }
-        print_r($from);
-        print_r($sheet_list);die;
+        // print_r($from);
+        // print_r($sheet_list);die;
+        $new_from = [];
+        foreach ($from as $f => $rom) {
+            $sheet = [];
+            $sheet['from'] = json_encode($rom);
+            $sheet['goods_id'] = $f;
+            $sheet['order_no'] = $orderNo;
+            $new_from[] = $sheet;
+        }
         Db::startTrans();
         try {
-            foreach ($from as $f => $rom) {
-                # code...
-            }
+            DbOrder::saveAllOrderGoodsSheet($new_from);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {

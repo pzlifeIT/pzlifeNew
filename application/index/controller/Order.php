@@ -643,6 +643,23 @@ class Order extends MyController {
      * @apiParam (入参) {Number} from 订单号
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 
      * @apiSampleRequest /index/order/submitOrderSheet
+     * @apiParamExample {json} Request Example
+     *  POST /index/order/submitOrderSheet
+     *  {
+     *      "con_id":"9d708dd4921d53b1d50bd25b4ca2e3f9",
+     *      "order_no":"odr19060223562557544951",
+     *      "from":{
+     *             "1595":{ //注：1595为此笔订单商品id
+     *                  "name":"测试",
+     *                  "idcard":"4XX60619950320XXXX",
+     *                  "medicare_card":"SH132145646513",
+     *                  "mobile":"13333333333",
+     *                  "hospital_name":"上海市第一人民医院",
+     *                  "registration_department":"耳鼻喉科",
+     *                  "experts_name":"赵医生"
+     *              }
+     *          }
+     *  }
      * @author rzc
      */
     public function submitOrderSheet(){
@@ -655,7 +672,7 @@ class Order extends MyController {
         if (empty($from)){
             return ['code' => ''];
         }
-        // $from = json_decode($from);
+        $from = json_decode($from);
         $result = $this->app->order->submitOrderSheet($orderNo, $conId, $from);
         return $result;
     }
