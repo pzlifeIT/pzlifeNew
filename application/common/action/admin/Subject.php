@@ -137,7 +137,7 @@ class Subject extends CommonIndex {
             if (empty($logShareImage)) {//图片不存在
                 return ['code' => '3006'];//图片没有上传过
             }
-            $oldSubjectShareImage = DbGoods::getSubjectImage(['subject_id' => $id], 'id,image_path,$share_image_path', true);
+            $oldSubjectShareImage = DbGoods::getSubjectImage(['subject_id' => $id], 'id,image_path,share_image_path', true);
             if (!empty($oldSubjectShareImage)) {//之前有图片
                 $oldShareImage = $oldSubjectShareImage['image_path'];
                 $oldShareImage = filtraImage(Config::get('qiniu.domain'), $oldShareImage);
