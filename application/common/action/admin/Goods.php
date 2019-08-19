@@ -1384,7 +1384,7 @@ class Goods extends CommonIndex {
                 'create_time' => time(),
             ],
         ];
-        // DbGoods::saveAllSheetOption($data);
+        DbGoods::saveAllSheetOption($data);
         $result = DbGoods::getSheetOption([],'*');
         return ['code' => 200,'options' => $result];
     }
