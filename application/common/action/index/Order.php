@@ -1814,5 +1814,74 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
     }
+    /**
+     * 查询订单商品是否有表格
+     * @param $orderNo
+     * @param $conId
+     * @return array
+     * @author rzc
+     */
+    public function isOrderSheet($orderNo, $conId){
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $order = DbOrder::getOrderDetail(['uid' => $uid, 'order_no' => $orderNo], 'order_status,goods_id');
+        if (empty($order)){
+            return ['code' => '3003'];
+        }
+        $goods = [];
+        foreach ($order as $key => $value) {
+            if ($value['order_status'] < 4){
+                return ['code' => '3004'];//该订单未付款，无法提交表格
+            }
+            $goods[] = $value['goods_id'];
+        }
+        $goods = array_unique($goods);
+        $goods_sheet = DbGoods::getGoodsList2([['id', 'in',$goods]],'id,goods_sheet');
+        $sheet_list = [];
+        foreach ($goods_sheet as $gs => $sheet) {
+            if ($sheet['goods_sheet'] != 0){
+                $sheet_info = $this->sheetInfo($sheet['goods_sheet']);
+                if ($sheet === false) {
+                    return ['code' => '3005'];
+                }
+                $sheet_list[$sheet['id']] = $sheet_info;
+            }
+        }
+        return ['code' => '200','order_no' => $orderNo,'sheet_list' => $sheet_list];
+        
+    }
+
+    private function sheetInfo($id){
+        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+        if (empty($sheet)) {
+            return false;
+        }
+        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_optionsList = [];
+        foreach ($sheet_options as $key => $value) {
+            $sheet_optionsList[] = $value['sheet_option'];
+        }
+        $sheet['options'] = $sheet_optionsList;
+        return $sheet;
+    }
+
+    public function submitOrderSheet ($orderNo, $conId, $from){
+        $order_sheet = $this->isOrderSheet($orderNo, $conId);
+        if ($order_sheet['code'] != '200') {
+            return $order_sheet;
+        }
+        $sheet_list = $order_sheet['sheet_list'];
+        foreach ($sheet_list as $sheet => $list) {
+            if (!isset($from[$sheet])) {
+                return ['code' => '3006'];//表格选项不完整
+            }
+            foreach ($list['options'] as $ls => $options) {
+                if ($options['name']) {}
+            }
+        }
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

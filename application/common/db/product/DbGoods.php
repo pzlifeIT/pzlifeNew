@@ -19,6 +19,9 @@ use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
 use app\common\model\SupplierFreightArea;
 use app\common\model\SupplierFreightDetail;
+use app\common\model\SheetOption;
+use app\common\model\Sheet;
+use app\common\model\SheetOptionRelation;
 use think\Db;
 
 class DbGoods {
@@ -1189,4 +1192,48 @@ class DbGoods {
         return $supAdmin->id;
     }
 
+    public function getSheetOption($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = SheetOption::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function saveAllSheetOption($data){
+        $SheetOption = new SheetOption;
+        return $SheetOption->saveAll($data);
+    }
+
+    public function getSheet($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = Sheet::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addSheet($data){
+        $Sheet = new Sheet;
+        $Sheet->save($data);
+        return $Sheet->id;
+    }
+
+    public function saveSheet($data, $id){
+        $Sheet = new Sheet;
+        return $Sheet->save($data,['id' => $id]);
+    }
+
+    public function addAllSheetOptionRelation($data){
+        $SheetOptionRelation = new SheetOptionRelation;
+        return $SheetOptionRelation->saveAll($data);
+    }
+
+    public function getSheetOptionRelation($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = SheetOptionRelation::field($field)->with([
+            'sheetOption' => function($query){
+                $query->field('id,name,title,type,create_time');
+            },
+        ])->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function delSheetOptionRelation($where){
+        $SheetOptionRelation = new SheetOptionRelation;
+        return  $SheetOptionRelation->destroy($where);
+    }
 }

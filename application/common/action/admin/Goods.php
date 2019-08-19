@@ -105,6 +105,10 @@ class Goods extends CommonIndex {
         if (empty($supplier)) {//供应商id不存在
             return ['code' => '3008'];
         }
+        $goods_sheet = Db::getSheet(['id' => $data['goods_sheet']],'id',true);
+        if (empty($goods_sheet)){
+            return ['code' => '3013'];
+        }
         $logImage = [];
         $logShareImage = [];
         if (!empty($goodsId)) {//更新操作
@@ -1093,5 +1097,369 @@ class Goods extends CommonIndex {
         } else {
             $this->redis->zIncrBy($redisKey, 1, $labelLibId);
         }
+    }
+
+    public function getSheetOption(){
+        $data = [
+            [
+                'name' => 'name',
+                'title' => '就诊人姓名',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'idcard',
+                'title' => '身份证号码',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'medicare_card',
+                'title' => '上海医保/医疗卡号（如有请填写）',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'mobile',
+                'title' => '联系人电话',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'hospital_name',
+                'title' => '挂号医院名称',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'registration_department',
+                'title' => '挂号科室',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'experts_name',
+                'title' => '专家姓名',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'appointment_time',
+                'title' => '预约时间',
+                'type' => '2',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'appointment_period',
+                'title' => '预约时间段',
+                'type' => '2',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'is_adjustment',
+                'title' => '预约时间接受调节',
+                'type' => '3',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'other_treatment',
+                'title' => '外院治疗情况',
+                'type' => '5',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'anamnesis',
+                'title' => '既往病史',
+                'type' => '5',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'get_report_barcode',
+                'title' => '取报告条码',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'get_report_time',
+                'title' => '需要取报告时间',
+                'type' => '2',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'get_report_address',
+                'title' => '需要取报告地点',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'need_escort_time',
+                'title' => '需要陪护时间',
+                'type' => '2',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'need_escort_place',
+                'title' => '需要陪护地点',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'sex',
+                'title' => '性别',
+                'type' => '3',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'nick_name',
+                'title' => '姓名',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'age',
+                'title' => '年龄',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'phone',
+                'title' => '手机号码',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'passport_number',
+                'title' => '护照号码',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'e_mail',
+                'title' => '邮箱',
+                'type' => '1',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'appeal',
+                'title' => '诉求',
+                'type' => '5',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'child_household_register_image',
+                'title' => '儿童户口本',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'birth_certificate_image',
+                'title' => '出生证明',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'passport_image',
+                'title' => '护照原件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'photograph',
+                'title' => '照片',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'id_card_copies',
+                'title' => '身份证复印件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'household_register_copies',
+                'title' => '户口本复印件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'visa_application_form',
+                'title' => '签证申请表',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'business_License_copies',
+                'title' => '营业执照复印件盖公章',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'incumbency_certification',
+                'title' => '在职证明',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'assets_certification',
+                'title' => '资产证明',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'iqama',
+                'title' => '居住证',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'half_year_social_security',
+                'title' => '半年社保',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'Wage_bill',
+                'title' => '工资流水',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'half_bank_card_statement',
+                'title' => '半年银行卡对账单',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'copy_of_credit_card_Statement',
+                'title' => '信用卡对账单',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'half_year_tax_bill',
+                'title' => '半年税单',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'child_birth_certificate_image',
+                'title' => '儿童出生证明',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'student_identity_card',
+                'title' => '学生证',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'certificate_of_criminal_record',
+                'title' => '犯罪记录证明',
+                'type' => '6',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'marriage_certificate_copies',
+                'title' => '结婚证复印件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'house_property_copies ',
+                'title' => '房产证复印件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'retirement_card',
+                'title' => '退休证原件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'Retirement_card_copies',
+                'title' => '退休证复印件',
+                'type' => '7',
+                'create_time' => time(),
+            ],
+        ];
+        // DbGoods::saveAllSheetOption($data);
+        $result = DbGoods::getSheetOption([],'*');
+        return ['code' => 200,'options' => $result];
+    }
+
+    public function getSheet($page, $pageNum){
+        $offset = $pageNum * ($page - 1);
+        $result = DbGoods::getSheet([],'*',$offset.','.$pageNum);
+        return ['code' => '200', 'sheetlist' => $result];
+    }
+
+
+    public function addSheet($name, $options){
+        if (DbGoods::getSheet(['name' => $name], 'id',true)) {
+            return ['code' => '3001'];
+        }
+        
+        Db::startTrans();
+        try {
+            $sheet_id = DbGoods::addSheet(['name' => $name]);
+            if ($sheet_id && $options){
+                $sheet_options = [];
+                foreach ($options as $key => $value) {
+                    $sheet_options[$key]['option_id'] = $value;
+                    $sheet_options[$key]['sheet_id'] = $sheet_id;
+                }
+                DbGoods::addAllSheetOptionRelation($sheet_options);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
+    }
+
+    public function editSheet($name = '', $id, $options = []){
+        if (!empty($name)) {
+            if (DbGoods::getSheet([['name' , '=', $name],['id','<>',$id]], 'id',true)) {
+                return ['code' => '3001'];
+            }
+        }
+        Db::startTrans();
+        try {
+            if (!empty($name)){
+                DbGoods::saveSheet(['name' => $name],$id);
+            }
+            if ($id && $options){
+                DbGoods::delSheetOptionRelation(['sheet_id' => $id]);
+                $sheet_options = [];
+                foreach ($options as $key => $value) {
+                    $sheet_options[$key]['option_id'] = $value;
+                    $sheet_options[$key]['sheet_id'] = $id;
+                }
+                DbGoods::addAllSheetOptionRelation($sheet_options);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
+       
+    }
+
+    public function getSheetInfo($id){
+        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+        if (empty($sheet)) {
+            return ['code' => '200', 'sheet' =>[]];
+        }
+        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_optionsList = [];
+        foreach ($sheet_options as $key => $value) {
+            $sheet_optionsList[] = $value['sheet_option'];
+        }
+        $sheet['options'] = $sheet_optionsList;
+        return ['code' => '200', 'sheet' =>$sheet];
     }
 }

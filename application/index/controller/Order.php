@@ -729,4 +729,52 @@ class Order extends MyController {
         $result = $this->app->order->quickCreateAudioOrder($conId, $buid, intval($sku_id), intval($num), intval($goods_id), $payType, intval($userCouponId));
         return $result;
     }
+
+    /**
+     * @api              {post} / 查询该订单是否需要填写表格
+     * @apiDescription   isOrderSheet
+     * @apiGroup         index_order
+     * @apiName          isOrderSheet
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号 
+     * @apiSampleRequest /index/order/isOrderSheet
+     * @author rzc
+     */
+    public function isOrderSheet(){
+        $conId       = trim($this->request->post('con_id'));
+        $orderNo     = trim($this->request->post('order_no'));
+        if (empty($orderNo)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->order->isOrderSheet($orderNo, $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查询该订单是否需要填写表格
+     * @apiDescription   submitOrderSheet
+     * @apiGroup         index_order
+     * @apiName          submitOrderSheet
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} order_no 订单号
+     * @apiParam (入参) {Number} from 订单号
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 
+     * @apiSampleRequest /index/order/submitOrderSheet
+     * @author rzc
+     */
+    public function submitOrderSheet(){
+        $conId       = trim($this->request->post('con_id'));
+        $orderNo     = trim($this->request->post('order_no'));
+        $from     = $this->request->post('from');
+        if (empty($orderNo)) {
+            return ['code' => '3001'];
+        }
+        if (empty($from)){
+            return ['code' => ''];
+        }
+        $from = json_decode($from);
+        $result = $this->app->order->submitOrderSheet($orderNo, $conId, $from);
+        return $result;
+    }
 }

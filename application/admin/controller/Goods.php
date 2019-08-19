@@ -94,11 +94,12 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
-     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 音频商品(默认1) 3 健康商品
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
+     * @apiParam (入参) {String} [sheet_id] 商品表格ID
      * @apiSampleRequest /admin/goods/saveaddgoods
      * @return array
      * @author zyr
@@ -116,7 +117,8 @@ class Goods extends AdminController {
         $targetUsers    = trim($this->request->post('target_users')); //适用人群
         $subtitle       = trim($this->request->post('subtitle')); //标题
         $image          = trim($this->request->post('image')); //商品标题图
-        $share_image    = trim($this->request->post('share_image')); //商品标题图
+        $share_image    = trim($this->request->post('share_image')); //商品分享图片
+        $sheet_id    = trim($this->request->post('sheet_id')); //商品分享图片
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -156,6 +158,9 @@ class Goods extends AdminController {
         }
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
+        }
+        if (!empty($sheet_id)){
+            $data['goods_sheet'] = intval($sheet_id);
         }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
@@ -809,4 +814,115 @@ class Goods extends AdminController {
         $this->apiLog($apiName, [$cmsConId, $id, $type], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 获取表格内容选项
+     * @apiDescription   getSheetOption
+     * @apiGroup         admin_goods
+     * @apiName          getSheetOption
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSampleRequest /admin/goods/getSheetOption
+     * @author rzc
+     */
+    public function getSheetOption(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $result = $this->app->goods->getSheetOption();
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取表格模板
+     * @apiDescription   getSheet
+     * @apiGroup         admin_goods
+     * @apiName          getSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [page]
+     * @apiParam (入参) {Number} [pageNum]
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSampleRequest /admin/goods/getSheet
+     * @author rzc
+     */
+    public function getSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page          = trim($this->request->post('page'));
+        $pageNum       = trim($this->request->post('pageNum'));
+        $page          = empty($page) ? 1 : $page;
+        $pageNum       = empty($pageNum) ? 10 : $pageNum;
+        $result = $this->app->goods->getSheet($page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加表格模板
+     * @apiDescription   addSheet
+     * @apiGroup         admin_goods
+     * @apiName          addSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} name 表格名称
+     * @apiParam (入参) {Number} options 选项ID，用‘,’连接
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:存在相同名称的表格 / 3002:表格名称为空 / 3003:options为空
+     * @apiSampleRequest /admin/goods/addSheet
+     * @author rzc
+     */
+    public function addSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $name     = trim($this->request->post('name'));
+        $options  = trim($this->request->post('options'));
+        if (empty($name)){
+            return ['code' => '3002'];
+        }
+        if (empty($options)){
+            return ['code' => '3003'];
+        }
+        $options = explode(',',$options);
+        $result   = $this->app->goods->addSheet($name, $options);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改表格模板
+     * @apiDescription   editSheet
+     * @apiGroup         admin_goods
+     * @apiName          editSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [name] 表格名称
+     * @apiParam (入参) {Number} [options] 选项ID，用‘,’连接
+     * @apiParam (入参) {Number} id 表格id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSampleRequest /admin/goods/editSheet
+     * @author rzc
+     */
+    public function editSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $name     = trim($this->request->post('name'));
+        $options  = trim($this->request->post('options'));
+        $id       = trim($this->request->post('id'));
+        if (!empty($options)){
+            $options = explode(',',$options);
+        }
+        $result   = $this->app->goods->editSheet($name, $id, $options);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取表格详情
+     * @apiDescription   getSheetInfo
+     * @apiGroup         admin_goods
+     * @apiName          getSheetInfo
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 表格id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSampleRequest /admin/goods/getSheetInfo
+     * @author rzc
+     */
+    public function getSheetInfo(){
+        $id       = trim($this->request->post('id'));
+        if (empty($id) || !is_numeric($id) || intval($id) < 1){
+            return ['code' => 3001];
+        }
+        $result   = $this->app->goods->getSheetInfo($id);
+        return $result;
+    }
+
 }
