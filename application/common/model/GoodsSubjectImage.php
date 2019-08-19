@@ -36,4 +36,14 @@ class GoodsSubjectImage extends Model {
         }
         return $value;
     }
+
+    public function getShareImagePathAttr($value) {
+        if (empty($value)) {
+            return '';
+        }
+        if (stripos($value, 'http') === false) {
+            return Config::get('qiniu.domain') . '/' . $value;
+        }
+        return $value;
+    }
 }
