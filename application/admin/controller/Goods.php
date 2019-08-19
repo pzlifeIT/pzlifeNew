@@ -628,7 +628,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getSheetOption
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSuccess (返回) {String} code 200:成功 
      * @apiSampleRequest /admin/goods/getSheetOption
      * @author rzc
      */
@@ -646,7 +646,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} [page]
      * @apiParam (入参) {Number} [pageNum]
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSuccess (返回) {String} code 200:成功
      * @apiSampleRequest /admin/goods/getSheet
      * @author rzc
      */
@@ -668,7 +668,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} name 表格名称
      * @apiParam (入参) {Number} options 选项ID，用‘,’连接
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:存在相同名称的表格 / 3002:表格名称为空 / 3003:options为空
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:存在相同名称的表格 / 3002:表格名称为空 / 3003:options为空 / 3005:数据回滚，添加失败
      * @apiSampleRequest /admin/goods/addSheet
      * @author rzc
      */
@@ -696,7 +696,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} [name] 表格名称
      * @apiParam (入参) {Number} [options] 选项ID，用‘,’连接
      * @apiParam (入参) {Number} id 表格id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:存在相同名称的表格  / 3005:修改失败
      * @apiSampleRequest /admin/goods/editSheet
      * @author rzc
      */
@@ -719,7 +719,7 @@ class Goods extends AdminController {
      * @apiName          getSheetInfo
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 表格id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 
+     * @apiSuccess (返回) {String} code 200:成功 
      * @apiSampleRequest /admin/goods/getSheetInfo
      * @author rzc
      */
