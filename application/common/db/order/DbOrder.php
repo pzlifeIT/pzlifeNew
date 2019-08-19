@@ -383,7 +383,7 @@ class DbOrder {
      * @param string $sc 排序方式asc,desc
      * @param string $limit
      * @return mixed
-     * @author zyr
+     * @author rzc
      */
     public function getOrderGoodsSheet($where, $field, $row = false, $orderBy = '', $limit = '') {
         $obj = OrderGoodsSheet::field($field)->where($where);
