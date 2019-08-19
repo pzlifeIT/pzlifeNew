@@ -1517,14 +1517,43 @@ class Order extends CommonIndex {
             return $order_sheet;
         }
         $sheet_list = $order_sheet['sheet_list'];
+       
         foreach ($sheet_list as $sheet => $list) {
             if (!isset($from[$sheet])) {
                 return ['code' => '3006'];//表格选项不完整
             }
             foreach ($list['options'] as $ls => $options) {
-                if ($options['name']) {}
+                // if ($options['name']) {}
+                    if (!isset($options['name'],$from[$sheet][$options['name']])) {
+                        return ['code' => '3006'];//表格选项不完整
+                    }
+                    $value = $from[$sheet][$options['name']];
+                    switch ($options['name']) {
+                        case "name" :
+                            $res = empty($value) ? false : true;
+                            break;
+                        case "idcard" :
+                            $res = checkIdcard($value);
+                            break;
+                        case "medicare_card" :
+                            $res = strlen($value) != 16 ? false : true;
+                            break;
+                        case "mobile":
+                            $res = checkMobile($value);
+                            break;
+                        case "phone":
+                            $res = checkMobile($value);
+                            break;
+                        default:
+                            $res = true;
+                    }
+                    if ($res === false) {
+                        return ['code' => '3007']; //信息校验失败
+                    }
             }
         }
+        print_r($from);
+        print_r($sheet_list);die;
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

@@ -1202,6 +1202,17 @@ class Goods extends CommonIndex {
     public function getSheet($page, $pageNum){
         $offset = $pageNum * ($page - 1);
         $result = DbGoods::getSheet([],'*',$offset.','.$pageNum);
+        if (!empty($result)) {
+            foreach ($result as $key => $value) {
+                $options = [];
+                $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $value['id']],'*');
+                foreach ($sheet_options as $sheet => $option) {
+                    $options[] = $option['sheet_option']['title'];
+                }
+                // print_r($sheet_options);die;
+                $result[$key]['options'] = join('，',$options);
+            }
+        }
         return ['code' => '200', 'sheetlist' => $result];
     }
 
