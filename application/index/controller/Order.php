@@ -752,7 +752,7 @@ class Order extends MyController {
     }
 
     /**
-     * @api              {post} / 查询该订单是否需要填写表格
+     * @api              {post} / 提交订单表格
      * @apiDescription   submitOrderSheet
      * @apiGroup         index_order
      * @apiName          submitOrderSheet
@@ -773,7 +773,7 @@ class Order extends MyController {
         if (empty($from)){
             return ['code' => ''];
         }
-        $from = json_decode($from);
+        // $from = json_decode($from);
         $result = $this->app->order->submitOrderSheet($orderNo, $conId, $from);
         return $result;
     }
