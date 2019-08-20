@@ -76,6 +76,7 @@ class Cart extends CommonIndex {
         $cart['goods_id'] = $goods_sku['goods_id'];
         $cart['track']    = [$track_id => $buy_num]; /* 购买店铺：购买数量 */
         $cart['spec']     = $goods_sku['spec']; /* 规格属性 */
+        $cart['from_uid'] = $parent_id; /* 推荐人ID */
         $hash_cart        = json_encode($cart);
         $key              = 'skuid:' . $goods_skuid;
 
@@ -87,6 +88,7 @@ class Cart extends CommonIndex {
             } else {
                 $oldcart['track'][$track_id] = $buy_num;
             }
+            $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
             if ($oldcart['track'][$track_id] < 1) {
                 unset($oldcart['track'][$track_id]);
             }
