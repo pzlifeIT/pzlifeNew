@@ -400,6 +400,11 @@ class DbOrder {
         $OrderGoodsSheet = new OrderGoodsSheet;
         return $OrderGoodsSheet->saveAll($data);
     }
+
+    public function saveOrderGoodsSheet($data, $id){
+        $OrderGoodsSheet = new OrderGoodsSheet;
+        return $OrderGoodsSheet->save($data,['id' => $id]);
+    }
 }
 
 

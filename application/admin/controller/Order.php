@@ -349,6 +349,70 @@ class Order extends AdminController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->searchKeywordOrders($cmsConId, $keyword);
+    }
+    /**
+     * @api              {post} / 查询该订单提交的表单
+     * @apiDescription   getOrderSheet
+     * @apiGroup         admin_Orders
+     * @apiName          getOrderSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} order_no 订单号
+     * @apiParam (入参) {Number} [goods_id] 商品，传入，视为查详情
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号 
+     * @apiSampleRequest /admin/order/getOrderSheet
+     * @author rzc
+     */
+    public function getOrderSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $orderNo     = trim($this->request->post('order_no'));
+        $goods_id    = trim($this->request->post('goods_id'));
+        if (empty($orderNo)) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->order->getOrderSheet($orderNo, $goods_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改订单表格
+     * @apiDescription   submitOrderSheet
+     * @apiGroup         admin_Orders
+     * @apiName          submitOrderSheet
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} id 
+     * @apiParam (入参) {String} [from] 表单信息
+     * @apiParam (入参) {String} [status] 2,确认，1未确认
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 
+     * @apiSampleRequest /admin/order/submitOrderSheet
+     * @apiParamExample {json} Request Example
+     *  POST /admin/order/submitOrderSheet
+     *  {
+     *      "cms_con_id":"9d708dd4921d53b1d50bd25b4ca2e3f9",
+     *      "id":"12",
+     *      "from":{
+     *             "1595":{ //注：1595为此笔订单商品id
+     *                  "name":"测试",
+     *                  "idcard":"4XX60619950320XXXX",
+     *                  "medicare_card":"SH132145646513",
+     *                  "mobile":"13333333333",
+     *                  "hospital_name":"上海市第一人民医院",
+     *                  "registration_department":"耳鼻喉科",
+     *                  "experts_name":"赵医生"
+     *              }
+     *          }
+     *  }
+     * @author rzc
+     */
+    public function updateOrderSheet(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id       = $this->request->post('id');
+        $from     = $this->request->post('from');
+        $status   = $this->request->post('status');
+        if (!empty($from)) {
+            $from = json_decode($from);
+        }
+        $status = intval($status);
+        $result = $this->app->order->updateOrderSheet($id, $from, $status);
         return $result;
     }
 }
