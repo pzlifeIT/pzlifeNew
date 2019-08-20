@@ -1512,6 +1512,9 @@ class Order extends CommonIndex {
     }
 
     public function submitOrderSheet ($orderNo, $conId, $from){
+        if (DbOrder::getOrderGoodsSheet(['order_no' => $orderNo],'id')) {
+            return ['code' => '3008'];
+        }
         $order_sheet = $this->isOrderSheet($orderNo, $conId);
         if ($order_sheet['code'] != '200') {
             return $order_sheet;
@@ -1571,6 +1574,47 @@ class Order extends CommonIndex {
             Db::rollback();
             return ['code' => '3005'];//领取失败
         }
+    }
+
+    public function getOrderSheet($orderNo, $goods_id = 0){
+        $where = ['order_no' => $orderNo];
+        $row = false;
+        if (!empty($goods_id)) {
+            $where = ['order_no' => $orderNo, 'goods_id' => $goods_id];
+            $row = true;
+        }
+        $result = DbOrder::getOrderGoodsSheet($where, 'order_no,goods_id,from',$row);
+        $from = [];
+        if (!empty($result)) {
+            $options = DbGoods::getSheetOption([],'name,title');
+            $new_options = [];
+            foreach ($options as $op => $ns) {
+                $new_options[$ns['name']] = $ns['title'];
+            }
+            if (!empty($goods_id)){
+                $result['from'] = json_decode($result['from'],true);
+                foreach ($result['from'] as $key => $value) {
+                    if (isset($key,$new_options[$key])) {
+                        $from[$new_options[$key]] = $value;
+                    }
+                }
+                unset($result['from']);
+                $result['from'] = $from;
+            }else {
+                foreach ($result as $key => $value) {
+                    $value['from'] = json_decode($value['from'],true);
+                    foreach ($value['from'] as $vf => $vfrom) {
+                        if (isset($key,$new_options[$vf])) {
+                            $from[$new_options[$vf]] = $vfrom;
+                        }
+                    }
+                    unset($result[$key]['from']);
+                    $result[$key]['from'] = $from;
+                    unset($from);
+                }
+            }
+        }
+        return ['code' => '200', 'fromList' => $result];
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
