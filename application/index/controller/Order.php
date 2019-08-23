@@ -672,7 +672,7 @@ class Order extends MyController {
         if (empty($from)){
             return ['code' => '3009'];
         }
-        $from = json_decode($from);
+        // $from = json_decode($from);
         $result = $this->app->order->submitOrderSheet($orderNo, $conId, $from);
         return $result;
     }

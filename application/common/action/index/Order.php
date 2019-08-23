@@ -1553,9 +1553,15 @@ class Order extends CommonIndex {
                     if ($res === false) {
                         return ['code' => '3007']; //信息校验失败
                     }
+                    if ($options['name'] == 'rassenger_information') {
+                        $rassenger_information = DbUser::getAirplanePassenger([['id','in',$value]],'*');
+                        if (count($rassenger_information) != count(explode(',',$value))) {
+                            return ['code' => '3010'];
+                        }
+                        $from[$sheet][$options['name']] = $rassenger_information;
+                    }
             }
         }
-        // print_r($from);
         // print_r($sheet_list);die;
         $new_from = [];
         foreach ($from as $f => $rom) {
