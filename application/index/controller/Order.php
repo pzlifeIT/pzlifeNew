@@ -774,7 +774,8 @@ class Order extends MyController {
      *                  "mobile":"13333333333",
      *                  "hospital_name":"上海市第一人民医院",
      *                  "registration_department":"耳鼻喉科",
-     *                  "experts_name":"赵医生"
+     *                  "experts_name":"赵医生",
+     *                  "rassenger_information":"1"
      *              }
      *          }
      *  }
