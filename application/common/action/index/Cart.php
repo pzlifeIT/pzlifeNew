@@ -54,7 +54,7 @@ class Cart extends CommonIndex {
             return ['code' => 3003, 'msg' => '该商品规格不存在'];
         }
         if ($goods_sku['stock'] < 1) {
-            return ['code' => 3004, 'msg' => '该规格库存不足'];
+            return ['code' => 3010, 'msg' => '该规格库存不足'];
         }
         if ($buy_num> $goods_sku['stock']) {
             return ['code' => '3006', 'msg' => '库存不足购买数量'];
