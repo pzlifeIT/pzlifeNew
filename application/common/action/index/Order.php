@@ -316,7 +316,7 @@ class Order extends CommonIndex {
     }
 
     private function quickSummary($uid, $buid, $skuId, $num, $cityId) {
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,subtitle,status,giving_rights');
         if (empty($goodsSku)) {
             return ['code' => '3004']; //商品下架
         }
@@ -335,6 +335,7 @@ class Order extends CommonIndex {
         $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
         $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
         $goodsSku['status']      = $goodsSku['goods']['status'];
+        $giving_rights           = $goodsSku['goods']['giving_rights'];
         $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
         $goodsSku['attr']        = array_column($attr, 'attr_name');
         unset($goodsSku['goods']);
@@ -381,7 +382,7 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
         $totalPrice = bcadd($totalGoodsPrice, $totalFreightPrice, 2);
-        return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice];
+        return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'goods_list' => [$goodsSku], 'freight_supplier_price' => $freightSupplierPrice, 'giving_rights' => $giving_rights];
     }
 
     /**
