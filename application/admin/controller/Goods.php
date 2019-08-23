@@ -96,6 +96,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiSampleRequest /admin/goods/saveaddgoods
@@ -108,12 +109,13 @@ class Goods extends AdminController {
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
-        $cateId       = trim($this->request->post('cate_id'));//分类id
-        $goodsName    = trim($this->request->post('goods_name'));//商品名称
-        $goodsType    = trim($this->request->post('goods_type'));//商品类型
-        $subtitle     = trim($this->request->post('subtitle'));//标题
-        $image        = trim($this->request->post('image'));//商品标题图
+        $supplierId    = trim($this->request->post('supplier_id')); //供应商id
+        $cateId        = trim($this->request->post('cate_id')); //分类id
+        $goodsName     = trim($this->request->post('goods_name')); //商品名称
+        $goodsType     = trim($this->request->post('goods_type')); //商品类型
+        $subtitle      = trim($this->request->post('subtitle')); //标题
+        $image         = trim($this->request->post('image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr = [1, 2];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001'];//供应商id只能为数字
@@ -144,6 +146,9 @@ class Goods extends AdminController {
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
         }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
+        }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
         $this->apiLog($apiName, [$cmsConId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $result['code'], $cmsConId);
@@ -163,6 +168,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiSampleRequest /admin/goods/saveupdategoods
@@ -170,15 +176,16 @@ class Goods extends AdminController {
      * @author zyr
      */
     public function saveUpdateGoods() {
-        $apiName      = classBasename($this) . '/' . __function__;
-        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
-        $goodsId      = trim($this->request->post('goods_id'));//商品id
-        $supplierId   = trim($this->request->post('supplier_id'));//供应商id
-        $cateId       = trim($this->request->post('cate_id'));//分类id
-        $goodsName    = trim($this->request->post('goods_name'));//商品名称
-        $goodsType    = trim($this->request->post('goods_type'));//商品类型
-        $subtitle     = trim($this->request->post('subtitle'));//标题
-        $image        = trim($this->request->post('image'));//商品标题图
+        $apiName       = classBasename($this) . '/' . __function__;
+        $cmsConId      = trim($this->request->post('cms_con_id')); //操作管理员
+        $goodsId       = trim($this->request->post('goods_id')); //商品id
+        $supplierId    = trim($this->request->post('supplier_id')); //供应商id
+        $cateId        = trim($this->request->post('cate_id')); //分类id
+        $goodsName     = trim($this->request->post('goods_name')); //商品名称
+        $goodsType     = trim($this->request->post('goods_type')); //商品类型
+        $subtitle      = trim($this->request->post('subtitle')); //标题
+        $image         = trim($this->request->post('image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr = [1, 2];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001'];//供应商id只能为数字
@@ -205,6 +212,9 @@ class Goods extends AdminController {
         }
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
+        }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
         }
         //调用方法存商品表
         $res = $this->app->goods->saveGoods($data, $goodsId);

@@ -203,13 +203,17 @@ class Order extends Pzlife {
         $data         = [];
         $tradingData  = [];
         $integralData = [];
+        $memberOrderData = [];
         while (true) {
             $orderId = $this->redis->lPop($redisListKey);
             if (empty($orderId)) {
                 break;
             }
-            $orderSql = sprintf("select id,uid,order_no,deduction_money from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
+            $orderSql = sprintf("select id,uid,order_no,deduction_money,giving_rights,from_uid from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
             $orderRes = Db::query($orderSql);
+            if (empty($orderRes)) {
+                exit('order_id_error'); //订单id有误
+            }
             $orderRes = $orderRes[0];
             if (empty($orderRes)) {
                 exit('order_id_error'); //订单id有误
@@ -217,6 +221,26 @@ class Order extends Pzlife {
             $uid      = $orderRes['uid']; //购买人的uid
             $orderNo  = $orderRes['order_no']; //购买订单号
             $identity = $this->getIdentity($uid); //获取自己的身份
+
+            if ($identity < $orderRes['giving_rights']) {
+                /* 赠送钻石会员 */
+                $memeberData = [];
+                if ($orderRes['giving_rights'] == 2) {
+                    /* 兼职网推渠道赠送钻石 */
+                    $memeberData = [
+                        'order_no'    => 'mem' . date('ymdHis') . substr(uniqid('',true),15,8) ,
+                        'uid'         => $uid,
+                        'from_uid'    => $orderRes['from_uid'],
+                        'actype'      => 2,
+                        'user_type'   => 1,
+                        'pay_status'  => 4,
+                        'pay_type'    => 5,
+                        'pay_time'    => time(),
+                        'create_time' => time(),
+                    ];
+                    array_push($memberOrderData, $memeberData);
+                }
+            }
 
             $bossList      = $this->getBossList($uid, $identity);
             $orderChildSql = sprintf("select id from pz_order_child where delete_time=0 and order_id = %d", $orderId);
@@ -332,6 +356,12 @@ class Order extends Pzlife {
             if (!empty($data)) {
                 Db::name('log_bonus')->insertAll($data);
                 Db::name('log_integral')->insertAll(array_values($integralData));
+            }
+            if (!empty($memberOrderData)) {
+                foreach ($memberOrderData as $me => $da) {
+                    $id = Db::name('member_order')->insertGetId($da);
+                    $this->redis->rPush(Config::get('redisKey.order.redisMemberOrder'), $id);
+                }
             }
             Db::commit();
             exit('ok!');

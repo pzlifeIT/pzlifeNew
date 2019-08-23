@@ -455,7 +455,7 @@ class Goods extends CommonIndex {
         $goods_data = [];
         if (in_array(1, $getType)) {
             $where      = [["id", "=", $id]];
-            $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+            $field      = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status,giving_rights";
             $goods_data = DbGoods::getOneGoods($where, $field);
             if (empty($goods_data)) {
                 return ["code" => 3000];
