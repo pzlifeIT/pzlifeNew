@@ -120,6 +120,7 @@ class Goods extends AdminController {
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品分享图片
         $sheet_id       = trim($this->request->post('sheet_id')); //商品分享图片
+        $sheet_id       = $sheet_id ? $sheet_id : 1;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
