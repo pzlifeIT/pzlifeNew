@@ -1378,9 +1378,15 @@ class Goods extends CommonIndex {
                 'create_time' => time(),
             ],
             [
-                'name' => 'Retirement_card_copies',
+                'name' => 'retirement_card_copies',
                 'title' => '退休证复印件',
                 'type' => '7',
+                'create_time' => time(),
+            ],
+            [
+                'name' => 'rassenger_information',
+                'title' => '乘机人信息',
+                'type' => '4',
                 'create_time' => time(),
             ],
         ];

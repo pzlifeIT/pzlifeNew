@@ -1874,4 +1874,105 @@ class User extends MyController {
         $result = $this->app->user->getUserBusinessMoneyTotal($conId);
         return $result;
     }
+    /**
+     * @api              {post} / 获取乘机人信息
+     * @apiDescription   getAirplanePassenger
+     * @apiGroup         index_user
+     * @apiName          getAirplanePassenger
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} coupon_hd_id 优惠券活动id
+     * @apiParam (入参) {Int} [page] 当前页(默认1)
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiSuccess (返回) {Int} total 优惠券总记录数
+     * @apiSuccess (返回) {Array} data
+     * @apiSampleRequest /index/user/getAirplanePassenger
+     * @return array
+     * @author rzc
+     */
+    public function getAirplanePassenger(){
+        $conId   = trim($this->request->post('con_id'));
+        $page       = trim($this->request->post('page'));
+        $pageNum    = trim($this->request->post('page_num'));
+        if (!is_numeric($page) && !empty($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum) && !empty($pageNum)) {
+            return ["code" => '3003'];
+        }
+        $page    = $page > 0 ? intval($page) : 1;
+        $pageNum = $pageNum > 0 ? intval($pageNum) : 10;
+        $result = $this->app->user->getAirplanePassenger($conId, $page, $pageNum);
+        return $result;
+    }
+
+     /**
+     * @api              {post} / 添加乘机人信息
+     * @apiDescription   addAirplanePassenger
+     * @apiGroup         index_user
+     * @apiName          addAirplanePassenger
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {String} name 
+     * @apiParam (入参) {String} phone 
+     * @apiParam (入参) {String} idcard 
+     * @apiParam (入参) {String} passport 
+     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiSuccess (返回) {Int} total 优惠券总记录数
+     * @apiSuccess (返回) {Array} data
+     * @apiSampleRequest /index/user/addAirplanePassenger
+     * @return array
+     * @author rzc
+     */
+    public function addAirplanePassenger(){
+        $conId    = trim($this->request->post('con_id'));
+        $name     = trim($this->request->post('name'));
+        $phone    = trim($this->request->post('phone'));
+        $idcard   = trim($this->request->post('idcard'));
+        $passport = trim($this->request->post('passport'));
+
+        if (checkIdcard($idcard) === false) {
+            return ['code' => '3001'];
+        }
+        if (checkMobile($phone) === false) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->addAirplanePassenger($conId, $name, $phone, $idcard, $passport);
+        return $result; 
+    }
+
+    /**
+     * @api              {post} / 修改乘机人信息
+     * @apiDescription   updateAirplanePassenger
+     * @apiGroup         index_user
+     * @apiName          updateAirplanePassenger
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Int} id id
+     * @apiParam (入参) {String} name 
+     * @apiParam (入参) {String} phone 
+     * @apiParam (入参) {String} idcard 
+     * @apiParam (入参) {String} passport 
+     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiSuccess (返回) {Int} total 优惠券总记录数
+     * @apiSuccess (返回) {Array} data
+     * @apiSampleRequest /index/user/updateAirplanePassenger
+     * @return array
+     * @author rzc
+     */
+    public function updateAirplanePassenger(){
+        $conId    = trim($this->request->post('con_id'));
+        $id       = trim($this->request->post('id'));
+        $name     = trim($this->request->post('name'));
+        $phone    = trim($this->request->post('phone'));
+        $idcard   = trim($this->request->post('idcard'));
+        $passport = trim($this->request->post('passport'));
+
+        if (checkIdcard($idcard) === false && $idcard) {
+            return ['code' => '3001'];
+        }
+        if (checkMobile($phone) === false && $phone) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->updateAirplanePassenger($conId, $id, $name, $phone, $idcard, $passport);
+        return $result; 
+    }
 }

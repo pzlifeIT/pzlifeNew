@@ -17,6 +17,7 @@ use app\common\model\UserRecommend;
 use app\common\model\UserRelation;
 use app\common\model\Users;
 use app\common\model\UserWxinfo;
+use app\common\model\AirplanePassenger;
 use think\Db;
 
 class DbUser {
@@ -733,5 +734,21 @@ class DbUser {
             return 0;
         }
         return $price[0]['price'];
+    }
+    
+    public function getAirplanePassenger($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = AirplanePassenger::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addAirplanePassenger($data){
+        $AirplanePassenger = new AirplanePassenger;
+        $AirplanePassenger->save($data);
+        return $AirplanePassenger->id;
+    }
+
+    public function updateAirplanePassenger($data, $id){
+        $AirplanePassenger = new AirplanePassenger;
+        return $AirplanePassenger->save($data,['id' => $id]);
     }
 }
