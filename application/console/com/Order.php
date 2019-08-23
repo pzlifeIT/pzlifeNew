@@ -211,7 +211,7 @@ class Order extends Pzlife {
             if (empty($orderId)) {
                 break;
             }
-            $orderSql = sprintf("select id,uid,order_no,deduction_money,order_type,giving_rights from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
+            $orderSql = sprintf("select id,uid,order_no,deduction_money,order_type,giving_rights,from_uid from pz_orders where delete_time=0 and order_status in (4,5,6,7) and id = '%d'", $orderId);
             $orderRes = Db::query($orderSql);
             if (empty($orderRes)) {
                 exit('order_id_error'); //订单id有误
