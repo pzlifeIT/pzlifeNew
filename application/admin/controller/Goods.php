@@ -121,6 +121,7 @@ class Goods extends AdminController {
         $share_image    = trim($this->request->post('share_image')); //商品分享图片
         $sheet_id    = trim($this->request->post('sheet_id')); //商品分享图片
         $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
+        $sheet_id       = $sheet_id ? $sheet_id : 1;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
