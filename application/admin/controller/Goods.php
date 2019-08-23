@@ -96,6 +96,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 音频商品(默认1) 3 健康商品
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
@@ -119,6 +120,7 @@ class Goods extends AdminController {
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品分享图片
         $sheet_id    = trim($this->request->post('sheet_id')); //商品分享图片
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -162,6 +164,9 @@ class Goods extends AdminController {
         if (!empty($sheet_id)){
             $data['goods_sheet'] = intval($sheet_id);
         }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
+        }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
         $this->apiLog($apiName, [$cmsConId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $result['code'], $cmsConId);
@@ -182,6 +187,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
@@ -201,6 +207,7 @@ class Goods extends AdminController {
         $subtitle       = trim($this->request->post('subtitle')); //标题
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -237,6 +244,9 @@ class Goods extends AdminController {
         }
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
+        }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
         }
         //调用方法存商品表
         $res = $this->app->goods->saveGoods($data, $goodsId);

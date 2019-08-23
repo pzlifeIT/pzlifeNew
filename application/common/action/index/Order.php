@@ -201,6 +201,9 @@ class Order extends CommonIndex {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
+
+        $from_uid = $buid;
+        $giving_rights = $summary['giving_rights'];
 //        print_r($goods);die;
         $orderGoodsData = [];
         foreach ($goods['shopBuySum'] as $kgl => $gl) {
@@ -290,6 +293,8 @@ class Order extends CommonIndex {
             'area_id'         => $userAddress['area_id'],
             'address'         => $userAddress['address'],
             'message'         => '',
+            'giving_rights'   => $giving_rights,
+            'from_uid'        => $from_uid,
             'pay_time'        => $isPay ? time() : 0,
         ];
 //        print_r($orderData);die;
@@ -564,6 +569,13 @@ class Order extends CommonIndex {
         if ($cart === false) {
             return ['code' => '3005'];
         }
+        $from_uid = 0;
+        foreach ($cart as $c => $t) {
+            if (isset($t['from_uid'])) {
+                $from_uid = $t['from_uid'];
+            }
+        }
+        $giving_rights = $summary['giving_rights'];
         $cartShops = array_column($cart, 'shops'); //所有购买涉及的门店
         $shops     = [];
         array_map(function ($value) use (&$shops) {
@@ -666,6 +678,8 @@ class Order extends CommonIndex {
             'area_id'         => $userAddress['area_id'],
             'address'         => $userAddress['address'],
             'message'         => '',
+            'giving_rights'   => $giving_rights,
+            'from_uid'        => $from_uid,
             'pay_time'        => $isPay ? time() : 0,
         ];
 //        print_r($orderData);die;
@@ -726,12 +740,12 @@ class Order extends CommonIndex {
         if ($cart === false) {
             return ['code' => '3005'];
         }
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,target_users,subtitle,status');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,target_users,subtitle,status,giving_rights');
         $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
         if (!empty($diff)) {
             $eGoodsList = [];
             foreach ($diff as $di) {
-                $oneGoods = DbGoods::getOneGoods(['id' => $cart[$di]['goods_id']], 'id,goods_name,subtitle,image');
+                $oneGoods = DbGoods::getOneGoods(['id' => $cart[$di]['goods_id']], 'id,goods_name,subtitle,image,giving_rights');
                 $attrList = DbGoods::getAttrList([['id', 'in', explode(',', $cart[$di]['spec'])]], 'attr_name');
                 $attrList = array_column($attrList, 'attr_name');
                 array_push($eGoodsList, $oneGoods['goods_name'] . '(' . implode('、', $attrList) . ')');
@@ -750,6 +764,7 @@ class Order extends CommonIndex {
         $totalFreightPrice    = 0; //总运费
         $freightSupplierPrice = []; //各个供应商的运费
         $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $giving_rights        = 1;
         foreach ($goodsSku as $value) {
             if ($user['user_identity'] < $value['goods']['target_users']) {
                 if ($value['goods']['target_users'] == 2){
@@ -767,6 +782,12 @@ class Order extends CommonIndex {
             $value['status']      = $value['goods']['status'];
             $attr                 = DbGoods::getAttrList([['id', 'in', explode(',', $value['spec'])]], 'attr_name');
             $value['attr']        = array_column($attr, 'attr_name');
+
+            /* 商品赠送权益 */
+            if ($value['goods']['giving_rights'] > $giving_rights) {
+                $giving_rights = $value['goods']['giving_rights'];
+            }
+
             unset($value['goods']);
             $cartSum = intval($cart[$value['id']]['sum']);
             if ($cartSum > $value['stock']) { //购买数量超过库存
@@ -866,7 +887,7 @@ class Order extends CommonIndex {
         }
         $discountMoney = $couponPrice;
         $totalPrice    = bcsub(bcadd($totalGoodsPrice, $totalFreightPrice, 2), $discountMoney, 2);
-        return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice];
+        return ['code' => '200', 'goods_count' => $goodsCount, 'rebate_all' => $rebateAll, 'total_goods_price' => $totalGoodsPrice, 'total_freight_price' => $totalFreightPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice,'giving_rights' => $giving_rights];
     }
 
     /**
