@@ -1869,7 +1869,8 @@ class Order extends CommonIndex {
                 if ($sheet === false) {
                     return ['code' => '3005'];
                 }
-                $sheet_list[$sheet['id']] = $sheet_info;
+                $sheet_info['goods_id'] = $sheet['id'];
+                array_push($sheet_list,$sheet_info);
             }
         }
         return ['code' => '200','order_no' => $orderNo,'sheet_list' => $sheet_list];
