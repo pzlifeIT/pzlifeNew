@@ -30,7 +30,12 @@ class Upload extends MyController {
         if (empty($filename)) {
             return ['code' => '3001'];
         }
-        $result = $this->app->upload->uploadUserImage($filename);
+        $fileInfo = $filename->getInfo();
+        $fileType = explode('/', $fileInfo['type']);
+        if ($fileType[0] != 'image') {
+            return ['3001'];//上传的不是图片
+        }
+        $result = $this->app->upload->uploadFile($fileInfo);
         // $this->apiLog($apiName, [$conId, $filename], $result['code'], $conId);
         return $result;
     }
