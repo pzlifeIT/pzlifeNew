@@ -19,7 +19,7 @@ class Subject extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addSubject(int $pid, int $status, $subject, $image) {
+    public function addSubject(int $pid, int $status, $subject, $image, $share_image) {
         $tier = 1;
         if (!empty($pid)) {//pid不为0
             $parentSubject = DbGoods::getSubject(['id' => $pid], 'id,pid', true);//获取上级专题
@@ -49,12 +49,28 @@ class Subject extends CommonIndex {
                 return ['code' => '3006'];//图片没有上传过
             }
         }
+        $logShareImage = [];
+        if (!empty($share_image)) {
+            $share_image = filtraImage(Config::get('qiniu.domain'), $share_image);
+            $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
+            if (empty($logShareImage)) {//图片不存在
+                return ['code' => '3006'];//图片没有上传过
+            }
+        }
         Db::startTrans();
         try {
             $subjectId = DbGoods::addSubject($data);
             if (!empty($logImage)) {
-                DbGoods::addSubjectImage(['subject_id' => $subjectId, 'image_path' => $image]);//添加专题图片
+                $addimage['subject_id'] = $subjectId;
+                $addimage['image_path'] = $image;
                 DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            }
+            if (!empty($logShareImage)) {
+                $addimage['share_image_path'] = $share_image;
+                DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
+            }
+            if (!empty($addimage)) {
+                DbGoods::addSubjectImage($addimage);//添加专题图片
             }
             Db::commit();
             return ["code" => '200'];
@@ -73,7 +89,7 @@ class Subject extends CommonIndex {
      * @param $orderBy
      * @return array
      */
-    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0) {
+    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0, $share_image = '') {
         if (empty($subject) && empty($status) && empty($image) && empty($orderBy)) {
             return ['code' => '3007'];
         }
@@ -112,6 +128,24 @@ class Subject extends CommonIndex {
 //                }
             }
         }
+        $logShareImage        = [];
+        $oldLogShareImage     = [];
+        $oldSubjectShareImage = [];
+        if (!empty($share_image)) {
+            $share_image    = filtraImage(Config::get('qiniu.domain'), $share_image);
+            $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
+            if (empty($logShareImage)) {//图片不存在
+                return ['code' => '3006'];//图片没有上传过
+            }
+            $oldSubjectShareImage = DbGoods::getSubjectImage(['subject_id' => $id], 'id,image_path,share_image_path', true);
+            if (!empty($oldSubjectShareImage)) {//之前有图片
+                $oldShareImage = $oldSubjectShareImage['image_path'];
+                $oldShareImage = filtraImage(Config::get('qiniu.domain'), $oldShareImage);
+//                if (stripos($oldImage, 'http') === false) {//新版本图片
+                $oldLogShareImage = DbImage::getLogImage($oldShareImage, 1);//之前在使用的图片日志
+//                }
+            }
+        }
         Db::startTrans();
         try {
             $flag = false;
@@ -130,6 +164,18 @@ class Subject extends CommonIndex {
             }
             if (!empty($oldLogImage)) {
                 DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+            }
+            if (!empty($logShareImage)) {
+                $flag = true;
+                DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
+                if (!empty($oldSubjectShareImage)) {
+                    DbGoods::updateSubjectImage(['share_image_path' => $share_image], $oldSubjectShareImage['id']);//修改专题图片
+                } else {
+                    DbGoods::addSubjectImage(['subject_id' => $id, 'share_image_path' => $share_image]);//添加分类图片
+                }
+            }
+            if (!empty($oldLogShareImage)) {
+                DbImage::updateLogImageStatus($oldLogShareImage, 3);//更新状态为弃用
             }
             if ($flag === false) {
                 Db::rollback();
@@ -167,8 +213,10 @@ class Subject extends CommonIndex {
                 break;
             }
             $subjectImage = $val['goods_subject_image'][0]['image_path'] ?? '';
+            $subjectShareImage = $val['goods_subject_image'][0]['share_image_path'] ?? '';
             unset($subjectList[$k]['goods_subject_image']);
             $subjectList[$k]['subject_image'] = $subjectImage;
+            $subjectList[$k]['subject_share_image'] = $subjectShareImage;
         }
         $tree = new PHPTree($subjectList);
         $tree->setParam("pk", "id");
@@ -277,6 +325,7 @@ class Subject extends CommonIndex {
             return ['code' => '3000'];
         }
         $subjectList['subject_image'] = $subjectList['goods_subject_image'][0]['image_path'] ?? '';
+        $subjectList['subject_share_image'] = $subjectList['goods_subject_image'][0]['share_image_path'] ?? '';
         unset($subjectList['goods_subject_image']);
         return ['code' => '200', 'data' => $subjectList];
     }
