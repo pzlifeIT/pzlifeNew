@@ -2800,6 +2800,7 @@ class User extends CommonIndex {
             'phone'    => $phone,
             'idcard'   => $idcard,
             'passport' => $passport,
+            'uid'      => $uid,
         ];
         Db::startTrans();
         try {
