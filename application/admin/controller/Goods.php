@@ -184,7 +184,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
-     * @apiParam (入参) {Number} [sheet_id] 表格ID
+     * @apiParam (入参) {Number} [goods_sheet] 表格ID
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiSampleRequest /admin/goods/saveupdategoods
@@ -202,7 +202,7 @@ class Goods extends AdminController {
         $targetUsers  = trim($this->request->post('target_users'));//适用人群
         $subtitle     = trim($this->request->post('subtitle'));//标题
         $image        = trim($this->request->post('image'));//商品标题图
-        $sheet_id     = trim($this->request->post('sheet_id')); //商品分享图片
+        $sheet_id     = trim($this->request->post('goods_sheet')); //商品分享图片
         $sheet_id     = $sheet_id ? $sheet_id : 1;
         $goodsTypeArr = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
