@@ -26,7 +26,7 @@ class Upload extends MyController {
     public function uploadUserImage() {
         $apiName  = classBasename($this) . '/' . __function__;
         $conId    = trim($this->request->post('con_id'));
-        $filename = $this->request->post('filename');
+        $filename = $this->request->file('filename');
         if (empty($filename)) {
             return ['code' => '3001'];
         }
