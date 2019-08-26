@@ -192,7 +192,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
      * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
-     * @apiParam (入参) {Number} [sheet_id] 表格ID
+     * @apiParam (入参) {Number} [goods_sheet] 表格ID
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
@@ -213,7 +213,7 @@ class Goods extends AdminController {
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品标题图
         $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
-        $sheet_id       = trim($this->request->post('sheet_id')); //商品分享图片
+        $sheet_id       = trim($this->request->post('goods_sheet')); //商品分享图片
         $sheet_id       = $sheet_id ? $sheet_id : 1;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
