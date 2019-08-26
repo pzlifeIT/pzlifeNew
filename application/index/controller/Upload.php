@@ -7,7 +7,7 @@ use app\index\MyController;
 class Upload extends MyController {
 
     protected $beforeActionList = [
-           'isLogin',//所有方法的前置操作
+           // 'isLogin',//所有方法的前置操作
     // 'isLogin' => ['except' => ''], //除去getFirstCate其他方法都进行second前置操作
     //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
@@ -24,14 +24,14 @@ class Upload extends MyController {
      * @author zyr
      */
     public function uploadUserImage() {
-        $apiName  = classBasename($this) . '/' . __function__;
-        $conId    = trim($this->request->post('con_id'));
+        // $apiName  = classBasename($this) . '/' . __function__;
+        // $conId    = trim($this->request->post('con_id'));
         $filename = $this->request->file('filename');
         if (empty($filename)) {
             return ['code' => '3001'];
         }
         $result = $this->app->upload->uploadUserImage($filename);
-        $this->apiLog($apiName, [$conId, $filename], $result['code'], $conId);
+        // $this->apiLog($apiName, [$conId, $filename], $result['code'], $conId);
         return $result;
     }
 
