@@ -89,13 +89,14 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          saveAddGoods
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过 / 3011:适用人群只能为数字 / 3012:分享图片没有上传过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:添加失败 / 3010:图片没有上传过 / 3011:适用人群只能为数字 / 3012:分享图片没有上传过 / 3015:虚拟商品暂时不支持赠送权益
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} supplier_id 供应商id
      * @apiParam (入参) {Number} cate_id 三级分类id
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} image 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
@@ -117,6 +118,7 @@ class Goods extends AdminController {
         $subtitle       = trim($this->request->post('subtitle')); //标题
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -157,6 +159,12 @@ class Goods extends AdminController {
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
         }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
+        }
+        if ($goodsType == 2 && $giving_rights != 1) {
+            return ['code' => '3015'];
+        }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
         $this->apiLog($apiName, [$cmsConId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $result['code'], $cmsConId);
@@ -169,7 +177,7 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          saveUpdateGoods
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过 / 3012:分享图片没有上传过
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:供应商id只能为数字 / 3002:分类id只能为数字 / 3003:商品名称不能空 / 3004:标题图不能空 / 3005:商品类型只能为数字 / 3006:商品名称重复 / 3007:提交的分类id不是三级分类 / 3008:供应商不存在 / 3009:修改失败 / 3010:图片没有上传过 / 3012:分享图片没有上传过 / 3015:虚拟商品暂时不支持赠送权益
      * @apiSuccess (返回) {String} msg 返回消息
      * @apiParam (入参) {Number} goods_id 商品id
      * @apiParam (入参) {Number} supplier_id 供应商id
@@ -177,6 +185,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} goods_name 商品名称
      * @apiParam (入参) {Number} [goods_type] 商品类型 1普通商品 2 虚拟商品(默认1)
      * @apiParam (入参) {Number} [target_users] 商品适用人群:1,全部;2,钻石及以上;3,创业店主及以上;4,合伙人及以上(默认1)
+     * @apiParam (入参) {Number} [giving_rights] 商品赠送权益 1,不赠送;2,钻石;3,创业店主;4,合伙人(默认1)
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
@@ -196,6 +205,7 @@ class Goods extends AdminController {
         $subtitle       = trim($this->request->post('subtitle')); //标题
         $image          = trim($this->request->post('image')); //商品标题图
         $share_image    = trim($this->request->post('share_image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -232,6 +242,12 @@ class Goods extends AdminController {
         }
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
+        }
+        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+            $data['giving_rights'] = $giving_rights;
+        }
+        if ($goodsType == 2 && $giving_rights != 1) {
+            return ['code' => '3015'];
         }
         //调用方法存商品表
         $res = $this->app->goods->saveGoods($data, $goodsId);

@@ -625,7 +625,7 @@ class Goods extends CommonIndex {
     public function getOneGoods($id, $getType, $goodsType) {
         //根据商品id找到商品表里面的基本数据
         $where    = [["id", "=", $id]];
-        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image";
+        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image,giving_rights";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != $goodsType) {
             return ['code' => '3005'];//该商品不属于这个类型

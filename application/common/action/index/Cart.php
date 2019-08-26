@@ -54,7 +54,7 @@ class Cart extends CommonIndex {
             return ['code' => 3003, 'msg' => '该商品规格不存在'];
         }
         if ($goods_sku['stock'] < 1) {
-            return ['code' => 3004, 'msg' => '该规格库存不足'];
+            return ['code' => 3010, 'msg' => '该规格库存不足'];
         }
         if ($buy_num> $goods_sku['stock']) {
             return ['code' => '3006', 'msg' => '库存不足购买数量'];
@@ -90,6 +90,7 @@ class Cart extends CommonIndex {
         $cart['goods_id'] = $goods_sku['goods_id'];
         $cart['track']    = [$track_id => $buy_num]; /* 购买店铺：购买数量 */
         $cart['spec']     = $goods_sku['spec']; /* 规格属性 */
+        // $cart['from_uid'] = $parent_id; /* 推荐人ID */
         $hash_cart        = json_encode($cart);
         $key              = 'skuid:' . $goods_skuid;
 
@@ -100,7 +101,9 @@ class Cart extends CommonIndex {
                 $oldcart['track'][$track_id] += $buy_num;
             } else {
                 $oldcart['track'][$track_id] = $buy_num;
+                // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
             }
+            // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
             if ($oldcart['track'][$track_id] < 1) {
                 unset($oldcart['track'][$track_id]);
             }
@@ -113,6 +116,13 @@ class Cart extends CommonIndex {
             }
             $thecart = $this->redis->hset($this->redisCartUserKey . $uid, $key, $hash_cart);
         }
+        $has_cart =  $this->redis->hgetall($this->redisCartUserKey . $uid);
+        foreach ($has_cart as $has => $value) {
+            $value = json_decode($value,true);
+            $value['from_uid'] = $parent_id;
+            $this->redis->hset($this->redisCartUserKey . $uid, $has, json_encode($value));
+        }
+        // print_r($has_cart);die;
         $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);
         return ['code' => '200', 'msg' => '添加成功'];
 
