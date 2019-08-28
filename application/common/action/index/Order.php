@@ -1900,17 +1900,17 @@ class Order extends CommonIndex {
             return $order_sheet;
         }
         $sheet_list = $order_sheet['sheet_list'];
-       
+        $goodsIds = [];
         foreach ($sheet_list as $sheet => $list) {
-            if (!isset($from[$sheet])) {
+            if (!isset($from[$list['goods_id']])) {
                 return ['code' => '3006'];//表格选项不完整
             }
             foreach ($list['options'] as $ls => $options) {
                 // if ($options['name']) {}
-                    if (!isset($options['name'],$from[$sheet][$options['name']])) {
+                    if (!isset($options['name'],$from[$list['goods_id']][$options['name']])) {
                         return ['code' => '3006'];//表格选项不完整
                     }
-                    $value = $from[$sheet][$options['name']];
+                    $value = $from[$list['goods_id']][$options['name']];
                     switch ($options['name']) {
                         case "name" :
                             $res = empty($value) ? false : true;
