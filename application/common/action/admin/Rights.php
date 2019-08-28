@@ -242,7 +242,9 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
+                //被邀请人信息
                 $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile,commission');
+                //被邀请人关系
                 $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
                 $userRelationData = [];
                 $bossId           = $this->getBoss($target_user['id']);
@@ -269,8 +271,10 @@ class Rights extends CommonIndex {
                 if ($shopapply['refe_identity'] == 2) {
                     $cost = 3500;
 
-                    //上级奖励任务
-                    $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
+                    //给邀请人上级奖励任务
+                    // $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
+                    //给本人合伙人
+                    $refe_relation = $this->getRelation($shopapply['target_uid'])['relation'];
                     $refe_relation = explode(',', $refe_relation);
                     $re_boss_id = $this->getPrentBoss($refe_relation);
                     if ($re_boss_id) {
