@@ -242,7 +242,9 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
+                //被邀请人信息
                 $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile,commission');
+                //被邀请人关系
                 $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
                 $userRelationData = [];
                 $bossId           = $this->getBoss($target_user['id']);
@@ -266,13 +268,16 @@ class Rights extends CommonIndex {
                 ];
                 $refe_user = DbUser::getUserOne(['id' => $shopapply['refe_uid']], 'user_market,commission');
                 $cost      = 0;
+                $refe_relation = $this->getRelation($shopapply['target_uid'])['relation'];
+                $refe_relation = explode(',', $refe_relation);
+                $re_boss_id = $this->getPrentBoss($refe_relation);
                 if ($shopapply['refe_identity'] == 2) {
                     $cost = 3500;
 
-                    //上级奖励任务
-                    $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
-                    $refe_relation = explode(',', $refe_relation);
-                    $re_boss_id = $this->getPrentBoss($refe_relation);
+                    //给邀请人上级奖励任务
+                    // $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
+                    //给本人合伙人
+                    
                     if ($re_boss_id) {
                         $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
                         if (!empty($rela_user) && $rela_user['user_market'] > 2) {
@@ -328,9 +333,19 @@ class Rights extends CommonIndex {
                         }
                     }
                 } else if ($shopapply['refe_identity'] == 4) {
-                    $cost = 4000;
+                    if ($re_boss_id == $shopapply['refe_uid']) {
+                        $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                        if (!empty($rela_user) && $rela_user['user_market'] = 3) {
+                            $cost = 4000;
+                        }
+                    }
                 } else if ($shopapply['refe_identity'] == 5) {
-                    $cost = 5000;
+                    if ($re_boss_id == $shopapply['refe_uid']) {
+                        $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                        if (!empty($rela_user) && $rela_user['user_market'] = 3) {
+                            $cost = 5000;
+                        }
+                    }
                 }
                 if ($cost) {
                     $tradingData = [
