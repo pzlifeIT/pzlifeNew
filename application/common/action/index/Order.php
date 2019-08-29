@@ -1559,11 +1559,11 @@ class Order extends CommonIndex {
                         if (count($rassenger_information) != count(explode(',',$value))) {
                             return ['code' => '3010'];
                         }
-                        $from[$sheet][$options['name']] = $rassenger_information;
+                        $from[$list['goods_id']][$options['name']] = $rassenger_information;
                     }
             }
         }
-        // print_r($sheet_list);die;
+        // print_r($from);die;
         $new_from = [];
         foreach ($from as $f => $rom) {
             $sheet = [];
