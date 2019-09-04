@@ -19,6 +19,7 @@ use app\common\model\GoodsAttr;
 use app\common\model\SupplierFreight;
 use app\common\model\SupplierFreightArea;
 use app\common\model\SupplierFreightDetail;
+use app\common\model\GoodsTracking;
 use think\Db;
 
 class DbGoods {
@@ -1189,4 +1190,19 @@ class DbGoods {
         return $supAdmin->id;
     }
 
+    public function getGoodsTracking($where, $field, $row = false, $orderBy = '', $limit = ''){
+        $obj = GoodsTracking::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addGoodsTracking($data){
+        $GoodsTracking = new GoodsTracking;
+        $GoodsTracking->save($data);
+        return $GoodsTracking->id;
+    }
+
+    public function saveGoodsTracking($data, $id){
+        $GoodsTracking = new GoodsTracking;
+        return $GoodsTracking->save($data,['id' => $id]);
+    }
 }

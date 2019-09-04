@@ -660,4 +660,27 @@ class Goods extends CommonIndex {
         $data = array_unique($data);
         return $data;
     }
+
+    public function addGoodsTracking($goodsId){
+        $where      = [["id", "=", $goodsId], ["status", "=", 1]];
+        $goods_data = DbGoods::getOneGoods($where, 'id,goods_name,goods_type,image');
+        if (empty($goods_data)) {
+            return ['code' => '3002'];
+        }
+        $has_views = DbGoods::getGoodsTracking(['goods_id' => $goodsId],'id,views',true);
+        if (!empty($has_views)){
+            DbGoods::saveGoodsTracking(['views' => $has_views['views']+1],$has_views['id']);
+        }else{
+            $new = [];
+            $new = [
+                'goods_id' => $goodsId,
+                'views' => 1,
+                'goods_name' => $goods_data['goods_name'],
+                'goods_type' => $goods_data['goods_type'],
+                'image' => $goods_data['image'],
+            ];
+            DbGoods::addGoodsTracking($new);
+        }
+        return ['code' => '200'];
+    }
 }

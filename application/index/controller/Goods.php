@@ -280,4 +280,27 @@ class Goods extends MyController {
         $this->apiLog($apiName, [$goodsId, $goodsNum], $result['code'], '');
         return $result;
     }
+
+    /**
+     * @api              {post} / 记录商品浏览记录
+     * @apiDescription   addGoodsTracking
+     * @apiGroup         index_Goods
+     * @apiName          addGoodsTracking
+     * @apiParam (入参) {Number} [con_id] 请求uid
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品id为数字 / 3002:商品不存在
+     * @apiSampleRequest /index/goods/addGoodsTracking
+     * @author rzc
+     */
+
+     public function addGoodsTracking(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $goodsId  = trim($this->request->post('goods_id'));
+        if (!is_numeric($goodsId) || intval($goodsId) < 1) {
+            return ['code' => '3001'];
+        }
+        $result   = $this->app->goods->addGoodsTracking(intval($goodsId));
+        $this->apiLog($apiName, [$goodsId], $result['code'], '');
+        return $result;
+     }
 }
