@@ -104,16 +104,17 @@ class Cart extends CommonIndex {
                     // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
                 }
             } else { 
-                foreach ($oldcart['track'] as $key => $value) {
+                foreach ($oldcart['track'] as $ol => $value) {
                     if ($value + $buy_num > 0){
-                        $oldcart['track'][$key] = $value + $buy_num;
+                        $oldcart['track'][$ol] = $value + $buy_num;
                         break;
                     } else {
-                        unset($oldcart['track'][$key]);
+                        unset($oldcart['track'][$ol]);
                         $buy_num  = $value + $buy_num;
                     }
                 }
             }
+            // print_r($oldcart);die;
             // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
             if ($oldcart['track'][$track_id] < 1) {
                 unset($oldcart['track'][$track_id]);
