@@ -36,10 +36,9 @@ class Cart extends CommonIndex {
         }
 
         /* 获取该商品规格属性ID */
-        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image';
+        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image,status';
         $where     = [["id", "=", $goods_skuid]];
         $goods_sku = DbGoods::getOneSku($where, $field);
-
         $field = 'id,uid,shop_name,shop_image,server_mobile,status';
         $where = ['uid' => $parent_id];
         
@@ -50,7 +49,7 @@ class Cart extends CommonIndex {
             $track_id = $shop['id'];
         }
         
-        if (!$goods_sku) {
+        if (!$goods_sku || $goods_sku['status'] == 2) {
             return ['code' => 3003, 'msg' => '该商品规格不存在'];
         }
         if ($goods_sku['stock'] < 1) {
@@ -75,7 +74,6 @@ class Cart extends CommonIndex {
                 return ['code' => 3008, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
-
         /* 获取商品所在分类 */
         /*  $field = 'id,type_name';
          $where = [["id", '=', $goods_data['cate_id']]];
@@ -87,6 +85,7 @@ class Cart extends CommonIndex {
 
         /* 判断该用户购物车是否添加过该商品SKU,有就变更数量，没有就新增一条新数据 */
 
+        
         $cart['goods_id'] = $goods_sku['goods_id'];
         $cart['track']    = [$track_id => $buy_num]; /* 购买店铺：购买数量 */
         $cart['spec']     = $goods_sku['spec']; /* 规格属性 */
@@ -97,11 +96,23 @@ class Cart extends CommonIndex {
         $oldcart = $this->redis->hget($this->redisCartUserKey . $uid, $key);
         if ($oldcart) {
             $oldcart = json_decode($oldcart, true);
-            if (array_key_exists($track_id, $oldcart['track'])) {
-                $oldcart['track'][$track_id] += $buy_num;
-            } else {
-                $oldcart['track'][$track_id] = $buy_num;
-                // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
+            if ($buy_num > 0) {
+                if (array_key_exists($track_id, $oldcart['track'])) {
+                    $oldcart['track'][$track_id] += $buy_num;
+                } else {
+                    $oldcart['track'][$track_id] = $buy_num;
+                    // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
+                }
+            } else { 
+                foreach ($oldcart['track'] as $key => $value) {
+                    if ($value + $buy_num > 0){
+                        $oldcart['track'][$key] = $value + $buy_num;
+                        break;
+                    } else {
+                        unset($oldcart['track'][$key]);
+                        $buy_num  = $value + $buy_num;
+                    }
+                }
             }
             // $oldcart['from_uid'] = $parent_id; /* 推荐人ID */
             if ($oldcart['track'][$track_id] < 1) {
@@ -139,6 +150,10 @@ class Cart extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
+        $valid = [];
+        $failure = [];
+        $failure_supplier = [];
+        $valid_supplier = [];
         $cart = $this->redis->hgetall($this->redisCartUserKey . $uid);
         if ($cart) {
             $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);
@@ -147,103 +162,138 @@ class Cart extends CommonIndex {
             foreach ($cart as $key => $value) {
                 /* $key示例：$key = 'skuid:18'; */
                 $buy_goods     = [];
+                $num = 0;
                 $skuid         = substr($key, 6);
                 $buy_goods     = json_decode($value, true);
                 $buy_track_num = $buy_goods['track'];
                 /*  $buy_goods_sku = []; */
+                $cart_buy = [];
 
-                foreach ($buy_track_num as $track_id => $num) {
-                    $cart_buy = [];
+                /* $track_id = $track_id; */
+                /* 获取店铺信息 */
+               
+                /* 查询商品信息 */
+                $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,cost_price,active_end_time,margin_price,integral_price,spec,sku_image,status';
+                $where     = [["id", "=", $skuid]];
+                $goods_sku = DbGoods::getOneSku($where, $field);
+                /* 该规格查询不到直接失效 */
 
-                    /* $track_id = $track_id; */
-                    /* 获取店铺信息 */
-                   
-                    /* 查询商品信息 */
-                    $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,cost_price,active_end_time,margin_price,integral_price,spec,sku_image,status';
-                    $where     = [["id", "=", $skuid]];
-                    $goods_sku = DbGoods::getOneSku($where, $field);
-                    /* 该规格查询不到直接失效 */
+                /* 获取商品基础信息 */
+                $where                  = [["id", "=", $buy_goods['goods_id']]];
+                $field                  = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
+                $goods_data             = DbGoods::getOneGoods($where, $field);
+                // $goods_data['track_id'] = $track_id;
+                // $goods_data['buy_num']  = $num;
+                /* print_r($goods_data); */
+               
+                /* 获取购物车购买规格属性 */
+                // $attr_field = 'id,spec_id,attr_name';
+                // $attr_where = [['id', 'in', $goods_sku['spec']]];
 
-                    /* 获取商品基础信息 */
-                    $where                  = [["id", "=", $buy_goods['goods_id']]];
-                    $field                  = "id,supplier_id,cate_id,goods_name,goods_type,title,subtitle,image,status";
-                    $goods_data             = DbGoods::getOneGoods($where, $field);
-                    $goods_data['track_id'] = $track_id;
-                    $goods_data['buy_num']  = $num;
-                    /* print_r($goods_data); */
-                   
-                    /* 获取购物车购买规格属性 */
-                    // $attr_field = 'id,spec_id,attr_name';
-                    // $attr_where = [['id', 'in', $goods_sku['spec']]];
+                // $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
+                $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
+                $goods_sku_name        = array_column($attr, 'attr_name');
 
-                    // $goods_sku_name = DbGoods::getAttrList($attr_where, $attr_field);
-                    $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goods_sku['spec'])]], 'attr_name');
-                    $goods_sku_name        = array_column($attr, 'attr_name');
+                $goods_sku['goods_sku_name'] = implode(',',$goods_sku_name);
+                
+                /*  print_r($goods_sku_name);die; */
 
-                    $goods_sku['goods_sku_name'] = implode(',',$goods_sku_name);
-                    
-                    /*  print_r($goods_sku_name);die; */
+                /* 获取商品所在分类 */
+                $field       = 'id,type_name';
+                $where       = [["id", '=', $goods_data['cate_id']]];
+                $goods_class = DbGoods::getOneCate($where, $field);
 
-                    /* 获取商品所在分类 */
-                    $field       = 'id,type_name';
-                    $where       = [["id", '=', $goods_data['cate_id']]];
-                    $goods_class = DbGoods::getOneCate($where, $field);
+                /* 获取商品对应供应商 */
+                $field    = 'id,tel,name';
+                $supplier = DbGoods::getSupplierData($field, $goods_data['supplier_id']);
 
-                    /* 获取商品对应供应商 */
-                    $field    = 'id,tel,name';
-                    $supplier = DbGoods::getSupplierData($field, $goods_data['supplier_id']);
-
-                    $cart_buy                  = $goods_sku;
-                    $cart_buy['goods_name']    = $goods_data['goods_name'];
-                    $cart_buy['cate_id']       = $goods_class['id'];
-                    $cart_buy['supplier_id']   = $supplier['id'];
-                    $cart_buy['supplier_name'] = $supplier['name'];
-                    $cart_buy['supplier_tel']  = $supplier['tel'];
-                    $cart_buy['goods_name']    = $goods_data['goods_name'];
-                    $cart_buy['goods_type']    = $goods_data['goods_type'];
-                    $cart_buy['title']         = $goods_data['title'];
-                    $cart_buy['subtitle']      = $goods_data['subtitle'];
-                    $cart_buy['status']        = $goods_data['status'];
-                    $cart_buy['track_id']      = $goods_data['track_id'];
-                    $cart_buy['buy_num']       = $goods_data['buy_num'];
-                    
-                    $cart_buy['brokerage']     =  bcmul(bcmul(getDistrProfits($goods_sku['retail_price'],$goods_sku['cost_price'],$goods_sku['margin_price']), 0.75, 2),$goods_data['buy_num'],2);
-
-                     /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
-                     if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
-                        $old_failure[$track_id][] = $cart_buy;
-                        continue;
-                    }
-                    /* 若无此规格，则该商品暂时以失效处理 */
-                    if (!$goods_sku_name) {
-                        $old_failure[$track_id][] = $cart_buy;
-                        continue;
-                    }
-                    $old_valid[$track_id][] = $cart_buy;
-
+                $cart_buy                  = $goods_sku;
+                $cart_buy['goods_name']    = $goods_data['goods_name'];
+                $cart_buy['cate_id']       = $goods_class['id'];
+                $cart_buy['supplier_id']   = $supplier['id'];
+                $cart_buy['supplier_name'] = $supplier['name'];
+                $cart_buy['supplier_tel']  = $supplier['tel'];
+                $cart_buy['goods_name']    = $goods_data['goods_name'];
+                $cart_buy['goods_type']    = $goods_data['goods_type'];
+                $cart_buy['title']         = $goods_data['title'];
+                $cart_buy['subtitle']      = $goods_data['subtitle'];
+                $cart_buy['status']        = $goods_data['status'];
+                // $cart_buy['track_id']      = $goods_data['track_id'];
+                // $cart_buy['buy_num']       = $goods_data['buy_num'];
+                foreach ($buy_track_num as $track_id => $tnum) {
+                    $num += $tnum;
                 }
+                $cart_buy['num'] = $num;
+                $cart_buy['brokerage']     =  bcmul(bcmul(getDistrProfits($goods_sku['retail_price'],$goods_sku['cost_price'],$goods_sku['margin_price']), 0.75, 2),$cart_buy['num'],2);
+                // $cart_buy['brokerage']     =  bcmul(bcmul(getDistrProfits($goods_sku['retail_price'],$goods_sku['cost_price'],$goods_sku['margin_price']), 0.75, 2),$goods_data['buy_num'],2);
+                // print_r($cart_buy);
+                 /* 失效商品处理：商品无库存、商品下架、商品主信息查询不到 */
+                 if (!$goods_sku['stock'] || !$goods_data || $goods_data['status'] == 2 || $goods_sku['status']==2) {
+                    // $old_failure[$track_id][] = $cart_buy;
+                    // $failure_goods[$supplier['id']] = $supplier;
+                    $failure_goods[] = $cart_buy;
+                    if (!in_array($supplier,$failure_supplier)) {
+                        array_push($failure_supplier,$supplier);
+                    }
+                    continue;
+                }
+                /* 若无此规格，则该商品暂时以失效处理 */
+                if (!$goods_sku_name) {
+                    // $old_failure[$track_id][] = $cart_buy;
+                    // $failure_goods[$supplier['id']] = $supplier;
+                    $failure_goods[] = $cart_buy;
+                    if (!in_array($supplier,$failure_supplier)) {
+                        array_push($failure_supplier,$supplier);
+                    }
+                    continue;
+                }
+                // $old_valid[$track_id][] = $cart_buy;
+                // $valid_goods[$supplier['id']] = $supplier;
+                // $valid_goods[$supplier['id']]['goods'] = [];
+                // $valid_goods[$supplier['id']]['goods'][] = $cart_buy;
+                $valid_goods[] = $cart_buy;
+                if (!in_array($supplier,$valid_supplier)) {
+                    array_push($valid_supplier,$supplier);
+                }
+            }
+          
+            //有效商品
+            foreach ($valid_supplier as $key => $value) {
+                foreach ($valid_goods as $val => $gs) {
+                   if ($gs['supplier_id'] == $value['id']){
+                       $valid_supplier[$key]['goods'][] = $gs;
+                   }
+                }
+                
+            }
+            //失效商品
+            foreach ($failure_supplier as $key => $value) {
+                foreach ($failure_goods as $val => $gs) {
+                    if ($gs['supplier_id'] == $value['id']){
+                        $failure_supplier[$key]['goods'][] = $gs;
+                    }
+                }
+            }
+            // $valid = [];
+            // foreach ($old_valid as $old => $val) {
+            //     //    print_r($val);
+            //     $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
+            //     $where         = ['id' => $old];
+            //     $shop          = DbShops::getShopInfo($field, $where);
+            //     $shop['goods'] = $val;
+            //     $valid[]       = $shop;
+            // }
+            // $failure = [];
+            // foreach ($old_failure as $old => $val) {
+            //     //    print_r($val);
+            //     $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
+            //     $where         = ['id' => $old];
+            //     $shop          = DbShops::getShopInfo($field, $where);
+            //     $shop['goods'] = $val;
+            //     $failure[]     = $shop;
+            // }
 
-            }
-            $valid = [];
-            foreach ($old_valid as $old => $val) {
-                //    print_r($val);
-                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
-                $where         = ['id' => $old];
-                $shop          = DbShops::getShopInfo($field, $where);
-                $shop['goods'] = $val;
-                $valid[]       = $shop;
-            }
-            $failure = [];
-            foreach ($old_failure as $old => $val) {
-                //    print_r($val);
-                $field         = 'id,uid,shop_name,shop_image,server_mobile,status';
-                $where         = ['id' => $old];
-                $shop          = DbShops::getShopInfo($field, $where);
-                $shop['goods'] = $val;
-                $failure[]     = $shop;
-            }
-
-            return ['code' => 200, 'valid' => $valid, 'failure' => $failure];
+            return ['code' => 200, 'valid' => $valid_supplier, 'failure' => $failure_supplier];
         } else {
             return ['code' => '3000', 'msg' => '购物车中未添加商品'];
         }
@@ -251,7 +301,7 @@ class Cart extends CommonIndex {
     }
 
     /**
-     * 修改购物车商品数量
+     * 修改购物车商品数量(添加购物车已满足修改购物车数量功能，故此功能暂废用)
      * @param $uid
      * @param $goods_skuid
      * @param $buy_num
