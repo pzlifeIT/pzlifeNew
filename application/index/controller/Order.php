@@ -742,6 +742,8 @@ class Order extends MyController {
      * @apiParam (入参) {Number} sku_id_list 此供应商已进入结算页的商品skuID
      * @apiParam (入参) {Number} supplier_id 供应商ID
      * @apiParam (入参) {Number} user_address_id 用户地址ID
+     * @apiParam (入参) {Number} [page] 页码 默认1  
+     * @apiParam (入参) {Number} [pagenum] 每页展示条数 默认10
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:未查询到该地址 / 3005:传入skuid中有商品未加入购物车 / 3006:商品不支持配送 / 
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
