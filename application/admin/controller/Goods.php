@@ -214,7 +214,7 @@ class Goods extends AdminController {
         $share_image    = trim($this->request->post('share_image')); //商品标题图
         $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
         $sheet_id       = trim($this->request->post('goods_sheet')); //商品分享图片
-        $sheet_id       = $sheet_id ? $sheet_id : 1;
+        $sheet_id       = $sheet_id ? $sheet_id : 0;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -255,13 +255,15 @@ class Goods extends AdminController {
         if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
             $data['giving_rights'] = $giving_rights;
         }
-        if (!empty($sheet_id)){
+        // if (!empty($sheet_id)){
             $data['goods_sheet'] = intval($sheet_id);
-        }
+            // }
         if ($goodsType == 2 && $giving_rights != 1) {
             return ['code' => '3015'];
         }
+        
         //调用方法存商品表
+        print_r($data);die;
         $res = $this->app->goods->saveGoods($data, $goodsId);
         $this->apiLog($apiName, [$cmsConId, $goodsId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $res['code'], $cmsConId);
         return $res;
