@@ -203,7 +203,7 @@ class Goods extends AdminController {
         $subtitle     = trim($this->request->post('subtitle'));//标题
         $image        = trim($this->request->post('image'));//商品标题图
         $sheet_id     = trim($this->request->post('goods_sheet')); //商品分享图片
-        $sheet_id     = $sheet_id ? $sheet_id : 1;
+        $sheet_id     = $sheet_id ? $sheet_id : 0;
         $goodsTypeArr = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
@@ -235,10 +235,11 @@ class Goods extends AdminController {
         if (!empty($subtitle)) {
             $data['subtitle'] = $subtitle;
         }
-        if (!empty($sheet_id)){
-            $data['goods_sheet'] = intval($sheet_id);
-        }
+        // if (!empty($sheet_id)){
+        $data['goods_sheet'] = intval($sheet_id);
+        // }
         //调用方法存商品表
+        print_r($data);die;
         $res = $this->app->goods->saveGoods($data, $goodsId);
         $this->apiLog($apiName, [$cmsConId, $goodsId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $res['code'], $cmsConId);
         return $res;

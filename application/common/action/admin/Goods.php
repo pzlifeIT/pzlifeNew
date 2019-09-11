@@ -1176,7 +1176,7 @@ class Goods extends CommonIndex {
                 'create_time' => time(),
             ],
             [
-                'name' => 'house_property_copies ',
+                'name' => 'house_property_copies',
                 'title' => '房产证复印件',
                 'type' => '7',
                 'create_time' => time(),
