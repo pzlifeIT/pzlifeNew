@@ -1891,7 +1891,7 @@ class Order extends CommonIndex {
 
     public function getAddOnItems($conId, $supplier_id, $skuIdList, $userAddressId, $page, $pageNum){
         $offset = ($page - 1) * $pageNum;
-        $limit = 'LIMIT '.$offset.','.$pageNum;
+        $limit = ' LIMIT '.$offset.','.$pageNum;
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
