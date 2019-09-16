@@ -1968,6 +1968,7 @@ class Order extends CommonIndex {
         //     return ['code' => '3006', 'freightError' => $eGoodsList]; //商品不支持配送
         // }
         $freightList = array_values($freightList)[0];
+        $supplierFreightText = DbGoods::getSupplierFreight('desc',$freight_id)['desc'];
         $addOnItems = 0;
         $freightSupplierPriceText = '';
         $orderBy = '';
@@ -2066,7 +2067,7 @@ class Order extends CommonIndex {
                 }
             }
         }
-        return ['code' => '200', 'freightSupplierPriceText' => $freightSupplierPriceText, 'goodsList' => $result];//已满足包邮条件
+        return ['code' => '200', 'freightSupplierPriceText' => $freightSupplierPriceText, 'supplierFreightText' => $supplierFreightText, 'goodsList' => $result];//已满足包邮条件
     }
 
         /**
