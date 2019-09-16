@@ -379,50 +379,51 @@ class Cart extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3003'];
         }
-        if (empty($del_shopid)) {
-            return ['code' => '3002', 'msg' => '删除店铺ID为空'];
-        }
+        // if (empty($del_shopid)) {
+        //     return ['code' => '3002', 'msg' => '删除店铺ID为空'];
+        // }
         if (empty($del_skuid)) {
             return ['code' => '3004', 'msg' => '删除SKU_ID为空'];
         }
-        $del_shopid = explode(',', $del_shopid);
+        // $del_shopid = explode(',', $del_shopid);
         $del_skuid  = explode(',', $del_skuid);
-        if (count($del_shopid) != count($del_skuid)) {
-            return ['code' => '3005', 'msg' => '删除店铺ID与删除SKU_ID长度不符'];
-        }
+        // if (count($del_shopid) != count($del_skuid)) {
+        //     return ['code' => '3005', 'msg' => '删除店铺ID与删除SKU_ID长度不符'];
+        // }
         $expirat_time = $this->redis->expire($this->redisCartUserKey . $uid, 2592000);
-        foreach ($del_skuid as $del => $skuid) {
-            $sku[$skuid][] = $del_shopid[$del];
-        }
+        // print_r($del_skuid);die;
+        // foreach ($del_skuid as $del => $skuid) {
+        //     $sku[$skuid][] = $del_shopid[$del];
+        // }
         /* 查询参数是否有效 */
-        foreach ($sku as $key => $value) {
-            $cart = $this->redis->hget($this->redisCartUserKey . $uid, 'skuid:' . $key);
-            if (!$cart) {
-                return ['code' => '3006', 'msg' => '传入参数中含有无效参数'];
-            }
-            $cart = json_decode($cart, true);
-            foreach ($cart['track'] as $track => $track_cart) {
-                if (!in_array($track, $value)) {
-                    return ['code' => '3006', 'msg' => '传入参数中含有无效参数'];
-                }
-            }
-        }
-        foreach ($sku as $key => $value) {
-            $cart = $this->redis->hget($this->redisCartUserKey . $uid, 'skuid:' . $key);
+        // foreach ($del_skuid as $key => $value) {
+        //     $cart = $this->redis->hget($this->redisCartUserKey . $uid, 'skuid:' . $value);
+        //     if (!$cart) {
+        //         return ['code' => '3006', 'msg' => '传入参数中含有无效参数'];
+        //     }
+        //     $cart = json_decode($cart, true);
+        //     foreach ($cart['track'] as $track => $track_cart) {
+        //         if (!in_array($track, $value)) {
+        //             return ['code' => '3006', 'msg' => '传入参数中含有无效参数'];
+        //         }
+        //     }
+        // }
+        foreach ($del_skuid as $key => $value) {
+            $cart = $this->redis->hget($this->redisCartUserKey . $uid, 'skuid:' . $value);
             if (!$cart) {
                 continue;
             }
-            $cart = json_decode($cart, true);
-            foreach ($value as $skey => $shopid) {
-                unset($cart['track'][$shopid]);
-            }
-            $redis_key = 'skuid:' . $key;
-            if ($cart['track']) {
-                $new_cart = json_encode($cart);
-                $thecart  = $this->redis->hset($this->redisCartUserKey . $uid, $redis_key, $new_cart);
-            } else {
+            // $cart = json_decode($cart, true);
+            // foreach ($value as $skey => $shopid) {
+            //     unset($cart['track'][$shopid]);
+            // }
+            $redis_key = 'skuid:' . $value;
+            // if ($cart['track']) {
+            //     $new_cart = json_encode($cart);
+            //     $thecart  = $this->redis->hset($this->redisCartUserKey . $uid, $redis_key, $new_cart);
+            // } else {
                 $thecart = $this->redis->hdel($this->redisCartUserKey . $uid, $redis_key);
-            }
+            // }
         }
         $newcart = $this->redis->hgetall($this->redisCartUserKey . $uid);
         if (!$newcart) {
