@@ -495,11 +495,12 @@ class Order extends CommonIndex {
             $supplierList[$sl]['freight_status'] = 1;
             if (isset($summary['freight_supplier_price'][$sll['id']])) {
                 $supplierList[$sl]['freight_supplier_price'] = $summary['freight_supplier_price'][$sll['id']];
+                if ($summary['freight_supplier_price'][$sll['id']]>0){
+                    $supplierList[$sl]['freight_status'] = 2;
+                }
             }
             $supplierList[$sl]['freight_supplier_price_text'] = '';
-            if ($summary['freight_supplier_price'][$sll['id']]>0){
-                $supplierList[$sl]['freight_status'] = 2;
-            }
+            
             if (isset($summary['freight_supplier_price_text'][$sll['id']])){
                 $supplierList[$sl]['freight_supplier_price_text'] = $summary['freight_supplier_price_text'][$sll['id']];
             }
