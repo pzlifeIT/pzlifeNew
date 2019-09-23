@@ -374,6 +374,15 @@ class DbOrder {
         return $result;
     }
 
+    public function getDeliveryOrderDetail($where, $field, $limit, $orderBy) {
+        return Db::table('pz_orders')
+            ->field($field)
+            ->alias('o')
+            ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
+            ->join(['pz_order_goods' => 'og'], 'oc.id=og.order_child_id')
+            ->where($where)->order($orderBy)->limit($limit)->select();
+    }
+
 }
 
 

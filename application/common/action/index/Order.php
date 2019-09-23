@@ -875,6 +875,7 @@ class Order extends CommonIndex {
         if (!empty($goodsOversold)) {
             return ['code' => '3007', 'goods_oversold' => $goodsOversold]; //库存不足商品
         }
+        $freightSupplierPriceText = [];
         if (!empty($cityId)) {
             /* 运费模版 运费计算 start */
             $freightIdList = array_values(array_unique(array_column($goodsList, 'freight_id')));
@@ -891,7 +892,7 @@ class Order extends CommonIndex {
                 }
                 return ['code' => '3006', 'freightError' => $eGoodsList]; //商品不支持配送
             }
-            $freightSupplierPriceText = [];
+            
             foreach ($freightList as $flk => $fl) {
                 // echo $fl['total_price'].'</br>';
                 // echo $freightPrice[$flk];

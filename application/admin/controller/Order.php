@@ -351,4 +351,42 @@ class Order extends AdminController {
         $result = $this->app->order->searchKeywordOrders($cmsConId, $keyword);
         return $result;
     }
+
+    /**
+     * @api              {post} / 发货单导出
+     * @apiDescription   exportDeliveryOrder
+     * @apiGroup         admin_Orders
+     * @apiName          exportDeliveryOrder
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [sup_id] 供应商ID
+     * @apiParam (入参) {Number} [order_status] 订单状态 默认4,已付款
+     * @apiParam (入参) {Number} [order_type] 订单类型 默认1
+     * @apiParam (入参) {Number} page 页码默认1
+     * @apiParam (入参) {Number} pagenum 查询条数默认1000
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单数据空 / 3001:空的keyword /
+     * @apiSampleRequest /admin/Order/exportDeliveryOrder
+     * @author rzc
+     */
+    public function exportDeliveryOrder(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $pagenum  = trim($this->request->post('pagenum'));
+        $page     = trim($this->request->post('page'));
+        $sup_id   = trim($this->request->post('sup_id'));
+        $order_status   = trim($this->request->post('order_status'));
+        $order_type   = trim($this->request->post('order_type'));
+
+        $order_type    = $order_type ? (int)$order_type : 1;
+        $order_status    = $order_status ? (int)$order_status : 4;
+        $page    = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 1000;
+        $sup_id = intval($sup_id);
+
+        if (!is_numeric($page) || !is_numeric($pagenum)) {
+            return ['code' => 3002];
+        }
+        $result = $this->app->order->exportDeliveryOrder($sup_id, $order_type, $order_status, intval($page), intval($pagenum));
+        $this->apiLog($apiName, [$cmsConId, $pagenum, $page], $result['code'], $cmsConId);
+        return $result;
+    }
 }
