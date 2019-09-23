@@ -493,7 +493,9 @@ class Order extends CommonIndex {
         foreach ($supplierList as $sl => $sll) {
             //各供应商运费
             $supplierList[$sl]['freight_status'] = 1;
-            $supplierList[$sl]['freight_supplier_price'] = $summary['freight_supplier_price'][$sll['id']];
+            if (isset($summary['freight_supplier_price'][$sll['id']])) {
+                $supplierList[$sl]['freight_supplier_price'] = $summary['freight_supplier_price'][$sll['id']];
+            }
             $supplierList[$sl]['freight_supplier_price_text'] = '';
             if ($summary['freight_supplier_price'][$sll['id']]>0){
                 $supplierList[$sl]['freight_status'] = 2;
