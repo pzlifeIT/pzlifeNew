@@ -602,4 +602,32 @@ class Order extends CommonIndex {
             return ['code' => '3005'];//领取失败
         }
     }
+    
+    public function exportDeliveryOrder($sup_id, $order_type, $order_status, $page, $pagenum){
+        $where = [];
+        if ($sup_id) {
+            array_push($where,['sup_id', '=', $sup_id]);
+        }
+        array_push($where,['order_type', '=', $order_type]);
+        array_push($where,['order_status', '=', $order_status]);
+        $offset = ($page - 1) * $pagenum;
+        $result = DbOrder::getDeliveryOrderDetail($where, 'order_no,linkman,linkphone,province_id,city_id,area_id,address,message,supplier_id,supplier_name,goods_name,goods_num,sku_json', $offset.','.$pagenum, ['sup_id' => 'asc']);
+        foreach ($result as $key => $value) {
+            if ($value['province_id']) {
+                $value['province_name'] = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
+            }
+            if ($value['city_id']) {
+                $value['city_name'] = DbProvinces::getAreaOne('*', ['id' => $value['city_id'], 'level' => 2])['area_name'];
+            }
+            if ($value['area_id']) {
+                $value['area_name'] = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
+            }
+            $result[$key]['sku_json'] = join(',',json_decode($value['sku_json'],true));
+            unset($result[$key]['province_id']);
+            unset($result[$key]['city_id']);
+            unset($result[$key]['area_id']);
+            $result[$key]['address'] = $value['province_name'].$value['city_name'].$value['area_name'].$value['address'];
+        }
+        return ['code' => '200', 'result' => $result];
+    }
 }
