@@ -11,6 +11,7 @@ use app\common\model\OrderGoods;
 use app\common\model\MemberOrder;
 use app\common\model\OrderExpress;
 use app\common\model\LogPay;
+use app\common\model\OrderGoodsSheet;
 use think\Db;
 
 class DbOrder {
@@ -373,7 +374,37 @@ class DbOrder {
         }
         return $result;
     }
+    
+    /**
+     * @param $where
+     * @param $field
+     * @param bool $row
+     * @param string $orderBy
+     * @param string $sc 排序方式asc,desc
+     * @param string $limit
+     * @return mixed
+     * @author rzc
+     */
+    public function getOrderGoodsSheet($where, $field, $row = false, $orderBy = '', $limit = '') {
+        $obj = OrderGoodsSheet::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
 
+    public function addOrderGoodsSheet($data){
+        $OrderGoodsSheet = new OrderGoodsSheet;
+        $OrderGoodsSheet->save($data);
+        return $OrderGoodsSheet->id;
+    }
+
+    public function saveAllOrderGoodsSheet($data){
+        $OrderGoodsSheet = new OrderGoodsSheet;
+        return $OrderGoodsSheet->saveAll($data);
+    }
+
+    public function saveOrderGoodsSheet($data, $id){
+        $OrderGoodsSheet = new OrderGoodsSheet;
+        return $OrderGoodsSheet->save($data,['id' => $id]);
+    }
 }
 
 

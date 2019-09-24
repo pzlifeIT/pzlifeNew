@@ -1836,5 +1836,172 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
     }
+    
+    /**
+     * 查询订单商品是否有表格
+     * @param $orderNo
+     * @param $conId
+     * @return array
+     * @author rzc
+     */
+    public function isOrderSheet($orderNo, $conId){
+        $uid = $this->getUidByConId($conId);
+        // $uid = 23697;
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $order = DbOrder::getOrderDetail(['uid' => $uid, 'order_no' => $orderNo], 'order_status,goods_id');
+        if (empty($order)){
+            return ['code' => '3003'];
+        }
+        $goods = [];
+        foreach ($order as $key => $value) {
+            if ($value['order_status'] < 4){
+                return ['code' => '3004'];//该订单未付款，无法提交表格
+            }
+            $goods[] = $value['goods_id'];
+        }
+        $goods = array_unique($goods);
+        $goods_sheet = DbGoods::getGoodsList2([['id', 'in',$goods]],'id,goods_sheet');
+        $sheet_list = [];
+        foreach ($goods_sheet as $gs => $sheet) {
+            if ($sheet['goods_sheet'] != 0){
+                $sheet_info = $this->sheetInfo($sheet['goods_sheet']);
+                if ($sheet === false) {
+                    return ['code' => '3005'];
+                }
+                $sheet_info['goods_id'] = $sheet['id'];
+                array_push($sheet_list,$sheet_info);
+            }
+        }
+        return ['code' => '200','order_no' => $orderNo,'sheet_list' => $sheet_list];
+        
+    }
+
+    private function sheetInfo($id){
+        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+        if (empty($sheet)) {
+            return false;
+        }
+        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_optionsList = [];
+        foreach ($sheet_options as $key => $value) {
+            $sheet_optionsList[] = $value['sheet_option'];
+        }
+        $sheet['options'] = $sheet_optionsList;
+        return $sheet;
+    }
+
+    public function submitOrderSheet ($orderNo, $conId, $from){
+        if (DbOrder::getOrderGoodsSheet(['order_no' => $orderNo],'id')) {
+            return ['code' => '3008'];
+        }
+        $order_sheet = $this->isOrderSheet($orderNo, $conId);
+        if ($order_sheet['code'] != '200') {
+            return $order_sheet;
+        }
+        $sheet_list = $order_sheet['sheet_list'];
+        $goodsIds = [];
+        foreach ($sheet_list as $sheet => $list) {
+            if (!isset($from[$list['goods_id']])) {
+                return ['code' => '3006'];//表格选项不完整
+            }
+            foreach ($list['options'] as $ls => $options) {
+                // if ($options['name']) {}
+                    if (!isset($options['name'],$from[$list['goods_id']][$options['name']])) {
+                        return ['code' => '3006'];//表格选项不完整
+                    }
+                    $value = $from[$list['goods_id']][$options['name']];
+                    switch ($options['name']) {
+                        case "name" :
+                            $res = empty($value) ? false : true;
+                            break;
+                        case "idcard" :
+                            $res = checkIdcard($value);
+                            break;
+                        case "medicare_card" :
+                            $res = strlen($value) > 16 ? false : true;
+                            break;
+                        case "mobile":
+                            $res = checkMobile($value);
+                            break;
+                        case "phone":
+                            $res = checkMobile($value);
+                            break;
+                        default:
+                            $res = true;
+                    }
+                    if ($res === false) {
+                        return ['code' => '3007']; //信息校验失败
+                    }
+                    if ($options['name'] == 'rassenger_information') {
+                        $rassenger_information = DbUser::getAirplanePassenger([['id','in',$value]],'*');
+                        if (count($rassenger_information) != count(explode(',',$value))) {
+                            return ['code' => '3010'];
+                        }
+                        $from[$list['goods_id']][$options['name']] = $rassenger_information;
+                    }
+            }
+        }
+        // print_r($from);die;
+        $new_from = [];
+        foreach ($from as $f => $rom) {
+            $sheet = [];
+            $sheet['from'] = json_encode($rom);
+            $sheet['goods_id'] = $f;
+            $sheet['order_no'] = $orderNo;
+            $new_from[] = $sheet;
+        }
+        Db::startTrans();
+        try {
+            DbOrder::saveAllOrderGoodsSheet($new_from);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
+    }
+
+    public function getOrderSheet($orderNo, $goods_id = 0){
+        $where = ['order_no' => $orderNo];
+        $row = false;
+        if (!empty($goods_id)) {
+            $where = ['order_no' => $orderNo, 'goods_id' => $goods_id];
+            $row = true;
+        }
+        $result = DbOrder::getOrderGoodsSheet($where, 'order_no,goods_id,from',$row);
+        $from = [];
+        if (!empty($result)) {
+            $options = DbGoods::getSheetOption([],'name,title');
+            $new_options = [];
+            foreach ($options as $op => $ns) {
+                $new_options[$ns['name']] = $ns['title'];
+            }
+            if (!empty($goods_id)){
+                $result['from'] = json_decode($result['from'],true);
+                foreach ($result['from'] as $key => $value) {
+                    if (isset($key,$new_options[$key])) {
+                        $from[$new_options[$key]] = $value;
+                    }
+                }
+                unset($result['from']);
+                $result['from'] = $from;
+            }else {
+                foreach ($result as $key => $value) {
+                    $value['from'] = json_decode($value['from'],true);
+                    foreach ($value['from'] as $vf => $vfrom) {
+                        if (isset($key,$new_options[$vf])) {
+                            $from[$new_options[$vf]] = $vfrom;
+                        }
+                    }
+                    unset($result[$key]['from']);
+                    $result[$key]['from'] = $from;
+                    unset($from);
+                }
+            }
+        }
+        return ['code' => '200', 'fromList' => $result];
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

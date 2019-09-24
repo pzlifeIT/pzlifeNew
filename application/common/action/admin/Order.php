@@ -141,7 +141,8 @@ class Order extends CommonIndex {
         $no_deliver_goods_num = count($no_deliver_goods);
         // print_r($has_deliver_goods);die;
         // print_r($express_money);die;
-        return ['code' => 200, 'order_info' => $order_info, 'order_pack' => $order_pack, 'order_child' => $order_child, 'no_deliver_goods' => $no_deliver_goods, 'has_deliver_goods' => $has_deliver_goods, 'no_deliver_goods_num' => $no_deliver_goods_num];
+        $order_sheet = $this->getOrderSheet($order_info['order_no'])['fromList'];
+        return ['code' => 200, 'order_info' => $order_info, 'order_pack' => $order_pack, 'order_child' => $order_child, 'no_deliver_goods' => $no_deliver_goods, 'has_deliver_goods' => $has_deliver_goods, 'no_deliver_goods_num' => $no_deliver_goods_num, 'fromList' => $order_sheet];
     }
 
     /**
@@ -545,5 +546,59 @@ class Order extends CommonIndex {
             }
         }
         return ['code' => '200', 'order_num' => $all_order_num, 'all_goods_num' => $all_goods_num, 'all_goods_price' => $all_goods_price];
+    }
+    public function getOrderSheet($orderNo, $goods_id = 0){
+        $where = ['order_no' => $orderNo];
+        $row = false;
+        if (!empty($goods_id)) {
+            $where = ['order_no' => $orderNo, 'goods_id' => $goods_id];
+            $row = true;
+        }
+        $result = DbOrder::getOrderGoodsSheet($where, 'id,order_no,goods_id,from,status',$row);
+        if (!empty($result)) {
+            
+            if (!empty($goods_id)){
+                $from = json_decode($result['from'],true);
+                unset($result['from']);
+                foreach ($from as $key => $value) {
+                    $options = DbGoods::getSheetOption(['name' => $key],'name,title,type',true);
+                    $options['value'] = $value;
+                    $result['from'][] = $options;
+                }
+            }else {
+                foreach ($result as $key => $value) {
+                    $from = json_decode($value['from'],true);
+                    unset($result[$key]['from']);
+                    foreach ($from as $fr => $om) {
+                        $options = DbGoods::getSheetOption(['name' => $fr],'name,title,type',true);
+                        $options['value'] = $om;
+                        $result[$key]['from'][] = $options;
+                    }
+                }
+            }
+        }
+        return ['code' => '200', 'fromList' => $result];
+    }
+
+    public function updateOrderSheet($id, $from = [], $status = 1){
+        $result = DbOrder::getOrderGoodsSheet(['id' => $id], 'id',true);
+        if (empty($result)) {
+            return ['code' => '3001'];
+        }
+        if ($status == 2) {
+            $data['status'] = 2;
+        }
+        if (!empty($from)) {
+            $data['from'] = json_encode($from);
+        }
+        Db::startTrans();
+        try {
+            DbOrder::saveOrderGoodsSheet($data,$id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005'];//领取失败
+        }
     }
 }

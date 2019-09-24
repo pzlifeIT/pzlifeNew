@@ -280,4 +280,99 @@ class Goods extends MyController {
         $this->apiLog($apiName, [$goodsId, $goodsNum], $result['code'], '');
         return $result;
     }
+
+    /**
+     * @api              {post} / 笛风旅游门票商品测试接口
+     * @apiDescription   getDifengTicketScenicList
+     * @apiGroup         index_Goods
+     * @apiName          getDifengTicketScenicList
+     * @apiParam (入参) {String} [key] 查询关键字,城市或者景点名称
+     * @apiParam (入参) {Int} page 第几页.页从1开始
+     * @apiParam (入参) {Int} pageSize 分页大小
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品id为数字 / 3002:商品不存在
+     * @apiSuccess (返回) {String} data 返回消息
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_retail_price 最低零售价
+     * @apiSuccess (data) {String} min_brokerage 最低钻石再补贴
+     * @apiSampleRequest /index/goods/getDifengTicketScenicList
+     * @return array
+     * @author rzc
+     */
+    public function getDifengTicketScenicList() {
+        $key      = trim($this->request->post('key'));
+        $page     = trim($this->request->post('key'));
+        $pageSize = trim($this->request->post('pageSize'));
+        $page     = is_numeric($page) ? $page : 1;
+        $pageSize = is_numeric($pageSize) ? $pageSize : 10;
+        //笛风SecretKey
+        $SecretKey = 'aaaaaaaa';
+        $apiKey    = 'tickettest';
+    
+        $request = [];
+        if (!empty($key)){
+            $request['key'] = $key;
+        }
+        if (!empty($page)){
+            $request['page'] = $page;
+        }
+        if (!empty($pageSize)){
+            $request['pageSize'] = $pageSize;
+        }
+        $request['apiKey'] = $apiKey;
+        $timestamp = date('Y-m-d H:i:s');
+        $request['timestamp'] = $timestamp;
+        ksort($request);
+        
+        $str       = '';
+        $i = '';
+        foreach ($request as $rkey => $value) {
+            if ($rkey == 'timestamp') {
+                $i = "&amp;";
+            }
+            $str.= $i.$rkey.'='.$value;
+            $i = '&';
+        }
+        // echo '请求参数拼接字符串：'.$str.'</br>';
+        $sign = $SecretKey . '&' . $str . '&' . $SecretKey;//
+        // echo '请求参数拼接SecretKey：'.$sign.'</br>';
+        $sign = strtoupper(md5($sign));//MD5加密并大写转换
+        // echo 'sign参数MD5加密并大写转换：'.$sign.'</br>';
+        // print_r($sign);die;
+        $data = [
+            'apiKey'    => $apiKey,
+            'data'      => [
+                'key'      => $key,
+                'page'     => $page,
+                'pageSize' => $pageSize,
+            ],
+            'sign'      => $sign,
+            'timestamp' => $timestamp,
+        ];
+        // echo "请求报文：";
+        // print_r(json_encode($data));
+        // echo '</br>'."请求地址：https://doptest-api.dfyoo.com/Ticket/scenicList".'</br>';
+        $result = $this->sendRequest2('https://doptest-api.dfyoo.com/Ticket/scenicList', $data);
+        // echo "请求结果：";
+        // print_r($result);die;
+        return json_decode($result, true);
+    }
+
+    function sendRequest2($requestUrl, $data = []) {
+        $curl = curl_init();
+        $data = json_encode($data);
+        curl_setopt($curl, CURLOPT_URL, $requestUrl);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Content-Length:' . strlen($data)]);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($curl);
+        curl_close($curl);
+        return $res;
+    }
 }

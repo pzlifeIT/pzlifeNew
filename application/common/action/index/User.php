@@ -2811,6 +2811,7 @@ class User extends CommonIndex {
         if (empty($uid)) { //用户不存在
             return ['code' => '3004'];
         }
+
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
@@ -2858,6 +2859,76 @@ class User extends CommonIndex {
         return ['code' => '200', 'all_price' => $all_price, 'own_price' => $own_price, 'vip_price' => $vip_price, 'dimondvip_price' => $dimondvip_price, 'other_price' => $other_price, 'businessmoney' => $result];
     }
 
+
+    public function getAirplanePassenger($conId, $page, $pageNum){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        $offset = $pageNum * ($page - 1);
+        $result = DbUser::getAirplanePassenger(['uid' => $uid], '*', false, '', $offset.','.$pageNum);
+        return ['code' => '200', 'airplanepassenger' => $result];
+    }
+
+    public function addAirplanePassenger($conId, $name, $phone, $idcard, $passport){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+        if (DbUser::getAirplanePassenger(['uid' => $uid, 'name' => $name, 'idcard' => $idcard], '*', true)) {
+            return ['code' => '3005'];
+        }
+        $data = [];
+        $data = [
+            'name'     => $name,
+            'phone'    => $phone,
+            'idcard'   => $idcard,
+            'passport' => $passport,
+            'uid'      => $uid,
+        ];
+        Db::startTrans();
+        try {
+            DbUser::addAirplanePassenger($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3006'];//领取失败
+        }
+    }
+
+    public function updateAirplanePassenger($conId, $id, $name = '', $phone = '', $idcard = '', $passport = ''){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+
+        if (!DbUser::getAirplanePassenger(['uid' => $uid, 'id' => $id])) {
+            return ['code' => '3005'];
+        }
+        if (!empty($name)){
+            $data['name'] = $name;
+        }
+        if (!empty($phone)){
+            $data['phone'] = $phone;
+        }
+        if (!empty($idcard)){
+            $data['idcard'] = $idcard;
+        }
+        if (!empty($passport)){
+            $data['passport'] = $passport;
+        }
+
+        Db::startTrans();
+        try {
+            DbUser::updateAirplanePassenger($data, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3006'];//领取失败
+        }
+    }
     /**
      * @param $conId
      * @return array
@@ -2868,6 +2939,7 @@ class User extends CommonIndex {
         if (empty($uid)) { //用户不存在
             return ['code' => '3004'];
         }
+
         $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
         if (empty($userInfo)) {
             return ['code' => '3000'];
