@@ -5,6 +5,7 @@ namespace app\common\action\index;
 use app\facade\DbGoods;
 use app\facade\DbLabel;
 use app\facade\DbAudios;
+use app\facade\DbCoupon;
 use Config;
 use think\Db;
 
@@ -190,12 +191,29 @@ class Goods extends CommonIndex {
             $goods_data['max_retail_price'] = max($retail_price);
             
         }
+        
+        // 获取商品优惠券
+        $goods_coupon = DbCoupon::getCoupon(['level' => 1, 'gs_id' => $goods_id], 'id,price,gs_id,level,title,days,create_time,time_type,start_time,end_time', false, 'id desc');
+        $new_coupon = [];
+        if (!empty($goods_coupon)) {
+            foreach ($goods_coupon as $gc => $coupon) {
+                if ($coupon['time_type'] == 2){
+                    if (time() > strtotime($coupon['start_time']) && time() < strtotime($coupon['end_time'])){
+                        array_push($new_coupon,$coupon);
+                    }
+                } else {
+                    array_push($new_coupon,$coupon);
+                }
+            }
+        }
+
         $goodsInfo                   = [
             'goods_data'    => $goods_data,
             'goods_banner'  => $goods_banner,
             'goods_details' => $goods_details,
             'goods_spec'    => $goods_spec,
-            'goods_sku'     => $goods_sku
+            'goods_sku'     => $goods_sku,
+            'goods_coupon'  => $new_coupon
         ];
         $this->redis->setEx($redisGoodsDetailKey, 86400, json_encode($goodsInfo));
         $goodsInfo['goods_data']['goods_name'] = htmlspecialchars_decode($goodsInfo['goods_data']['goods_name']);

@@ -320,6 +320,9 @@ class Order extends MyController {
      * @apiSuccess (supplier_list) {String} image 供应商image
      * @apiSuccess (supplier_list) {String} title 供应商title
      * @apiSuccess (supplier_list) {String} desc 供应商详情
+     * @apiSuccess (supplier_list) {String} freight_supplier_price 供应商运费小计
+     * @apiSuccess (supplier_list) {String} freight_status 邮费状态 1,包邮;2,不包邮
+     * @apiSuccess (supplier_list) {String} freight_supplier_price_text 凑单文字提示
      * @apiSuccess (supplier_list) {Array} shop_list 购买店铺分组
      * @apiSuccess (shop_list) {Int} id 店铺id
      * @apiSuccess (shop_list) {Int} uid 店铺boss的uid
@@ -682,7 +685,7 @@ class Order extends MyController {
         if (empty($num) || !is_numeric($num) || intval($num) < 1) {
             return ['code' => '3003'];
         }
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickSettlementAudio($conId, $buid, intval($sku_id), intval($num), intval($goods_id), intval($userCouponId));
         return $result;
     }
@@ -706,12 +709,12 @@ class Order extends MyController {
      * @author rzc
      */
     public function quickCreateAudioOrder() {
-        $conId    = trim($this->request->post('con_id'));
-        $buid     = trim($this->request->post('buid'));
-        $sku_id   = trim($this->request->post('sku_id'));
-        $goods_id = trim($this->request->post('goods_id'));
-        $payType = trim($this->request->post('pay_type'));
-        $num      = trim($this->request->post('num'));
+        $conId        = trim($this->request->post('con_id'));
+        $buid         = trim($this->request->post('buid'));
+        $sku_id       = trim($this->request->post('sku_id'));
+        $goods_id     = trim($this->request->post('goods_id'));
+        $payType      = trim($this->request->post('pay_type'));
+        $num          = trim($this->request->post('num'));
         $userCouponId = trim($this->request->post('user_coupon_id'));
         if (empty($sku_id) || !is_numeric($sku_id) || intval($sku_id) < 1) {
             return ['code' => '3001'];
@@ -722,10 +725,10 @@ class Order extends MyController {
         if (empty($num) || !is_numeric($num) || intval($num) < 1) {
             return ['code' => '3003'];
         }
-        if (!in_array($payType, [1,2])) {
+        if (!in_array($payType, [1, 2])) {
             return ['code' => '3008'];
         }
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickCreateAudioOrder($conId, $buid, intval($sku_id), intval($num), intval($goods_id), $payType, intval($userCouponId));
         return $result;
     }
@@ -816,6 +819,49 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->getOrderSheet($orderNo, $goods_id);
+    }
+    /**
+     * @api              {post} / 获取凑单商品
+     * @apiDescription   getAddOnItems
+     * @apiGroup         index_order
+     * @apiName          getAddOnItems
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} sku_id_list 此供应商已进入结算页的商品skuID
+     * @apiParam (入参) {Number} supplier_id 供应商ID
+     * @apiParam (入参) {Number} user_address_id 用户地址ID
+     * @apiParam (入参) {Number} [page] 页码 默认1  
+     * @apiParam (入参) {Number} [pagenum] 每页展示条数 默认10
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:未查询到该地址 / 3005:传入skuid中有商品未加入购物车 / 3006:商品不支持配送 / 
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
+     * @apiSampleRequest /index/order/getAddOnItems
+     * @author rzc
+     */
+    public function getAddOnItems() {
+        $conId         = trim($this->request->post('con_id'));
+        $supplier_id   = trim($this->request->post('supplier_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $userAddressId = trim($this->request->post('user_address_id'));
+        $page          = trim($this->request->post('page'));
+        $pagenum       = trim($this->request->post('pagenum'));
+        $page          = $page ? $page : 1;
+        $pagenum       = $pagenum ? $pagenum : 10;
+        if (!is_array($skuIdList)) {
+            $skuIdList = explode(',', $skuIdList);
+        }
+        if (empty($skuIdList)) {
+            return ['code' => '3001'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($userAddressId) || empty($userAddressId)) {
+            return ['code' => '3004'];
+        }
+        $result = $this->app->order->getAddOnItems($conId, $supplier_id, $skuIdList, $userAddressId, $page, $pagenum);
         return $result;
     }
 }
