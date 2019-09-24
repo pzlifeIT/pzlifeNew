@@ -819,6 +819,7 @@ class Order extends MyController {
             return ['code' => '3001'];
         }
         $result = $this->app->order->getOrderSheet($orderNo, $goods_id);
+        return $result;
     }
     /**
      * @api              {post} / 获取凑单商品
