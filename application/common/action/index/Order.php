@@ -2180,7 +2180,7 @@ class Order extends CommonIndex {
             $result[$key]['spec'] = $goods_spec;
             $result[$key]['goods_sku'] = $goods_sku; */
             $result[$key]['goods_name'] = htmlspecialchars_decode($value['goods_name']);
-
+            $result[$key]['image'] = Config::get('qiniu.domain'). '/' .$value['image'];
             $brokerage       = [];
             $integral_active = [];
             // print_r($value['id']);die;
