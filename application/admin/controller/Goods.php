@@ -239,7 +239,7 @@ class Goods extends AdminController {
         $data['goods_sheet'] = intval($sheet_id);
         // }
         //调用方法存商品表
-        print_r($data);die;
+        // print_r($data);die;
         $res = $this->app->goods->saveGoods($data, $goodsId);
         $this->apiLog($apiName, [$cmsConId, $goodsId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $res['code'], $cmsConId);
         return $res;
