@@ -88,14 +88,15 @@ class Order extends AdminController {
                 return ['code' => '3003'];
             }
         }
-
-        if (!empty($start_time)) {
+        $start_time = intval(strtotime($start_time));
+        $end_time = intval(strtotime($end_time));
+     /*    if (!empty($start_time)) {
             if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
                 // print_r($parts);die;
                 if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
                     return ['code' => '3004'];
                 }
-                $start_time = strtotime($start_time);
+               
             } else {
                 return ['code' => '3004'];
             }
@@ -105,11 +106,11 @@ class Order extends AdminController {
                 if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
                     return ['code' => '3005'];
                 }
-                $end_time = strtotime($end_time);
+               
             } else {
                 return ['code' => '3005'];
             }
-        }
+        } */
         $result = $this->app->order->getOrderList(intval($page), intval($pagenum), intval($order_status), $order_no, $nick_name, intval($supplier_id), $start_time, $end_time);
         $this->apiLog($apiName, [$cmsConId, $page, $pagenum, $order_status, $order_no, $nick_name], $result['code'], $cmsConId);
         return $result;
