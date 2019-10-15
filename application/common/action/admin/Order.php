@@ -646,7 +646,7 @@ class Order extends CommonIndex {
             unset($result[$key]['province_id']);
             unset($result[$key]['city_id']);
             unset($result[$key]['area_id']);
-            $result[$key]['address'] = $value['province_name'].$value['city_name'].$value['area_name'].$value['address'];
+            $result[$key]['address'] .= $value['address'];
         }
         return ['code' => '200', 'result' => $result];
     }
