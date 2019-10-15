@@ -23,7 +23,10 @@ class Order extends AdminController {
      * @apiParam (入参) {Number} pagenum 查询条数
      * @apiParam (入参) {Number} [order_no] 订单号
      * @apiParam (入参) {Number} [nick_name] 昵称
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单列表空 / 3002:页码和查询条数只能是数字 / 3003:无效的状态查询
+     * @apiParam (入参) {Number} [sup_id] 供应商id
+     * @apiParam (入参) {Number} [start_time] 订单创建时间(开始)
+     * @apiParam (入参) {Number} [end_time] 订单创建时间(结束)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:订单列表空 / 3002:页码和查询条数只能是数字 / 3003:无效的状态查询 / 3004:start_time时间格式错误  / 3005:end_time时间格式错误 /
      * @apiSuccess (返回) {String} totle 总结果条数
      * @apiSuccess (data) {object_array} order_list 结果
      * @apiSuccess (data) {String} id 订单ID
@@ -67,9 +70,13 @@ class Order extends AdminController {
         $order_status = trim($this->request->post('order_status'));
         $order_no     = trim($this->request->post('order_no'));
         $nick_name    = trim($this->request->post('nick_name'));
+        $supplier_id  = trim($this->request->post('sup_id'));
+        $start_time   = trim($this->request->post('start_time'));
+        $end_time     = trim($this->request->post('end_time'));
 
         $page    = $page ? $page : 1;
         $pagenum = $pagenum ? $pagenum : 10;
+        $supplier_id = $supplier_id ? intval($supplier_id) : 0;
 
         if (!is_numeric($page) || !is_numeric($pagenum)) {
             return ['code' => 3002];
@@ -81,7 +88,29 @@ class Order extends AdminController {
                 return ['code' => '3003'];
             }
         }
-        $result = $this->app->order->getOrderList(intval($page), intval($pagenum), intval($order_status), $order_no, $nick_name);
+
+        if (!empty($start_time)) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $start_time, $parts)) {
+                // print_r($parts);die;
+                if (checkdate($parts[2], $parts[3], $parts[1]) == false) {
+                    return ['code' => '3004'];
+                }
+                $start_time = strtotime($start_time);
+            } else {
+                return ['code' => '3004'];
+            }
+        }
+        if (!empty($end_time)) {
+            if (preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $end_time, $parts1)) {
+                if (checkdate($parts1[2], $parts1[3], $parts1[1]) == false) {
+                    return ['code' => '3005'];
+                }
+                $end_time = strtotime($end_time);
+            } else {
+                return ['code' => '3005'];
+            }
+        }
+        $result = $this->app->order->getOrderList(intval($page), intval($pagenum), intval($order_status), $order_no, $nick_name, intval($supplier_id), $start_time, $end_time);
         $this->apiLog($apiName, [$cmsConId, $page, $pagenum, $order_status, $order_no, $nick_name], $result['code'], $cmsConId);
         return $result;
     }

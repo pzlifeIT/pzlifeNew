@@ -120,8 +120,11 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where, $row = false) {
+    public function getOrderChild($field, $where, $row = false, $distinct = false) {
         $obj = OrderChild::field($field)->where($where);
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }

@@ -29,7 +29,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '') {
+    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '', $supplier_id = 0, $start_time = 0, $end_time = 0) {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
@@ -49,7 +49,23 @@ class Order extends CommonIndex {
             }
             array_push($where, ['uid', 'in',$uid]);
         }
+        if ($start_time) {
+            array_push($where, ['create_time', '>=',$start_time]);
+        }
+        if ($end_time) {
+            array_push($where, ['create_time', '<=',$end_time]);
+        }
         $field     = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
+        if ($supplier_id) {
+            $order_ids = DbOrder::getOrderChild('order_id',['supplier_id' => $supplier_id], false, true);
+            if (!empty($order_ids)) {
+                // $new_order_ids = array_column($order_ids,'order_id');
+                array_push($where, ['id', 'in', array_column($order_ids,'order_id')]);
+            } else {
+                return ['code' => 200, 'totle' => 0, 'order_list' => []];
+            }
+        }
+        // print_r($where);die;
         $orderList = DbOrder::getOrder($field, $where, false,$offset . ',' . $pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
