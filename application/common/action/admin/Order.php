@@ -573,14 +573,18 @@ class Order extends CommonIndex {
         $offset = ($page - 1) * $pagenum;
         $result = DbOrder::getDeliveryOrderDetail($where, 'order_no,linkman,linkphone,province_id,city_id,area_id,address,message,supplier_id,supplier_name,goods_name,goods_num,sku_json', $offset.','.$pagenum, ['sup_id' => 'asc']);
         foreach ($result as $key => $value) {
+            $result[$key]['address'] = '';
             if ($value['province_id']) {
                 $value['province_name'] = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
+                $result[$key]['address'] .= $value['province_name'];
             }
             if ($value['city_id']) {
                 $value['city_name'] = DbProvinces::getAreaOne('*', ['id' => $value['city_id'], 'level' => 2])['area_name'];
+                $result[$key]['address'] .= $value['city_name'];
             }
             if ($value['area_id']) {
                 $value['area_name'] = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
+                $result[$key]['address'] .= $value['area_name'];
             }
             $result[$key]['sku_json'] = join(',',json_decode($value['sku_json'],true));
             unset($result[$key]['province_id']);
