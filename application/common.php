@@ -388,6 +388,7 @@ function getExpressList() {
         'rufengda'       => '如风达',
         'wanxiangwuliu'  => '万象物流',
         'suer'           => '速尔',
+        'jd'             => '京东',
         'SJPS'           => '商家派送',
     ];
     return $ExpressList;
