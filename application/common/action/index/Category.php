@@ -69,4 +69,27 @@ class Category{
         unset($subjectList['goods_subject_image']);
         return ['code' => '200', 'data' => $subjectList];
     }
+
+    public function getGoodsIntegralSubject(){
+        $where = [["status","=",1],['is_integral_show','=','2']];
+        $field = "id,pid,subject,tier";
+        $res = DbGoods::getSubject($where, $field,false,true);
+        if (empty($res)) {
+            return ['code' => 3000,'msg'=>'未获取到专题' ];
+        }
+        foreach ($res as $key => $value) {
+            if ($value['goods_subject_image']) {
+                $res[$key]['goods_subject_image'] = $value['goods_subject_image'][0]['image_path'];
+            }else{
+                $res[$key]['goods_subject_image'] = '';
+            }
+            
+        }
+        $tree = new PHPTree($res);
+        $tree->setParam("pk", "id");
+        $tree->setParam("pid", "pid");
+        $cate_tree = $tree->listTree();
+        return ["code"=>200,"data"=>$cate_tree];
+        
+    }
 }

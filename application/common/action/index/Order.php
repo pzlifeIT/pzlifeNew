@@ -2292,5 +2292,49 @@ class Order extends CommonIndex {
         }
         return [$goods_spec, $goods_sku];
     }
+
+    public function quickIntegralSettlement($conId, $buid = 0, $skuId, $num, $userAddressId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $cityId           = 0;
+        $defaultAddressId = 0;
+        if (!empty($userAddressId)) {
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) { //没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
+            if (empty($defaultAddress)) {
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
+            }
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
+        }
+        $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
+        $user_identity = $balance['user_identity'];
+        $integral = $balance['integral'] ?? 0;
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
+        if (empty($goodsSku)) {
+            return ['code' => '3004']; //商品下架
+        }
+        $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
+        $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
+        $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
+        $goodsSku['target_users']  = $goodsSku['goods']['target_users'];
+        $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
+        $goodsSku['status']      = $goodsSku['goods']['status'];
+        $giving_rights           = $goodsSku['goods']['giving_rights'];
+        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr']        = array_column($attr, 'attr_name');
+        unset($goodsSku['goods']);
+        $goodsSku['buySum']     = $num;
+        // $goodsSku['shopBuySum'] = [$shopId => $num];
+        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 2); //商品积分总价
+        //暂不计算运费
+        print_r($goodsSku);die;
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

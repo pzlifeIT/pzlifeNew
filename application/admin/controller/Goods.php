@@ -25,6 +25,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} [supplier_name] 供应商名称
      * @apiParam (入参) {String} [supplier_title] 供应商标题
      * @apiParam (入参) {Number} [status] 上下架状态 1.上架 2.下架
+     * @apiParam (入参) {Number} [is_integral_sale]  是否积分售卖:1,默认不售卖;2,售卖
      * @apiParam (入参) {Number} [goods_id] 商品id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:page只能为数字 / 3002:page_num只能为数字 / 3003:goods_id只能为数字 / 3004:上下架状态参数有误 / 3005:商品属性参数有误
      * @apiSuccess (返回) {Number} total 条数
@@ -101,6 +102,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} image 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
      * @apiParam (入参) {String} [sheet_id] 商品表格ID
+     * @apiParam (入参) {String} [is_integral_sale] 是否积分售卖:1,默认不售卖;2,售卖
      * @apiSampleRequest /admin/goods/saveaddgoods
      * @return array
      * @author zyr
@@ -122,6 +124,7 @@ class Goods extends AdminController {
         $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
         $share_image    = trim($this->request->post('share_image')); //商品分享图片
         $sheet_id       = trim($this->request->post('sheet_id')); //商品分享图片
+        $is_integral_sale       = trim($this->request->post('is_integral_sale')); //商品分享图片
         $sheet_id       = $sheet_id ? $sheet_id : 1;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
@@ -138,6 +141,9 @@ class Goods extends AdminController {
             return ['code' => '3004']; //标题图不能空
         }
         if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
+            return ['code' => '3005']; //商品类型只能为数字
+        }
+        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1,2])) {
             return ['code' => '3005']; //商品类型只能为数字
         }
         if (!empty($targetUsers) && !in_array($targetUsers, $targetUsersArr)) {
@@ -172,6 +178,9 @@ class Goods extends AdminController {
         if (!empty($sheet_id)){
             $data['goods_sheet'] = intval($sheet_id);
         }
+        if (!empty($is_integral_sale)){
+            $data['is_integral_sale'] = intval($is_integral_sale);
+        }
         //调用方法存商品表
         $result = $this->app->goods->saveGoods($data);
         $this->apiLog($apiName, [$cmsConId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $result['code'], $cmsConId);
@@ -197,6 +206,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} [subtitle] 标题
      * @apiParam (入参) {String} [image] 商品标题图
      * @apiParam (入参) {String} [share_image] 商品分享标题图
+     * @apiParam (入参) {String} [is_integral_sale] 是否积分售卖:1,默认不售卖;2,售卖
      * @apiSampleRequest /admin/goods/saveupdategoods
      * @return array
      * @author zyr
@@ -215,6 +225,7 @@ class Goods extends AdminController {
         $share_image    = trim($this->request->post('share_image')); //商品标题图
         $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
         $sheet_id       = trim($this->request->post('goods_sheet')); //商品分享图片
+        $is_integral_sale       = trim($this->request->post('is_integral_sale')); //商品分享图片
         $sheet_id       = $sheet_id ? $sheet_id : 0;
         $goodsTypeArr   = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
@@ -264,6 +275,12 @@ class Goods extends AdminController {
         // }
         //调用方法存商品表
         // print_r($data);die;
+        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1,2])) {
+            return ['code' => '3005']; //商品类型只能为数字
+        }
+        if (!empty($is_integral_sale)) {
+            $data['is_integral_sale'] = intval($is_integral_sale);
+        }
         $res = $this->app->goods->saveGoods($data, $goodsId);
         $this->apiLog($apiName, [$cmsConId, $goodsId, $supplierId, $cateId, $goodsName, $goodsType, $subtitle, $image], $res['code'], $cmsConId);
         return $res;
@@ -290,6 +307,7 @@ class Goods extends AdminController {
      * @apiSuccess (data) {String} freight_title 运费模版标题
      * @apiSuccess (data) {Array} attr 属性列表
      * @apiSuccess (data) {Number} integral_price 积分售价
+     * @apiSuccess (data) {Number} integral_sale_stock 积分兑换库存
      * @apiSuccess (data) {Number} weight 重量(单位kg)用作计算运费
      * @apiSuccess (data) {Number} volume 体积(单位m³)用作计算运费
      * @apiSampleRequest /admin/goods/getgoodssku
@@ -322,6 +340,7 @@ class Goods extends AdminController {
      * @apiParam (入参) {Decimal} cost_price 成本价
      * @apiParam (入参) {Decimal} margin_price 其他运费成本
      * @apiParam (入参) {Int} integral_price 积分售价
+     * @apiParam (入参) {Int} integral_sale_stock 积分兑换库存
      * @apiParam (入参) {String} sku_image 规格详情图
      * @apiParam (入参) {Decimal} [weight] 重量(单位kg)用作计算运费
      * @apiParam (入参) {Decimal} [volume] 体积(单位m³)用作计算运费
@@ -344,6 +363,7 @@ class Goods extends AdminController {
         $costPrice     = trim($this->request->post('cost_price')); //成本价
         $marginPrice   = trim($this->request->post('margin_price')); //其他运费成本
         $integralPrice = trim($this->request->post('integral_price')); //积分售价
+        $integral_sale_stock = trim($this->request->post('integral_sale_stock')); //积分售价
         $weight        = trim($this->request->post('weight')); //重量
         $volume        = trim($this->request->post('volume')); //体积
         $skuImage      = trim($this->request->post('sku_image')); //规格详情图
@@ -378,6 +398,9 @@ class Goods extends AdminController {
             'integral_price' => $integralPrice,
             'sku_image'      => $skuImage,
         ];
+        if (!empty($integral_sale_stock)) {
+            $data['integral_sale_stock'] = intval($integral_sale_stock);
+        }
         $result = $this->app->goods->editGoodsSku($skuId, $data, $weight, $volume);
         $this->apiLog($apiName, [$cmsConId, $skuId, $stock, $freightId, $marketPrice, $retailPrice, $costPrice, $marginPrice, $integralPrice, $weight, $volume, $skuImage], $result['code'], $cmsConId);
         return $result;
@@ -657,6 +680,7 @@ class Goods extends AdminController {
      * @apiSuccess (goods_data) {Number} status 1.上架 2.下架
      * @apiSuccess (goods_data) {String} goods_class 三级分类
      * @apiSuccess (goods_data) {String} supplier_name 供应商名称
+     * @apiSuccess (goods_data) {String} is_integral_sale 是否积分售卖:1,默认不售卖;2,售卖
      * @apiSuccess (spec_attr) {Number} spec_id 规格id
      * @apiSuccess (spec_attr) {Number} attr_id 属性id
      * @apiSuccess (spec_attr) {Number} spec_name 规格名称
@@ -669,6 +693,7 @@ class Goods extends AdminController {
      * @apiSuccess (sku) {Number} stock 库存
      * @apiSuccess (sku) {Number} market_price 市场价
      * @apiSuccess (sku) {Number} retail_price 零售价
+     * @apiSuccess (sku) {Number} integral_sale_stock 积分兑换库存
      * @apiSuccess (sku) {Number} cost_price 成本价
      * @apiSuccess (sku) {Number} margin_price 毛利
      * @apiSuccess (sku) {Number} sku_image 规格详情图
