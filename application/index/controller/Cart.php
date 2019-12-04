@@ -294,7 +294,6 @@ class Cart extends MyController {
      * @apiParam (入参) {Number} con_id 请求uid
      * @apiParam (入参) {Number} goods_skuid 商品SKU_id
      * @apiParam (入参) {Number} goods_num 数量
-     * @apiParam (入参) {Number} parent_id 分享者id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001:uid长度只能是32位 / 3002:缺少参数conId / 3003:商品SKU_ID必须是数字 / 3004:购买数量必须是数字 / 3005:该商品钻石会员及以上身份专享 / 3006:库存不足购买数量 / 3007:该商品创业店主及以上身份专享 / 3008:该商品合伙人及以上身份专享 / 3009:缺少参数:uid或者商品SKUID / 3010:库存不足
      * @apiSuccess (返回) {Number} total 总条数
      * @apiSuccess (返回) {String} type_name 上级分类的name
@@ -324,7 +323,6 @@ class Cart extends MyController {
             return ['code' => '3001'];
         }
         // 5a3f0e0196fdebb4737c0851849c2005
-
         if (empty($goods_skuid)) {
             return ['code' => '3009', 'msg' => '缺少参数:uid或者商品SKUID'];
         }
@@ -335,7 +333,7 @@ class Cart extends MyController {
             return ['code' => '3004', 'msg' => '购买数量必须是数字'];
         }
         // $parent_id = empty(deUid($parent_id)) ? 1 : deUid($parent_id);
-        $result    = $this->app->cart->addUserIntegralCart($conId, intval($goods_skuid), intval($goods_num));
+        $result    = $this->app->cart->addIntegralCartGoods($conId, intval($goods_skuid), intval($goods_num));
         // $result    = $this->app->cart->addCartGoods($conId, intval($goods_skuid), intval($goods_num), $parent_id);
         $this->apiLog($apiName, [$conId, $goods_skuid, $goods_num], $result['code'], $conId);
         return $result;

@@ -662,15 +662,15 @@ class Cart extends CommonIndex {
         // phpinfo();
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
-            return ['code' => '3003'];
+            return ['code' => '3000'];
         }
         $user = DbUser::getUserOne(['id' => $uid], 'id,user_identity');
         if (empty($user)) {
-            return ['code' => '3003'];
+            return ['code' => '3000'];
         }
 
         /* 获取该商品规格属性ID */
-        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image,status';
+        $field     = 'id,goods_id,stock,market_price,retail_price,presell_start_time,presell_end_time,presell_price,active_price,active_start_time,active_end_time,margin_price,integral_price,spec,sku_image,status,integral_sale_stock';
         $where     = [["id", "=", $goods_skuid]];
         $goods_sku = DbGoods::getOneSku($where, $field);
         $field = 'id,uid,shop_name,shop_image,server_mobile,status';
@@ -682,7 +682,7 @@ class Cart extends CommonIndex {
         }else{
             $track_id = $shop['id'];
         }
-        
+        // print_r($goods_sku);die;
         if (!$goods_sku || $goods_sku['status'] == 2) {
             return ['code' => 3003, 'msg' => '该商品规格不存在,无法兑换'];
         }
@@ -699,7 +699,7 @@ class Cart extends CommonIndex {
         if (empty($goods_data)) {
             return ['code' => 3000, 'msg' => '商品不存在或者已下架'];
         }
-        if ($user['user_identity'] < $goods_data['target_users']) {
+      /*   if ($user['user_identity'] < $goods_data['target_users']) {
             if ($goods_data['target_users'] == 2){
                 return ['code' => 3005, 'msg' => '该商品钻石会员及以上身份专享'];
             }elseif ($goods_data['target_users'] == 3){
@@ -707,7 +707,7 @@ class Cart extends CommonIndex {
             }elseif ($goods_data['target_users'] == 4){
                 return ['code' => 3008, 'msg' => '该商品合伙人及以上身份专享'];
             }
-        }
+        } */
         /* 获取商品所在分类 */
         /*  $field = 'id,type_name';
          $where = [["id", '=', $goods_data['cate_id']]];

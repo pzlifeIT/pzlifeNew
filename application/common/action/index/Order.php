@@ -2314,27 +2314,222 @@ class Order extends CommonIndex {
             $cityId           = $defaultAddress['city_id'] ?? 0;
         }
         $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
-        $user_identity = $balance['user_identity'];
+        // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
         if (empty($goodsSku)) {
             return ['code' => '3004']; //商品下架
         }
+        $goodsSku = $goodsSku[0];
         $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
         $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
         $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
         $goodsSku['target_users']  = $goodsSku['goods']['target_users'];
         $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
         $goodsSku['status']      = $goodsSku['goods']['status'];
-        $giving_rights           = $goodsSku['goods']['giving_rights'];
+        // $giving_rights           = $goodsSku['goods']['giving_rights'];
         $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
         $goodsSku['attr']        = array_column($attr, 'attr_name');
         unset($goodsSku['goods']);
         $goodsSku['buySum']     = $num;
         // $goodsSku['shopBuySum'] = [$shopId => $num];
-        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 2); //商品积分总价
+        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
         //暂不计算运费
-        print_r($goodsSku);die;
+        $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
+        $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
+        $supplierId   = $goodsSku['supplier_id']; //供应商id
+        $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+        $summary['goods_list'][] = $goodsSku;
+        $supplier = [];
+                
+        foreach ($supplierList as $sl) {
+            $glList = [];
+            $sList  = []; //门店
+            foreach ($summary['goods_list'] as $gl) {
+                if ($gl['supplier_id'] == $sl['id']) {
+                    unset($gl['freight_id']);
+                    unset($gl['cost_price']);
+                    unset($gl['margin_price']);
+                    unset($gl['weight']);
+                    unset($gl['volume']);
+                    unset($gl['spec']);
+                    unset($gl['status']);
+                    unset($gl['stock']);
+                    unset($gl['supplier_id']);
+                    unset($gl['buySum']);
+                    unset($gl['shopBuySum']);
+                    $glList[$gl['id']] = $gl;
+//                    $shopKey           = array_keys($cart[$gl['id']]['track']);
+                    $shopKey = array_keys($shopList);
+                    foreach ($shopKey as $s) {
+                        if (!isset($sList[$s])) {
+                            $sList[$s] = $shopList[$s];
+                        }
+                    }
+                }
+            }
+            foreach ($sList as $sk => $s) {
+                $ggList = [];
+                foreach ($glList as $kg => $g) {
+                    if (in_array($s['id'], array_keys($shopList))) {
+                        $bSum        = $num; //店铺购买的数量
+                        $g['buySum'] = $bSum;
+                        $ggList[$kg] = $g;
+                    }
+                }
+                $sList[$sk]['goods_list'] = $ggList;
+            }
+            $sl['shop_list'] = $sList;
+            array_push($supplier, $sl);
+        }
+        unset($summary['goods_list']);
+        $summary['code'] = 200;
+        $summary['goods_count'] = $num;
+        $summary['supplier_list']      = $supplier;
+        $summary['integral']           = $integral;
+        $summary['default_address_id'] = $defaultAddressId;
+        $summary['total_integral_price'] = $totalGoodsIntegralPrice;
+        $summary['freight_supplier_price'] = $totalGoodsIntegralPrice;
+        return $summary;
+    }
+
+    public function quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId = 0){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $userAddress = DbUser::getUserAddress('uid,mobile,name,province_id,city_id,area_id,address', ['id' => $userAddressId], true);
+        if (empty($userAddress)) {
+            return ['code' => '3003'];
+        }
+        $cityId  = $userAddress['city_id'];
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
+        if (empty($goodsSku)) {
+            return ['code' => '3004']; //商品下架
+        }
+        $goodsSku = $goodsSku[0];
+        $summary['goods_list'][] = $goodsSku;
+        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        if (empty($shopInfo)) {
+            $buid = 1;
+        }
+        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
+        $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
+        // $user_identity = $balance['user_identity'];
+        $integral = $balance['integral'] ?? 0;
+        if ($integral < $totalGoodsIntegralPrice) {
+            return ['code' => '3005','msg' => '余额不足'];
+        }
+        $goods = $summary['goods_list'][0];
+        $from_uid = $buid;
+        $orderGoodsData = [];
+        foreach ($goods['shopBuySum'] as $kgl => $gl) {
+            for ($i = 0; $i < $gl; $i++) {
+                $goodsData = [
+                    'goods_id'     => $goods['goods_id'],
+                    'goods_name'   => $goods['goods_name'],
+                    'sku_id'       => $goods['id'],
+                    'sup_id'       => $goods['supplier_id'],
+                    'boss_uid'     => $buid,
+                    'goods_price'  => $goods['retail_price'],
+                    'goods_num'    => 1,
+                    'sku_json'     => json_encode($goods['attr']),
+                ];
+                array_push($orderGoodsData, $goodsData);
+            }
+        }
+        $supplierId   = $goodsSku['supplier_id']; //供应商id
+        $supplier = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+        $supplierData         = [];
+        foreach ($supplier as $sval) {
+            $sval['express_money'] = 0;//运费为0
+            $sval['supplier_id']   = $sval['id'];
+            $sval['supplier_name'] = $sval['name'];
+            unset($sval['id']);
+            unset($sval['name']);
+            array_push($supplierData, $sval);
+        }
+        $orderNo        = createOrderNo(); //创建订单号
+        $deductionMoney = 0; //商票抵扣金额
+        $thirdMoney     = 0; //第三方支付金额
+        $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
+        $isPay          = true;
+        $tradingData    = []; //交易日志
+
+        if ($payType == 3) { //商票支付
+            $userInfo = DbUser::getUserInfo(['id' => $uid], 'integral', true);
+            $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
+            $tradingData = [
+                'uid'          => $uid,
+                'order_no' => $orderNo,
+                'status'  => 2,
+                'result_integral'        => -$integralMoney,
+                'message'      => '兑换积分商品扣除',
+                'create_time'  => time(),
+            ];
+        }
+        $orderData = [
+            'order_no'        => $orderNo,
+            'third_order_id'  => 0,
+            'uid'             => $uid,
+            'order_status'    => $isPay ? 4 : 1,
+            'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney, //商票抵扣金额
+            'pay_money'       => $totalGoodsIntegralPrice, //实际支付(第三方支付金额+商票抵扣金额)
+            'goods_money'     => $totalGoodsIntegralPrice, //商品金额
+            'third_money'     => $thirdMoney, //第三方支付金额
+            'pay_type'        => $payType,
+            'third_pay_type'  => 2, //第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
+            'linkman'         => $userAddress['name'],
+            'linkphone'       => $userAddress['mobile'],
+            'province_id'     => $userAddress['province_id'],
+            'city_id'         => $userAddress['city_id'],
+            'area_id'         => $userAddress['area_id'],
+            'address'         => $userAddress['address'],
+            'message'         => '',
+            'from_uid'        => $from_uid,
+            'pay_time'        => $isPay ? time() : 0,
+        ];
+        $stockSku = [$skuId => $goods['buySum']];
+        Db::startTrans();
+        try {
+            $orderId = DbOrder::addOrder($orderData);
+            if (empty($orderId)) {
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+            foreach ($supplierData as $sdkey => $sdval) {
+                $supplierData[$sdkey]['order_id'] = $orderId;
+            }
+            $childOrder    = DbOrder::addOrderChilds($supplierData);
+            $childSupplier = $childOrder->toArray();
+            $childSupplier = array_column($childSupplier, 'id', 'supplier_id');
+            foreach ($orderGoodsData as $ogdK => $ogdV) {
+                $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
+            }
+            DbOrder::addOrderGoods($orderGoodsData);
+            DbGoods::decStock($stockSku);
+            DbUser::modifyIntegral($uid, $integralMoney, 'dec');
+            if (!empty($tradingData)) {
+                DbOrder::saveLogInvest($tradingData);
+            }
+            if (!empty($userCouponId)) {
+                DbCoupon::updateUserCoupon([
+                    'is_use'   => 1,
+                    'order_id' => $orderId,
+                ], $userCouponId);
+            }
+            // if ($isPay) {
+            //     $redisListKey = Config::get('rediskey.order.redisOrderBonus');
+            //     $this->redis->rPush($redisListKey, $orderId);
+            // }
+            $this->resetUserInfo($uid);
+            Db::commit();
+            return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3009'];
+        }
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

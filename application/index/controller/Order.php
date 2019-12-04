@@ -879,11 +879,7 @@ class Order extends MyController {
      * @apiParam (入参) {Ind} [user_coupon_id] 用户优惠券id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
-     * @apiSuccess (返回) {Float} rebate_all 所有商品钻石返利总和
-     * @apiSuccess (返回) {Float} discount_money 优惠金额
-     * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
-     * @apiSuccess (返回) {Float} total_freight_price 运费总价
-     * @apiSuccess (返回) {Float} total_price 价格总计
+     * @apiSuccess (返回) {Float} total_integral_price 所有商品积分价格
      * @apiSuccess (返回) {Array} supplier_list 供应商分组
      * @apiSuccess (返回) {Array} freight_supplier_price 各个供应商的运费价格(供应商id->价格)
      * @apiSuccess (返回) {Float} balance 账户的商券余额
@@ -902,6 +898,7 @@ class Order extends MyController {
      * @apiSuccess (goods_list) {Int} goods_id 商品id
      * @apiSuccess (goods_list) {Float} market_price 市场价
      * @apiSuccess (goods_list) {Float} retail_price 零售价
+     * @apiSuccess (goods_list) {Float} integral_price 积分售价
      * @apiSuccess (goods_list) {String} sku_image sku图片
      * @apiSuccess (goods_list) {String} goods_name 商品名称
      * @apiSuccess (goods_list) {Int} goods_type 商品类型
@@ -941,6 +938,61 @@ class Order extends MyController {
         // $result       = $this->app->order->quickIntegralSettlement($conId, $buid, $skuId, $num, $userAddressId, $userCouponId);
         $result       = $this->app->order->quickIntegralSettlement($conId, $buid, $skuId, $num, $userAddressId);
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId], $result['code'], $conId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 积分商城快速购买创建订单
+     * @apiDescription   quickCreateIntegralOrder
+     * @apiGroup         index_order
+     * @apiName          quickCreateIntegralOrder
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {String} buid 推荐人
+     * @apiParam (入参) {Number} sku_id 购买的skuid
+     * @apiParam (入参) {Number} user_address_id 用户选择的地址
+     * @apiParam (入参) {Number} pay_type 3.积分支付
+     * @apiParam (入参) {Number} [num] 购买数量
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享 / 3013:用户优惠券不可使用
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(积分) 
+     * @apiSampleRequest /index/order/quickCreateIntegralOrder
+     * @author zyr
+     */
+    public function quickCreateIntegralOrder() {
+        $apiName       = classBasename($this) . '/' . __function__;
+        $conId         = trim($this->request->post('con_id'));
+        $buid          = trim($this->request->post('buid'));
+        $skuId         = trim($this->request->post('sku_id'));
+        $num           = trim($this->request->post('num'));
+        $userAddressId = trim($this->request->post('user_address_id'));
+        $payType       = trim($this->request->post('pay_type'));
+        $userCouponId  = trim($this->request->post('user_coupon_id'));
+        $payTypeArr    = [3];
+        if (!is_numeric($skuId)) {
+            return ['code' => '3001'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        $userAddressId = empty($userAddressId) ? 0 : $userAddressId;
+        if (!is_numeric($userAddressId)) {
+            return ['code' => '3003'];
+        }
+        if (!is_numeric($num) || $num < 1) {
+            $num = 1;
+        }
+        $num = intval($num);
+        if (!in_array($payType, $payTypeArr)) {
+            return ['code' => '3008'];
+        }
+        $userCouponId = intval($userCouponId);
+        $num          = intval($num);
+        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result       = $this->app->order->quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
+        $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
 }
