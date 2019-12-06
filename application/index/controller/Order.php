@@ -995,4 +995,73 @@ class Order extends MyController {
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 积分商城创建结算页
+     * @apiDescription   createIntegralSettlement
+     * @apiGroup         index_order
+     * @apiName          createIntegralSettlement
+     * @apiParam (入参) {Number} con_id
+     * @apiParam (入参) {Number} sku_id_list skuid列表
+     * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 /3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
+     * @apiSuccess (返回) {Int} goods_count 购买商品总数
+     * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
+     * @apiSuccess (返回) {Float} balance 账户的商券余额
+     * @apiSuccess (返回) {Int} default_address_id 默认地址(0表示没有地址)
+     * @apiSuccess (supplier_list) {Int} id 供应商id
+     * @apiSuccess (supplier_list) {String} name 供应商name
+     * @apiSuccess (supplier_list) {String} image 供应商image
+     * @apiSuccess (supplier_list) {String} title 供应商title
+     * @apiSuccess (supplier_list) {String} desc 供应商详情
+     * @apiSuccess (supplier_list) {String} freight_supplier_price 供应商运费小计
+     * @apiSuccess (supplier_list) {String} freight_status 邮费状态 1,包邮;2,不包邮
+     * @apiSuccess (supplier_list) {String} freight_supplier_price_text 凑单文字提示
+     * @apiSuccess (supplier_list) {Array} shop_list 购买店铺分组
+     * @apiSuccess (shop_list) {Int} id 店铺id
+     * @apiSuccess (shop_list) {Int} uid 店铺boss的uid
+     * @apiSuccess (shop_list) {String} shop_name 店铺名称
+     * @apiSuccess (shop_list) {String} shop_image 店铺image
+     * @apiSuccess (shop_list) {Array} goods_list 店铺购买的商品列表
+     * @apiSuccess (goods_list) {Int} id skuid
+     * @apiSuccess (goods_list) {Int} goods_id 商品id
+     * @apiSuccess (goods_list) {Float} market_price 市场价
+     * @apiSuccess (goods_list) {Float} retail_price 零售价
+     * @apiSuccess (goods_list) {Int} integral_active 积分赠送
+     * @apiSuccess (goods_list) {String} sku_image sku图片
+     * @apiSuccess (goods_list) {String} goods_name 商品名称
+     * @apiSuccess (goods_list) {Int} goods_type 商品类型
+     * @apiSuccess (goods_list) {String} subtitle 商品标题
+     * @apiSuccess (goods_list) {Array} attr 属性列表
+     * @apiSuccess (goods_list) {Float} rebate 单品返利
+     * @apiSuccess (goods_list) {Int} integral 赠送积分
+     * @apiSuccess (goods_list) {Int} buySum 购买数量
+     * @apiSampleRequest /index/order/createIntegralSettlement
+     * @author rzc
+     */
+    public function createIntegralSettlement(){
+        $apiName       = classBasename($this) . '/' . __function__;
+        $conId         = trim($this->request->post('con_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $userAddressId = trim($this->request->post('user_address_id'));
+        if (!is_array($skuIdList)) {
+            $skuIdList = explode(',', $skuIdList);
+        }
+        if (empty($skuIdList)) {
+            return ['code' => '3001'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        $userAddressId = empty($userAddressId) ? 0 : $userAddressId;
+        if (!is_numeric($userAddressId)) {
+            return ['code' => '3003'];
+        }
+        $result       = $this->app->order->createIntegralSettlement($conId, $skuIdList, intval($userAddressId));
+        $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId], $result['code'], $conId);
+        return $result;
+    }
 }

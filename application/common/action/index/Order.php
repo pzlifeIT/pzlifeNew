@@ -2531,5 +2531,36 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
     }
+
+    public function createIntegralSettlement($conId, $skuIdList, $userAddressId){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        if ($this->checkCart($skuIdList, $uid) === false) {
+            return ['code' => '3005']; //商品未加入购物车
+        }
+        $cityId           = 0;
+        $defaultAddressId = 0;
+        if (!empty($userAddressId)) {
+            $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+            $cityId           = $userAddress['city_id'] ?? 0;
+            $defaultAddressId = $userAddress['id'] ?? 0;
+        }
+        if (empty($defaultAddressId)) { //没有地址返回默认地址id
+            $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 1], true);
+            if (empty($defaultAddress)) {
+                $defaultAddress = DbUser::getUserAddress('id,city_id', ['uid' => $uid, 'default' => 2], true, 'id desc');
+            }
+            $defaultAddressId = $defaultAddress['id'] ?? 0;
+            $cityId           = $defaultAddress['city_id'] ?? 0;
+        }
+        $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
+        // $user_identity = $balance['user_identity'];
+        $integral = $balance['integral'] ?? 0;
+
+    }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
+
+// \u3010\u5b9d\u6d01\u4e2d\u56fd\u3011\u98ce\u500d\u6e05\u53bb\u5473\u9664\u83cc\u55b7\u96fe~\u61d2\u4eba\u6e05\u6d01\u795e\u5668\uff0c\u4e00\u55b7\u6e05\u65b0\uff01\u4ed8\u51e0\u5957\u9001\u51e0\u5957\uff0c\u9650\u91cf\u9001\u52a0\u6e7f\u5668 http://weu.me/_4BbkA \u56deQX\u9000\u8ba2
