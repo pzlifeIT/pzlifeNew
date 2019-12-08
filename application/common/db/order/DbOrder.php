@@ -121,8 +121,11 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where, $row = false) {
+    public function getOrderChild($field, $where, $row = false, $distinct = false) {
         $obj = OrderChild::field($field)->where($where);
+        if ($distinct === true) {
+            $obj = $obj->distinct(true);
+        }
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
         }
@@ -374,8 +377,8 @@ class DbOrder {
         }
         return $result;
     }
-
-    /** 
+    
+    /**
      * @param $where
      * @param $field
      * @param bool $row
@@ -405,6 +408,15 @@ class DbOrder {
         $OrderGoodsSheet = new OrderGoodsSheet;
         return $OrderGoodsSheet->save($data,['id' => $id]);
     }
+    public function getDeliveryOrderDetail($where, $field, $limit, $orderBy) {
+        return Db::table('pz_orders')
+            ->field($field)
+            ->alias('o')
+            ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
+            ->join(['pz_order_goods' => 'og'], 'oc.id=og.order_child_id')
+            ->where($where)->order($orderBy)->limit($limit)->select();
+    }
+
 }
 
 

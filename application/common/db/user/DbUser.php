@@ -735,7 +735,6 @@ class DbUser {
         }
         return $price[0]['price'];
     }
-    
     public function getAirplanePassenger($where, $field, $row = false, $orderBy = '', $limit = ''){
         $obj = AirplanePassenger::field($field)->where($where);
         return getResult($obj, $row, $orderBy, $limit);

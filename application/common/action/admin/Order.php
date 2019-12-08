@@ -29,7 +29,7 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '') {
+    public function getOrderList($page, $pagenum, $order_status = '', $order_no = '', $nick_name = '', $supplier_id = 0, $start_time = 0, $end_time = 0) {
         $offset = ($page - 1) * $pagenum;
         if ($offset < 0) {
             return ['code' => 3000];
@@ -49,7 +49,23 @@ class Order extends CommonIndex {
             }
             array_push($where, ['uid', 'in',$uid]);
         }
+        if ($start_time) {
+            array_push($where, ['create_time', '>=',$start_time]);
+        }
+        if ($end_time) {
+            array_push($where, ['create_time', '<=',$end_time]);
+        }
         $field     = 'id,uid,order_no,order_status,order_money,deduction_money,pay_money,goods_money,discount_money,pay_type,third_money,third_pay_type';
+        if ($supplier_id) {
+            $order_ids = DbOrder::getOrderChild('order_id',['supplier_id' => $supplier_id], false, true);
+            if (!empty($order_ids)) {
+                // $new_order_ids = array_column($order_ids,'order_id');
+                array_push($where, ['id', 'in', array_column($order_ids,'order_id')]);
+            } else {
+                return ['code' => 200, 'totle' => 0, 'order_list' => []];
+            }
+        }
+        // print_r($where);die;
         $orderList = DbOrder::getOrder($field, $where, false,$offset . ',' . $pagenum);
         // dump( Db::getLastSql());die;
         if (empty($orderList)) {
@@ -547,7 +563,6 @@ class Order extends CommonIndex {
         }
         return ['code' => '200', 'order_num' => $all_order_num, 'all_goods_num' => $all_goods_num, 'all_goods_price' => $all_goods_price];
     }
-    
     public function getOrderSheet($orderNo, $goods_id = 0){
         $where = ['order_no' => $orderNo];
         $row = false;
@@ -601,5 +616,37 @@ class Order extends CommonIndex {
             Db::rollback();
             return ['code' => '3005'];//领取失败
         }
+    }
+    
+    public function exportDeliveryOrder($sup_id, $order_type, $order_status, $page, $pagenum){
+        $where = [];
+        if ($sup_id) {
+            array_push($where,['sup_id', '=', $sup_id]);
+        }
+        array_push($where,['order_type', '=', $order_type]);
+        array_push($where,['order_status', '=', $order_status]);
+        $offset = ($page - 1) * $pagenum;
+        $result = DbOrder::getDeliveryOrderDetail($where, 'order_no,linkman,linkphone,province_id,city_id,area_id,address,message,supplier_id,supplier_name,goods_name,goods_num,sku_json', $offset.','.$pagenum, ['sup_id' => 'asc']);
+        foreach ($result as $key => $value) {
+            $result[$key]['address'] = '';
+            if ($value['province_id']) {
+                $value['province_name'] = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
+                $result[$key]['address'] .= $value['province_name'];
+            }
+            if ($value['city_id']) {
+                $value['city_name'] = DbProvinces::getAreaOne('*', ['id' => $value['city_id'], 'level' => 2])['area_name'];
+                $result[$key]['address'] .= $value['city_name'];
+            }
+            if ($value['area_id']) {
+                $value['area_name'] = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
+                $result[$key]['address'] .= $value['area_name'];
+            }
+            $result[$key]['sku_json'] = join(',',json_decode($value['sku_json'],true));
+            unset($result[$key]['province_id']);
+            unset($result[$key]['city_id']);
+            unset($result[$key]['area_id']);
+            $result[$key]['address'] .= $value['address'];
+        }
+        return ['code' => '200', 'result' => $result];
     }
 }

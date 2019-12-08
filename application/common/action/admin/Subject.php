@@ -19,7 +19,7 @@ class Subject extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addSubject(int $pid, int $status, $subject, $image, $share_image) {
+    public function addSubject(int $pid, int $status, $subject, $image, $share_image, int $is_integral_show) {
         $tier = 1;
         if (!empty($pid)) {//pid不为0
             $parentSubject = DbGoods::getSubject(['id' => $pid], 'id,pid', true);//获取上级专题
@@ -40,6 +40,7 @@ class Subject extends CommonIndex {
             "subject" => $subject,
             "tier"    => $tier,
             "status"  => $status,
+            "is_integral_show"  => $is_integral_show,
         ];
         $logImage = [];
         if (!empty($image)) {
@@ -89,7 +90,7 @@ class Subject extends CommonIndex {
      * @param $orderBy
      * @return array
      */
-    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0, $share_image = '') {
+    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0, $share_image = '', int $is_integral_show) {
         if (empty($subject) && empty($status) && empty($image) && empty($orderBy)) {
             return ['code' => '3007'];
         }
@@ -109,6 +110,9 @@ class Subject extends CommonIndex {
         }
         if (!empty($orderBy)) {
             $data['order_by'] = $orderBy;
+        }
+        if (!empty($is_integral_show)) {
+            $data['is_integral_show'] = $is_integral_show;
         }
         $logImage        = [];
         $oldLogImage     = [];
@@ -197,7 +201,7 @@ class Subject extends CommonIndex {
      */
     public function getAllSubject(int $stype) {
         $where       = [];
-        $field       = 'id,pid,subject,status,tier,order_by';
+        $field       = 'id,pid,subject,status,tier,order_by,is_integral_show';
         $selectImage = true;
         if ($stype == 2) {
             $field       = 'id,pid,subject';
@@ -319,8 +323,9 @@ class Subject extends CommonIndex {
 
     public function getSubjectDetail(int $subjectId) {
         $where       = ['id' => $subjectId];
-        $field       = 'id,pid,subject,status,tier,order_by';
+        $field       = 'id,pid,subject,status,tier,order_by,is_integral_show';
         $subjectList = DbGoods::getSubject($where, $field, true, true);
+        // print_r($subjectList);die;
         if (empty($subjectList)) {
             return ['code' => '3000'];
         }

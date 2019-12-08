@@ -66,7 +66,7 @@ class Goods extends CommonIndex {
         if (!empty($goodsType)) {
             array_push($where, ['pz_goods.goods_type', '=', $goodsType]);
         }
-        $field      = "id,image,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,status";
+        $field      = "id,image,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,status,is_integral_sale";
         $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum, 'id desc');
         $total      = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
@@ -105,10 +105,13 @@ class Goods extends CommonIndex {
         if (empty($supplier)) {//供应商id不存在
             return ['code' => '3008'];
         }
-        $goods_sheet = DbGoods::getSheet(['id' => $data['goods_sheet']],'id',true);
-        if (empty($goods_sheet)){
-            return ['code' => '3013'];
+        if ($data['goods_sheet']) {
+            $goods_sheet = DbGoods::getSheet(['id' => $data['goods_sheet']],'id',true);
+            if (empty($goods_sheet)){
+                return ['code' => '3013'];
+            }
         }
+
         $logImage = [];
         $logShareImage = [];
         if (!empty($goodsId)) {//更新操作
@@ -610,7 +613,7 @@ class Goods extends CommonIndex {
 //        }
 
 
-        $result = DbGoods::getSku(['id' => $skuId, 'status' => 1], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image');
+        $result = DbGoods::getSku(['id' => $skuId, 'status' => 1], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image,integral_sale_stock');
         if (empty($result)) {
             return ['code' => '3000'];
         }
@@ -629,7 +632,7 @@ class Goods extends CommonIndex {
     public function getOneGoods($id, $getType, $goodsType) {
         //根据商品id找到商品表里面的基本数据
         $where    = [["id", "=", $id]];
-        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image,goods_sheet,giving_rights";
+        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image,giving_rights,goods_sheet,is_integral_sale";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != $goodsType) {
             return ['code' => '3005'];//该商品不属于这个类型
@@ -684,7 +687,7 @@ class Goods extends CommonIndex {
         if (in_array(4, $getType)) {
             if ($goodsType == 1) {
                 $where = [["goods_id", "=", $id], ['status', '=', 1]];
-                $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image";
+                $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image,integral_sale_stock";
                 $sku   = DbGoods::getSku($where, $field);
             }
             if ($goodsType == 2) {
@@ -1366,7 +1369,7 @@ class Goods extends CommonIndex {
                 'create_time' => time(),
             ],
             [
-                'name' => 'house_property_copies ',
+                'name' => 'house_property_copies',
                 'title' => '房产证复印件',
                 'type' => '7',
                 'create_time' => time(),

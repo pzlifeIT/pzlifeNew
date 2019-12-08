@@ -2868,31 +2868,6 @@ class User extends CommonIndex {
         return ['code' => '200', 'all_price' => $all_price, 'own_price' => $own_price, 'vip_price' => $vip_price, 'dimondvip_price' => $dimondvip_price, 'other_price' => $other_price, 'businessmoney' => $result];
     }
 
-    /**
-     * @param $conId
-     * @return array
-     * @author rzc
-     */
-    public function getUserBusinessMoneyTotal($conId) {
-        $uid = $this->getUidByConId($conId);
-        if (empty($uid)) { //用户不存在
-            return ['code' => '3004'];
-        }
-        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
-        if (empty($userInfo)) {
-            return ['code' => '3000'];
-        }
-        if ($userInfo['user_identity'] != 3) {
-            return ['code' => '3005'];
-        }
-
-        //不可总收益
-        $no_price = DbUser::sumLogBonus([['layer', 'in', '3,4,5'], ['to_uid', '=', $uid]], 'result_price');
-        //可分佣总收益
-        $can_price = DbUser::sumLogBonus([['layer', 'in', '1,2'], ['to_uid', '=', $uid]], 'result_price');
-        return ['code' => '200', 'no_price' => $no_price, 'can_price' => $can_price];
-    }
-
     public function getAirplanePassenger($conId, $page, $pageNum){
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) { //用户不存在
@@ -2960,5 +2935,30 @@ class User extends CommonIndex {
             Db::rollback();
             return ['code' => '3006'];//领取失败
         }
+    }
+    /**
+     * @param $conId
+     * @return array
+     * @author rzc
+     */
+    public function getUserBusinessMoneyTotal($conId) {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) { //用户不存在
+            return ['code' => '3004'];
+        }
+
+        $userInfo = DbUser::getUserInfo(['id' => $uid], 'id,user_identity,user_market', true);
+        if (empty($userInfo)) {
+            return ['code' => '3000'];
+        }
+        if ($userInfo['user_identity'] != 3) {
+            return ['code' => '3005'];
+        }
+
+        //不可总收益
+        $no_price = DbUser::sumLogBonus([['layer', 'in', '3,4,5'], ['to_uid', '=', $uid]], 'result_price');
+        //可分佣总收益
+        $can_price = DbUser::sumLogBonus([['layer', 'in', '1,2'], ['to_uid', '=', $uid]], 'result_price');
+        return ['code' => '200', 'no_price' => $no_price, 'can_price' => $can_price];
     }
 }
