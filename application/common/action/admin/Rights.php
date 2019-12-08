@@ -242,7 +242,9 @@ class Rights extends CommonIndex {
         // print_r($status);die;
         try {
             if ($status == 3) {
+                //被邀请人信息
                 $target_user      = DbUser::getUserOne(['id' => $shopapply['target_uid']], 'id,mobile,commission');
+                //被邀请人关系
                 $userRelationList = DbUser::getUserRelation([['relation', 'like', '%,' . $target_user['id'] . ',%']], 'id,relation');
                 $userRelationData = [];
                 $bossId           = $this->getBoss($target_user['id']);
@@ -266,13 +268,16 @@ class Rights extends CommonIndex {
                 ];
                 $refe_user = DbUser::getUserOne(['id' => $shopapply['refe_uid']], 'user_market,commission');
                 $cost      = 0;
+                $refe_relation = $this->getRelation($shopapply['target_uid'])['relation'];
+                $refe_relation = explode(',', $refe_relation);
+                $re_boss_id = $this->getPrentBoss($refe_relation);
                 if ($shopapply['refe_identity'] == 2) {
                     $cost = 3500;
 
-                    //上级奖励任务
-                    $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
-                    $refe_relation = explode(',', $refe_relation);
-                    $re_boss_id = $this->getPrentBoss($refe_relation);
+                    //给邀请人上级奖励任务
+                    // $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
+                    //给本人合伙人
+                    
                     if ($re_boss_id) {
                         $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
                         if (!empty($rela_user) && $rela_user['user_market'] > 2) {
@@ -328,9 +333,23 @@ class Rights extends CommonIndex {
                         }
                     }
                 } else if ($shopapply['refe_identity'] == 4) {
-                    $cost = 4000;
+                    if ($re_boss_id == $shopapply['refe_uid']) {
+                        $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                        if (!empty($rela_user) && $rela_user['user_market'] = 3) {
+                            $cost = 4000;
+                        }
+                    } else {
+                        $cost = 3500;
+                    }
                 } else if ($shopapply['refe_identity'] == 5) {
-                    $cost = 5000;
+                    if ($re_boss_id == $shopapply['refe_uid']) {
+                        $rela_user = DbUser::getUserInfo(['id' => $re_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                        if (!empty($rela_user) && $rela_user['user_market'] = 3) {
+                            $cost = 5000;
+                        }
+                    } else {
+                        $cost = 3500;
+                    }
                 }
                 if ($cost) {
                     $tradingData = [
@@ -376,7 +395,47 @@ class Rights extends CommonIndex {
                         'bonus'         => $cost,
                     ];
                     DbRights::addTaskInvited($res_task_invited);
-    
+                    if ($cost == 3500) {
+                        //查询推广人关系
+                        $refe_relation = $this->getRelation($shopapply['refe_uid'])['relation'];
+                        $refe_relation = explode(',', $refe_relation);
+                        $refe_boss_id = $this->getPrentBoss($refe_relation);
+                        //推广经理总监提成
+                        $refe_puser = DbUser::getUserInfo(['id' => $refe_boss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                        if ($shopapply['refe_identity'] == 2 && $refe_boss_id != $re_boss_id && $refe_puser['user_market'] > 2) {
+                            // echo 1;die;
+                            $refe_cost = $cost * 0.15;
+                            $refe_tradingData = [
+                                'uid'          => $refe_boss_id,
+                                'trading_type' => 2,
+                                'change_type'  => 13,
+                                'money'        => $cost,
+                                'befor_money'  => $refe_puser['commission'],
+                                'after_money'  => bcadd($refe_puser['commission'], $refe_cost, 2),
+                                'message'      => '推广合伙人奖励',
+                            ];
+                            DbOrder::addLogTrading($refe_tradingData); //写佣金明细
+                        } 
+                        if ($refe_user['user_market'] > 2) {
+                            $refe_pboss_id = $refe_relation[0];
+                            $refe_pboss = DbUser::getUserInfo(['id' => $refe_pboss_id], 'id,user_identity,nick_name,user_market,commission', true);
+                            // print_r($refe_pboss);die;
+                            if ($refe_pboss['user_market'] > 2){
+                                $refe_cost = $cost * 0.15;
+                                $refe_tradingData = [
+                                    'uid'          => $refe_pboss_id,
+                                    'trading_type' => 2,
+                                    'change_type'  => 13,
+                                    'money'        => $cost,
+                                    'befor_money'  => $refe_pboss['commission'],
+                                    'after_money'  => bcadd($refe_pboss['commission'], $refe_cost, 2),
+                                    'message'      => '推广合伙人奖励',
+                                ];
+                                DbOrder::addLogTrading($refe_tradingData); //写佣金明细
+                            }
+                        }
+
+                    }
                 }
 
                 //查询是否有未结算的临时升级市场经理任务和升级合伙人任务

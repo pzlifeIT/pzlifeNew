@@ -821,7 +821,7 @@ class Order extends MyController {
         $result = $this->app->order->getOrderSheet($orderNo, $goods_id);
         return $result;
     }
-    /**
+    /** 
      * @api              {post} / 获取凑单商品
      * @apiDescription   getAddOnItems
      * @apiGroup         index_order

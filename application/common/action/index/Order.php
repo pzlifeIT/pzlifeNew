@@ -1892,7 +1892,6 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
     }
-    
     /**
      * 查询订单商品是否有表格
      * @param $orderNo
@@ -2059,7 +2058,7 @@ class Order extends CommonIndex {
         }
         return ['code' => '200', 'fromList' => $result];
     }
-
+    
     public function getAddOnItems($conId, $supplier_id, $skuIdList, $userAddressId, $page, $pageNum){
         $offset = ($page - 1) * $pageNum;
         $limit = ' LIMIT '.$offset.','.$pageNum;

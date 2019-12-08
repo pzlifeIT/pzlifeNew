@@ -563,6 +563,7 @@ class Order extends CommonIndex {
         }
         return ['code' => '200', 'order_num' => $all_order_num, 'all_goods_num' => $all_goods_num, 'all_goods_price' => $all_goods_price];
     }
+    
     public function getOrderSheet($orderNo, $goods_id = 0){
         $where = ['order_no' => $orderNo];
         $row = false;

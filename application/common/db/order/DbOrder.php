@@ -377,8 +377,8 @@ class DbOrder {
         }
         return $result;
     }
-    
-    /**
+
+    /** 
      * @param $where
      * @param $field
      * @param bool $row

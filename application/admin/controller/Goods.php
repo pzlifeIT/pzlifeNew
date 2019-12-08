@@ -120,8 +120,6 @@ class Goods extends AdminController {
         $targetUsers    = trim($this->request->post('target_users')); //适用人群
         $subtitle       = trim($this->request->post('subtitle')); //标题
         $image          = trim($this->request->post('image')); //商品标题图
-        $share_image    = trim($this->request->post('share_image')); //商品标题图
-        $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
         $share_image    = trim($this->request->post('share_image')); //商品分享图片
         $sheet_id       = trim($this->request->post('sheet_id')); //商品分享图片
         $is_integral_sale       = trim($this->request->post('is_integral_sale')); //商品分享图片
@@ -273,6 +271,13 @@ class Goods extends AdminController {
         // if (!empty($sheet_id)){
         $data['goods_sheet'] = intval($sheet_id);
         // }
+        // if (!empty($sheet_id)){
+            // $data['goods_sheet'] = intval($sheet_id);
+            // }
+        if ($goodsType == 2 && $giving_rights != 1) {
+            return ['code' => '3015'];
+        }
+        
         //调用方法存商品表
         // print_r($data);die;
         if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1,2])) {
