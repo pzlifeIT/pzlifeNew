@@ -2515,7 +2515,7 @@ class Order extends CommonIndex {
             DbGoods::decStock($stockSku);
             DbUser::modifyIntegral($uid, $integralMoney, 'dec');
             if (!empty($tradingData)) {
-                DbOrder::saveLogInvest($tradingData);
+                DbUser::saveLogInvest($tradingData);
             }
             if (!empty($userCouponId)) {
                 DbCoupon::updateUserCoupon([
@@ -2531,7 +2531,7 @@ class Order extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
-            exception($e);
+            // exception($e);
             Db::rollback();
             return ['code' => '3009'];
         }
