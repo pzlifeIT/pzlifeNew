@@ -2425,7 +2425,7 @@ class Order extends CommonIndex {
         $goods = $summary['goods_list'][0];
         $from_uid = $buid;
         $orderGoodsData = [];
-        // print_r($goods);die;
+        print_r($goodsSku);die;
         foreach ($goods as $kgl => $gl) {
            
                 $goodsData = [
