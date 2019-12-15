@@ -2425,7 +2425,7 @@ class Order extends CommonIndex {
         $goods = $summary['goods_list'][0];
         $from_uid = $buid;
         $orderGoodsData = [];
-        print_r($goodsSku);die;
+        // print_r($goodsSku);die;
         foreach ($goods as $kgl => $gl) {
            
                 $goodsData = [
@@ -2441,7 +2441,7 @@ class Order extends CommonIndex {
                 array_push($orderGoodsData, $goodsData);
            
         }
-        $supplierId   = $goodsSku['supplier_id']; //供应商id
+        $supplierId   = $goodsSku['goods']['supplier_id']; //供应商id
         $supplier = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
         $supplierData         = [];
         foreach ($supplier as $sval) {
