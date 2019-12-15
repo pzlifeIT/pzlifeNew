@@ -871,6 +871,35 @@ class Goods extends AdminController {
     }
 
     /**
+     * @api              {post} / 积分商城上下架
+     * @apiDescription   upDownGoods
+     * @apiGroup         admin_goods
+     * @apiName          upDownGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 商品id
+     * @apiParam (入参) {Number} is_integral_sale 是否积分售卖:1,默认不售卖;2,售卖
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:商品不存在 / 3002:参数必须是数字 / 3003:没有可售库存 / 3004:请填写零售价 / 3005:请填写成本价 / 3006:没有详情图 / 3007:没有轮播图 /3008:上下架失败/ 3009:请选择分类
+     * @apiSampleRequest /admin/goods/updowngoods
+     * @author wujunjie
+     * 2019/1/8-10:13
+     */
+    public function upDownIntegralGoods() {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $id   = trim(input("post.id"));
+        $is_integral_sale = trim(input("post.is_integral_sale"));
+        if (!is_numeric($id) || !is_numeric($is_integral_sale)) {
+            return ["code" => '3002'];
+        }
+        $result = $this->app->goods->upDownIntegralGoods(intval($id), intval($is_integral_sale));
+        $this->apiLog($apiName, [$cmsConId, $id, $is_integral_sale], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
      * @api              {post} / 获取表格内容选项
      * @apiDescription   getSheetOption
      * @apiGroup         admin_goods

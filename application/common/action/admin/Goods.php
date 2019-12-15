@@ -986,6 +986,155 @@ class Goods extends CommonIndex {
     }
 
     /**
+     * 上下架
+     * @param $id
+     * @param $type 1.上架 ,2.下架
+     * @return array
+     * @author zyr
+     * 2019/1/8-10:13
+     */
+    public function upDownIntegralGoods(int $id, int $is_integral_sale) {
+        //判断传过来的id是否有效
+        $where     = [["id", "=", $id]];
+        $field     = "goods_name,cate_id,goods_type";
+        $res       = DbGoods::getOneGoods($where, $field);
+        $labelName = $res['goods_name'];
+        if (empty($res)) {
+            return ["code" => '3001'];
+        }
+        if (empty($res['cate_id'])) {
+            return ['code' => '3009'];
+        }
+        $labelGoodsRelation    = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id');//该商品的所有标签
+        $labelGoodsRelationId  = array_column($labelGoodsRelation, 'label_lib_id');
+        $labelGoodsRelation2   = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他已上架的商品
+            ['gr.label_lib_id', 'in', $labelGoodsRelationId],
+            ['gr.goods_id', '<>', $id],
+            ['g.status', '=', '1'],
+        ], 'gr.label_lib_id');
+        $labelGoodsRelationId2 = empty($labelGoodsRelation2) ? [] : array_column($labelGoodsRelation2, 'label_lib_id');
+        $labelRelationId       = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
+        if ($is_integral_sale == 1) {// 上架
+            $stockAll = 0;
+            $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            foreach ($sku as $s) {
+                $stockAll = bcadd($stockAll, $s['stock'], 2);
+                if ($s['stock'] > 0) {
+                    if ($s['retail_price'] == 0) {
+                        return ['code' => '3004'];//请填写零售价
+                    }
+                    if ($s['cost_price'] == 0) {
+                        return ['code' => '3005'];//请填写成本价
+                    }
+                }
+            }
+            if ($res['goods_type'] == 1) {
+                if ($stockAll <= 0) {
+                    return ['code' => '3003'];//没有可售库存
+                }
+            }
+            //1.详情图 2.轮播图
+            $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
+            $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
+            if (!in_array(1, $goodsImageType)) {//没有详情图
+                return ['code' => '3006'];
+            }
+            if (!in_array(2, $goodsImageType)) {//没有轮播图
+                return ['code' => '3007'];
+            }
+        } else {
+            $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
+            $source_type         = [1, 2, 3, 4];
+            foreach ($source_type as $st) {
+                $key = $redisGoodsDetailKey . ':' . $st;
+                $this->redis->del($key);
+            }
+            foreach ($labelRelationId as $lri) {
+                $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name', true);
+                $transList = $this->getTransformPinyin($labelLib['label_name']);
+                $delFlag   = false;
+                foreach ($transList as $tlk => $tl) {
+                    $labelKey = $this->redis->hGet($this->transformRedisKey, $tl);
+                    if ($labelKey === false) {
+                        continue;
+                    }
+                    $labelLibraryIdList = json_decode($labelKey, true);
+                    if (!in_array($lri, $labelLibraryIdList)) {
+                        continue;
+                    }
+                    $indexKey = array_search($lri, $labelLibraryIdList);
+                    if ($indexKey === false) {
+                        continue;
+                    }
+                    array_splice($labelLibraryIdList, $indexKey, 1);
+                    if (!empty($labelLibraryIdList)) {
+                        $this->redis->hSet($this->transformRedisKey, $tl, json_encode($labelLibraryIdList));
+                    } else {
+                        $this->redis->hDel($this->transformRedisKey, $tl);
+                        $delFlag = true;
+                    }
+                }
+                if ($delFlag === true) {
+//                    $this->redis->zDelete($this->labelLibraryHeatRedisKey, $lri);
+                    $this->redis->hDel($this->labelLibraryRedisKey, $lri);
+                }
+            }
+        }
+        $data       = [//修改状态
+            "is_integral_sale" => $is_integral_sale
+        ];
+        $flag       = false;
+        $labelLibId = 0;
+        Db::startTrans();
+        try {
+            DbGoods::editGoods($data, $id);
+            if ($is_integral_sale == 1) {
+                $labelRelationFlag = true;
+                $labelLib          = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
+                if (!empty($labelLib)) { //标签库有该标签
+                    $labelLibId         = $labelLib['id'];
+                    $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelLibId, 'goods_id' => $id], 'id', true);
+                    if (!empty($labelGoodsRelation)) { //标签已关联该商品
+                        $labelRelationFlag = false;
+                    }
+                }
+                if (empty($labelLibId)) { //标签库没有就添加
+                    $labelLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
+                    $flag       = true;
+                } else {
+                    if ($labelRelationFlag === true) {
+                        DbLabel::modifyHeat($labelLibId);
+                    }
+                }
+                if ($labelRelationFlag === true) {
+                    DbLabel::addLabelGoodsRelation(['goods_id' => $id, 'label_lib_id' => $labelLibId]); //添加标签商品关联
+                }
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3008'];
+        }
+        if ($is_integral_sale == 1) {
+            if (!empty($labelRelationId)) {
+                foreach ($labelRelationId as $lri) {
+                    $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name,the_heat', true);
+                    $transList = $this->getTransformPinyin($labelLib['label_name']);
+                    $this->setTransform($transList, $lri);
+                    $this->setLabelLibrary($lri, $labelLib['label_name']);
+                    $this->redis->zAdd($this->labelLibraryHeatRedisKey, $labelLib['the_heat'], $lri);
+                }
+            }
+            if ($flag === true) {
+                $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
+                $this->setLabelLibrary($labelLibId, $labelName);
+                $this->setLabelHeat($labelLibId, true);//执行zAdd
+            }
+        }
+        return ["msg" => '成功', "code" => '200'];
+    }
+
+    /**
      * 验证规格属性和商品是否存在
      * @param $attrId
      * @param $goodsId
