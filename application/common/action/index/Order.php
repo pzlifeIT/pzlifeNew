@@ -2531,6 +2531,7 @@ class Order extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3009'];
         }
