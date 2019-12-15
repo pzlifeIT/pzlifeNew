@@ -2435,7 +2435,7 @@ class Order extends CommonIndex {
                     'sup_id'       => $goods['goods']['supplier_id'],
                     'boss_uid'     => $buid,
                     'goods_price'  => $goods['integral_price'],
-                    'goods_num'    => 1,
+                    'goods_num'    => $num,
                     'sku_json'     => json_encode($goods['attr']),
                 ];
                 array_push($orderGoodsData, $goodsData);
@@ -2494,7 +2494,7 @@ class Order extends CommonIndex {
             'from_uid'        => $from_uid,
             'pay_time'        => $isPay ? time() : 0,
         ];
-        $stockSku = [$skuId => $goods['buySum']];
+        $stockSku = [$skuId => $num];
         Db::startTrans();
         try {
             $orderId = DbOrder::addOrder($orderData);
