@@ -90,8 +90,8 @@ class Subject extends CommonIndex {
      * @param $orderBy
      * @return array
      */
-    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0, $share_image = '', int $is_integral_show) {
-        if (empty($subject) && empty($status) && empty($image) && empty($orderBy)) {
+    public function editSubject(int $id, int $status = 0, $subject = '', $image = '', $orderBy = 0, $share_image = '', int $is_integral_show = 0) {
+        if (empty($subject) && empty($status) && empty($image) && empty($orderBy) && empty($is_integral_show)) {
             return ['code' => '3007'];
         }
         $subjectRow = DbGoods::getSubject(['id' => $id], 'id,pid,tier', true);//获取上级专题
