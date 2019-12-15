@@ -2430,11 +2430,11 @@ class Order extends CommonIndex {
            
                 $goodsData = [
                     'goods_id'     => $goods['goods_id'],
-                    'goods_name'   => $goods['goods_name'],
+                    'goods_name'   => $goods['goods']['goods_name'],
                     'sku_id'       => $goods['id'],
-                    'sup_id'       => $goods['supplier_id'],
+                    'sup_id'       => $goods['goods']['supplier_id'],
                     'boss_uid'     => $buid,
-                    'goods_price'  => $goods['retail_price'],
+                    'goods_price'  => $goods['integral_price'],
                     'goods_num'    => 1,
                     'sku_json'     => json_encode($goods['attr']),
                 ];
