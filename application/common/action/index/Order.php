@@ -2423,6 +2423,7 @@ class Order extends CommonIndex {
         $goods = $summary['goods_list'][0];
         $from_uid = $buid;
         $orderGoodsData = [];
+        print_r($goods);die;
         foreach ($goods['shopBuySum'] as $kgl => $gl) {
             for ($i = 0; $i < $gl; $i++) {
                 $goodsData = [
