@@ -2408,6 +2408,8 @@ class Order extends CommonIndex {
             return ['code' => '3004']; //商品下架
         }
         $goodsSku = $goodsSku[0];
+        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr']        = array_column($attr, 'attr_name');
         $summary['goods_list'][] = $goodsSku;
         $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
         if (empty($shopInfo)) {
@@ -2423,9 +2425,9 @@ class Order extends CommonIndex {
         $goods = $summary['goods_list'][0];
         $from_uid = $buid;
         $orderGoodsData = [];
-        print_r($goods);die;
-        foreach ($goods['shopBuySum'] as $kgl => $gl) {
-            for ($i = 0; $i < $gl; $i++) {
+        // print_r($goods);die;
+        foreach ($goods as $kgl => $gl) {
+           
                 $goodsData = [
                     'goods_id'     => $goods['goods_id'],
                     'goods_name'   => $goods['goods_name'],
@@ -2437,7 +2439,7 @@ class Order extends CommonIndex {
                     'sku_json'     => json_encode($goods['attr']),
                 ];
                 array_push($orderGoodsData, $goodsData);
-            }
+           
         }
         $supplierId   = $goodsSku['supplier_id']; //供应商id
         $supplier = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
@@ -2457,7 +2459,7 @@ class Order extends CommonIndex {
         $isPay          = true;
         $tradingData    = []; //交易日志
 
-        if ($payType == 3) { //商票支付
+        if ($payType == 3) { //积分支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'integral', true);
             $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
             $tradingData = [
@@ -2473,6 +2475,7 @@ class Order extends CommonIndex {
             'order_no'        => $orderNo,
             'third_order_id'  => 0,
             'uid'             => $uid,
+            'order_type'      => 5,
             'order_status'    => $isPay ? 4 : 1,
             'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
             'deduction_money' => $deductionMoney, //商票抵扣金额
