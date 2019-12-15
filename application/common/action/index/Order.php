@@ -21,6 +21,7 @@ class Order extends CommonIndex {
     public function __construct() {
         parent::__construct();
         $this->redisCartUserKey     = Config::get('rediskey.cart.redisCartUserKey');
+        $this->redisIntegralCartUserKey     = Config::get('rediskey.cart.redisIntegralCartUserKey');
         $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
@@ -2536,7 +2537,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        if ($this->checkCart($skuIdList, $uid) === false) {
+        if ($this->checkIntegralCart($skuIdList, $uid) === false) {
             return ['code' => '3005']; //商品未加入购物车
         }
         $cityId           = 0;
@@ -2558,6 +2559,29 @@ class Order extends CommonIndex {
         // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
 
+    }
+
+     /**
+     * 判断结算的商品是否已加入购物车
+     * @param $skuIdList
+     * @param $uid
+     * @return bool
+     * @author zyr
+     */
+    private function checkIntegralCart($skuIdList, $uid) {
+        if (!$this->redis->exists($this->redisIntegralCartUserKey . $uid)) {
+            return false;
+        }
+        $prefix   = $this->prefix;
+        $carts    = $this->redis->hKeys($this->redisIntegralCartUserKey . $uid);
+        $cartList = array_map(function ($v) use ($prefix) {
+            return str_replace($prefix, '', $v);
+        }, $carts);
+        $diff     = array_diff($skuIdList, $cartList);
+        if (empty($diff)) {
+            return true;
+        }
+        return false;
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
