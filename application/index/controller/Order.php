@@ -1006,7 +1006,7 @@ class Order extends MyController {
      * @apiParam (入参) {Number} [user_address_id] 用户选择的地址(user_address的id,不选地址暂不计算邮费)
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 /3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享
      * @apiSuccess (返回) {Int} goods_count 购买商品总数
-     * @apiSuccess (返回) {Float} total_goods_price 所有商品价格
+     * @apiSuccess (返回) {Float} total_goods_integral_price 所有商品总计兑换积分
      * @apiSuccess (返回) {Float} balance 账户的商券余额
      * @apiSuccess (返回) {Int} default_address_id 默认地址(0表示没有地址)
      * @apiSuccess (supplier_list) {Int} id 供应商id
@@ -1033,8 +1033,6 @@ class Order extends MyController {
      * @apiSuccess (goods_list) {Int} goods_type 商品类型
      * @apiSuccess (goods_list) {String} subtitle 商品标题
      * @apiSuccess (goods_list) {Array} attr 属性列表
-     * @apiSuccess (goods_list) {Float} rebate 单品返利
-     * @apiSuccess (goods_list) {Int} integral 赠送积分
      * @apiSuccess (goods_list) {Int} buySum 购买数量
      * @apiSampleRequest /index/order/createIntegralSettlement
      * @author rzc
@@ -1062,6 +1060,51 @@ class Order extends MyController {
         }
         $result       = $this->app->order->createIntegralSettlement($conId, $skuIdList, intval($userAddressId));
         $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId], $result['code'], $conId);
+        return $result;
+    }
+
+        /**
+     * @api              {post} / 积分商城创建订单
+     * @apiDescription   createIntegralOrder
+     * @apiGroup         index_order
+     * @apiName          createIntegralOrder
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} sku_id_list skuid列表
+     * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
+     * @apiParam (入参) {Number} pay_type 支付方式  3 积分支付
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3013:用户优惠券不可使用
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
+     * @apiSampleRequest /index/order/createIntegralOrder
+     * @author zyr
+     */
+    public function createIntegralOrder() {
+        $apiName       = classBasename($this) . '/' . __function__;
+        $conId         = trim($this->request->post('con_id'));
+        $skuIdList     = trim($this->request->post('sku_id_list'));
+        $userAddressId = trim($this->request->post('user_address_id'));
+        $payType       = trim($this->request->post('pay_type'));
+        $payTypeArr    = [3];
+        if (!is_array($skuIdList)) {
+            $skuIdList = explode(',', $skuIdList);
+        }
+        if (empty($skuIdList)) {
+            return ['code' => '3001'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3002'];
+        }
+        if (!is_numeric($userAddressId)) {
+            return ['code' => '3003'];
+        }
+        if (!in_array($payType, $payTypeArr)) {
+            return ['code' => '3008'];
+        }
+        $result       = $this->app->order->createIntegralOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
+        $this->apiLog($apiName, [$conId, $skuIdList, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
 }

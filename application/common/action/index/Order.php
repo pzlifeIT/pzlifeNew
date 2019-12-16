@@ -2,13 +2,13 @@
 
 namespace app\common\action\index;
 
+use app\facade\DbAudios;
 use app\facade\DbCoupon;
 use app\facade\DbGoods;
 use app\facade\DbOrder;
 use app\facade\DbProvinces;
 use app\facade\DbShops;
 use app\facade\DbUser;
-use app\facade\DbAudios;
 use Config;
 use function Qiniu\json_decode;
 use think\Db;
@@ -20,9 +20,9 @@ class Order extends CommonIndex {
 
     public function __construct() {
         parent::__construct();
-        $this->redisCartUserKey     = Config::get('rediskey.cart.redisCartUserKey');
-        $this->redisIntegralCartUserKey     = Config::get('rediskey.cart.redisIntegralCartUserKey');
-        $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
+        $this->redisCartUserKey         = Config::get('rediskey.cart.redisCartUserKey');
+        $this->redisIntegralCartUserKey = Config::get('rediskey.cart.redisIntegralCartUserKey');
+        $this->redisDeliverOrderKey     = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
     public function cancelOrder($orderNo, $conId = '', $uid = 0) {
@@ -42,7 +42,7 @@ class Order extends CommonIndex {
         $data          = [
             'order_status' => 2,
         ];
-        $tradingData   = [];
+        $tradingData = [];
         if ($order['deduction_money'] != 0) {
             $userInfo    = DbUser::getUserInfo(['id' => $uid], 'balance', true);
             $tradingData = [
@@ -99,20 +99,20 @@ class Order extends CommonIndex {
             $defaultAddressId = $defaultAddress['id'] ?? 0;
             $cityId           = $defaultAddress['city_id'] ?? 0;
         }
-        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $balance       = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
         $user_identity = $balance['user_identity'];
-        $balance = $balance['balance'] ?? 0;
-        $summary = $this->quickSummary($uid, $buid, $skuId, $num, $cityId, $userCouponId);
+        $balance       = $balance['balance'] ?? 0;
+        $summary       = $this->quickSummary($uid, $buid, $skuId, $num, $cityId, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
         }
         $target_users = $summary['goods_list'][0]['target_users']; //适用人群
         if ($user_identity < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
@@ -123,7 +123,7 @@ class Order extends CommonIndex {
         $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
         $supplierId   = $summary['goods_list'][0]['supplier_id']; //供应商id
         $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
-        $supplier = [];
+        $supplier     = [];
         foreach ($supplierList as $sl) {
             $glList = [];
             $sList  = []; //门店
@@ -190,20 +190,20 @@ class Order extends CommonIndex {
         if (empty($shopInfo)) {
             $buid = 1;
         }
-        $goods = $summary['goods_list'][0];
+        $goods        = $summary['goods_list'][0];
         $target_users = $goods['target_users']; //适用人群
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user         = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if ($user['user_identity'] < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
 
-        $from_uid = $buid;
+        $from_uid      = $buid;
         $giving_rights = $summary['giving_rights'];
 //        print_r($goods);die;
         $orderGoodsData = [];
@@ -356,36 +356,36 @@ class Order extends CommonIndex {
         } else {
             $shopId = $shopInfo['id'];
         }
-        $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
-        $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
-        $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
-        $goodsSku['target_users']  = $goodsSku['goods']['target_users'];
-        $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
-        $goodsSku['status']      = $goodsSku['goods']['status'];
-        $giving_rights           = $goodsSku['goods']['giving_rights'];
-        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
-        $goodsSku['attr']        = array_column($attr, 'attr_name');
+        $goodsSku['supplier_id']  = $goodsSku['goods']['supplier_id'];
+        $goodsSku['goods_name']   = $goodsSku['goods']['goods_name'];
+        $goodsSku['goods_type']   = $goodsSku['goods']['goods_type'];
+        $goodsSku['target_users'] = $goodsSku['goods']['target_users'];
+        $goodsSku['subtitle']     = $goodsSku['goods']['subtitle'];
+        $goodsSku['status']       = $goodsSku['goods']['status'];
+        $giving_rights            = $goodsSku['goods']['giving_rights'];
+        $attr                     = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr']         = array_column($attr, 'attr_name');
         unset($goodsSku['goods']);
         $goodsSku['buySum']     = $num;
         $goodsSku['shopBuySum'] = [$shopId => $num];
         $totalGoodsPrice        = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
-        $couponPrice = 0;
-        if (!empty($userCouponId)) {//有优惠券
+        $couponPrice            = 0;
+        if (!empty($userCouponId)) { //有优惠券
             $userCoupon = DbCoupon::getUserCoupon([
                 ['id', '=', $userCouponId],
                 ['uid', '=', $uid],
-                ['is_use', '=', 2],//未使用的
-                ['end_time', '>', time()],//未过期的
+                ['is_use', '=', 2], //未使用的
+                ['end_time', '>', time()], //未过期的
             ], 'id,price,gs_id,level', true);
             if (empty($userCoupon)) {
                 return ['code' => '3013'];
             }
-            if ($userCoupon['level'] == 1) {//单品券
+            if ($userCoupon['level'] == 1) { //单品券
                 if ($userCoupon['gs_id'] != $goodsSku['goods_id']) {
                     return ['code' => '3013'];
                 }
             }
-            if ($userCoupon['level'] == 2) {//专题券
+            if ($userCoupon['level'] == 2) { //专题券
                 $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
                 if (!in_array($goodsSku['goods_id'], $couponGoodsIdList)) {
@@ -394,7 +394,7 @@ class Order extends CommonIndex {
             }
             $couponPrice = $userCoupon['price'];
         }
-        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);//可分配利润
+        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']); //可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], $goodsSku['margin_price']);
         $freightPrice         = bcmul($goodsSku['retail_price'], $num, 2); //同一个供应商模版id的商品价格累加
@@ -496,13 +496,13 @@ class Order extends CommonIndex {
             $supplierList[$sl]['freight_status'] = 1;
             if (isset($summary['freight_supplier_price'][$sll['id']])) {
                 $supplierList[$sl]['freight_supplier_price'] = $summary['freight_supplier_price'][$sll['id']];
-                if ($summary['freight_supplier_price'][$sll['id']]>0){
+                if ($summary['freight_supplier_price'][$sll['id']] > 0) {
                     $supplierList[$sl]['freight_status'] = 2;
                 }
             }
             $supplierList[$sl]['freight_supplier_price_text'] = '';
-            
-            if (isset($summary['freight_supplier_price_text'][$sll['id']])){
+
+            if (isset($summary['freight_supplier_price_text'][$sll['id']])) {
                 $supplierList[$sl]['freight_supplier_price_text'] = $summary['freight_supplier_price_text'][$sll['id']];
             }
             foreach ($goodsList as $gl) {
@@ -518,50 +518,50 @@ class Order extends CommonIndex {
                     unset($gl['supplier_id']);
                     unset($gl['shopBuySum']);
                     $supplierList[$sl]['goods_list'][] = $gl;
-                    
+
                 }
             }
         }
         $supplier = $supplierList;
         // print_r($supplierList);die;
-   /*      foreach ($supplierList as $sl) {
-            $glList = [];
-            $sList  = []; //门店
-            foreach ($goodsList as $gl) {
-                if ($gl['supplier_id'] == $sl['id']) {
-                    unset($gl['freight_id']);
-                    unset($gl['cost_price']);
-                    unset($gl['margin_price']);
-                    unset($gl['weight']);
-                    unset($gl['volume']);
-                    unset($gl['spec']);
-                    unset($gl['status']);
-                    unset($gl['stock']);
-                    unset($gl['supplier_id']);
-                    unset($gl['buySum']);
-                    unset($gl['shopBuySum']);
-                    $glList[$gl['id']] = $gl;
-                    $shopKey           = array_keys($cart[$gl['id']]['track']);
-                    foreach ($shopKey as $s) {
-                        if (!isset($sList[$s])) {
-                            $sList[$s] = $shopList[$s];
-                        }
-                    }
-                }
-            }
-            foreach ($sList as $sk => $s) {
-                $ggList = [];
-                foreach ($glList as $kg => $g) {
-                    if (in_array($s['id'], array_keys($cart[$g['id']]['track']))) {
-                        $bSum        = $cart[$g['id']]['track'][$s['id']]; //店铺购买的数量
-                        $g['buySum'] = $bSum;
-                        $ggList[$kg] = $g;
-                    }
-                }
-                $sList[$sk]['goods_list'] = $ggList;
-            }
-            $sl['shop_list'] = $sList;
-            array_push($supplier, $sl);
+        /*      foreach ($supplierList as $sl) {
+        $glList = [];
+        $sList  = []; //门店
+        foreach ($goodsList as $gl) {
+        if ($gl['supplier_id'] == $sl['id']) {
+        unset($gl['freight_id']);
+        unset($gl['cost_price']);
+        unset($gl['margin_price']);
+        unset($gl['weight']);
+        unset($gl['volume']);
+        unset($gl['spec']);
+        unset($gl['status']);
+        unset($gl['stock']);
+        unset($gl['supplier_id']);
+        unset($gl['buySum']);
+        unset($gl['shopBuySum']);
+        $glList[$gl['id']] = $gl;
+        $shopKey           = array_keys($cart[$gl['id']]['track']);
+        foreach ($shopKey as $s) {
+        if (!isset($sList[$s])) {
+        $sList[$s] = $shopList[$s];
+        }
+        }
+        }
+        }
+        foreach ($sList as $sk => $s) {
+        $ggList = [];
+        foreach ($glList as $kg => $g) {
+        if (in_array($s['id'], array_keys($cart[$g['id']]['track']))) {
+        $bSum        = $cart[$g['id']]['track'][$s['id']]; //店铺购买的数量
+        $g['buySum'] = $bSum;
+        $ggList[$kg] = $g;
+        }
+        }
+        $sList[$sk]['goods_list'] = $ggList;
+        }
+        $sl['shop_list'] = $sList;
+        array_push($supplier, $sl);
         } */
         unset($summary['goods_list']);
         unset($summary['freight_supplier_price_text']);
@@ -613,8 +613,8 @@ class Order extends CommonIndex {
             }
         }
         $giving_rights = $summary['giving_rights'];
-        $cartShops = array_column($cart, 'shops'); //所有购买涉及的门店
-        $shops     = [];
+        $cartShops     = array_column($cart, 'shops'); //所有购买涉及的门店
+        $shops         = [];
         array_map(function ($value) use (&$shops) {
             $shops = array_merge($shops, array_values($value));
         }, $cartShops);
@@ -800,15 +800,15 @@ class Order extends CommonIndex {
         $goodsCount           = 0; //购买商品总数
         $totalFreightPrice    = 0; //总运费
         $freightSupplierPrice = []; //各个供应商的运费
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user                 = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         $giving_rights        = 1;
         foreach ($goodsSku as $value) {
             if ($user['user_identity'] < $value['goods']['target_users']) {
-                if ($value['goods']['target_users'] == 2){
+                if ($value['goods']['target_users'] == 2) {
                     return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-                }elseif ($value['goods']['target_users'] == 3){
+                } elseif ($value['goods']['target_users'] == 3) {
                     return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-                }elseif ($value['goods']['target_users'] == 4){
+                } elseif ($value['goods']['target_users'] == 4) {
                     return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
                 }
             }
@@ -839,38 +839,38 @@ class Order extends CommonIndex {
             $fWeight                             = bcmul($value['weight'], $cartSum, 2);
             $freightWeight[$value['freight_id']] = isset($freightWeight[$value['freight_id']]) ? bcadd($freightWeight[$value['freight_id']], $fWeight, 2) : $fWeight; //同一个供应商模版id的商品重量累加
             $fVolume                             = bcmul($value['volume'], $cartSum, 2);
-            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume;//同一个供应商模版id的商品体积累加
-            $distrProfits                        = getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']);//可分配利润
+            $freightVolume[$value['freight_id']] = isset($freightVolume[$value['freight_id']]) ? bcadd($freightVolume[$value['freight_id']], $fVolume, 2) : $fVolume; //同一个供应商模版id的商品体积累加
+            $distrProfits                        = getDistrProfits($value['retail_price'], $value['cost_price'], $value['margin_price']); //可分配利润
             $value['rebate']                     = $this->getRebate($distrProfits, $cartSum);
             $value['integral']                   = $this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price']);
             $rebateAll                           = bcadd($this->getRebate($distrProfits, $cartSum), $rebateAll, 2); //钻石再补贴
             //            $integralAll                         = bcadd($this->getIntegral($value['retail_price'], $value['cost_price'], $value['margin_price'], $cartSum));
             $totalGoodsPrice = bcadd(bcmul($value['retail_price'], $cartSum, 2), $totalGoodsPrice, 2); //商品总价
-            $goodsCount      += $cartSum;
+            $goodsCount += $cartSum;
             array_push($goodsList, $value);
         }
         $couponPrice = 0;
         $goodsIdList = array_unique(array_column($goodsList, 'goods_id'));
-        if (!empty($userCouponId)) {//有优惠券
+        if (!empty($userCouponId)) { //有优惠券
             $userCoupon = DbCoupon::getUserCoupon([
                 ['id', '=', $userCouponId],
                 ['uid', '=', $uid],
-                ['is_use', '=', 2],//未使用的
-                ['end_time', '>', time()],//未过期的
+                ['is_use', '=', 2], //未使用的
+                ['end_time', '>', time()], //未过期的
             ], 'id,price,gs_id,level', true);
             if (empty($userCoupon)) {
                 return ['code' => '3013'];
             }
-            if ($userCoupon['level'] == 1) {//单品券
+            if ($userCoupon['level'] == 1) { //单品券
                 if (!in_array($userCoupon['gs_id'], $goodsIdList)) {
                     return ['code' => '3013'];
                 }
             }
-            if ($userCoupon['level'] == 2) {//专题券
+            if ($userCoupon['level'] == 2) { //专题券
                 $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
                 $intersect         = array_intersect($couponGoodsIdList, $goodsIdList);
-                if (empty($intersect)) {//没有交集
+                if (empty($intersect)) { //没有交集
                     return ['code' => '3013'];
                 }
             }
@@ -896,40 +896,40 @@ class Order extends CommonIndex {
                 }
                 return ['code' => '3006', 'freightError' => $eGoodsList]; //商品不支持配送
             }
-            
+
             foreach ($freightList as $flk => $fl) {
                 // echo $fl['total_price'].'</br>';
                 // echo $freightPrice[$flk];
-                
+
                 if ($fl['total_price'] <= $freightPrice[$flk]) { //该供应商的当前运费模版下购买的总价超过包邮价可以包邮
-                    $addOnItems = $fl['total_price']-$freightPrice[$flk];
-                    $freightSupplierPriceText[$fl['supid']] = '再凑'.$addOnItems.'元可享受包邮';
-                    $freightSupplierPrice[$fl['supid']] = isset($freightSupplierPrice[$fl['supid']]) ? bcadd($freightSupplierPrice[$fl['supid']], 0, 0) : 0;
+                    $addOnItems                             = $fl['total_price'] - $freightPrice[$flk];
+                    $freightSupplierPriceText[$fl['supid']] = '再凑' . $addOnItems . '元可享受包邮';
+                    $freightSupplierPrice[$fl['supid']]     = isset($freightSupplierPrice[$fl['supid']]) ? bcadd($freightSupplierPrice[$fl['supid']], 0, 0) : 0;
                     continue;
                 }
                 $price = 0;
                 if ($fl['stype'] == 1) { //件数
                     if ($fl['unit_price'] > $freightCount[$flk]) { //购买件数超过当前模版的满件包邮条件可以包邮
-                        $price = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-                        $addOnItems = $freightCount[$flk]-$fl['unit_price'];
-                        if ($addOnItems){
-                            $freightSupplierPriceText[$fl['supid']] = '再凑'.$addOnItems.'件可享受包邮';
+                        $price      = bcadd(bcmul(bcsub($freightCount[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                        $addOnItems = $freightCount[$flk] - $fl['unit_price'];
+                        if ($addOnItems) {
+                            $freightSupplierPriceText[$fl['supid']] = '再凑' . $addOnItems . '件可享受包邮';
                         }
                     }
                 } else if ($fl['stype'] == 2) { //重量
                     if ($fl['unit_price'] > $freightWeight[$flk]) { //购买重量超过当前模版的满件包邮条件可以包邮
-                        $price = bcadd(bcmul(bcsub(ceil($freightWeight[$flk]), 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-                        $addOnItems = $freightWeight[$flk]-$fl['unit_price'];
-                        if ($addOnItems){
-                            $freightSupplierPriceText[$fl['supid']] = '再凑'.$addOnItems.'千克可享受包邮';
+                        $price      = bcadd(bcmul(bcsub(ceil($freightWeight[$flk]), 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                        $addOnItems = $freightWeight[$flk] - $fl['unit_price'];
+                        if ($addOnItems) {
+                            $freightSupplierPriceText[$fl['supid']] = '再凑' . $addOnItems . '千克可享受包邮';
                         }
                     }
                 } else if ($fl['stype'] == 3) { //体积
                     if ($fl['unit_price'] > $freightVolume[$flk]) { //购买件数超过当前模版的满件包邮条件可以包邮
-                        $price = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
-                        $addOnItems = $freightVolume[$flk]-$fl['unit_price'];
-                        if ($addOnItems){
-                            $freightSupplierPriceText[$fl['supid']] = '再凑'.$addOnItems.'立方米可享受包邮';
+                        $price      = bcadd(bcmul(bcsub($freightVolume[$flk], 1, 2), $fl['after_price'], 2), $fl['price'], 2);
+                        $addOnItems = $freightVolume[$flk] - $fl['unit_price'];
+                        if ($addOnItems) {
+                            $freightSupplierPriceText[$fl['supid']] = '再凑' . $addOnItems . '立方米可享受包邮';
                         }
                     }
                 }
@@ -1036,7 +1036,7 @@ class Order extends CommonIndex {
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
         }, $carts);
-        $diff     = array_diff($skuIdList, $cartList);
+        $diff = array_diff($skuIdList, $cartList);
         if (empty($diff)) {
             return true;
         }
@@ -1090,13 +1090,13 @@ class Order extends CommonIndex {
                                 $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                             } else if ($goods['goods_type'] == 2) {
                                 $order_goods[$og]['sku_image'] = '';
-                                $order_goods[$og]['sku_json'] = DbAudios::getAudio([['id','in',join(',',json_decode($order_goods[$og]['sku_json'], true))]],'id,name,audio,audition_time,audio_length_text');
-                               
+                                $order_goods[$og]['sku_json']  = DbAudios::getAudio([['id', 'in', join(',', json_decode($order_goods[$og]['sku_json'], true))]], 'id,name,audio,audition_time,audio_length_text');
+
                                 // print_r(json_encode($sku_json));die;
                             }
-                            
-                            $integral                      += $goods['integral'] * $goods_num['goods_num'];
-                            $commission                    = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
+
+                            $integral += $goods['integral'] * $goods_num['goods_num'];
+                            $commission = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                         }
                     }
                 }
@@ -1154,13 +1154,13 @@ class Order extends CommonIndex {
                             $order_goods[$og]['sku_json']  = json_decode($order_goods[$og]['sku_json'], true);
                         } else if ($goods['goods_type'] == 2) {
                             $order_goods[$og]['sku_image'] = '';
-                            $order_goods[$og]['sku_json'] = DbAudios::getAudio([['id','in',join(',',json_decode($order_goods[$og]['sku_json'], true))]],'id,name,audio,audition_time,audio_length_text');
-                           
+                            $order_goods[$og]['sku_json']  = DbAudios::getAudio([['id', 'in', join(',', json_decode($order_goods[$og]['sku_json'], true))]], 'id,name,audio,audition_time,audio_length_text');
+
                             // print_r(json_encode($sku_json));die;
                         }
-                        
-                        $integral                     += $goods['integral'] * $goods_num['goods_num'];
-                        $commission                   = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
+
+                        $integral += $goods['integral'] * $goods_num['goods_num'];
+                        $commission = bcadd($commission, bcmul(bcmul($goods['margin_price'], 0.75, 2), $goods_num['goods_num'], 2), 2);
                     }
                 }
             }
@@ -1247,14 +1247,14 @@ class Order extends CommonIndex {
             }
             // unset($has_member_order['from_uid']);
             Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder', 'data' => json_encode([
-                    'member_order_id' => $has_member_order['id'],
-                    'uid'             => $uid,
-                    'user_type'       => $user_type,
-                    'actype'          => $actype,
-                    'parent_id'       => $parent_id,
-                    'old_parent_id'   => $old_parent_id,
-                    'pay_money'       => $pay_money,
-                ])]
+                'member_order_id' => $has_member_order['id'],
+                'uid'             => $uid,
+                'user_type'       => $user_type,
+                'actype'          => $actype,
+                'parent_id'       => $parent_id,
+                'old_parent_id'   => $old_parent_id,
+                'pay_money'       => $pay_money,
+            ])]
             );
             $has_member_order['from_uid'] = enUid($has_member_order['from_uid']);
             return ['code' => '200', 'order_data' => $has_member_order];
@@ -1272,14 +1272,14 @@ class Order extends CommonIndex {
             $add               = DbOrder::addMemberOrder($order);
             $order['from_uid'] = enUid($parent_id);
             Db::table('pz_log_error')->insert(['title' => '/index/order/createMemberOrder', 'data' => json_encode([
-                    'member_order_id' => $add,
-                    'uid'             => $uid,
-                    'user_type'       => $user_type,
-                    'actype'          => $actype,
-                    'pay_money'       => $pay_money,
-                    'parent_id'       => $parent_id,
-                    'old_parent_id'   => $old_parent_id,
-                ])]
+                'member_order_id' => $add,
+                'uid'             => $uid,
+                'user_type'       => $user_type,
+                'actype'          => $actype,
+                'pay_money'       => $pay_money,
+                'parent_id'       => $parent_id,
+                'old_parent_id'   => $old_parent_id,
+            ])]
             );
             return ['code' => '200', 'order_data' => $order];
         }
@@ -1330,7 +1330,7 @@ class Order extends CommonIndex {
         foreach ($order_child as $key => $value) {
             $order_childs[] = $value['id'];
         }
-        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
+        $order_goods_id  = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
         $order_goods_ids = [];
         foreach ($order_goods_id as $goods => $goods_id) {
             $order_goods_ids[] = $goods_id['id'];
@@ -1339,7 +1339,7 @@ class Order extends CommonIndex {
         $has_order_express = DbOrder::getOrderExpress('express_no,express_key,express_name', [['order_goods_id', 'IN', $order_goods_ids]], false, true);
         $order_subpackage  = [];
         foreach ($has_order_express as $order => $express) {
-            $where               = [
+            $where = [
                 'express_no'   => $express['express_no'],
                 'express_key'  => $express['express_key'],
                 'express_name' => $express['express_name'],
@@ -1394,7 +1394,7 @@ class Order extends CommonIndex {
         foreach ($order_child as $key => $value) {
             $order_childs[] = $value['id'];
         }
-        $order_goods_id = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
+        $order_goods_id  = DbOrder::getOrderGoods('id', [['order_child_id', 'IN', $order_childs]]);
         $order_goods_ids = [];
         foreach ($order_goods_id as $goods => $goods_id) {
             $order_goods_ids[] = $goods_id['id'];
@@ -1478,48 +1478,48 @@ class Order extends CommonIndex {
         }
         $data['keyword3']['color'] = '#333';
         switch ($order_id['order_status']) {
-            case '1':
-                $data['keyword4']['value'] = '待付款';
-                break;
-            case '2':
-                $data['keyword4']['value'] = '取消订单';
-                break;
-            case '3':
-                $data['keyword4']['value'] = '已关闭';
-                break;
-            case '4':
-                $data['keyword4']['value'] = '已付款';
-                break;
-            case '5':
-                $data['keyword4']['value'] = '已发货';
-                break;
-            case '6':
-                $data['keyword4']['value'] = '已收货';
-                break;
-            case '7':
-                $data['keyword4']['value'] = '待评价';
-                break;
-            case '8':
-                $data['keyword4']['value'] = '退款申请确认';
-                break;
-            case '9':
-                $data['keyword4']['value'] = '退款中';
-                break;
-            case '10':
-                $data['keyword4']['value'] = '退款成功';
-                break;
+        case '1':
+            $data['keyword4']['value'] = '待付款';
+            break;
+        case '2':
+            $data['keyword4']['value'] = '取消订单';
+            break;
+        case '3':
+            $data['keyword4']['value'] = '已关闭';
+            break;
+        case '4':
+            $data['keyword4']['value'] = '已付款';
+            break;
+        case '5':
+            $data['keyword4']['value'] = '已发货';
+            break;
+        case '6':
+            $data['keyword4']['value'] = '已收货';
+            break;
+        case '7':
+            $data['keyword4']['value'] = '待评价';
+            break;
+        case '8':
+            $data['keyword4']['value'] = '退款申请确认';
+            break;
+        case '9':
+            $data['keyword4']['value'] = '退款中';
+            break;
+        case '10':
+            $data['keyword4']['value'] = '退款成功';
+            break;
         }
         $data['keyword4']['color'] = '#333';
         $data['keyword5']['value'] = $order_id['order_money'];
         $data['keyword5']['color'] = '#333';
         $data['keyword6']['value'] = $order_id['pay_time'];
         $data['keyword6']['color'] = '#333';
-        $send_data                = [];
-        $send_data['touser']      = $user_wxinfo['openid'];
-        $send_data['template_id'] = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
-        $send_data['page']        = 'pages/order/orderDetail/orderDetail?orderno=' . $orderNo;
-        $send_data['form_id']     = $logPayRes['prepay_id'];
-        $send_data['data']        = $data;
+        $send_data                 = [];
+        $send_data['touser']       = $user_wxinfo['openid'];
+        $send_data['template_id']  = 'sTxQPX6BWBAo7In_nr9KbTlV6tEAhINijB2rSjHrKz8';
+        $send_data['page']         = 'pages/order/orderDetail/orderDetail?orderno=' . $orderNo;
+        $send_data['form_id']      = $logPayRes['prepay_id'];
+        $send_data['data']         = $data;
         // $send_data['emphasis_keyword']        = 'keyword2.DATA';
         // print_r(json_encode($send_data,true));die;
         $access_token = $this->getWeiXinAccessToken();
@@ -1550,28 +1550,27 @@ class Order extends CommonIndex {
         return $res;
     }
 
-    
-    public function quickSettlementAudio($conId, $buid = '', $skuId, $num, $goods_id, $userCouponId = 0){
+    public function quickSettlementAudio($conId, $buid = '', $skuId, $num, $goods_id, $userCouponId = 0) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3004'];
         }
-        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $balance       = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
         $user_identity = $balance['user_identity'];
-        $balance = $balance['balance'] ?? 0;
-        $summary = $this->quickAudioSummary($uid, $buid, $skuId, $num, $goods_id, $userCouponId);
+        $balance       = $balance['balance'] ?? 0;
+        $summary       = $this->quickAudioSummary($uid, $buid, $skuId, $num, $goods_id, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
         }
-        $goods = $summary['goods_list'][0];
+        $goods        = $summary['goods_list'][0];
         $target_users = $goods['target_users']; //适用人群
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user         = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if ($user['user_identity'] < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
@@ -1582,7 +1581,7 @@ class Order extends CommonIndex {
         $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
         $supplierId   = $summary['goods_list'][0]['supplier_id']; //供应商id
         $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
-        $supplier = [];
+        $supplier     = [];
         foreach ($supplierList as $sl) {
             $glList = [];
             $sList  = []; //门店
@@ -1615,7 +1614,7 @@ class Order extends CommonIndex {
                     if (in_array($s['id'], array_keys($shopList))) {
                         $bSum        = $num; //店铺购买的数量
                         $g['buySum'] = $bSum;
-                        $ggList[] = $g;
+                        $ggList[]    = $g;
                     }
                 }
                 $sList[$sk]['goods_list'] = $ggList;
@@ -1624,8 +1623,8 @@ class Order extends CommonIndex {
             array_push($supplier, $sl);
         }
         unset($summary['goods_list']);
-        $summary['supplier_list']      = $supplier;
-        $summary['balance']            = $balance;
+        $summary['supplier_list'] = $supplier;
+        $summary['balance']       = $balance;
         return $summary;
     }
 
@@ -1634,7 +1633,7 @@ class Order extends CommonIndex {
         if (empty($goods)) {
             return ['code' => '3005'];
         }
-        $goodsSku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id],['id', '=', $skuId]]);
+        $goodsSku = DbGoods::getAudioSkuRelation([['goods_id', '=', $goods_id], ['id', '=', $skuId]]);
         if (empty($goodsSku)) {
             return ['code' => '3006'];
         }
@@ -1645,33 +1644,33 @@ class Order extends CommonIndex {
         } else {
             $shopId = $shopInfo['id'];
         }
-        $goodsSku['supplier_id'] = $goods['supplier_id'];
-        $goodsSku['goods_name']  = $goods['goods_name'];
-        $goodsSku['goods_type']  = $goods['goods_type'];
+        $goodsSku['supplier_id']  = $goods['supplier_id'];
+        $goodsSku['goods_name']   = $goods['goods_name'];
+        $goodsSku['goods_type']   = $goods['goods_type'];
         $goodsSku['target_users'] = $goods['target_users'];
-        $goodsSku['subtitle']    = $goods['subtitle'];
-        $goodsSku['status']      = $goods['status'];
-        $goodsSku['buySum']      = $num;
-        $goodsSku['end_time']    = $goodsSku['end_time'] * $num;
-        $goodsSku['shopBuySum']  = [$shopId => $num];
-        $totalGoodsPrice         = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
-        $couponPrice = 0;
-        if (!empty($userCouponId)) {//有优惠券
+        $goodsSku['subtitle']     = $goods['subtitle'];
+        $goodsSku['status']       = $goods['status'];
+        $goodsSku['buySum']       = $num;
+        $goodsSku['end_time']     = $goodsSku['end_time'] * $num;
+        $goodsSku['shopBuySum']   = [$shopId => $num];
+        $totalGoodsPrice          = bcmul($goodsSku['retail_price'], $num, 2); //商品总价
+        $couponPrice              = 0;
+        if (!empty($userCouponId)) { //有优惠券
             $userCoupon = DbCoupon::getUserCoupon([
                 ['id', '=', $userCouponId],
                 ['uid', '=', $uid],
-                ['is_use', '=', 2],//未使用的
-                ['end_time', '>', time()],//未过期的
+                ['is_use', '=', 2], //未使用的
+                ['end_time', '>', time()], //未过期的
             ], 'id,price,gs_id,level', true);
             if (empty($userCoupon)) {
                 return ['code' => '3013'];
             }
-            if ($userCoupon['level'] == 1) {//单品券
+            if ($userCoupon['level'] == 1) { //单品券
                 if ($userCoupon['gs_id'] != $goodsSku['goods_id']) {
                     return ['code' => '3013'];
                 }
             }
-            if ($userCoupon['level'] == 2) {//专题券
+            if ($userCoupon['level'] == 2) { //专题券
                 $couponGoodsIdList = DbGoods::getSubjectRelation([['subject_id', '=', $userCoupon['gs_id']]], 'goods_id');
                 $couponGoodsIdList = array_column($couponGoodsIdList, 'goods_id');
                 if (!in_array($goodsSku['goods_id'], $couponGoodsIdList)) {
@@ -1680,7 +1679,7 @@ class Order extends CommonIndex {
             }
             $couponPrice = $userCoupon['price'];
         }
-        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], 0);//可分配利润
+        $distrProfits         = getDistrProfits($goodsSku['retail_price'], $goodsSku['cost_price'], 0); //可分配利润
         $goodsSku['rebate']   = $this->getRebate($distrProfits, $num);
         $goodsSku['integral'] = $this->getIntegral($goodsSku['retail_price'], $goodsSku['cost_price'], 0);
         if ($totalGoodsPrice < 0) {
@@ -1694,27 +1693,27 @@ class Order extends CommonIndex {
         return ['code' => '200', 'goods_count' => $num, 'rebate_all' => $goodsSku['rebate'], 'total_goods_price' => $totalGoodsPrice, 'total_price' => $totalPrice, 'discount_money' => $discountMoney, 'goods_list' => [$goodsSku]];
     }
 
-    public function quickCreateAudioOrder($conId, $buid, int $sku_id, int $num, int $goods_id, $payType, int $userCouponId = 0){
+    public function quickCreateAudioOrder($conId, $buid, int $sku_id, int $num, int $goods_id, $payType, int $userCouponId = 0) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
+        $balance       = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'user_identity,balance', true);
         $user_identity = $balance['user_identity'];
-        $balance = $balance['balance'] ?? 0;
-        $summary = $this->quickAudioSummary($uid, $buid, $sku_id, $num, $goods_id, $userCouponId);
+        $balance       = $balance['balance'] ?? 0;
+        $summary       = $this->quickAudioSummary($uid, $buid, $sku_id, $num, $goods_id, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
         }
-        $goods = $summary['goods_list'][0];
+        $goods        = $summary['goods_list'][0];
         $target_users = $goods['target_users']; //适用人群
-        $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
+        $user         = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if ($user['user_identity'] < $target_users) {
-            if ($target_users == 2){
+            if ($target_users == 2) {
                 return ['code' => 3010, 'msg' => '该商品钻石会员及以上身份专享'];
-            }elseif ($target_users == 3){
+            } elseif ($target_users == 3) {
                 return ['code' => 3011, 'msg' => '该商品创业店主及以上身份专享'];
-            }elseif ($target_users == 4){
+            } elseif ($target_users == 4) {
                 return ['code' => 3012, 'msg' => '该商品合伙人及以上身份专享'];
             }
         }
@@ -1722,17 +1721,17 @@ class Order extends CommonIndex {
         foreach ($goods['audios'] as $key => $value) {
             $attr[] = $value['pivot']['audio_pri_id'];
         }
-        $user_audioData = [];
+        $user_audioData        = [];
         $user_audio_updateData = [];
-        $audio_time = [];
+        $audio_time            = [];
         foreach ($attr as $at => $ar) {
-            $u_audio = DbAudios::getUserAudio(['uid' => $uid,'audio_id' => $ar],'id,end_time',true);
-            if ($u_audio) {//更新
-                if ($u_audio['end_time'] >= time()){
-                    $audio_time[$ar]      = $u_audio['end_time'] - time() + $goods['end_time'];
+            $u_audio = DbAudios::getUserAudio(['uid' => $uid, 'audio_id' => $ar], 'id,end_time', true);
+            if ($u_audio) { //更新
+                if ($u_audio['end_time'] >= time()) {
+                    $audio_time[$ar] = $u_audio['end_time'] - time() + $goods['end_time'];
                     $u_audio['end_time'] += $goods['end_time'];
-                }else {
-                    $u_audio['end_time'] = $goods['end_time']+time();
+                } else {
+                    $u_audio['end_time'] = $goods['end_time'] + time();
                     $audio_time[$ar]     = $goods['end_time'];
                 }
                 $up_data = [
@@ -1740,13 +1739,13 @@ class Order extends CommonIndex {
                 ];
                 $user_audio_updateData[$u_audio['id']] = $up_data;
                 unset($user_audio);
-            }else {
+            } else {
                 $user_audio = [
-                    'uid' => $uid,
+                    'uid'      => $uid,
                     'audio_id' => $ar,
-                    'end_time' => $goods['end_time']+time(),
+                    'end_time' => $goods['end_time'] + time(),
                 ];
-                array_push($user_audioData,$user_audio);
+                array_push($user_audioData, $user_audio);
                 $audio_time[$ar] = $goods['end_time'];
                 unset($user_audio);
             }
@@ -1771,8 +1770,8 @@ class Order extends CommonIndex {
                 array_push($orderGoodsData, $goodsData);
             }
         }
-        $supplier             = DbGoods::getSupplier('id,name', [['id', '=', $goods['supplier_id']]]);
-        $supplierData         = [];
+        $supplier     = DbGoods::getSupplier('id,name', [['id', '=', $goods['supplier_id']]]);
+        $supplierData = [];
         foreach ($supplier as $sval) {
             $sval['express_money'] = 0;
             $sval['supplier_id']   = $sval['id'];
@@ -1781,7 +1780,7 @@ class Order extends CommonIndex {
             unset($sval['name']);
             array_push($supplierData, $sval);
         }
-         /*
+        /*
          * 子订单内容
          */
         $orderNo        = createOrderNo(); //创建订单号
@@ -1802,7 +1801,7 @@ class Order extends CommonIndex {
             } else {
                 $thirdMoney = $summary['total_price'];
                 if ($thirdMoney = 0) {
-                    $isPay          = true; //无需支付
+                    $isPay = true; //无需支付
                 }
             }
             $tradingData = [
@@ -1818,7 +1817,7 @@ class Order extends CommonIndex {
         } else if ($payType == 1) { //第三方支付
             $thirdMoney = $summary['total_price'];
             if ($thirdMoney == 0) {
-                $isPay          = true; //无需支付
+                $isPay = true; //无需支付
             }
         }
         $orderData = [
@@ -1876,12 +1875,12 @@ class Order extends CommonIndex {
                 }
                 if (!empty($user_audio_updateData)) {
                     foreach ($user_audio_updateData as $up => $audio_u) {
-                        DbAudios::updateUserAudio($audio_u,$up);
+                        DbAudios::updateUserAudio($audio_u, $up);
                     }
                 }
                 foreach ($audio_time as $audio => $time) {
-                    $this->redis->set($redisaudioKey.$uid.':'.$audio, $audio);
-                    $this->redis->expire($redisaudioKey.$uid.':'.$audio, $time);
+                    $this->redis->set($redisaudioKey . $uid . ':' . $audio, $audio);
+                    $this->redis->expire($redisaudioKey . $uid . ':' . $audio, $time);
                 }
             }
             $this->resetUserInfo($uid);
@@ -1893,7 +1892,7 @@ class Order extends CommonIndex {
             return ['code' => '3009'];
         }
     }
-    
+
     /**
      * 查询订单商品是否有表格
      * @param $orderNo
@@ -1901,46 +1900,46 @@ class Order extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function isOrderSheet($orderNo, $conId){
+    public function isOrderSheet($orderNo, $conId) {
         $uid = $this->getUidByConId($conId);
         // $uid = 23697;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
         $order = DbOrder::getOrderDetail(['uid' => $uid, 'order_no' => $orderNo], 'order_status,goods_id');
-        if (empty($order)){
+        if (empty($order)) {
             return ['code' => '3003'];
         }
         $goods = [];
         foreach ($order as $key => $value) {
-            if ($value['order_status'] < 4){
-                return ['code' => '3004'];//该订单未付款，无法提交表格
+            if ($value['order_status'] < 4) {
+                return ['code' => '3004']; //该订单未付款，无法提交表格
             }
             $goods[] = $value['goods_id'];
         }
-        $goods = array_unique($goods);
-        $goods_sheet = DbGoods::getGoodsList2([['id', 'in',$goods]],'id,goods_sheet');
-        $sheet_list = [];
+        $goods       = array_unique($goods);
+        $goods_sheet = DbGoods::getGoodsList2([['id', 'in', $goods]], 'id,goods_sheet');
+        $sheet_list  = [];
         foreach ($goods_sheet as $gs => $sheet) {
-            if ($sheet['goods_sheet'] != 0){
+            if ($sheet['goods_sheet'] != 0) {
                 $sheet_info = $this->sheetInfo($sheet['goods_sheet']);
                 if ($sheet === false) {
                     return ['code' => '3005'];
                 }
                 $sheet_info['goods_id'] = $sheet['id'];
-                array_push($sheet_list,$sheet_info);
+                array_push($sheet_list, $sheet_info);
             }
         }
-        return ['code' => '200','order_no' => $orderNo,'sheet_list' => $sheet_list];
-        
+        return ['code' => '200', 'order_no' => $orderNo, 'sheet_list' => $sheet_list];
+
     }
 
-    private function sheetInfo($id){
-        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+    private function sheetInfo($id) {
+        $sheet = DbGoods::getSheet([['id', '=', $id]], 'id,name,create_time', true);
         if (empty($sheet)) {
             return false;
         }
-        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_options     = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']], '*');
         $sheet_optionsList = [];
         foreach ($sheet_options as $key => $value) {
             $sheet_optionsList[] = $value['sheet_option'];
@@ -1949,8 +1948,8 @@ class Order extends CommonIndex {
         return $sheet;
     }
 
-    public function submitOrderSheet ($orderNo, $conId, $from){
-        if (DbOrder::getOrderGoodsSheet(['order_no' => $orderNo],'id')) {
+    public function submitOrderSheet($orderNo, $conId, $from) {
+        if (DbOrder::getOrderGoodsSheet(['order_no' => $orderNo], 'id')) {
             return ['code' => '3008'];
         }
         $order_sheet = $this->isOrderSheet($orderNo, $conId);
@@ -1958,56 +1957,56 @@ class Order extends CommonIndex {
             return $order_sheet;
         }
         $sheet_list = $order_sheet['sheet_list'];
-        $goodsIds = [];
+        $goodsIds   = [];
         foreach ($sheet_list as $sheet => $list) {
             if (!isset($from[$list['goods_id']])) {
-                return ['code' => '3006'];//表格选项不完整
+                return ['code' => '3006']; //表格选项不完整
             }
             foreach ($list['options'] as $ls => $options) {
                 // if ($options['name']) {}
-                    if (!isset($options['name'],$from[$list['goods_id']][$options['name']])) {
-                        return ['code' => '3006'];//表格选项不完整
+                if (!isset($options['name'], $from[$list['goods_id']][$options['name']])) {
+                    return ['code' => '3006']; //表格选项不完整
+                }
+                $value = $from[$list['goods_id']][$options['name']];
+                switch ($options['name']) {
+                case "name":
+                    $res = empty($value) ? false : true;
+                    break;
+                case "idcard":
+                    $res = checkIdcard($value);
+                    break;
+                case "medicare_card":
+                    $res = strlen($value) > 16 ? false : true;
+                    break;
+                case "mobile":
+                    $res = checkMobile($value);
+                    break;
+                case "phone":
+                    $res = checkMobile($value);
+                    break;
+                default:
+                    $res = true;
+                }
+                if ($res === false) {
+                    return ['code' => '3007']; //信息校验失败
+                }
+                if ($options['name'] == 'rassenger_information') {
+                    $rassenger_information = DbUser::getAirplanePassenger([['id', 'in', $value]], '*');
+                    if (count($rassenger_information) != count(explode(',', $value))) {
+                        return ['code' => '3010'];
                     }
-                    $value = $from[$list['goods_id']][$options['name']];
-                    switch ($options['name']) {
-                        case "name" :
-                            $res = empty($value) ? false : true;
-                            break;
-                        case "idcard" :
-                            $res = checkIdcard($value);
-                            break;
-                        case "medicare_card" :
-                            $res = strlen($value) > 16 ? false : true;
-                            break;
-                        case "mobile":
-                            $res = checkMobile($value);
-                            break;
-                        case "phone":
-                            $res = checkMobile($value);
-                            break;
-                        default:
-                            $res = true;
-                    }
-                    if ($res === false) {
-                        return ['code' => '3007']; //信息校验失败
-                    }
-                    if ($options['name'] == 'rassenger_information') {
-                        $rassenger_information = DbUser::getAirplanePassenger([['id','in',$value]],'*');
-                        if (count($rassenger_information) != count(explode(',',$value))) {
-                            return ['code' => '3010'];
-                        }
-                        $from[$list['goods_id']][$options['name']] = $rassenger_information;
-                    }
+                    $from[$list['goods_id']][$options['name']] = $rassenger_information;
+                }
             }
         }
         // print_r($from);die;
         $new_from = [];
         foreach ($from as $f => $rom) {
-            $sheet = [];
-            $sheet['from'] = json_encode($rom);
+            $sheet             = [];
+            $sheet['from']     = json_encode($rom);
             $sheet['goods_id'] = $f;
             $sheet['order_no'] = $orderNo;
-            $new_from[] = $sheet;
+            $new_from[]        = $sheet;
         }
         Db::startTrans();
         try {
@@ -2016,39 +2015,39 @@ class Order extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//领取失败
+            return ['code' => '3005']; //领取失败
         }
     }
 
-    public function getOrderSheet($orderNo, $goods_id = 0){
+    public function getOrderSheet($orderNo, $goods_id = 0) {
         $where = ['order_no' => $orderNo];
-        $row = false;
+        $row   = false;
         if (!empty($goods_id)) {
             $where = ['order_no' => $orderNo, 'goods_id' => $goods_id];
-            $row = true;
+            $row   = true;
         }
-        $result = DbOrder::getOrderGoodsSheet($where, 'order_no,goods_id,from',$row);
-        $from = [];
+        $result = DbOrder::getOrderGoodsSheet($where, 'order_no,goods_id,from', $row);
+        $from   = [];
         if (!empty($result)) {
-            $options = DbGoods::getSheetOption([],'name,title');
+            $options     = DbGoods::getSheetOption([], 'name,title');
             $new_options = [];
             foreach ($options as $op => $ns) {
                 $new_options[$ns['name']] = $ns['title'];
             }
-            if (!empty($goods_id)){
-                $result['from'] = json_decode($result['from'],true);
+            if (!empty($goods_id)) {
+                $result['from'] = json_decode($result['from'], true);
                 foreach ($result['from'] as $key => $value) {
-                    if (isset($key,$new_options[$key])) {
+                    if (isset($key, $new_options[$key])) {
                         $from[$new_options[$key]] = $value;
                     }
                 }
                 unset($result['from']);
                 $result['from'] = $from;
-            }else {
+            } else {
                 foreach ($result as $key => $value) {
-                    $value['from'] = json_decode($value['from'],true);
+                    $value['from'] = json_decode($value['from'], true);
                     foreach ($value['from'] as $vf => $vfrom) {
-                        if (isset($key,$new_options[$vf])) {
+                        if (isset($key, $new_options[$vf])) {
                             $from[$new_options[$vf]] = $vfrom;
                         }
                     }
@@ -2061,27 +2060,27 @@ class Order extends CommonIndex {
         return ['code' => '200', 'fromList' => $result];
     }
 
-    public function getAddOnItems($conId, $supplier_id, $skuIdList, $userAddressId, $page, $pageNum){
+    public function getAddOnItems($conId, $supplier_id, $skuIdList, $userAddressId, $page, $pageNum) {
         $offset = ($page - 1) * $pageNum;
-        $limit = ' LIMIT '.$offset.','.$pageNum;
-        $uid = $this->getUidByConId($conId);
+        $limit  = ' LIMIT ' . $offset . ',' . $pageNum;
+        $uid    = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
         if ($this->checkCart($skuIdList, $uid) === false) {
             return ['code' => '3005']; //商品未加入购物车
         }
-        
+
         $cart = $this->getCartGoods($skuIdList, $uid);
-        
+
         if ($cart === false) {
             return ['code' => '3005'];
         }
-        $userAddress      = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
-        if (empty($userAddress)){
+        $userAddress = DbUser::getUserAddress('id,city_id', ['id' => $userAddressId], true);
+        if (empty($userAddress)) {
             return ['code' => '3004'];
         }
-        $cityId           = $userAddress['city_id'];
+        $cityId   = $userAddress['city_id'];
         $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['stock', '>', '0'], ['goods_sku.status', '=', '1']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec', 'id,supplier_id,goods_name,goods_type,target_users,subtitle,status,giving_rights');
 
         //商品库存不足
@@ -2098,14 +2097,14 @@ class Order extends CommonIndex {
         // }
 
         //此供应商统计
-        $goodsList            = [];
-        $freightPrice         = 0; //此供应商商品购买总价
-        $freightCount         = 0; //此供应商商品购买数量
-        $freightWeight        = 0; //此供应商商品购买重量
-        $freightVolume        = 0; //此供应商商品购买体积
+        $goodsList     = [];
+        $freightPrice  = 0; //此供应商商品购买总价
+        $freightCount  = 0; //此供应商商品购买数量
+        $freightWeight = 0; //此供应商商品购买重量
+        $freightVolume = 0; //此供应商商品购买体积
         foreach ($goodsSku as $key => $value) {
             $value['supplier_id'] = $value['goods']['supplier_id'];
-            if ($value['supplier_id'] != $supplier_id){
+            if ($value['supplier_id'] != $supplier_id) {
                 continue;
             }
             $cartSum       = intval($cart[$value['id']]['sum']);
@@ -2119,14 +2118,14 @@ class Order extends CommonIndex {
             $freightVolume = bcadd($freightVolume, $fVolume, 2);
             unset($value['goods']);
             array_push($goodsList, $value);
-            $freight_id   = $value['freight_id'];//运费模板ID
+            $freight_id = $value['freight_id']; //运费模板ID
         }
 
         // $goodsIdList = array_unique(array_column($goodsList, 'goods_id'));
 
         //商品不支持配送部分
         // $freight_id = array_values(array_unique(array_column($goodsList, 'freight_id')));
-        $freightList   = DbGoods::getFreightAndDetail([['freight_id', '=', $freight_id]], $cityId, 'id,freight_id,price,after_price,total_price,unit_price', 'id,supid,stype', 'freight_detail_id,city_id', $freight_id);
+        $freightList = DbGoods::getFreightAndDetail([['freight_id', '=', $freight_id]], $cityId, 'id,freight_id,price,after_price,total_price,unit_price', 'id,supid,stype', 'freight_detail_id,city_id', $freight_id);
         // $freightDiff   = array_values(array_diff($freight_id, array_keys($freightList)));
         // if (!empty($freightDiff)) {
         //     $eGoodsList = [];
@@ -2139,52 +2138,52 @@ class Order extends CommonIndex {
         //     }
         //     return ['code' => '3006', 'freightError' => $eGoodsList]; //商品不支持配送
         // }
-        $freightList = array_values($freightList)[0];
-        $supplierFreightText = DbGoods::getSupplierFreight('desc',$freight_id)['desc'];
-        $addOnItems = 0;
+        $freightList              = array_values($freightList)[0];
+        $supplierFreightText      = DbGoods::getSupplierFreight('desc', $freight_id)['desc'];
+        $addOnItems               = 0;
         $freightSupplierPriceText = '';
-        $orderBy = '';
+        $orderBy                  = '';
         if ($freightList['total_price'] <= $freightPrice) { //该供应商的当前运费模版下购买的总价超过包邮价可以包邮
-            $addOnItems = $freightList['total_price']-$freightPrice;
-            $freightSupplierPriceText = '再凑'.$addOnItems.'元可享受包邮';
-            $orderBy = ' ORDER BY abs(`gs`.`retail_price` - "'.$addOnItems.'") ASC';
+            $addOnItems               = $freightList['total_price'] - $freightPrice;
+            $freightSupplierPriceText = '再凑' . $addOnItems . '元可享受包邮';
+            $orderBy                  = ' ORDER BY abs(`gs`.`retail_price` - "' . $addOnItems . '") ASC';
         }
         if ($freightList['stype'] == 1) { //件数
             if ($freightList['unit_price'] > $freightCount) { //购买件数超过当前模版的满件包邮条件可以包邮
-                $addOnItems = $freightCount-$freightList['unit_price'];
-                $freightSupplierPriceText = '再凑'.$addOnItems.'件可享受包邮';
-                $orderBy = ' ORDER BY `g`.`id` DESC';
+                $addOnItems               = $freightCount - $freightList['unit_price'];
+                $freightSupplierPriceText = '再凑' . $addOnItems . '件可享受包邮';
+                $orderBy                  = ' ORDER BY `g`.`id` DESC';
             }
         } else if ($freightList['stype'] == 2) { //重量
             if ($freightList['unit_price'] > $freightWeight) { //购买重量超过当前模版的满件包邮条件可以包邮
-                $addOnItems = $freightWeight-$freightList['unit_price'];
-                $freightSupplierPriceText = '再凑'.$addOnItems.'千克可享受包邮';
-                $orderBy = ' ORDER BY abs(`gs`.`weight` - "'.$addOnItems.'") ASC';
+                $addOnItems               = $freightWeight - $freightList['unit_price'];
+                $freightSupplierPriceText = '再凑' . $addOnItems . '千克可享受包邮';
+                $orderBy                  = ' ORDER BY abs(`gs`.`weight` - "' . $addOnItems . '") ASC';
             }
         } else if ($freightList['stype'] == 3) { //体积
             if ($freightList['unit_price'] > $freightVolume) { //购买件数超过当前模版的满件包邮条件可以包邮
-                $addOnItems = $freightVolume-$freightList['unit_price'];
-                $freightSupplierPriceText = '再凑'.$addOnItems.'立方米可享受包邮';
-                $orderBy = ' ORDER BY abs(`gs`.`volume` - "'.$addOnItems.'") ASC';
+                $addOnItems               = $freightVolume - $freightList['unit_price'];
+                $freightSupplierPriceText = '再凑' . $addOnItems . '立方米可享受包邮';
+                $orderBy                  = ' ORDER BY abs(`gs`.`volume` - "' . $addOnItems . '") ASC';
             }
         }
         if ($addOnItems <= 0) {
             $freightSupplierPriceText = '已满足包邮条件，是否继续凑单';
             // return ['code' => '3007', 'freightSupplierPriceText' => '已满足包邮条件，是否继续凑单'];//已满足包邮条件
         }
-        $sql = 'SELECT DISTINCT(`gs`.`goods_id`),`g`.`id`,`g`.`supplier_id`,`g`.`cate_id`,`g`.`goods_name`,`g`.`goods_type`,`g`.`title`,`g`.`subtitle`,`g`.`image` 
-        FROM  pz_goods_sku AS gs LEFT JOIN pz_goods AS g ON `gs`.`goods_id` = `g`.`id` 
-        WHERE `gs`.`freight_id` = '.$freight_id.' AND `g`.`status` = 1 '. $orderBy . $limit;
+        $sql = 'SELECT DISTINCT(`gs`.`goods_id`),`g`.`id`,`g`.`supplier_id`,`g`.`cate_id`,`g`.`goods_name`,`g`.`goods_type`,`g`.`title`,`g`.`subtitle`,`g`.`image`
+        FROM  pz_goods_sku AS gs LEFT JOIN pz_goods AS g ON `gs`.`goods_id` = `g`.`id`
+        WHERE `gs`.`freight_id` = ' . $freight_id . ' AND `g`.`status` = 1 ' . $orderBy . $limit;
         $result = Db::query($sql);
-        
+
         foreach ($result as $key => $value) {
             /*  list($goods_spec,$goods_sku) = $this->getGoodsSku($value['id']);
             $result[$key]['spec'] = $goods_spec;
             $result[$key]['goods_sku'] = $goods_sku; */
             $result[$key]['goods_name'] = htmlspecialchars_decode($value['goods_name']);
-            $result[$key]['image'] = Config::get('qiniu.domain'). '/' .$value['image'];
-            $brokerage       = [];
-            $integral_active = [];
+            $result[$key]['image']      = Config::get('qiniu.domain') . '/' . $value['image'];
+            $brokerage                  = [];
+            $integral_active            = [];
             // print_r($value['id']);die;
             if ($value['goods_type'] == 1) {
                 $where                            = [['goods_id', '=', $value['id']], ['status', '=', 1], ['stock', '<>', 0]];
@@ -2239,10 +2238,10 @@ class Order extends CommonIndex {
                 }
             }
         }
-        return ['code' => '200', 'freightSupplierPriceText' => $freightSupplierPriceText, 'supplierFreightText' => $supplierFreightText, 'goodsList' => $result];//已满足包邮条件
+        return ['code' => '200', 'freightSupplierPriceText' => $freightSupplierPriceText, 'supplierFreightText' => $supplierFreightText, 'goodsList' => $result]; //已满足包邮条件
     }
 
-        /**
+    /**
      * 获取商品SKU及规格名称等
      * @param $goods_id
      * @param $source
@@ -2294,7 +2293,7 @@ class Order extends CommonIndex {
         return [$goods_spec, $goods_sku];
     }
 
-    public function quickIntegralSettlement($conId, $buid = 0, $skuId, $num, $userAddressId){
+    public function quickIntegralSettlement($conId, $buid = 0, $skuId, $num, $userAddressId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -2317,32 +2316,32 @@ class Order extends CommonIndex {
         $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
         // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'], ['goods.is_integral_sale', '=', '2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
         if (empty($goodsSku)) {
             return ['code' => '3004']; //商品下架
         }
-        $goodsSku = $goodsSku[0];
-        $goodsSku['supplier_id'] = $goodsSku['goods']['supplier_id'];
-        $goodsSku['goods_name']  = $goodsSku['goods']['goods_name'];
-        $goodsSku['goods_type']  = $goodsSku['goods']['goods_type'];
-        $goodsSku['target_users']  = $goodsSku['goods']['target_users'];
-        $goodsSku['subtitle']    = $goodsSku['goods']['subtitle'];
-        $goodsSku['status']      = $goodsSku['goods']['status'];
+        $goodsSku                 = $goodsSku[0];
+        $goodsSku['supplier_id']  = $goodsSku['goods']['supplier_id'];
+        $goodsSku['goods_name']   = $goodsSku['goods']['goods_name'];
+        $goodsSku['goods_type']   = $goodsSku['goods']['goods_type'];
+        $goodsSku['target_users'] = $goodsSku['goods']['target_users'];
+        $goodsSku['subtitle']     = $goodsSku['goods']['subtitle'];
+        $goodsSku['status']       = $goodsSku['goods']['status'];
         // $giving_rights           = $goodsSku['goods']['giving_rights'];
-        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
-        $goodsSku['attr']        = array_column($attr, 'attr_name');
+        $attr             = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr'] = array_column($attr, 'attr_name');
         unset($goodsSku['goods']);
-        $goodsSku['buySum']     = $num;
+        $goodsSku['buySum'] = $num;
         // $goodsSku['shopBuySum'] = [$shopId => $num];
-        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
+        $totalGoodsIntegralPrice = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
         //暂不计算运费
-        $shopList = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
-        $shopList     = array_combine(array_column($shopList, 'id'), $shopList);
-        $supplierId   = $goodsSku['supplier_id']; //供应商id
-        $supplierList = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+        $shopList                = DbShops::getShops([['uid', '=', $buid]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
+        $shopList                = array_combine(array_column($shopList, 'id'), $shopList);
+        $supplierId              = $goodsSku['supplier_id']; //供应商id
+        $supplierList            = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
         $summary['goods_list'][] = $goodsSku;
-        $supplier = [];
-                
+        $supplier                = [];
+
         foreach ($supplierList as $sl) {
             $glList = [];
             $sList  = []; //门店
@@ -2384,17 +2383,17 @@ class Order extends CommonIndex {
             array_push($supplier, $sl);
         }
         unset($summary['goods_list']);
-        $summary['code'] = 200;
-        $summary['goods_count'] = $num;
-        $summary['supplier_list']      = $supplier;
-        $summary['integral']           = $integral;
-        $summary['default_address_id'] = $defaultAddressId;
-        $summary['total_integral_price'] = $totalGoodsIntegralPrice;
+        $summary['code']                   = 200;
+        $summary['goods_count']            = $num;
+        $summary['supplier_list']          = $supplier;
+        $summary['integral']               = $integral;
+        $summary['default_address_id']     = $defaultAddressId;
+        $summary['total_integral_price']   = $totalGoodsIntegralPrice;
         $summary['freight_supplier_price'] = $totalGoodsIntegralPrice;
         return $summary;
     }
 
-    public function quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId = 0){
+    public function quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId = 0) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -2403,47 +2402,47 @@ class Order extends CommonIndex {
         if (empty($userAddress)) {
             return ['code' => '3003'];
         }
-        $cityId  = $userAddress['city_id'];
-        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'],['goods.is_integral_sale','=','2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
+        $cityId   = $userAddress['city_id'];
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', '=', $skuId], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'], ['goods.is_integral_sale', '=', '2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,target_users,goods_type,subtitle,status,giving_rights');
         if (empty($goodsSku)) {
             return ['code' => '3004']; //商品下架
         }
-        $goodsSku = $goodsSku[0];
+        $goodsSku                = $goodsSku[0];
         $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
         $goodsSku['attr']        = array_column($attr, 'attr_name');
         $summary['goods_list'][] = $goodsSku;
-        $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
+        $shopInfo                = DbShops::getShopInfo('id', ['uid' => $buid]);
         if (empty($shopInfo)) {
             $buid = 1;
         }
-        $totalGoodsIntegralPrice        = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
-        $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
+        $totalGoodsIntegralPrice = bcmul($goodsSku['integral_price'], $num, 0); //商品积分总价
+        $balance                 = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
         // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
         if ($integral < $totalGoodsIntegralPrice) {
-            return ['code' => '3005','msg' => '余额不足'];
+            return ['code' => '3005', 'msg' => '余额不足'];
         }
-        $goods = $summary['goods_list'][0];
-        $from_uid = $buid;
+        $goods          = $summary['goods_list'][0];
+        $from_uid       = $buid;
         $orderGoodsData = [];
         // print_r($goodsSku);die;
-           
-                $goodsData = [
-                    'goods_id'     => $goods['goods_id'],
-                    'goods_name'   => $goods['goods']['goods_name'],
-                    'sku_id'       => $goods['id'],
-                    'sup_id'       => $goods['goods']['supplier_id'],
-                    'boss_uid'     => $buid,
-                    'goods_price'  => $goods['integral_price'],
-                    'goods_num'    => $num,
-                    'sku_json'     => json_encode($goods['attr']),
-                ];
-                array_push($orderGoodsData, $goodsData);
+
+        $goodsData = [
+            'goods_id'    => $goods['goods_id'],
+            'goods_name'  => $goods['goods']['goods_name'],
+            'sku_id'      => $goods['id'],
+            'sup_id'      => $goods['goods']['supplier_id'],
+            'boss_uid'    => $buid,
+            'goods_price' => $goods['integral_price'],
+            'goods_num'   => $num,
+            'sku_json'    => json_encode($goods['attr']),
+        ];
+        array_push($orderGoodsData, $goodsData);
         $supplierId   = $goodsSku['goods']['supplier_id']; //供应商id
-        $supplier = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
-        $supplierData         = [];
+        $supplier     = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
+        $supplierData = [];
         foreach ($supplier as $sval) {
-            $sval['express_money'] = 0;//运费为0
+            $sval['express_money'] = 0; //运费为0
             $sval['supplier_id']   = $sval['id'];
             $sval['supplier_name'] = $sval['name'];
             unset($sval['id']);
@@ -2453,20 +2452,20 @@ class Order extends CommonIndex {
         $orderNo        = createOrderNo(); //创建订单号
         $deductionMoney = 0; //商票抵扣金额
         $thirdMoney     = 0; //第三方支付金额
-        $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
+        $integralMoney  = $totalGoodsIntegralPrice; //积分抵扣金额
         $isPay          = true;
         $tradingData    = []; //交易日志
 
         if ($payType == 3) { //积分支付
-            $userInfo = DbUser::getUserInfo(['id' => $uid], 'integral', true);
-            $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
-            $tradingData = [
-                'uid'          => $uid,
-                'order_no' => $orderNo,
-                'status'  => 2,
-                'result_integral'        => -$integralMoney,
-                'message'      => '兑换积分商品扣除',
-                'create_time'  => time(),
+            $userInfo      = DbUser::getUserInfo(['id' => $uid], 'integral', true);
+            $integralMoney = $totalGoodsIntegralPrice; //积分抵扣金额
+            $tradingData   = [
+                'uid'             => $uid,
+                'order_no'        => $orderNo,
+                'status'          => 2,
+                'result_integral' => -$integralMoney,
+                'message'         => '兑换积分商品扣除',
+                'create_time'     => time(),
             ];
         }
         $orderData = [
@@ -2510,7 +2509,7 @@ class Order extends CommonIndex {
                 $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
             }
             DbOrder::addOrderGoods($orderGoodsData);
-            DbGoods::decStock($stockSku);
+            DbGoods::decintegralStock($stockSku);
             DbUser::modifyIntegral($uid, $integralMoney, 'dec');
             if (!empty($tradingData)) {
                 DbUser::saveLogInvest($tradingData);
@@ -2535,7 +2534,7 @@ class Order extends CommonIndex {
         }
     }
 
-    public function createIntegralSettlement($conId, $skuIdList, $userAddressId){
+    public function createIntegralSettlement($conId, $skuIdList, $userAddressId) {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -2561,10 +2560,290 @@ class Order extends CommonIndex {
         $balance = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
         // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
+        $summary = $this->integralSummary($uid, $skuIdList);
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        
+        $cart = $this->getIntegralCartGoods($skuIdList, $uid);
+        if ($cart == false) {
+            return ['code' => '3005'];
+        }
+        $cartShops = array_column($cart, 'shops'); //所有购买涉及的门店
+        $shops     = [];
+        array_map(function ($value) use (&$shops) {
+            $shops = array_merge($shops, array_values($value));
+        }, $cartShops);
+        $shops          = array_values(array_unique($shops)); //去重后的门店
+        $shopList       = DbShops::getShops([['id', 'in', $shops]], 'id,uid,shop_name,shop_image'); //购买的所有店铺信息列表
+        $shopList       = array_combine(array_column($shopList, 'id'), $shopList);
+        $goodsList      = $summary['goods_list'];
+        $supplierIdList = array_unique(array_column($goodsList, 'supplier_id')); //要结算商品的供应商id列表
+        $supplierList   = DbGoods::getSupplier('id,name,image,title,desc', [['id', 'in', $supplierIdList], ['status', '=', 1]]);
+        $supplier       = [];
+        foreach ($supplierList as $sl => $sll) {
+            //各供应商运费
+           
+            foreach ($goodsList as $gl) {
+                if ($gl['supplier_id'] == $sll['id']) {
+                    unset($gl['freight_id']);
+                    unset($gl['cost_price']);
+                    unset($gl['margin_price']);
+                    unset($gl['weight']);
+                    unset($gl['volume']);
+                    unset($gl['spec']);
+                    unset($gl['status']);
+                    unset($gl['stock']);
+                    unset($gl['supplier_id']);
+                    unset($gl['shopBuySum']);
+                    $supplierList[$sl]['goods_list'][] = $gl;
+
+                }
+            }
+        }
+        $supplier = $supplierList;
+        unset($summary['goods_list']);
+        unset($summary['freight_supplier_price_text']);
+        $summary['supplier_list']      = $supplier;
+        $summary['balance']            = $balance;
+        $summary['default_address_id'] = $defaultAddressId;
+        return $summary;
 
     }
+    /**
+     * 创建积分商城订单
+     * @param $conId
+     * @param $skuIdList 1,2,3
+     * @param $userAddressId 1 收货地址id
+     * @param $payType 3积分兑换
+     * @param $userCouponId
+     * @return array
+     * @author rzc
+     */
+    public function createIntegralOrder($conId, $skuIdList, int $userAddressId, int $payType){
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $userAddress = DbUser::getUserAddress('uid,mobile,name,province_id,city_id,area_id,address', ['id' => $userAddressId], true);
+        if (empty($userAddress)) {
+            return ['code' => '3003'];
+        }
+        $cityId = $userAddress['city_id'];
+        if ($this->checkIntegralCart($skuIdList, $uid) === false) {
+            return ['code' => '3005']; //参数有误，商品未加入购物车
+        }
+        $summary = $this->integralSummary($uid, $skuIdList);
+        if ($summary['code'] != '200') {
+            return $summary;
+        }
+        $cart = $this->getIntegralCartGoods($skuIdList, $uid);
+        if ($cart === false) {
+            return ['code' => '3005'];
+        }
+        $balance                 = DbUser::getUserInfo(['id' => $uid], 'user_identity,integral', true);
+        // $user_identity = $balance['user_identity'];
+        $integral = $balance['integral'] ?? 0;
+        $totalGoodsIntegralPrice = $summary['total_goods_integral_price'];
+        if ($integral < $totalGoodsIntegralPrice) {
+            return ['code' => '3006', 'msg' => '余额不足'];
+        }
+        $from_uid = 0;
+        foreach ($cart as $c => $t) {
+            if (isset($t['from_uid'])) {
+                $from_uid = $t['from_uid'];
+            }
+        }
+        $cartShops     = array_column($cart, 'shops'); //所有购买涉及的门店
+        $shops         = [];
+        array_map(function ($value) use (&$shops) {
+            $shops = array_merge($shops, array_values($value));
+        }, $cartShops);
+        $shops    = array_values(array_unique($shops)); //去重后的门店
+        $shopList = DbShops::getShops([['id', 'in', $shops]], 'id,uid'); //购买的所有店铺信息列表
+        $shopList = array_column($shopList, 'uid', 'id');
+//        print_r($shopList);die;
+        $orderGoodsData = [];
+        foreach ($summary['goods_list'] as $gList) {
+            foreach ($gList['shopBuySum'] as $kgl => $gl) {
+                for ($i = 0; $i < $gl; $i++) {
+                    $goodsData = [
+                        'goods_id'     => $gList['goods_id'],
+                        'goods_name'   => $gList['goods_name'],
+                        'sku_id'       => $gList['id'],
+                        'sup_id'       => $gList['supplier_id'],
+                        'boss_uid'     => $shopList[$kgl] ?: 1,
+                        'goods_price'  => $gList['integral_price'],
+                        'goods_num'    => 1,
+                        'sku_json'     => json_encode($gList['attr']),
+                    ];
+                    array_push($orderGoodsData, $goodsData);
+                }
+            }
+        }
 
-     /**
+         /*
+         * 商品订单内容
+         */
+        /*
+         * 子订单内容
+         */
+        // $freightSupplierPrice = $summary['freight_supplier_price'];
+        $freightSupplierPrice = $summary['freight_supplier_price'];
+        $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
+        $supplierData         = [];
+        foreach ($supplier as $sval) {
+            $sval['express_money'] = 0;
+            $sval['supplier_id']   = $sval['id'];
+            $sval['supplier_name'] = $sval['name'];
+            unset($sval['id']);
+            unset($sval['name']);
+            array_push($supplierData, $sval);
+        }
+        /*
+         * 子订单内容
+         */
+        $orderNo        = createOrderNo(); //创建订单号
+        $deductionMoney = 0; //商票抵扣金额
+        $thirdMoney     = 0; //第三方支付金额
+        $integralMoney  = $totalGoodsIntegralPrice; //积分抵扣金额
+        $isPay          = true;
+        $tradingData    = []; //交易日志
+
+        if ($payType == 3) { //积分支付
+            $userInfo      = DbUser::getUserInfo(['id' => $uid], 'integral', true);
+            $integralMoney = $totalGoodsIntegralPrice; //积分抵扣金额
+            $tradingData   = [
+                'uid'             => $uid,
+                'order_no'        => $orderNo,
+                'status'          => 2,
+                'result_integral' => -$integralMoney,
+                'message'         => '兑换积分商品扣除',
+                'create_time'     => time(),
+            ];
+        }
+        $orderData = [
+            'order_no'        => $orderNo,
+            'third_order_id'  => 0,
+            'uid'             => $uid,
+            'order_type'      => 5,
+            'order_status'    => $isPay ? 4 : 1,
+            'order_money'     => $totalGoodsIntegralPrice, //订单金额(优惠金额+实际支付的金额)
+            'deduction_money' => $deductionMoney, //商票抵扣金额
+            'pay_money'       => $totalGoodsIntegralPrice, //实际支付(第三方支付金额+商票抵扣金额)
+            'goods_money'     => $totalGoodsIntegralPrice, //商品金额
+            'third_money'     => $thirdMoney, //第三方支付金额
+            'pay_type'        => $payType,
+            'third_pay_type'  => 2, //第三方支付类型1.支付宝 2.微信 3.银联 (暂时只能微信)
+            'linkman'         => $userAddress['name'],
+            'linkphone'       => $userAddress['mobile'],
+            'province_id'     => $userAddress['province_id'],
+            'city_id'         => $userAddress['city_id'],
+            'area_id'         => $userAddress['area_id'],
+            'address'         => $userAddress['address'],
+            'message'         => '',
+            'from_uid'        => $from_uid,
+            'pay_time'        => $isPay ? time() : 0,
+        ];
+        $stockSku = array_column($summary['goods_list'], 'buySum', 'id');
+        Db::startTrans();
+        try {
+            $orderId = DbOrder::addOrder($orderData);
+            if (empty($orderId)) {
+                Db::rollback();
+                return ['code' => '3009'];
+            }
+            foreach ($supplierData as $sdkey => $sdval) {
+                $supplierData[$sdkey]['order_id'] = $orderId;
+            }
+            $childOrder    = DbOrder::addOrderChilds($supplierData);
+            $childSupplier = $childOrder->toArray();
+            $childSupplier = array_column($childSupplier, 'id', 'supplier_id');
+            foreach ($orderGoodsData as $ogdK => $ogdV) {
+                $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
+            }
+            DbOrder::addOrderGoods($orderGoodsData);
+            DbGoods::decintegralStock($stockSku);
+            DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
+            DbUser::modifyIntegral($uid, $integralMoney, 'dec');
+            if (!empty($tradingData)) {
+                DbUser::saveLogInvest($tradingData);
+            }
+           
+            // if ($isPay) {
+            //     $redisListKey = Config::get('rediskey.order.redisOrderBonus');
+            //     $this->redis->rPush($redisListKey, $orderId);
+            // }
+            $this->summaryCart($skuIdList, $uid);
+            $this->resetUserInfo($uid);
+            Db::commit();
+            return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3009'];
+        }
+    }
+
+    public function integralSummary($uid, $skuIdList) {
+        $cart = $this->getIntegralCartGoods($skuIdList, $uid);
+        if ($cart === false) {
+            return ['code' => '3005'];
+        }
+        $goodsSku = DbGoods::getSkuGoods([['goods_sku.id', 'in', $skuIdList], ['integral_sale_stock', '>', '0'], ['goods_sku.status', '=', '1'], ['goods.is_integral_sale', '=', '2']], 'id,goods_id,stock,freight_id,market_price,retail_price,cost_price,margin_price,weight,volume,sku_image,spec,integral_price', 'id,supplier_id,goods_name,goods_type,target_users,subtitle,status,giving_rights');
+        $diff     = array_diff($skuIdList, array_column($goodsSku, 'id'));
+        if (!empty($diff)) {
+            $eGoodsList = [];
+            foreach ($diff as $di) {
+                $oneGoods = DbGoods::getOneGoods(['id' => $cart[$di]['goods_id']], 'id,goods_name,subtitle,image,giving_rights');
+                $attrList = DbGoods::getAttrList([['id', 'in', explode(',', $cart[$di]['spec'])]], 'attr_name');
+                $attrList = array_column($attrList, 'attr_name');
+                array_push($eGoodsList, $oneGoods['goods_name'] . '(' . implode('、', $attrList) . ')');
+            }
+            return ['code' => '3004', 'goodsError' => $eGoodsList]; //商品售罄列表
+        }
+        $goodsOversold = []; //库存不够商品列表
+        $goodsList     = [];
+        // $freightPrice         = []; //各个运费模版的商品购买价格
+        // $freightCount         = []; //各个运费模版的购买数量
+        // $freightWeight        = []; //各个运费模版的购买重量
+        // $freightVolume        = []; //各个运费模版的购买体积
+        // $rebateAll            = 0; //所有商品钻石再补贴总和
+        $totalGoodsIntegralPrice = 0; //所有商品总价
+        $goodsCount              = 0; //购买商品总数
+        // $totalFreightPrice    = 0; //总运费
+        $freightSupplierPrice = []; //各个供应商的运费
+        foreach ($goodsSku as $value) {
+            $value['supplier_id'] = $value['goods']['supplier_id'];
+            $value['goods_name']  = $value['goods']['goods_name'];
+            $value['goods_type']  = $value['goods']['goods_type'];
+            $value['subtitle']    = $value['goods']['subtitle'];
+            $value['status']      = $value['goods']['status'];
+            $attr                 = DbGoods::getAttrList([['id', 'in', explode(',', $value['spec'])]], 'attr_name');
+            $value['attr']        = array_column($attr, 'attr_name');
+
+            $cartSum = intval($cart[$value['id']]['sum']);
+            if ($cartSum > $value['stock']) { //购买数量超过库存
+                array_push($goodsOversold, $value['goods_name'] . '(' . implode('、', $value['attr']) . ')');
+            }
+            $value['buySum']                     = $cartSum;
+            $value['shopBuySum']                 = $cart[$value['id']]['track'];
+            $totalGoodsIntegralPrice = bcadd(bcmul($value['integral_price'], $cartSum), $totalGoodsIntegralPrice); //商品总价
+            $goodsCount += $cartSum;
+            array_push($goodsList, $value);
+            array_push($freightSupplierPrice, [$value['supplier_id'] => 0]);
+        }
+        $couponPrice = 0;
+        $goodsIdList = array_unique(array_column($goodsList, 'goods_id'));
+        if (!empty($goodsOversold)) {
+            return ['code' => '3007', 'goods_oversold' => $goodsOversold]; //库存不足商品
+        }
+        if ($totalGoodsIntegralPrice <= 0) {
+            return ['code' => '3009'];
+        }
+        return ['code' => '200', 'goods_count' => $goodsCount, 'total_goods_integral_price' => $totalGoodsIntegralPrice,'goods_list' => $goodsList, 'freight_supplier_price' => $freightSupplierPrice];
+    }
+
+    /**
      * 判断结算的商品是否已加入购物车
      * @param $skuIdList
      * @param $uid
@@ -2580,11 +2859,40 @@ class Order extends CommonIndex {
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
         }, $carts);
-        $diff     = array_diff($skuIdList, $cartList);
+        $diff = array_diff($skuIdList, $cartList);
         if (empty($diff)) {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 获取购物车里要购买的商品
+     * @param $skuIdList
+     * @param $uid
+     * @return array
+     * @author zyr
+     */
+    private function getIntegralCartGoods($skuIdList, $uid) {
+        $prefix       = $this->prefix;
+        $skuIdListNew = array_map(function ($v) use ($prefix) {
+            return $prefix . $v;
+        }, $skuIdList);
+        $keys = $this->redis->hKeys($this->redisIntegralCartUserKey . $uid);
+        $diff = array_diff($skuIdListNew, $keys);
+        if (!empty($diff)) {
+            return false;
+        }
+        $buyList = $this->redis->hMGet($this->redisIntegralCartUserKey . $uid, $skuIdListNew);
+        $result  = [];
+        foreach ($buyList as $key => $val) {
+            $cartRow          = json_decode($val, true);
+            $cartRow['sum']   = array_sum($cartRow['track']);
+            $cartRow['shops'] = array_keys($cartRow['track']);
+            $resKey           = str_replace($prefix, '', $key);
+            $result[$resKey]  = $cartRow;
+        }
+        return $result;
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */

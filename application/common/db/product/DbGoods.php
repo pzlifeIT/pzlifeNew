@@ -607,6 +607,20 @@ class DbGoods {
         }
     }
 
+     /**
+     * 改积分库存
+     * @param $skuIdList
+     * @param string $modify 增加/减少inc/dec
+     * @author zyr
+     */
+    public function decintegralStock($skuIdList, $modify = 'dec') {
+        foreach ($skuIdList as $skuId => $num) {
+            $sku        = GoodsSku::get($skuId);
+            $sku->integral_sale_stock = [$modify, $num];
+            $sku->save();
+        }
+    }
+
     /**
      * 改一个库存
      * @param $skuId
