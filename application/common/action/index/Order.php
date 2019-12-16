@@ -21,6 +21,7 @@ class Order extends CommonIndex {
     public function __construct() {
         parent::__construct();
         $this->redisCartUserKey     = Config::get('rediskey.cart.redisCartUserKey');
+        $this->redisIntegralCartUserKey     = Config::get('rediskey.cart.redisIntegralCartUserKey');
         $this->redisDeliverOrderKey = Config::get('rediskey.order.redisDeliverOrderExpress');
     }
 
@@ -2408,6 +2409,8 @@ class Order extends CommonIndex {
             return ['code' => '3004']; //商品下架
         }
         $goodsSku = $goodsSku[0];
+        $attr                    = DbGoods::getAttrList([['id', 'in', explode(',', $goodsSku['spec'])]], 'attr_name');
+        $goodsSku['attr']        = array_column($attr, 'attr_name');
         $summary['goods_list'][] = $goodsSku;
         $shopInfo = DbShops::getShopInfo('id', ['uid' => $buid]);
         if (empty($shopInfo)) {
@@ -2423,22 +2426,20 @@ class Order extends CommonIndex {
         $goods = $summary['goods_list'][0];
         $from_uid = $buid;
         $orderGoodsData = [];
-        foreach ($goods['shopBuySum'] as $kgl => $gl) {
-            for ($i = 0; $i < $gl; $i++) {
+        // print_r($goodsSku);die;
+           
                 $goodsData = [
                     'goods_id'     => $goods['goods_id'],
-                    'goods_name'   => $goods['goods_name'],
+                    'goods_name'   => $goods['goods']['goods_name'],
                     'sku_id'       => $goods['id'],
-                    'sup_id'       => $goods['supplier_id'],
+                    'sup_id'       => $goods['goods']['supplier_id'],
                     'boss_uid'     => $buid,
-                    'goods_price'  => $goods['retail_price'],
-                    'goods_num'    => 1,
+                    'goods_price'  => $goods['integral_price'],
+                    'goods_num'    => $num,
                     'sku_json'     => json_encode($goods['attr']),
                 ];
                 array_push($orderGoodsData, $goodsData);
-            }
-        }
-        $supplierId   = $goodsSku['supplier_id']; //供应商id
+        $supplierId   = $goodsSku['goods']['supplier_id']; //供应商id
         $supplier = DbGoods::getSupplier('id,name,image,title,desc', [['id', '=', $supplierId], ['status', '=', 1]]);
         $supplierData         = [];
         foreach ($supplier as $sval) {
@@ -2456,7 +2457,7 @@ class Order extends CommonIndex {
         $isPay          = true;
         $tradingData    = []; //交易日志
 
-        if ($payType == 3) { //商票支付
+        if ($payType == 3) { //积分支付
             $userInfo = DbUser::getUserInfo(['id' => $uid], 'integral', true);
             $integralMoney     = $totalGoodsIntegralPrice; //积分抵扣金额
             $tradingData = [
@@ -2472,8 +2473,9 @@ class Order extends CommonIndex {
             'order_no'        => $orderNo,
             'third_order_id'  => 0,
             'uid'             => $uid,
+            'order_type'      => 5,
             'order_status'    => $isPay ? 4 : 1,
-            'order_money'     => bcadd($summary['total_price'], $summary['discount_money'], 2), //订单金额(优惠金额+实际支付的金额)
+            'order_money'     => $totalGoodsIntegralPrice, //订单金额(优惠金额+实际支付的金额)
             'deduction_money' => $deductionMoney, //商票抵扣金额
             'pay_money'       => $totalGoodsIntegralPrice, //实际支付(第三方支付金额+商票抵扣金额)
             'goods_money'     => $totalGoodsIntegralPrice, //商品金额
@@ -2490,7 +2492,7 @@ class Order extends CommonIndex {
             'from_uid'        => $from_uid,
             'pay_time'        => $isPay ? time() : 0,
         ];
-        $stockSku = [$skuId => $goods['buySum']];
+        $stockSku = [$skuId => $num];
         Db::startTrans();
         try {
             $orderId = DbOrder::addOrder($orderData);
@@ -2511,7 +2513,7 @@ class Order extends CommonIndex {
             DbGoods::decStock($stockSku);
             DbUser::modifyIntegral($uid, $integralMoney, 'dec');
             if (!empty($tradingData)) {
-                DbOrder::saveLogInvest($tradingData);
+                DbUser::saveLogInvest($tradingData);
             }
             if (!empty($userCouponId)) {
                 DbCoupon::updateUserCoupon([
@@ -2527,6 +2529,7 @@ class Order extends CommonIndex {
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
         } catch (\Exception $e) {
+            // exception($e);
             Db::rollback();
             return ['code' => '3009'];
         }
@@ -2537,7 +2540,7 @@ class Order extends CommonIndex {
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        if ($this->checkCart($skuIdList, $uid) === false) {
+        if ($this->checkIntegralCart($skuIdList, $uid) === false) {
             return ['code' => '3005']; //商品未加入购物车
         }
         $cityId           = 0;
@@ -2559,6 +2562,29 @@ class Order extends CommonIndex {
         // $user_identity = $balance['user_identity'];
         $integral = $balance['integral'] ?? 0;
 
+    }
+
+     /**
+     * 判断结算的商品是否已加入购物车
+     * @param $skuIdList
+     * @param $uid
+     * @return bool
+     * @author zyr
+     */
+    private function checkIntegralCart($skuIdList, $uid) {
+        if (!$this->redis->exists($this->redisIntegralCartUserKey . $uid)) {
+            return false;
+        }
+        $prefix   = $this->prefix;
+        $carts    = $this->redis->hKeys($this->redisIntegralCartUserKey . $uid);
+        $cartList = array_map(function ($v) use ($prefix) {
+            return str_replace($prefix, '', $v);
+        }, $carts);
+        $diff     = array_diff($skuIdList, $cartList);
+        if (empty($diff)) {
+            return true;
+        }
+        return false;
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
