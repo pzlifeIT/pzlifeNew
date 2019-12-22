@@ -1104,7 +1104,7 @@ class Order extends MyController {
             return ['code' => '3008'];
         }
         $result       = $this->app->order->createIntegralOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
-        $this->apiLog($apiName, [$conId, $skuIdList, $payType, $userCouponId], $result['code'], $conId);
+        $this->apiLog($apiName, [$conId, $skuIdList, $payType, ], $result['code'], $conId);
         return $result;
     }
 }
