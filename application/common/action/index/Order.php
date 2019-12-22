@@ -2689,8 +2689,6 @@ class Order extends CommonIndex {
          */
         // $freightSupplierPrice = $summary['freight_supplier_price'];
         $freightSupplierPrice = $summary['freight_supplier_price'];
-        
-        print_r($freightSupplierPrice);die;
         $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
         $supplierData         = [];
         foreach ($supplier as $sval) {
@@ -2836,7 +2834,8 @@ class Order extends CommonIndex {
             $totalGoodsIntegralPrice = bcadd(bcmul($value['integral_price'], $cartSum), $totalGoodsIntegralPrice); //商品总价
             $goodsCount += $cartSum;
             array_push($goodsList, $value);
-            array_push($freightSupplierPrice, [$value['supplier_id'] => 0]);
+            // array_push($freightSupplierPrice, $value['supplier_id'] => 0);
+            $freightSupplierPrice[$value['supplier_id']] = 0;
         }
         $couponPrice = 0;
         $goodsIdList = array_unique(array_column($goodsList, 'goods_id'));
