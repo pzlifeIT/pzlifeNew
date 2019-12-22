@@ -2752,6 +2752,8 @@ class Order extends CommonIndex {
                 Db::rollback();
                 return ['code' => '3009'];
             }
+            print_r($supplierData);die;
+
             foreach ($supplierData as $sdkey => $sdval) {
                 $supplierData[$sdkey]['order_id'] = $orderId;
             }
@@ -2761,7 +2763,7 @@ class Order extends CommonIndex {
             foreach ($orderGoodsData as $ogdK => $ogdV) {
                 $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
             }
-            print_r($orderGoodsData);die;
+            
             DbOrder::addOrderGoods($orderGoodsData);
             DbGoods::decintegralStock($stockSku);
             DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
