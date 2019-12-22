@@ -2690,6 +2690,7 @@ class Order extends CommonIndex {
         // $freightSupplierPrice = $summary['freight_supplier_price'];
         $freightSupplierPrice = $summary['freight_supplier_price'];
         $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
+        print_r($supplier);die;
         $supplierData         = [];
         foreach ($supplier as $sval) {
             $sval['express_money'] = 0;
@@ -2836,7 +2837,6 @@ class Order extends CommonIndex {
             array_push($goodsList, $value);
             array_push($freightSupplierPrice, [$value['supplier_id'] => 0]);
         }
-        print_r($freightSupplierPrice);die;
         $couponPrice = 0;
         $goodsIdList = array_unique(array_column($goodsList, 'goods_id'));
         if (!empty($goodsOversold)) {
