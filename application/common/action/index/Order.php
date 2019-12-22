@@ -2761,6 +2761,7 @@ class Order extends CommonIndex {
             foreach ($orderGoodsData as $ogdK => $ogdV) {
                 $orderGoodsData[$ogdK]['order_child_id'] = $childSupplier[$ogdV['sup_id']];
             }
+            print_r($orderGoodsData);die;
             DbOrder::addOrderGoods($orderGoodsData);
             DbGoods::decintegralStock($stockSku);
             DbUser::modifyBalance($uid, $deductionMoney, $modify = 'dec');
@@ -2773,7 +2774,7 @@ class Order extends CommonIndex {
             //     $redisListKey = Config::get('rediskey.order.redisOrderBonus');
             //     $this->redis->rPush($redisListKey, $orderId);
             // }
-            $this->summaryCart($skuIdList, $uid);
+            $this->summaryIntegralCart($skuIdList, $uid);
             $this->resetUserInfo($uid);
             Db::commit();
             return ['code' => '200', 'order_no' => $orderNo, 'is_pay' => $isPay ? 1 : 2];
@@ -2893,6 +2894,20 @@ class Order extends CommonIndex {
             $result[$resKey]  = $cartRow;
         }
         return $result;
+    }
+
+        /**
+     * 创建订单后清空购物车中下单的商品
+     * @param $skuIdList
+     * @param $uid
+     * @author zyr
+     */
+    private function summaryIntegralCart($skuIdList, $uid) {
+        $params = [$this->redisIntegralCartUserKey . $uid];
+        foreach ($skuIdList as $silV) {
+            array_push($params, $this->prefix . $silV);
+        }
+        call_user_func_array([$this->redis, 'hDel'], $params);
     }
 }
 /* {"appid":"wx112088ff7b4ab5f3","attach":"2","bank_type":"CMB_DEBIT","cash_fee":"600","fee_type":"CNY","is_subscribe":"Y","mch_id":"1330663401","nonce_str":"lzlqdk6lgavw1a3a8m69pgvh6nwxye89","openid":"o83f0wAGooABN7MsAHjTv4RTOdLM","out_trade_no":"PAYSN201806201611392442","result_code":"SUCCESS","return_code":"SUCCESS","sign":"108FD8CE191F9635F67E91316F624D05","time_end":"20180620161148","total_fee":"600","trade_type":"JSAPI","transaction_id":"4200000112201806200521869502"} */
