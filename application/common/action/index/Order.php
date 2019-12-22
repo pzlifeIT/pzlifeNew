@@ -2689,8 +2689,9 @@ class Order extends CommonIndex {
          */
         // $freightSupplierPrice = $summary['freight_supplier_price'];
         $freightSupplierPrice = $summary['freight_supplier_price'];
+        
+        print_r($freightSupplierPrice);die;
         $supplier             = DbGoods::getSupplier('id,name', [['id', 'in', array_keys($freightSupplierPrice)], ['status', '=', '1']]);
-        print_r($supplier);die;
         $supplierData         = [];
         foreach ($supplier as $sval) {
             $sval['express_money'] = 0;
