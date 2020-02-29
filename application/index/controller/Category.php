@@ -7,7 +7,7 @@ use app\index\MyController;
 class Category extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'getFirstCate,getGoodsSubject,getSubjectDetail'],//除去getFirstCate其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getFirstCate,getGoodsSubject,getSubjectDetail,getGoodsIntegralSubject'],//除去getFirstCate其他方法都进行isLogin前置操作
 //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -70,5 +70,23 @@ class Category extends MyController {
         }
         $result = $this->app->category->getSubjectDetail(intval($subjectId));
         return $result;
+    }
+
+    /**
+     * @api              {post} / 积分专题
+     * @apiDescription   getGoodsIntegralSubject
+     * @apiGroup         index_category
+     * @apiName          getGoodsIntegralSubject
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3002.type参数错误 / 3003.pid参数错误
+     * @apiSuccess (data) {String} type_name 分类名称
+     * @apiSampleRequest /index/category/getGoodsIntegralSubject
+     * @author rzc
+     * 2019/1/7-9:47
+     */
+    public function getGoodsIntegralSubject() {
+        $apiName = classBasename($this) . '/' . __function__;
+        $res     = $this->app->category->getGoodsIntegralSubject();
+        $this->apiLog($apiName, [], $res['code'], '');
+        return $res;
     }
 }
