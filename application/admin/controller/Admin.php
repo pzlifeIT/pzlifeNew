@@ -4,9 +4,10 @@ namespace app\admin\controller;
 
 use app\admin\AdminController;
 
-class Admin extends AdminController {
+class Admin extends AdminController
+{
     protected $beforeActionList = [
-//        'isLogin', //所有方法的前置操作
+        //        'isLogin', //所有方法的前置操作
         'isLogin' => ['except' => 'login'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
@@ -23,7 +24,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function login() {
+    public function login()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $adminName = trim($this->request->post('admin_name'));
         $passwd    = trim($this->request->post('passwd'));
@@ -49,7 +51,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminUsers() {
+    public function getAdminUsers()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminUsers();
@@ -72,7 +75,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function getAdminInfo() {
+    public function getAdminInfo()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getAdminInfo($cmsConId);
@@ -94,7 +98,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function addAdmin() {
+    public function addAdmin()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -133,7 +138,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function midifyPasswd() {
+    public function midifyPasswd()
+    {
         $apiName    = classBasename($this) . '/' . __function__;
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $passwd     = trim($this->request->post('passwd'));
@@ -170,7 +176,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function adminRemittance() {
+    public function adminRemittance()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -220,7 +227,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function auditAdminRemittance() {
+    public function auditAdminRemittance()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -260,7 +268,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function openBoss() {
+    public function openBoss()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -311,7 +320,8 @@ class Admin extends AdminController {
      * @return array
      * @author zyr
      */
-    public function getOpenBossList() {
+    public function getOpenBossList()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $mobile   = trim($this->request->post('mobile')); //开通账号手机号
@@ -351,7 +361,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminRemittance() {
+    public function getAdminRemittance()
+    {
         $apiName           = classBasename($this) . '/' . __function__;
         $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $page              = trim(input("post.page"));
@@ -421,7 +432,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getInvoice() {
+    public function getInvoice()
+    {
         $apiName           = classBasename($this) . '/' . __function__;
         $cmsConId          = trim($this->request->post('cms_con_id')); //操作管理员
         $result = $this->app->admin->getInvoice();
@@ -443,7 +455,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function editInvoice() {
+    public function editInvoice()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -480,7 +493,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getAdminBank() {
+    public function getAdminBank()
+    {
         $apiName   = classBasename($this) . '/' . __function__;
         $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $id        = trim(input("post.id"));
@@ -527,7 +541,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function addAdminBank() {
+    public function addAdminBank()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -573,7 +588,8 @@ class Admin extends AdminController {
      * @author rzc
      */
 
-    public function editAdminBank() {
+    public function editAdminBank()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -651,7 +667,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getLogTransfer() {
+    public function getLogTransfer()
+    {
         $apiName     = classBasename($this) . '/' . __function__;
         $cmsConId    = trim($this->request->post('cms_con_id')); //操作管理员
         $id          = trim(input("post.id"));
@@ -760,7 +777,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function checkUserCommissionTransfer() {
+    public function checkUserCommissionTransfer()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -781,7 +799,6 @@ class Admin extends AdminController {
         $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message, 2);
         $this->apiLog($apiName, [$cmsConId, $id, $status, $message, 2], $result['code'], $cmsConId);
         return $result;
-
     }
 
     /**
@@ -799,7 +816,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function checkUserBountyTransfer() {
+    public function checkUserBountyTransfer()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -820,7 +838,6 @@ class Admin extends AdminController {
         $result = $this->app->admin->checkUserTransfer(intval($id), intval($status), $message, 4);
         $this->apiLog($apiName, [$cmsConId, $id, $status, $message, 4], $result['code'], $cmsConId);
         return $result;
-
     }
 
     /**
@@ -862,7 +879,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function getUserBank() {
+    public function getUserBank()
+    {
         $apiName     = classBasename($this) . '/' . __function__;
         $cmsConId    = trim($this->request->post('cms_con_id')); //操作管理员
         $id          = trim($this->request->post('id'));
@@ -919,7 +937,8 @@ class Admin extends AdminController {
      * @return array
      * @author rzc
      */
-    public function checkUserBank() {
+    public function checkUserBank()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -970,7 +989,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/cmsmenu
      * @author zyr
      */
-    public function cmsMenu() {
+    public function cmsMenu()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->cmsMenu($cmsConId);
@@ -990,12 +1010,13 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/cmsmenuone
      * @author zyr
      */
-    public function cmsMenuOne() {
+    public function cmsMenuOne()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $id       = trim($this->request->post('id'));
         if (!is_numeric($id) || $id < 0) {
-            return ['code' => '3001'];//菜单id有误
+            return ['code' => '3001']; //菜单id有误
         }
         $result = $this->app->admin->cmsMenuOne($cmsConId, $id);
         $this->apiLog($apiName, [$cmsConId, $id], $result['code'], $cmsConId);
@@ -1014,7 +1035,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/editmenu
      * @author zyr
      */
-    public function editMenu() {
+    public function editMenu()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1023,7 +1045,7 @@ class Admin extends AdminController {
         $id   = trim($this->request->post('id'));
         $name = trim($this->request->post('name'));
         if (!is_numeric($id) || $id < 0) {
-            return ['code' => '3001'];//菜单id有误
+            return ['code' => '3001']; //菜单id有误
         }
         $result = $this->app->admin->editMenu($cmsConId, $id, $name);
         $this->apiLog($apiName, [$cmsConId, $id, $name], $result['code'], $cmsConId);
@@ -1042,7 +1064,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/addpermissionsgroup
      * @author zyr
      */
-    public function addPermissionsGroup() {
+    public function addPermissionsGroup()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1071,7 +1094,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/editpermissionsgroup
      * @author zyr
      */
-    public function editPermissionsGroup() {
+    public function editPermissionsGroup()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1104,7 +1128,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/addadminpermissions
      * @author zyr
      */
-    public function addAdminPermissions() {
+    public function addAdminPermissions()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1140,12 +1165,13 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/addpermissionsapi
      * @author zyr
      */
-    public function addPermissionsApi() {
+    public function addPermissionsApi()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-//        if ($this->checkPermissions($cmsConId, $apiName) === false) { //该接口只有root可以使用,开发特殊接口
-//            return ['code' => '3100'];
-//        }
+        //        if ($this->checkPermissions($cmsConId, $apiName) === false) { //该接口只有root可以使用,开发特殊接口
+        //            return ['code' => '3100'];
+        //        }
         $menuId   = trim($this->request->post('menu_id'));
         $apiUrl   = trim($this->request->post('api_name'));
         $stype    = trim($this->request->post('stype'));
@@ -1153,17 +1179,17 @@ class Admin extends AdminController {
         $content  = trim($this->request->post('content'));
         $stypeArr = [1, 2, 3];
         if (!is_numeric($menuId) || $menuId < 1) {
-            return ['code' => '3001'];//菜单id有误
+            return ['code' => '3001']; //菜单id有误
         }
         $menuId = intval($menuId);
         if (empty($apiUrl)) {
-            return ['code' => '3002'];//接口url不能为空
+            return ['code' => '3002']; //接口url不能为空
         }
         if (!in_array($stype, $stypeArr)) {
-            return ['code' => '3003'];//接口权操作类型
+            return ['code' => '3003']; //接口权操作类型
         }
         if (empty($cnName)) {
-            return ['code' => '3004'];//权限名称不能为空
+            return ['code' => '3004']; //权限名称不能为空
         }
         $content = $content ?? '';
         $result  = $this->app->admin->addPermissionsApi($cmsConId, $menuId, $apiUrl, $stype, $cnName, $content);
@@ -1184,7 +1210,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/editpermissionsapi
      * @author zyr
      */
-    public function editPermissionsApi() {
+    public function editPermissionsApi()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1194,11 +1221,11 @@ class Admin extends AdminController {
         $cnName  = trim($this->request->post('cn_name'));
         $content = trim($this->request->post('content'));
         if (!is_numeric($id) || $id < 1) {
-            return ['code' => '3001'];//接口id有误
+            return ['code' => '3001']; //接口id有误
         }
         $id = intval($id);
         if (empty($cnName)) {
-            return ['code' => '3004'];//权限名称不能为空
+            return ['code' => '3004']; //权限名称不能为空
         }
         $content = $content ?? '';
         $result  = $this->app->admin->editPermissionsApi($cmsConId, $id, $cnName, $content);
@@ -1218,7 +1245,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/addpermissionsgrouppower
      * @author zyr
      */
-    public function addPermissionsGroupPower() {
+    public function addPermissionsGroupPower()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1229,7 +1257,7 @@ class Admin extends AdminController {
         if (!is_numeric($groupId) || $groupId < 1) {
             return ['code' => '3001'];
         }
-//        $permissions = json_encode($arr);
+        //        $permissions = json_encode($arr);
         if (empty($permissions)) {
             return ['code' => '3004'];
         }
@@ -1251,7 +1279,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/deladminpermissions
      * @author zyr
      */
-    public function delAdminPermissions() {
+    public function delAdminPermissions()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1285,7 +1314,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getpermissionsgroupadmin
      * @author zyr
      */
-    public function getPermissionsGroupAdmin() {
+    public function getPermissionsGroupAdmin()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
@@ -1312,7 +1342,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getadmingroup
      * @author zyr
      */
-    public function getAdminGroup() {
+    public function getAdminGroup()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $getAdminId = trim($this->request->post('get_admin_id'));
@@ -1339,7 +1370,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getgroupinfo
      * @author zyr
      */
-    public function getGroupInfo() {
+    public function getGroupInfo()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
@@ -1363,7 +1395,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getpermissionslist
      * @author zyr
      */
-    public function getPermissionsList() {
+    public function getPermissionsList()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $groupId  = trim($this->request->post('group_id'));
@@ -1392,7 +1425,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getpermissionsapi
      * @author zyr
      */
-    public function getPermissionsApi() {
+    public function getPermissionsApi()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result   = $this->app->admin->getPermissionsApi($cmsConId);
@@ -1417,12 +1451,13 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/getpermissionsapione
      * @author zyr
      */
-    public function getPermissionsApiOne() {
+    public function getPermissionsApiOne()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $id       = trim($this->request->post('id'));
         if (!is_numeric($id) || $id < 0) {
-            return ['code' => '3001'];//接口id有误
+            return ['code' => '3001']; //接口id有误
         }
         $id     = intval($id);
         $result = $this->app->admin->getPermissionsApiOne($cmsConId, $id);
@@ -1442,7 +1477,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/bindManagerSearchKeyword
      * @author rzc
      */
-    public function bindManagerSearchKeyword(){
+    public function bindManagerSearchKeyword()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1473,7 +1509,8 @@ class Admin extends AdminController {
      * @apiSampleRequest /admin/admin/delManagerSearchKeyword
      * @author rzc
      */
-    public function delManagerSearchKeyword(){
+    public function delManagerSearchKeyword()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -1489,6 +1526,79 @@ class Admin extends AdminController {
         }
         $result = $this->app->admin->delManagerSearchKeyword($admin_id, $keyword);
         $this->apiLog($apiName, [$cmsConId, $admin_id, $keyword], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 采样细胞检查生成工具
+     * @apiDescription   samplingCreateTool
+     * @apiGroup         admin_admin
+     * @apiName          samplingCreateTool
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} password 密码
+     * @apiParam (入参) {int} type 产品类型 1~9
+     * @apiParam (入参) {int}  num 生成数量
+     * @apiParam (入参) {int}  start_num 卡号起始数字
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:密码错误 / 3002:
+     * @apiSampleRequest /admin/admin/samplingCreateTool
+     * @author rzc
+     */
+    public function samplingCreateTool()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $cms_con_id = trim($this->request->post('cms_con_id'));
+        $type  = trim($this->request->post('type'));
+        $password  = trim($this->request->post('password'));
+        $num  = trim($this->request->post('num'));
+        $start_num  = trim($this->request->post('start_num'));
+
+        $result = $this->app->admin->samplingCreateTool($type, $password, $num, $start_num);
+        // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 查看采样细胞检查生成记录
+     * @apiDescription   getSamplingNumber
+     * @apiGroup         admin_admin
+     * @apiName          getSamplingNumber
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} password 密码
+     * @apiParam (入参) {int} datekey 生成时间
+     * @apiParam (入参) {int}  type 生成数量
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/getSamplingNumber
+     * @author rzc
+     */
+    public function getSamplingNumber()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $cms_con_id = trim($this->request->post('cms_con_id'));
+        $type  = trim($this->request->post('type'));
+        $password  = trim($this->request->post('password'));
+        $datekey  = trim($this->request->post('datekey'));
+        $page        = trim($this->request->post('page'));
+        $page_num    = trim($this->request->post('page_num'));
+        $page        = empty($page) ? 1 : $page;
+        $pageNum     = empty($pageNum) ? 10 : $page_num;
+        if (!is_numeric($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum)) {
+            return ["code" => '3002'];
+        }
+        intval($page);
+        intval($pageNum);
+        $result = $this->app->admin->getSamplingNumber($type, $password, $datekey, $page, $pageNum);
+        // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
         return $result;
     }
 }
