@@ -16,12 +16,14 @@ use Env;
 use think\Db;
 use third\PHPTree;
 
-class Admin extends CommonIndex {
+class Admin extends CommonIndex
+{
     private $cmsCipherUserKey = 'adminpass'; //用户密码加密key
 
-    private function redisInit() {
+    private function redisInit()
+    {
         $this->redis = Phpredis::getConn();
-//        $this->connect = Db::connect(Config::get('database.db_config'));
+        //        $this->connect = Db::connect(Config::get('database.db_config'));
     }
 
     /**
@@ -30,7 +32,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function login($adminName, $passwd) {
+    public function login($adminName, $passwd)
+    {
         $getPass   = $this->getPassword($passwd, $this->cmsCipherUserKey); //用户填写的密码
         $adminInfo = DbAdmin::getAdminInfo(['admin_name' => $adminName, 'status' => 1], 'id,passwd', true);
         if (empty($adminInfo)) {
@@ -53,7 +56,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getAdminInfo($cmsConId) {
+    public function getAdminInfo($cmsConId)
+    {
         $adminId                 = $this->getUidByConId($cmsConId);
         $adminInfo               = DbAdmin::getAdminInfo(['id' => $adminId], 'admin_name,stype', true);
         $adminGroup              = DbAdmin::getAdminPermissionsGroup(['admin_id' => $adminId], 'group_id');
@@ -69,7 +73,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getAdminUsers() {
+    public function getAdminUsers()
+    {
         $adminByGroup = DbAdmin::getAdminInfoByGroup([
             ['a.id', '<>', '1'],
         ], 'a.id as admin_id,pg.group_name');
@@ -100,9 +105,10 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addAdmin($cmsConId, $adminName, $passwd, $stype) {
+    public function addAdmin($cmsConId, $adminName, $passwd, $stype)
+    {
         $adminId = $this->getUidByConId($cmsConId);
-//        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
+        //        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype,status', true);
         //        if ($adminInfo['stype'] != '2') {
         //            return ['code' => '3005']; //没有操作权限
         //        }
@@ -135,7 +141,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function midifyPasswd($cmsConId, $passwd, $newPasswd) {
+    public function midifyPasswd($cmsConId, $passwd, $newPasswd)
+    {
         $adminId   = $this->getUidByConId($cmsConId);
         $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'id,passwd,status', true);
         if ($adminInfo['passwd'] !== $this->getPassword($passwd, $this->cmsCipherUserKey)) {
@@ -162,9 +169,10 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function openBoss($cmsConId, $mobile, $nickName, $money, $message) {
+    public function openBoss($cmsConId, $mobile, $nickName, $money, $message)
+    {
         $adminId = $this->getUidByConId($cmsConId);
-//        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
+        //        $adminInfo = DbAdmin::getAdminInfo(['id' => $adminId], 'stype', true);
         //        if ($adminInfo['stype'] != '2') {
         //            return ['code' => '3005']; //没有操作权限
         //        }
@@ -237,7 +245,7 @@ class Admin extends CommonIndex {
             if (!empty($upgrade_task)) {
                 DbRights::editUserTask(['status' => 4], $upgrade_task['id']);
             }
-            
+
             if (!empty($temporary_task)) {
                 $user = DbUser::getUserInfo(['mobile' => $mobile, 'nick_name' => $nickName], 'id,user_identity,commission', true);
                 $tradingData = [];
@@ -274,7 +282,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum) {
+    public function getOpenBossList($cmsConId, $mobile, $nickName, $page, $pageNum)
+    {
         $adminId  = $this->getUidByConId($cmsConId);
         $allCount = DbUser::getLogOpenbossCount($mobile, $nickName); //总记录数
         $allPage  = ceil(bcdiv($allCount, $pageNum, 5)); //总页数
@@ -283,7 +292,8 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'data' => $data, 'all_count' => $allCount, 'all_page' => $allPage];
     }
 
-    private function getBoss($uid) {
+    private function getBoss($uid)
+    {
         if ($uid == 1) {
             return 1;
         }
@@ -299,7 +309,8 @@ class Admin extends CommonIndex {
         return $bossUid;
     }
 
-    private function getRelation($uid) {
+    private function getRelation($uid)
+    {
         $userRelation = DbUser::getUserRelation(['uid' => $uid], 'id,pid,is_boss,relation', true);
         return $userRelation;
     }
@@ -310,7 +321,8 @@ class Admin extends CommonIndex {
      * @return mixed
      * @author zyr
      */
-    private function getIdentity($uid) {
+    private function getIdentity($uid)
+    {
         $user = DbUser::getUserInfo(['id' => $uid], 'user_identity', true);
         if (empty($user)) {
             return false;
@@ -322,7 +334,8 @@ class Admin extends CommonIndex {
      * 创建唯一conId
      * @author zyr
      */
-    private function createCmsConId() {
+    private function createCmsConId()
+    {
         $cmsConId = uniqid(date('ymdHis'));
         $cmsConId = hash_hmac('ripemd128', $cmsConId, 'admin');
         return $cmsConId;
@@ -334,7 +347,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author zyr
      */
-    private function getPassword($str, $key) {
+    private function getPassword($str, $key)
+    {
         $algo   = Config::get('conf.cipher_algo');
         $md5    = hash_hmac('md5', $str, $key);
         $key2   = strrev($key);
@@ -353,7 +367,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message, $admin_message) {
+    public function adminRemittance($cmsConId, $passwd, $stype, $nick_name, $mobile, $credit, $message, $admin_message)
+    {
         $message       = $message ?? '';
         $admin_message = $admin_message ?? '';
         $adminId       = $this->getUidByConId($cmsConId);
@@ -393,10 +408,11 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function auditAdminRemittance($cmsConId, $status, int $id) {
+    public function auditAdminRemittance($cmsConId, $status, int $id)
+    {
         $userRedisKey = Config::get('rediskey.user.redisKey');
         $adminId      = $this->getUidByConId($cmsConId);
-//        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
+        //        $adminInfo    = DbAdmin::getAdminInfo(['id' => $adminId], 'id,stype', true);
         //        if ($adminInfo['id'] != 1) {
         //            return ['code' => '3002'];
         //        }
@@ -496,7 +512,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getAdminRemittance(int $page, int $pageNum, $initiate_admin_id = 0, $audit_admin_id = 0, $status = 0, $min_credit = 0, $max_credit = 0, $uid = 0, $stype = 0, $start_time = '', $end_time = '') {
+    public function getAdminRemittance(int $page, int $pageNum, $initiate_admin_id = 0, $audit_admin_id = 0, $status = 0, $min_credit = 0, $max_credit = 0, $uid = 0, $stype = 0, $start_time = '', $end_time = '')
+    {
         $offset = $pageNum * ($page - 1);
         $where  = [];
         if (!empty($initiate_admin_id)) {
@@ -548,7 +565,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function addAdminBank($abbrev, $bank_name, $icon_img = '', $bg_img = '', $status) {
+    public function addAdminBank($abbrev, $bank_name, $icon_img = '', $bg_img = '', $status)
+    {
         $is_bank_abbrev = DbAdmin::getAdminBank(['abbrev' => $abbrev], 'id', true);
         $is_bank_name   = DbAdmin::getAdminBank(['bank_name' => $bank_name], 'id', true);
         if ($is_bank_abbrev || $is_bank_name) {
@@ -599,7 +617,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function editAdminBank(int $id, $abbrev = '', $bank_name = '', $icon_img = '', $bg_img = '', $status = '') {
+    public function editAdminBank(int $id, $abbrev = '', $bank_name = '', $icon_img = '', $bg_img = '', $status = '')
+    {
         if (empty($abbrev) && empty($bank_name) && empty($icon_img) && empty($bg_img) && empty($status)) {
             return ['code' => '3004'];
         }
@@ -673,7 +692,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getAdminBank(int $page, int $pageNum, $abbrev = '', $bank_name = '', $status = '', $id = '') {
+    public function getAdminBank(int $page, int $pageNum, $abbrev = '', $bank_name = '', $status = '', $id = '')
+    {
         $where = [];
         if (!empty($id)) {
             $result = DbAdmin::getAdminBank(['id' => $id], '*', true);
@@ -721,7 +741,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getLogTransfer($bank_card = '', $abbrev = '', $bank_mobile = '', $user_name = '', $bank_name = '', $min_money = '', $max_money = '', $invoice = '', $status = '', $stype = '', $wtype = '', $start_time = '', $end_time = '', $page = '', $pageNum = '', $id = '') {
+    public function getLogTransfer($bank_card = '', $abbrev = '', $bank_mobile = '', $user_name = '', $bank_name = '', $min_money = '', $max_money = '', $invoice = '', $status = '', $stype = '', $wtype = '', $start_time = '', $end_time = '', $page = '', $pageNum = '', $id = '')
+    {
         $offset = ($page - 1) * $pageNum;
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -803,7 +824,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function checkUserTransfer(int $id, int $status, $message = '', $stype) {
+    public function checkUserTransfer(int $id, int $status, $message = '', $stype)
+    {
         $transfer     = DbUser::getLogTransfer(['id' => $id, 'stype' => $stype], '*', true);
         $userRedisKey = Config::get('rediskey.user.redisKey');
         if (empty($transfer)) {
@@ -906,7 +928,6 @@ class Admin extends CommonIndex {
         } else {
             return ['code' => '3008', 'msg' => '错误的提现方式'];
         }
-
     }
 
     /**
@@ -922,7 +943,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getUserBank($id = '', $bank_card = '', $bank_mobile = '', $user_name = '', $status = '', int $page, int $pageNum) {
+    public function getUserBank($id = '', $bank_card = '', $bank_mobile = '', $user_name = '', $status = '', int $page, int $pageNum)
+    {
         $offset = ($page - 1) * $pageNum;
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -956,7 +978,8 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'total' => $total, 'userbank' => $result];
     }
 
-    function delDataEmptyKey($data) {
+    function delDataEmptyKey($data)
+    {
         foreach ($data as $key => $value) {
             if (!$value) {
                 unset($data[$key]);
@@ -974,7 +997,8 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function checkUserBank($id, $status, $message = '', $error_fields = '') {
+    public function checkUserBank($id, $status, $message = '', $error_fields = '')
+    {
         $userbank = DbUser::getUserBank(['id' => $id], '*', true);
         if (empty($userbank)) {
             return ['code' => '3000'];
@@ -1010,17 +1034,18 @@ class Admin extends CommonIndex {
      * @return string
      * @author rzc
      */
-    public function getInvoice() {
+    public function getInvoice()
+    {
         // echo ;die;
         $invoice = @file_get_contents(Env::get('root_path') . "invoice.json");
         if ($invoice == false) {
             return ['code' => '3000'];
         }
         return ['code' => '200', 'invoice' => json_decode($invoice, true)];
-
     }
 
-    public function editInvoice($cmsConId, $has_invoice, $no_invoice) {
+    public function editInvoice($cmsConId, $has_invoice, $no_invoice)
+    {
         $redisManageInvoice     = Config::get('rediskey.manage.redisManageInvoice');
         $invoice                = [];
         $invoice['has_invoice'] = $has_invoice;
@@ -1038,7 +1063,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function cmsMenu($cmsConId) {
+    public function cmsMenu($cmsConId)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId == 1) {
             $data = DbAdmin::getMenu([]);
@@ -1071,8 +1097,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function cmsMenuOne($cmsConId, $id) {
-//        $adminId = $this->getUidByConId($cmsConId);
+    public function cmsMenuOne($cmsConId, $id)
+    {
+        //        $adminId = $this->getUidByConId($cmsConId);
         $data = DbAdmin::getMenuList([['id', '=', $id]], 'name', true);
         return ["code" => 200, "data" => $data];
     }
@@ -1085,7 +1112,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function editMenu($cmsConId, $id, $name) {
+    public function editMenu($cmsConId, $id, $name)
+    {
         $menu = DbAdmin::getMenuList([['id', '=', $id]], 'id', true);
         if (empty($menu)) {
             return ['code' => '3002'];
@@ -1109,8 +1137,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addPermissionsGroup($cmsConId, $groupName, $content) {
-//        $adminId = $this->getUidByConId($cmsConId);
+    public function addPermissionsGroup($cmsConId, $groupName, $content)
+    {
+        //        $adminId = $this->getUidByConId($cmsConId);
         $group = DbAdmin::getPermissionsGroup(['group_name' => $groupName], 'id', true);
         if (!empty($group)) {
             return ['code' => '3001'];
@@ -1139,7 +1168,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function editPermissionsGroup($cmsConId, $groupId, $groupName, $content) {
+    public function editPermissionsGroup($cmsConId, $groupId, $groupName, $content)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         $data    = [
             'group_name' => $groupName,
@@ -1168,7 +1198,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addAdminPermissions($cmsConId, $groupId, $addAdminId) {
+    public function addAdminPermissions($cmsConId, $groupId, $addAdminId)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($group)) { //权限分组不存在
@@ -1208,7 +1239,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content) {
+    public function addPermissionsApi($cmsConId, $menuId, $apiName, $stype, $cnName, $content)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId != '1') {
             return ['code' => '3008']; //只有root可以添加
@@ -1248,7 +1280,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function editPermissionsApi($cmsConId, $id, $cnName, $content) {
+    public function editPermissionsApi($cmsConId, $id, $cnName, $content)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         $apiRes  = DbAdmin::getPermissionsApi(['id' => $id], 'id', true);
         if (empty($apiRes)) {
@@ -1277,7 +1310,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addPermissionsGroupPower($cmsConId, $groupId, $permissions) {
+    public function addPermissionsGroupPower($cmsConId, $groupId, $permissions)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($group)) { //权限分组不存在
@@ -1380,7 +1414,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function delAdminPermissions($cmsConId, $groupId, $delAdminId) {
+    public function delAdminPermissions($cmsConId, $groupId, $delAdminId)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         $group   = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id', true);
         if (empty($group)) { //权限分组不存在
@@ -1417,8 +1452,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPermissionsGroupAdmin($cmsConId, $groupId) {
-//        $adminId = $this->getUidByConId($cmsConId);
+    public function getPermissionsGroupAdmin($cmsConId, $groupId)
+    {
+        //        $adminId = $this->getUidByConId($cmsConId);
         $groupAdmin = DbAdmin::getAdminPermissionsGroup([['group_id', '=', $groupId]], 'admin_id');
         if (empty($groupAdmin)) {
             return ['code' => '3000'];
@@ -1439,8 +1475,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getAdminGroup($cmsConId, $getAdminId) {
-//        $adminId = $this->getUidByConId($cmsConId);
+    public function getAdminGroup($cmsConId, $getAdminId)
+    {
+        //        $adminId = $this->getUidByConId($cmsConId);
         if (empty($getAdminId)) {
             $group = DbAdmin::getPermissionsGroup([], 'id,group_name,content');
         } else {
@@ -1456,7 +1493,8 @@ class Admin extends CommonIndex {
         return ['code' => '200', 'data' => $group];
     }
 
-    public function getGroupInfo($cmsConId, $groupId) {
+    public function getGroupInfo($cmsConId, $groupId)
+    {
         $group = DbAdmin::getPermissionsGroup(['id' => $groupId], 'id,group_name,content', true);
         return ['code' => '200', 'data' => $group];
     }
@@ -1468,8 +1506,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPermissionsList($cmsConId, $groupId) {
-//        $adminId = $this->getUidByConId($cmsConId);
+    public function getPermissionsList($cmsConId, $groupId)
+    {
+        //        $adminId = $this->getUidByConId($cmsConId);
         $data = DbAdmin::getMenuList([], 'id,pid,name');
         $tree = new PHPTree($data);
         $tree->setParam("pk", "id");
@@ -1512,7 +1551,8 @@ class Admin extends CommonIndex {
      * @return bool
      * @author zyr
      */
-    public function checkPermissions($cmsConId, $apiName) {
+    public function checkPermissions($cmsConId, $apiName)
+    {
         $adminId = $this->getUidByConId($cmsConId);
         if ($adminId == '1') {
             return true;
@@ -1544,7 +1584,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPermissionsApi($cmsConId) {
+    public function getPermissionsApi($cmsConId)
+    {
         $data = DbAdmin::getMenuList([], 'id,pid,name');
         $tree = new PHPTree($data);
         $tree->setParam("pk", "id");
@@ -1573,7 +1614,8 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPermissionsApiOne($cmsConId, $id) {
+    public function getPermissionsApiOne($cmsConId, $id)
+    {
         $data = DbAdmin::getPermissionsApi([['id', '=', $id]], 'id,stype,cn_name,content', true);
         return ['code' => '200', 'data' => $data];
     }
@@ -1585,8 +1627,9 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function bindManagerSearchKeyword($admin_id, $keyword){
-        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id],'id',true);
+    public function bindManagerSearchKeyword($admin_id, $keyword)
+    {
+        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id], 'id', true);
         if (empty($admin_user)) {
             return ['code' => '3001'];
         }
@@ -1602,13 +1645,117 @@ class Admin extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function delManagerSearchKeyword($admin_id, $keyword){
-        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id],'id',true);
+    public function delManagerSearchKeyword($admin_id, $keyword)
+    {
+        $admin_user = DbAdmin::getAdminInfo(['id' => $admin_id], 'id', true);
         if (empty($admin_user)) {
             return ['code' => '3001'];
         }
         $redissearchkeyword = Config::get('rediskey.cms.redisCmsSearchKeyword');
         $this->redis->hdel($redissearchkeyword . $admin_id, $keyword);
         return ['code' => '200'];
+    }
+
+    public function samplingCreateTool($type, $password, $num, $start_num)
+    {
+        if ($password == '' || $password != 51616413) {
+            return ['code' => '3001'];
+        }
+        intval($type);
+        if ($type < 0 || $type > 9) {
+            return ['code' => 3002];
+        }
+
+        $all_data = [];
+        for ($i = 0; $i < $num; $i++) {
+            $card = [];
+            $card_number = '';
+            do {
+                $card_number = $type . $this->combination($start_num);
+                $result = DbAdmin::getSamplingCard(['card_number' => $card_number], 'id', true);
+            } while ($result);
+            $start_num++;
+            $passwd = '';
+            $passwd = $this->getRandomString(12);
+            // $random = mt_rand(0, 7);
+            $card['card_number'] = $card_number;
+            $card['passwd'] = $passwd;
+            $card['datekey'] = date("ymd", time());
+            $card['type'] = $type;
+            $all_data[] = $card;
+        }
+        try {
+            DbAdmin::addAllSamplingCard($all_data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //删除失败
+        }
+    }
+
+    public function getSamplingNumber($type, $password, $datekey, $page, $pageNum)
+    {
+        if ($password == '' || $password != 51616413) {
+            return ['code' => '3001'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $where = [];
+        if (!empty($type)) {
+            array_push($where, ['type', '=', $type]);
+        }
+        if (!empty($datekey)) {
+            array_push($where, ['datekey', '=', $datekey]);
+        }
+        $result = DbAdmin::getSamplingCard($where, '*', false, '', $offset . ',' . $pageNum);
+        $total = DbAdmin::countSamplingCard($where);
+        return ['code' => '200', 'result' => $result];
+    }
+
+    function combination($num)
+    {
+        $num     = intval($num);
+        $num     = strval($num);
+        $new_num = '';
+        switch (strlen($num)) {
+            case 0:
+                $new_num = "00000";
+                break;
+            case 1:
+                $new_num = "0000" . $num;
+                break;
+            case 2:
+                $new_num = "000" . $num;
+                break;
+            case 3:
+                $new_num = "00" . $num;
+                break;
+            case 4:
+                $new_num = "0" . $num;
+                break;
+            case 5:
+                $new_num = "" . $num;
+                break;
+        }
+        return $new_num;
+    }
+
+    /**
+     * 生成数字随机组合
+     * @param $len
+     * @param string $chars
+     * @return mixed
+     * @author rzc
+     */
+    function getRandomString($len, $chars = null)
+    {
+        if (is_null($chars)) {
+            $chars = "0123456789";
+        }
+        mt_srand(10000000 * (float) microtime());
+        for ($i = 0, $str = '', $lc = strlen($chars) - 1; $i < $len; $i++) {
+            $str .= $chars[mt_rand(0, $lc)];
+        }
+        return $str;
     }
 }
