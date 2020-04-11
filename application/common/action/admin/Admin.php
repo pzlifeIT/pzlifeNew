@@ -1709,7 +1709,7 @@ class Admin extends CommonIndex
         }
         $result = DbAdmin::getSamplingCard($where, '*', false, '', $offset . ',' . $pageNum);
         $total = DbAdmin::countSamplingCard($where);
-        return ['code' => '200', 'result' => $result];
+        return ['code' => '200', 'total' => $total, 'result' => $result];
     }
 
     function combination($num)
