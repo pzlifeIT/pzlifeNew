@@ -1618,4 +1618,136 @@ class Admin extends AdminController
     public function exportSamplingNumber()
     {
     }
+
+    /**
+     * @api              {post} / 添加抽血点
+     * @apiDescription   addBloodSampling
+     * @apiGroup         admin_admin
+     * @apiName          addBloodSampling
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} province_id 省id
+     * @apiParam (入参) {int} city_id 市id
+     * @apiParam (入参) {int}  name 抽血点名称
+     * @apiParam (入参) {int}  address 详细地址
+     * @apiParam (入参) {int}  area_id 区级id
+     * @apiParam (入参) {int}  longitude 经度
+     * @apiParam (入参) {int}  latitude 纬度
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/addBloodSampling
+     * @author rzc
+     */
+    public function addBloodSampling()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $cms_con_id = trim($this->request->post('cms_con_id'));
+        $province_id  = trim($this->request->post('province_id'));
+        $city_id  = trim($this->request->post('city_id'));
+        $area_id  = trim($this->request->post('area_id'));
+        $name        = trim($this->request->post('name'));
+        $address    = trim($this->request->post('address'));
+        $longitude    = trim($this->request->post('longitude'));
+        $latitude    = trim($this->request->post('latitude'));
+        if (!is_numeric($longitude) || !is_numeric($latitude) || !is_numeric($province_id) || !is_numeric($area_id) || !is_numeric($city_id)) {
+            return ['code' => '3001', 'msg' => '数据格式错误'];
+        }
+        if (empty($name) || empty($address)) {
+            return ['code' => '3002', 'msg' => '信息填写不完整'];
+        }
+        $result = $this->app->admin->addBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude);
+        // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改抽血点信息
+     * @apiDescription   editBloodSampling
+     * @apiGroup         admin_admin
+     * @apiName          editBloodSampling
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} province_id 省id
+     * @apiParam (入参) {int} city_id 市id
+     * @apiParam (入参) {int}  name 抽血点名称
+     * @apiParam (入参) {int}  address 详细地址
+     * @apiParam (入参) {int}  area_id 区级id
+     * @apiParam (入参) {int}  longitude 经度
+     * @apiParam (入参) {int}  latitude 纬度
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/editBloodSampling
+     * @author rzc
+     */
+    public function editBloodSampling()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        if ($this->checkPermissions($cmsConId, $apiName) === false) {
+            return ['code' => '3100'];
+        }
+        $cms_con_id = trim($this->request->post('cms_con_id'));
+        $province_id  = trim($this->request->post('province_id'));
+        $city_id  = trim($this->request->post('city_id'));
+        $area_id  = trim($this->request->post('area_id'));
+        $name        = trim($this->request->post('name'));
+        $address    = trim($this->request->post('address'));
+        $longitude    = trim($this->request->post('longitude'));
+        $latitude    = trim($this->request->post('latitude'));
+        $id    = trim($this->request->post('id'));
+        if (!is_numeric($longitude) || !is_numeric($latitude) || !is_numeric($province_id) || !is_numeric($area_id) || !is_numeric($city_id)) {
+            return ['code' => '3001', 'msg' => '数据格式错误'];
+        }
+        if (empty($name) || empty($address)) {
+            return ['code' => '3002', 'msg' => '信息填写不完整'];
+        }
+        if (empty($id) || intval($id) < 1) {
+            return ['code' => '3003', 'msg' => 'id错误'];
+        }
+        $result = $this->app->admin->editBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude, $id);
+        // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取抽血点信息
+     * @apiDescription   getBloodSampling
+     * @apiGroup         admin_admin
+     * @apiName          getBloodSampling
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} province_id 省id
+     * @apiParam (入参) {int} city_id 市id
+     * @apiParam (入参) {int}  name 抽血点名称
+     * @apiParam (入参) {int}  address 详细地址
+     * @apiParam (入参) {int}  area_id 区级id
+     * @apiParam (入参) {int}  longitude 经度
+     * @apiParam (入参) {int}  latitude 纬度
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/getBloodSampling
+     * @author rzc
+     */
+    public function getBloodSampling()
+    {
+        $province_id  = trim($this->request->post('province_id'));
+        $city_id  = trim($this->request->post('city_id'));
+        $area_id  = trim($this->request->post('area_id'));
+        $name        = trim($this->request->post('name'));
+        $address    = trim($this->request->post('address'));
+        $longitude    = trim($this->request->post('longitude'));
+        $latitude    = trim($this->request->post('latitude'));
+        $page        = trim($this->request->post('page'));
+        $page_num    = trim($this->request->post('page_num'));
+        $page        = empty($page) ? 1 : $page;
+        $pageNum     = empty($pageNum) ? 10 : $page_num;
+        if (!is_numeric($page)) {
+            return ["code" => '3002'];
+        }
+        if (!is_numeric($pageNum)) {
+            return ["code" => '3002'];
+        }
+        intval($page);
+        intval($pageNum);
+        $result = $this->app->admin->getBloodSampling($province_id, $city_id, $name, $address, $longitude, $latitude, $area_id, $page, $pageNum);
+        return $result;
+    }
 }

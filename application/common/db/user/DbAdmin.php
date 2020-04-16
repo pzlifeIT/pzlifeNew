@@ -13,6 +13,7 @@ use app\common\model\PermissionsGroup;
 use app\common\model\User;
 use app\common\model\SamplingCard;
 use app\common\model\SamplingReport;
+use app\common\model\BloodSamplingAddress;
 use think\Db;
 
 class DbAdmin
@@ -348,5 +349,28 @@ class DbAdmin
     public function countSamplingReport($where)
     {
         return SamplingReport::where($where)->count();
+    }
+    public function getBloodSamplingAddress($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
+        $obj = BloodSamplingAddress::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addBloodSamplingAddress($data)
+    {
+        $BloodSamplingAddress = new BloodSamplingAddress();
+        $BloodSamplingAddress->save($data);
+        return $BloodSamplingAddress->id;
+    }
+
+    public function editBloodSamplingAddress($data, $id)
+    {
+        $BloodSamplingAddress = new BloodSamplingAddress();
+        return $BloodSamplingAddress->save($data, ['id' => $id]);
+    }
+
+    public function countBloodSamplingAddress($where)
+    {
+        return BloodSamplingAddress::where($where)->count();
     }
 }
