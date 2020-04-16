@@ -10,6 +10,7 @@ use app\facade\DbOrder;
 use app\facade\DbRights;
 use app\facade\DbShops;
 use app\facade\DbUser;
+use app\facade\DbProvinces;
 use cache\Phpredis;
 use Config;
 use Env;
@@ -1684,6 +1685,7 @@ class Admin extends CommonIndex
             $card['type'] = $type;
             $all_data[] = $card;
         }
+        Db::startTrans();
         try {
             DbAdmin::addAllSamplingCard($all_data);
             Db::commit();
@@ -1757,5 +1759,118 @@ class Admin extends CommonIndex
             $str .= $chars[mt_rand(0, $lc)];
         }
         return $str;
+    }
+
+    public function addBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude)
+    {
+        /* 判断省市区ID是否合法 */
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $province_id];
+        $province = DbProvinces::getAreaOne($field, $where);
+
+        if (empty($province) || $province['level'] != '1') {
+            return ['code' => '3006', 'msg' => '错误的省份id'];
+        }
+        // $field = 'id,area_name,pid,level';
+        $where = ['city_id' => $city_id, 'level' => 2];
+        $city  = DbProvinces::getAreaOne($field, $where);
+        if (empty($city)) {
+            return ['code' => '3004', 'msg' => '错误的市级id'];
+        }
+        // $field = 'id,area_name,pid,level';
+        $where = ['area_id' => $area_id];
+        $area  = DbProvinces::getAreaOne($field, $where);
+        if (empty($area) || $area['level'] != '3') {
+            return ['code' => '3005', 'msg' => '错误的区级id'];
+        }
+        $data = [];
+        $data = [
+            'province' => $province_id,
+            'city_id' => $city_id,
+            'area_id' => $area_id,
+            'name' => $name,
+            'address' => $address,
+            'longitude' => $longitude,
+            'latitude' => $latitude,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::addBloodSamplingAddress($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //删除失败
+        }
+    }
+
+    public function editBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude, $id)
+    {
+        /* 判断省市区ID是否合法 */
+        $field    = 'id,area_name,pid,level';
+        $where    = ['id' => $province_id];
+        $province = DbProvinces::getAreaOne($field, $where);
+
+        if (empty($province) || $province['level'] != '1') {
+            return ['code' => '3006', 'msg' => '错误的省份id'];
+        }
+        // $field = 'id,area_name,pid,level';
+        $where = ['city_id' => $city_id, 'level' => 2];
+        $city  = DbProvinces::getAreaOne($field, $where);
+        if (empty($city)) {
+            return ['code' => '3004', 'msg' => '错误的市级id'];
+        }
+        // $field = 'id,area_name,pid,level';
+        $where = ['area_id' => $area_id];
+        $area  = DbProvinces::getAreaOne($field, $where);
+        if (empty($area) || $area['level'] != '3') {
+            return ['code' => '3005', 'msg' => '错误的区级id'];
+        }
+        $data = [];
+        $data = [
+            'province' => $province_id,
+            'city_id' => $city_id,
+            'area_id' => $area_id,
+            'name' => $name,
+            'address' => $address,
+            'longitude' => $longitude,
+            'latitude' => $latitude,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::editBloodSamplingAddress($data, $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //删除失败
+        }
+    }
+
+    public function getBloodSampling($province_id = 0, $city_id = 0, $name = '', $address = '', $longitude = '', $latitude = '', $area_id = 0, $page, $pageNum)
+    {
+        $offset = ($page - 1) * $pageNum;
+        $where = [];
+        if (!empty($province_id)) {
+            array_push($where, ['province_id', '=', $province_id]);
+        }
+        if (!empty($city_id)) {
+            array_push($where, ['city_id', '=', $city_id]);
+        }
+        if (!empty($name)) {
+            array_push($where, ['name', '=', $name]);
+        }
+        if (!empty($address)) {
+            array_push($where, ['address', '=', $address]);
+        }
+        if (!empty($latitude)) {
+            array_push($where, ['latitude', '=', $latitude]);
+        }
+        if (!empty($area_id)) {
+            array_push($where, ['area_id', '=', $area_id]);
+        }
+        $result = DbAdmin::getBloodSamplingAddress($where, '*', false, '', $offset . ',' . $pageNum);
+        $total = DbAdmin::countBloodSamplingAddress($where);
+        return ['code' => '200', 'total' => $total, 'result' => $result];
     }
 }

@@ -17,7 +17,7 @@ class Wap extends MyController
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,samplingReport'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,samplingReport,getBloodSamplingAddress'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -309,6 +309,27 @@ class Wap extends MyController
             return ['code' => '3001', 'msg' => '手机号格式错误'];
         }
         $result = $this->app->wap->getsamplingReport($mobile);
+        return $result;
+    }
+    /**
+     * @api              {POST} / 根据省市区获取抽血点
+     * @apiDescription  getBloodSamplingAddress
+     * @apiGroup         index_wap
+     * @apiName          getBloodSamplingAddress
+     * @apiParam (入参) {Int} province_id 省id
+     * @apiParam (入参) {int} city_id 市id
+     * @apiParam (入参) {int}  area_id 区级id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/getBloodSamplingAddress
+     * @author rzc
+     */
+    public function getBloodSamplingAddress()
+    {
+        $province_id  = trim($this->request->post('province_id'));
+        $city_id  = trim($this->request->post('city_id'));
+        $area_id  = trim($this->request->post('area_id'));
+        $result = $this->app->wap->getBloodSampling($province_id, $city_id, $area_id);
         return $result;
     }
 }

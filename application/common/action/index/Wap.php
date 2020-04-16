@@ -309,4 +309,17 @@ class Wap extends CommonIndex
         $result = DbAdmin::getSamplingReport(['mobile' => $mobile], '*', false);
         return ['code' => '200', 'data' => $result];
     }
+
+    public function getBloodSampling($province_id, $city_id, $area_id)
+    {
+        $where = [];
+        if (empty($province_id) || empty($city_id) || empty($area_id)) {
+        }
+        array_push($where, ['province_id', '=', $province_id]);
+        array_push($where, ['city_id', '=', $city_id]);
+        array_push($where, ['area_id', '=', $area_id]);
+        $result = DbAdmin::getBloodSamplingAddress($where, '*', false);
+        $total = DbAdmin::countBloodSamplingAddress($where);
+        return ['code' => '200', 'total' => $total, 'result' => $result];
+    }
 }
