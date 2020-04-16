@@ -228,7 +228,7 @@ class Wap extends CommonIndex
 
     public function getsamplingReport($mobile)
     {
-        $result = DbAdmin::getSamplingReport(['mobile' => $mobile], '*', false);
+        $result = DbAdmin::getSamplingReport(['mobile' => $mobile, 'status' => 1], '*', false);
         return ['code' => '200', 'data' => $result];
     }
 
