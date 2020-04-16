@@ -7,14 +7,17 @@ use app\index\MyController;
 /**
  * 短信通知
  */
-class Wap extends MyController {
+class Wap extends MyController
+{
 
-    public function test() {
-        echo 1;die;
+    public function test()
+    {
+        echo 1;
+        die;
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,sendModelMessage,onlineMarketingUser'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,samplingReport'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -39,7 +42,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/getSupPromote
      * @author rzc
      */
-    public function getSupPromote() {
+    public function getSupPromote()
+    {
         $promote_id = trim($this->request->get('promote_id'));
         if (!is_numeric($promote_id) || $promote_id < 1) {
             return ['code' => 3001];
@@ -67,7 +71,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/SupPromoteSignUp
      * @author rzc
      */
-    public function SupPromoteSignUp() {
+    public function SupPromoteSignUp()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         // $mobile  = trim($this->request->post('mobile'));
         // $vercode = trim($this->request->post('vercode'));
@@ -136,7 +141,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/getPromoteShareNum
      * @author rzc
      */
-    public function getPromoteShareNum() {
+    public function getPromoteShareNum()
+    {
         $promote_id = trim($this->request->get('promote_id'));
         $conId      = trim($this->request->get('con_id'));
         if (empty($conId)) {
@@ -163,7 +169,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/getJsapiTicket
      * @author rzc
      */
-    public function getJsapiTicket() {
+    public function getJsapiTicket()
+    {
         $url = trim($this->request->get('url'));
         $url = urldecode($url);
         $url = str_replace('&amp;', '&', $url);
@@ -190,7 +197,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/sendModelMessage
      * @author rzc
      */
-    public function sendModelMessage() {
+    public function sendModelMessage()
+    {
         $access_token = trim($this->request->post('access_token'));
         $template_id  = trim($this->request->post('template_id'));
         $touser       = trim($this->request->post('touser'));
@@ -198,21 +206,47 @@ class Wap extends MyController {
         $data         = $this->request->post('data');
         $color        = trim($this->request->post('color'));
         if (empty($access_token)) {
-            return ['code' => '3001','Error' => 'ACCESS_TOKEN is none'];
+            return ['code' => '3001', 'Error' => 'ACCESS_TOKEN is none'];
         }
-        
+
         if (empty($template_id)) {
-            return ['code' => '3002','Error' => 'template_id is none'];
+            return ['code' => '3002', 'Error' => 'template_id is none'];
         }
         if (empty($touser)) {
-            return ['code' => '3003','Error' => 'touser is none'];
+            return ['code' => '3003', 'Error' => 'touser is none'];
         }
         if (empty($data)) {
-            return ['code' => '3004','Error' => 'data is none'];
+            return ['code' => '3004', 'Error' => 'data is none'];
         }
         // $data = json_decode($data,true);
         // print_r($touser);die;
         $result = $this->app->wap->sendModelMessage($access_token, $template_id, $touser, $url, $data, $color);
+        return $result;
+    }
+    /**   
+     * @api              {POST} / 卡号核验
+     * @apiDescription  samplingReport
+     * @apiGroup         index_wap
+     * @apiName          samplingReport
+     * @apiParam (入参) {Number} card_number 卡号
+     * @apiParam (入参) {Number} passwd 密码
+     * @apiParam (入参) {Number} mobile 手机号
+     * @apiParam (入参) {Number} [from_id] 推荐人12位ID
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/samplingReport
+     * @author rzc
+     */
+    public function samplingReport()
+    {
+        $card_number = trim($this->request->post('card_number'));
+        $passwd = trim($this->request->post('passwd'));
+        $mobile = trim($this->request->post('mobile'));
+        $from_id = trim($this->request->post('from_id'));
+        if (empty($card_number) || empty($passwd) || empty($mobile)) {
+            return ['code' => '3000', 'msg' => '信息不完整，请填写信息'];
+        }
+        $result = $this->app->wap->samplingReport($card_number, $passwd, $mobile, $from_id);
         return $result;
     }
 
@@ -231,7 +265,8 @@ class Wap extends MyController {
      * @apiSampleRequest /index/wap/onlineMarketingUser
      * @author rzc
      */
-    public function onlineMarketingUser(){
+    public function onlineMarketingUser()
+    {
         $avatar        = trim($this->request->post('avatar'));
         $nick_name     = trim($this->request->post('nick_name'));
         $mobile        = trim($this->request->post('mobile'));
@@ -240,19 +275,40 @@ class Wap extends MyController {
         if (checkMobile($mobile) === false) {
             return ['code' => '3001', 'Errormsg' => 'mobile check false']; //手机号格式错误
         }
-        if (!in_array($user_identity,[1,2,3,4])) {
+        if (!in_array($user_identity, [1, 2, 3, 4])) {
             return ['code' => '3002', 'Errormsg' => 'user_identity false'];
         }
-        if (!in_array($platform,['SJ'])) {
+        if (!in_array($platform, ['SJ'])) {
             return ['code' => '3003', 'Errormsg' => 'platform false'];
         }
-        if (empty($nick_name)){
+        if (empty($nick_name)) {
             return ['code' => '3006', 'Errormsg' => 'nick_name is null'];
         }
-        if (empty($avatar)){
+        if (empty($avatar)) {
             return ['code' => '3007', 'Errormsg' => 'avatar is null'];
         }
         $result = $this->app->wap->onlineMarketingUser($avatar, $nick_name, $mobile, $user_identity, $platform);
         return $result;
     }
-}       
+
+    /**
+     * @api              {POST} / 根据手机号码获取领取预约卡
+     * @apiDescription  getsamplingReport
+     * @apiGroup         index_wap
+     * @apiName          getsamplingReport
+     * @apiParam (入参) {Number} mobile 手机号
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
+     * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
+     * @apiSampleRequest /index/wap/getsamplingReport
+     * @author rzc
+     */
+    public function getsamplingReport()
+    {
+        $mobile = trim($this->request->post('mobile'));
+        if (checkMobile($mobile) == false) {
+            return ['code' => '3001', 'msg' => '手机号格式错误'];
+        }
+        $result = $this->app->wap->getsamplingReport($mobile);
+        return $result;
+    }
+}

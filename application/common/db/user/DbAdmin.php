@@ -12,6 +12,7 @@ use app\common\model\PermissionsApi;
 use app\common\model\PermissionsGroup;
 use app\common\model\User;
 use app\common\model\SamplingCard;
+use app\common\model\SamplingReport;
 use think\Db;
 
 class DbAdmin
@@ -317,5 +318,35 @@ class DbAdmin
     public function countSamplingCard($where)
     {
         return SamplingCard::where($where)->count();
+    }
+
+    public function getSamplingReport($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
+        $obj = SamplingReport::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addAllSamplingReport($data)
+    {
+        $SamplingReport = new SamplingReport();
+        return $SamplingReport->saveAll($data);
+    }
+
+    public function addSamplingReport($data)
+    {
+        $SamplingReport = new SamplingReport();
+        $SamplingReport->save($data);
+        return $SamplingReport->id;
+    }
+
+    public function editSamplingReport($data, $id)
+    {
+        $SamplingReport = new SamplingReport();
+        return $SamplingReport->save($data, ['id' => $id]);
+    }
+
+    public function countSamplingReport($where)
+    {
+        return SamplingReport::where($where)->count();
     }
 }
