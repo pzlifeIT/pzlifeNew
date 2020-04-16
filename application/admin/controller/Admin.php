@@ -1601,4 +1601,21 @@ class Admin extends AdminController
         // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 采样细胞检查卡导出
+     * @apiDescription   exportSamplingNumber
+     * @apiGroup         admin_admin
+     * @apiName          exportSamplingNumber
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} password 密码
+     * @apiParam (入参) {int} datekey 生成时间
+     * @apiParam (入参) {int}  type 生成数量
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:admin_id错误 / 3002:keyword为空
+     * @apiSampleRequest /admin/admin/exportSamplingNumber
+     * @author rzc
+     */
+    public function exportSamplingNumber()
+    {
+    }
 }

@@ -5,7 +5,7 @@ namespace app\common\action\index;
 //use third\AliSms;
 use app\common\action\index\CommonIndex;
 use app\facade\DbSup;
-use app\facade\DbUser;
+use app\facade\DbAdmin;
 use config;
 use Env;
 use think\Db;
@@ -15,9 +15,11 @@ use third\Zthy;
  * H5站接口
  * @package app\common\wap
  */
-class Wap extends CommonIndex {
+class Wap extends CommonIndex
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->redisAccessTokenTencent = Config::get('redisKey.weixin.redisAccessTokenTencent');
         $this->redisTicketTencent      = Config::get('redisKey.weixin.redisTicketTencent');
@@ -31,7 +33,8 @@ class Wap extends CommonIndex {
      * @return bool
      * @author zyr
      */
-    private function checkVercode($stype, $mobile, $vercode) {
+    private function checkVercode($stype, $mobile, $vercode)
+    {
         $redisKey  = $this->redisKey . 'vercode:' . $mobile . ':' . $stype;
         $redisCode = $this->redis->get($redisKey); //服务器保存的验证码
         if ($redisCode == $vercode) {
@@ -48,7 +51,8 @@ class Wap extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupPromote($promote_id) {
+    public function getSupPromote($promote_id)
+    {
         $promote = DbSup::getSupPromote(['id' => $promote_id], 'id,title,big_image,share_title,share_image,share_count,bg_image', true);
         if (empty($promote)) {
             return ['code' => '3001']; //推广活动不存在
@@ -65,7 +69,8 @@ class Wap extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo,  $study_name, $study_mobile) {
+    public function SupPromoteSignUp($conId, $mobile, $nick_name, $promote_id, $sex, $age, $signinfo,  $study_name, $study_mobile)
+    {
         // $stype = 5;
         // if ($this->checkVercode($stype, $mobile, $vercode) === false) {
         //     return ['code' => '3008']; //验证码错误
@@ -78,7 +83,7 @@ class Wap extends CommonIndex {
         if (empty($promote)) {
             return ['code' => '3003']; //推广活动不存在
         }
-        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'study_name' => $study_name, 'study_mobile' => $study_mobile,'uid' => $uid], true);
+        $promotesignup = DbSup::getSupPromoteSignUp(['promote_id' => $promote_id, 'study_name' => $study_name, 'study_mobile' => $study_mobile, 'uid' => $uid], true);
         if (!empty($promotesignup)) {
             return ['code' => '3005'];
         }
@@ -98,7 +103,8 @@ class Wap extends CommonIndex {
         return ['code' => '200'];
     }
 
-    public function getPromoteShareNum($promote_id, $conId) {
+    public function getPromoteShareNum($promote_id, $conId)
+    {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
@@ -133,7 +139,8 @@ class Wap extends CommonIndex {
         return ['code' => '200', 'is_share' => $is_share];
     }
 
-    public function getJsapiTicket($durl) {
+    public function getJsapiTicket($durl)
+    {
         $jsapiTicket = $this->getWXJsapiTicket();
         $timestamp   = time();
         $nonceStr    = $this->createNonceStr();
@@ -153,7 +160,8 @@ class Wap extends CommonIndex {
         return ['code' => 200, 'signPackage' => $signPackage];
     }
 
-    private function createNonceStr($length = 16) {
+    private function createNonceStr($length = 16)
+    {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $str   = "";
         for ($i = 0; $i < $length; $i++) {
@@ -163,7 +171,8 @@ class Wap extends CommonIndex {
     }
 
     //获取微信jsapi_ticket
-    public function getWXJsapiTicket() {
+    public function getWXJsapiTicket()
+    {
         $access_token = $this->redis->get($this->redisAccessTokenTencent);
 
         if (empty($access_token)) {
@@ -175,5 +184,51 @@ class Wap extends CommonIndex {
         }
 
         return $jsapi_ticket;
+    }
+
+    public function samplingReport($card_number, $passwd, $mobile, $from_id = '')
+    {
+        $card = DbAdmin::getSamplingCard(['card_number' => $card_number, 'passwd' => $passwd], '*', true);
+        if (empty($card)) {
+            return ['code' => '3001', 'msg' => '该卡不存在'];
+        }
+        if (DbAdmin::getSamplingReport(['card_number' => $card_number], '*', true)) {
+            return ['code' => '3002', 'msg' => '该卡已被领取'];
+        }
+        if (checkMobile($mobile) == false) {
+            return ['code' => '3003', 'msg' => '手机号格式错误'];
+        }
+        switch ($card['type']) {
+            case '1':
+                $goods_id = 2056;
+                break;
+
+            default:
+                $goods_id = 2155;
+                break;
+        }
+        $data = [];
+        $data = [
+            'card_number' => $card_number,
+            'type' => $card['type'],
+            'goods_id' => $goods_id,
+            'mobile' => $mobile,
+            'from_id' => $from_id,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::addSamplingCard($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3007']; //删除失败
+        }
+    }
+
+    public function getsamplingReport($mobile)
+    {
+        $result = DbAdmin::getSamplingReport(['mobile' => $mobile], '*', false);
+        return ['code' => '200', 'data' => $result];
     }
 }
