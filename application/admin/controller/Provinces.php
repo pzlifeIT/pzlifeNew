@@ -6,11 +6,12 @@ use app\admin\AdminController;
 use Config;
 use Env;
 
-class Provinces extends AdminController {
+class Provinces extends AdminController
+{
     protected $beforeActionList = [
-        'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        // 'isLogin', //所有方法的前置操作
+        'isLogin' => ['except' => 'getProvinceCity,getCity,getArea'], //除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -26,12 +27,13 @@ class Provinces extends AdminController {
      * @apiSampleRequest /admin/provinces/getProvinceCity
      * @author zyr
      */
-    public function getProvinceCity() {
+    public function getProvinceCity()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $result = $this->app->provinces->getProvinceCity();
         $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
-//        $this->addLog($result['code'],__function__);//接口请求日志
+        //        $this->addLog($result['code'],__function__);//接口请求日志
         return $result;
     }
 
@@ -49,7 +51,8 @@ class Provinces extends AdminController {
      * @apiSampleRequest /admin/provinces/getCity
      * @author zyr
      */
-    public function getCity() {
+    public function getCity()
+    {
         $apiName    = classBasename($this) . '/' . __function__;
         $cmsConId   = trim($this->request->post('cms_con_id'));
         $provinceId = trim($this->request->post('provinceId'));
@@ -76,7 +79,8 @@ class Provinces extends AdminController {
      * @apiSampleRequest /admin/provinces/getArea
      * @author zyr
      */
-    public function getArea() {
+    public function getArea()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id'));
         $cityId   = trim($this->request->post('cityId'));
@@ -105,7 +109,8 @@ class Provinces extends AdminController {
      * @apiSampleRequest /admin/provinces/getprovincecitybyfreight
      * @author zyr
      */
-    public function getProvinceCityByFreight() {
+    public function getProvinceCityByFreight()
+    {
         $apiName   = classBasename($this) . '/' . __function__;
         $cmsConId  = trim($this->request->post('cms_con_id'));
         $freightId = $this->request->post('freight_id');
