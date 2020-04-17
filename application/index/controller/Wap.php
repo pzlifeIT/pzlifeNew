@@ -249,12 +249,12 @@ class Wap extends MyController
         if (empty($card_number) || empty($passwd) || empty($mobile)) {
             return ['code' => '3000', 'msg' => '信息不完整，请填写信息'];
         }
-        if (empty($conId)) {
+        /*  if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        }
+        } */
         $result = $this->app->wap->samplingReport($conId, $card_number, $passwd, $mobile, $from_id);
         return $result;
     }
@@ -314,12 +314,12 @@ class Wap extends MyController
     public function getsamplingReport()
     {
         $conId      = trim($this->request->post('con_id'));
-        if (empty($conId)) {
+        /*  if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        }
+        } */
         $result = $this->app->wap->getsamplingReport($conId);
         return $result;
     }
@@ -364,6 +364,154 @@ class Wap extends MyController
         $result = $this->app->wap->getProvinceCity();
         // $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         //        $this->addLog($result['code'],__function__);//接口请求日志
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 提交预约
+     * @apiDescription   addSamplingAppointment
+     * @apiGroup         index_wap
+     * @apiName          addSamplingAppointment
+     * @apiParam (入参) {String} con_id 用户登录ID
+     * @apiParam (入参) {String} mobile 手机号
+     * @apiParam (入参) {String} name 姓名
+     * @apiParam (入参) {String} sex 性别 性别 1，男，2，女
+     * @apiParam (入参) {String} age 年龄 
+     * @apiParam (入参) {String} idenity_type 证件类型，1,身份证 
+     * @apiParam (入参) {String} idenity_nmber 证件号码
+     * @apiParam (入参) {String} blood_sampling_id 采样点id
+     * @apiParam (入参) {String} project_id 预约项目激活卡id，多张卡用,连接
+     * @apiParam (入参) {String} is_illness 是否有家族病史, 1:没有,2：有
+     * @apiParam (入参) {String} is_had_illness 本人是否患有肿瘤, 1:没有,2：有
+     * @apiParam (入参) {String} had_illness_time 本人患肿瘤时间
+     * @apiParam (入参) {String} illness 家族肿瘤患者患什么肿瘤
+     * @apiParam (入参) {String} my_illness 本人患什么肿瘤
+     * @apiParam (入参) {String} relation 本人与肿瘤患者成员关系 1,祖父、2祖母、3外公、4外婆、5父亲、6母亲、7兄弟姐妹、8子女、9伯/叔/姑、10舅/姨
+     * @apiParam (入参) {String} health_type 本人健康状态1：查出肿瘤尚未治疗；2已手术未做放化疗，3，已手术正在做放化疗，4，已手术，已结束放化疗，5未做手术已做放化疗
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /index/wap/addSamplingAppointment
+     * @author zyr
+     */
+    public function addSamplingAppointment()
+    {
+        $conId      = trim($this->request->post('con_id'));
+        /* if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        } */
+        $mobile      = trim($this->request->post('mobile'));
+        $name      = trim($this->request->post('name'));
+        $sex      = trim($this->request->post('sex'));
+        $age      = trim($this->request->post('age'));
+        $idenity_type      = trim($this->request->post('idenity_type'));
+        $idenity_nmber      = trim($this->request->post('idenity_nmber'));
+        $blood_sampling_id      = trim($this->request->post('blood_sampling_id'));
+        $project_id      = trim($this->request->post('project_id'));
+        $is_illness      = trim($this->request->post('is_illness'));
+        $is_had_illness      = trim($this->request->post('is_had_illness'));
+        $had_illness_time      = trim($this->request->post('had_illness_time'));
+        $illness      = trim($this->request->post('illness'));
+        $relation      = trim($this->request->post('relation'));
+        $my_illness      = trim($this->request->post('my_illness'));
+        $health_type      = trim($this->request->post('health_type'));
+        $project_id = explode(',', $project_id);
+        if (empty($mobile) || empty($name) || empty($sex) || empty($age) || empty($idenity_type) || empty($idenity_nmber) || empty($blood_sampling_id) || empty($project_id) || empty($is_illness) || empty($is_had_illness) || empty($illness) || empty($had_illness_time) || empty($relation) || empty($my_illness) || empty($health_type)) {
+            return ['code' => '3001', 'msg' => '参数为空'];
+        }
+        $result = $this->app->wap->addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 修改提交预约
+     * @apiDescription   editSamplingAppointment
+     * @apiGroup         index_wap
+     * @apiName          editSamplingAppointment
+     * @apiParam (入参) {String} id 修改id 
+     * @apiParam (入参) {String} con_id 用户登录ID
+     * @apiParam (入参) {String} mobile 手机号
+     * @apiParam (入参) {String} name 姓名
+     * @apiParam (入参) {String} sex 性别 性别 1，男，2，女
+     * @apiParam (入参) {String} age 年龄 
+     * @apiParam (入参) {String} idenity_type 证件类型，1,身份证 
+     * @apiParam (入参) {String} idenity_nmber 证件号码
+     * @apiParam (入参) {String} blood_sampling_id 采样点id
+     * @apiParam (入参) {String} project_id 预约项目激活卡id，多张卡用,连接
+     * @apiParam (入参) {String} is_illness 是否有家族病史, 1:没有,2：有
+     * @apiParam (入参) {String} is_had_illness 本人是否患有肿瘤, 1:没有,2：有
+     * @apiParam (入参) {String} had_illness_time 本人患肿瘤时间
+     * @apiParam (入参) {String} illness 家族肿瘤患者患什么肿瘤
+     * @apiParam (入参) {String} my_illness 本人患什么肿瘤
+     * @apiParam (入参) {String} relation 本人与肿瘤患者成员关系 1,祖父、2祖母、3外公、4外婆、5父亲、6母亲、7兄弟姐妹、8子女、9伯/叔/姑、10舅/姨
+     * @apiParam (入参) {String} health_type 本人健康状态1：查出肿瘤尚未治疗；2已手术未做放化疗，3，已手术正在做放化疗，4，已手术，已结束放化疗，5未做手术已做放化疗
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /index/wap/editSamplingAppointment
+     * @author zyr
+     */
+    public function editSamplingAppointment()
+    {
+        $conId      = trim($this->request->post('con_id'));
+        /* if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        } */
+        $id      = trim($this->request->post('id'));
+        $mobile      = trim($this->request->post('mobile'));
+        $name      = trim($this->request->post('name'));
+        $sex      = trim($this->request->post('sex'));
+        $age      = trim($this->request->post('age'));
+        $idenity_type      = trim($this->request->post('idenity_type'));
+        $idenity_nmber      = trim($this->request->post('idenity_nmber'));
+        $blood_sampling_id      = trim($this->request->post('blood_sampling_id'));
+        $project_id      = trim($this->request->post('project_id'));
+        $is_illness      = trim($this->request->post('is_illness'));
+        $is_had_illness      = trim($this->request->post('is_had_illness'));
+        $had_illness_time      = trim($this->request->post('had_illness_time'));
+        $illness      = trim($this->request->post('illness'));
+        $relation      = trim($this->request->post('relation'));
+        $my_illness      = trim($this->request->post('my_illness'));
+        $health_type      = trim($this->request->post('health_type'));
+        $project_id = explode(',', $project_id);
+        if (empty($mobile) || empty($name) || empty($sex) || empty($age) || empty($idenity_type) || empty($idenity_nmber) || empty($blood_sampling_id) || empty($project_id) || empty($is_illness) || empty($is_had_illness) || empty($illness) || empty($had_illness_time) || empty($relation) || empty($my_illness) || empty($health_type)) {
+            return ['code' => '3001', 'msg' => '参数为空'];
+        }
+        $result = $this->app->wap->editSamplingAppointment($id, $conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取预约信息
+     * @apiDescription   getSamplingAppointment
+     * @apiGroup         index_wap
+     * @apiName          getSamplingAppointment
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /index/wap/getSamplingAppointment
+     * @author zyr
+     */
+    public function getSamplingAppointment()
+    {
+        $conId      = trim($this->request->post('con_id'));
+        /* if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        } */
+        $id      = trim($this->request->post('id'));
+        $result = $this->app->wap->getSamplingAppointment($id, $conId);
         return $result;
     }
 }
