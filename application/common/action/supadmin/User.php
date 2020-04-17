@@ -2,11 +2,13 @@
 
 namespace app\common\action\supadmin;
 
+use app\common\db\user\DbAdmin;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbSup;
 use Config;
 use think\Db;
+use Zxing\Result;
 
 class User extends CommonIndex
 {
@@ -241,5 +243,31 @@ class User extends CommonIndex
             return ['code' => '3001', '该用户不存在']; //密码错误
         }
         $where = ['sup_admin_id' => $supAdminId];
+        $blood_sampling_ids = DbAdmin::addBloodSamplingAddress($where, 'id', false);
+        $ids = [];
+        foreach ($blood_sampling_ids as $key => $value) {
+            $ids[] = $value['id'];
+        }
+        $offset = ($page - 1) * $pageNum;
+        $result = DbAdmin::getSamplingAppointment([['id', 'in', join(',', $ids)]], '*', false, '', $offset . ',' . $pageNum);
+        $total = DbAdmin::countSamplingAppointment([['id', 'in', join(',', $ids)]]);
+        foreach ($result as $key => $value) {
+            $type = explode(',', $value['project_id']);
+            $sampling_data = [];
+            foreach ($type as $tkey => $tvalue) {
+                $card = DbAdmin::getSamplingCard(['id' => $tvalue], '*', true);
+                switch ($card['type']) {
+                    case '1':
+                        array_push($sampling_data, [$tvalue => "i·FISH循环异常细胞筛查"]);
+                        break;
+
+                    default:
+                        array_push($sampling_data,  [$tvalue => "i·FISH循环异常细胞筛查"]);
+                        break;
+                }
+            }
+            $result[$key]['projects'] = $sampling_data;
+        }
+        return ['code' => '200', 'data' => $result];
     }
 }
