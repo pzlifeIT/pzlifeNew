@@ -305,7 +305,7 @@ class User extends CommonIndex
                     break;
             }
         }
-        $result['projects'] = join(',', $sampling_data);
+        $result['projects'] = $sampling_data;
         return ['code' => '200', 'result' => $result];
     }
 
