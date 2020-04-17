@@ -1670,6 +1670,7 @@ class Admin extends AdminController
      * @apiGroup         admin_admin
      * @apiName          editBloodSampling
      * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} sup_admin_id
      * @apiParam (入参) {Int} province_id 省id
      * @apiParam (入参) {int} city_id 市id
      * @apiParam (入参) {int}  name 抽血点名称
@@ -1688,6 +1689,7 @@ class Admin extends AdminController
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
+        $sup_admin_id = trim($this->request->post('sup_admin_id'));
         $cms_con_id = trim($this->request->post('cms_con_id'));
         $province_id  = trim($this->request->post('province_id'));
         $city_id  = trim($this->request->post('city_id'));

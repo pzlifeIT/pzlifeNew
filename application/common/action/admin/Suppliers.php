@@ -10,7 +10,8 @@ use app\facade\DbUser;
 use think\Db;
 use Config;
 
-class Suppliers extends CommonIndex {
+class Suppliers extends CommonIndex
+{
     private $supCipherUserKey = 'suppass'; //用户密码加密key
 
     /**
@@ -18,7 +19,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSuppliers($page, $pagenum, $supplierName) {
+    public function getSuppliers($page, $pagenum, $supplierName)
+    {
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
             return ['code' => '3000'];
@@ -40,7 +42,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getSuppliersAll() {
+    public function getSuppliersAll()
+    {
         $field  = 'id,name';
         $where  = ['status' => 1];
         $result = DbGoods::getSupplier($field, $where, 'id');
@@ -52,7 +55,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierData($supplierId) {
+    public function getSupplierData($supplierId)
+    {
         $field  = 'id,tel,name,status,image,title,desc';
         $result = DbGoods::getSupplierData($field, $supplierId);
         if (empty($result)) {
@@ -71,16 +75,17 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addSupplier($tel, $name, $title, $desc, $image) {
+    public function addSupplier($tel, $name, $title, $desc, $image)
+    {
         $supplier = DbGoods::getSupplierWhereFile('name', $name, 'id');
         if (!empty($supplier)) {
-            return ['code' => '3006'];//供应商名字不能重复
+            return ['code' => '3006']; //供应商名字不能重复
         }
         $image = filtraImage(Config::get('qiniu.domain'), $image);
         if (!empty($image)) {
-            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-            if (empty($logImage)) {//图片不存在
-                return ['code' => '3005'];//图片没有上传过
+            $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+            if (empty($logImage)) { //图片不存在
+                return ['code' => '3005']; //图片没有上传过
             }
         }
         /* 初始化数组 */
@@ -93,7 +98,7 @@ class Suppliers extends CommonIndex {
         Db::startTrans();
         try {
             DbGoods::addSupplier($new_supplier);
-            DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+            DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
             Db::commit();
             return ['code' => '200', 'msg' => '添加成功'];
         } catch (\Exception $e) {
@@ -102,30 +107,31 @@ class Suppliers extends CommonIndex {
         }
     }
 
-    public function editSupplier($id, $tel, $name, $title, $desc, $image) {
+    public function editSupplier($id, $tel, $name, $title, $desc, $image)
+    {
         $supplierRes = DbGoods::getOneSupplier(['id' => $id], 'image');
         if (empty($supplierRes)) {
-            return ['code' => '3006'];//供应商id不存在
+            return ['code' => '3006']; //供应商id不存在
         }
         $supplierName = DbGoods::getOneSupplier([['name', '=', $name], ['id', '<>', $id]], 'id');
         if (!empty($supplierName)) {
-            return ['code' => '3007'];//供应商名称不能重复
+            return ['code' => '3007']; //供应商名称不能重复
         }
         /* 初始化数组 */
         $oldLogImage  = [];
         $logImage     = [];
         $new_supplier = [];
         $image        = filtraImage(Config::get('qiniu.domain'), $image);
-        if (!empty($image)) {//提交了图片
-            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-            if (empty($logImage)) {//图片不存在
-                return ['code' => '3005'];//图片没有上传过
+        if (!empty($image)) { //提交了图片
+            $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+            if (empty($logImage)) { //图片不存在
+                return ['code' => '3005']; //图片没有上传过
             }
             $oldImage = $supplierRes['image'];
             $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
-            if (!empty($oldImage)) {//之前有图片
-                if (stripos($oldImage, 'http') === false) {//新版本图片
-                    $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
+            if (!empty($oldImage)) { //之前有图片
+                if (stripos($oldImage, 'http') === false) { //新版本图片
+                    $oldLogImage = DbImage::getLogImage($oldImage, 1); //之前在使用的图片日志
                 }
             }
             $new_supplier['image'] = $image;
@@ -138,10 +144,10 @@ class Suppliers extends CommonIndex {
         try {
             DbGoods::updateSupplier($new_supplier, $id);
             if (!empty($logImage)) {
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
             }
             if (!empty($oldLogImage)) {
-                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+                DbImage::updateLogImageStatus($oldLogImage, 3); //更新状态为弃用
             }
             Db::commit();
             return ['code' => '200', 'msg' => '更新成功'];
@@ -156,7 +162,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierWhereFile($field, $value) {
+    public function getSupplierWhereFile($field, $value)
+    {
         return DbGoods::getSupplierWhereFile($field, $value);
     }
 
@@ -165,7 +172,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierWhereFileByID($field, $value, $id) {
+    public function getSupplierWhereFileByID($field, $value, $id)
+    {
         return DbGoods::getSupplierWhereFileByID($field, $value, $id);
     }
 
@@ -174,7 +182,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function updateSupplier($data, $id) {
+    public function updateSupplier($data, $id)
+    {
         $update = DbGoods::updateSupplier($data, $id);
         if ($update) {
             return ['code' => '200', 'msg' => '添加成功'];
@@ -188,7 +197,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreights($supid) {
+    public function getSupplierFreights($supid)
+    {
         $field  = 'id,supid,stype,title,desc';
         $result = DbGoods::getSupplierFreights(['supid' => $supid, 'status' => 1], $field);
         if (empty($result)) {
@@ -202,7 +212,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function updateSupplierFreights($status, $supid) {
+    public function updateSupplierFreights($status, $supid)
+    {
         return DbGoods::updateSupplierFreights($status, $supid);
     }
 
@@ -211,7 +222,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreight($id) {
+    public function getSupplierFreight($id)
+    {
         $field           = 'id,supid,stype,status,title,desc';
         $supplierfreight = DbGoods::getSupplierFreight($field, $id);
         if (empty($supplierfreight)) {
@@ -225,7 +237,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreightdetailList($freight_id, $page, $pagenum) {
+    public function getSupplierFreightdetailList($freight_id, $page, $pagenum)
+    {
         $field  = 'id,freight_id,price,after_price,total_price,unit_price';
         $offset = $pagenum * ($page - 1);
         if ($offset < 0) {
@@ -263,13 +276,14 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addSupplierFreight(int $supplierId, int $stype, $title, $desc) {
+    public function addSupplierFreight(int $supplierId, int $stype, $title, $desc)
+    {
         $supplierfreight          = [];
         $supplierfreight['supid'] = $supplierId;
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
         $supplierfreight['desc']  = $desc;
-//        DbGoods::addSupplierFreight($data);
+        //        DbGoods::addSupplierFreight($data);
         DbGoods::addSupplierFreight($supplierfreight);
         return ['code' => '200'];
     }
@@ -283,7 +297,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function updateSupplierFreight(int $supplier_freight_Id, int $stype, $title, $desc) {
+    public function updateSupplierFreight(int $supplier_freight_Id, int $stype, $title, $desc)
+    {
         $supplierfreight          = [];
         $supplierfreight['stype'] = $stype;
         $supplierfreight['title'] = $title;
@@ -297,7 +312,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function getSupplierFreightdetail($id) {
+    public function getSupplierFreightdetail($id)
+    {
         $field  = 'id,freight_id,price,after_price,total_price,unit_price';
         $result = DbGoods::getSupplierFreightdetailRow($field, $id);
         if (empty($result)) {
@@ -316,7 +332,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author rzc
      */
-    public function addSupplierFreightdetail($freight_id, $price, $after_price, $total_price, $unit_price) {
+    public function addSupplierFreightdetail($freight_id, $price, $after_price, $total_price, $unit_price)
+    {
         $supplierFreight = DbGoods::getSupplierFreight('id', $freight_id);
         if (empty($supplierFreight)) {
             return ['code' => '3003'];
@@ -342,7 +359,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function editSupplierFreightdetail($freight_detail_id, $price, $after_price, $total_price, $unit_price) {
+    public function editSupplierFreightdetail($freight_detail_id, $price, $after_price, $total_price, $unit_price)
+    {
         $freightDetail = DbGoods::getSupplierFreightdetailRow('id', $freight_detail_id);
         if (empty($freightDetail)) {
             return ['code' => '3003'];
@@ -364,7 +382,8 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function updateSupplierFreightArea($cityIdStr, $freightDetailId) {
+    public function updateSupplierFreightArea($cityIdStr, $freightDetailId)
+    {
         $cityIdStr  = str_replace(' ', '', $cityIdStr);
         $cityIdList = explode(',', $cityIdStr);
         $cityCount  = DbProvinces::getAreaCount('id', [['id', 'in', $cityIdList], ['level', '=', 2]]);
@@ -373,10 +392,10 @@ class Suppliers extends CommonIndex {
         }
         $where         = [['freight_detail_id', '=', $freightDetailId],];
         $freightArea   = DbGoods::getSupplierFreightArea($where, 'id,city_id');
-        $freightAreaId = array_column($freightArea, 'city_id');//已提交的
-        $delList       = array_diff($freightAreaId, $cityIdList);//需要删除的city_id
-        $addList       = array_diff($cityIdList, $freightAreaId);//需要添加的city_id
-//        $idList        = array_column($freightArea, 'id');
+        $freightAreaId = array_column($freightArea, 'city_id'); //已提交的
+        $delList       = array_diff($freightAreaId, $cityIdList); //需要删除的city_id
+        $addList       = array_diff($cityIdList, $freightAreaId); //需要添加的city_id
+        //        $idList        = array_column($freightArea, 'id');
         $delId = [];
         foreach ($freightArea as $val) {
             if (in_array($val['city_id'], $delList)) {
@@ -401,7 +420,6 @@ class Suppliers extends CommonIndex {
             Db::rollback();
             return ["code" => "3003"];
         }
-
     }
 
     /**
@@ -411,15 +429,16 @@ class Suppliers extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addSupplierAdmin($mobile, $supName) {
+    public function addSupplierAdmin($mobile, $supName)
+    {
         $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
         if (!empty($supAdmin)) {
-            return ['code' => '3003'];//账号名称已存在
+            return ['code' => '3003']; //账号名称已存在
         }
-        $user = DbUser::getUserInfo(['mobile' => $mobile], 'id', true);
-        if (empty($user)) {
-            return ['code' => '3004'];
-        }
+        // $user = DbUser::getUserInfo(['mobile' => $mobile], 'id', true);
+        // if (empty($user)) {
+        //     return ['code' => '3004'];
+        // }
         $data = [
             'uid'        => $user['id'],
             'sup_name'   => $supName,
@@ -437,13 +456,14 @@ class Suppliers extends CommonIndex {
         }
     }
 
-    public function supplierAdminList($page, $pageNum) {
+    public function supplierAdminList($page, $pageNum)
+    {
         $offset = $pageNum * ($page - 1);
         $total  = DbGoods::getSupAdminCount([]);
         if ($total < 1) {
             return ['code' => '3000', 'data' => '', 'total' => 0];
         }
-        $supAdmin = DbGoods::getSupAdmin(['status'=>1], 'id,sup_name,mobile', false, '', $offset . ',' . $pageNum);
+        $supAdmin = DbGoods::getSupAdmin(['status' => 1], 'id,sup_name,mobile', false, '', $offset . ',' . $pageNum);
         return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
     }
 }
