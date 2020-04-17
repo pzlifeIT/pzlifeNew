@@ -345,7 +345,7 @@ class Wap extends MyController
     /**
      * @api              {post} / 省市列表
      * @apiDescription   getProvinceCity
-     * @apiGroup         admin_provinces
+     * @apiGroup         index_wap
      * @apiName          getProvinceCity
      * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
