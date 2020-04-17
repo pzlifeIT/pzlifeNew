@@ -191,6 +191,7 @@ class Wap extends CommonIndex
     public function samplingReport($conId, $card_number, $passwd, $mobile, $from_id = '')
     {
         $uid = $this->getUidByConId($conId);
+        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -236,6 +237,7 @@ class Wap extends CommonIndex
     public function getsamplingReport($conId)
     {
         $uid = $this->getUidByConId($conId);
+        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -270,5 +272,132 @@ class Wap extends CommonIndex
         $phptree->setParam('pk', 'id');
         $result = $phptree->listTree();
         return ['code' => '200', 'data' => $result];
+    }
+
+    public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
+    {
+        $uid = $this->getUidByConId($conId);
+        $uid = 2;
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        foreach ($project_id as $key => $value) {
+            $card = DbAdmin::getSamplingCard(['id' => $value, 'status' => 1], '*', true);
+            if (empty($card)) {
+                return ['code' => '3003', 'msg' => '存在未核验激活项目卡'];
+            }
+        }
+        $data = [];
+        $data = [
+            'uid' => $uid,
+            'mobile' => $mobile,
+            'name' => $name,
+            'sex' => $sex,
+            'age' => $age,
+            'idenity_type' => $idenity_type,
+            'blood_sampling_id' => $blood_sampling_id,
+            'project_id' => join(',', $project_id),
+            'is_illness' => $is_illness,
+            'idenity_nmber' => $idenity_nmber,
+            'is_had_illness' => $is_had_illness,
+            'had_illness_time' => $had_illness_time,
+            'illness' => $illness,
+            'my_illness' => $my_illness,
+            'relation' => $relation,
+            'health_type' => $health_type,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::addSamplingAppointment($data);
+            foreach ($project_id as $key => $value) {
+                DbAdmin::editSamplingReport(['status' => 2], $value);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+        }
+    }
+
+    public function editSamplingAppointment($id, $conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
+    {
+        $uid = $this->getUidByConId($conId);
+        $uid = 2;
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        foreach ($project_id as $key => $value) {
+            $card = DbAdmin::getSamplingCard(['id' => $value, 'status' => 1], '*', true);
+            if (empty($card)) {
+                return ['code' => '3003', 'msg' => '存在未激活或已使用项目卡'];
+            }
+        }
+        $old_project = DbAdmin::getSamplingAppointment(['id' => $id], '*', true);
+        if ($old_project['status'] != 1) {
+            return ['code' => '3004', 'msg' => '改次预约已被核验,无法使用'];
+        }
+        $old_project_ids = $old_project['project_id'];
+        $old_project_ids = explode(',', $old_project_ids);
+        $data = [];
+        $data = [
+            'uid' => $uid,
+            'mobile' => $mobile,
+            'name' => $name,
+            'sex' => $sex,
+            'age' => $age,
+            'idenity_type' => $idenity_type,
+            'blood_sampling_id' => $blood_sampling_id,
+            'project_id' => join(',', $project_id),
+            'is_illness' => $is_illness,
+            'idenity_nmber' => $idenity_nmber,
+            'is_had_illness' => $is_had_illness,
+            'had_illness_time' => $had_illness_time,
+            'illness' => $illness,
+            'my_illness' => $my_illness,
+            'relation' => $relation,
+            'health_type' => $health_type,
+        ];
+        Db::startTrans();
+        try {
+            DbAdmin::editSamplingAppointment($data, $id);
+            foreach ($old_project_ids as $key => $value) {
+                DbAdmin::editSamplingReport(['status' => 1], $value);
+            }
+            foreach ($project_id as $key => $value) {
+                DbAdmin::editSamplingReport(['status' => 2], $value);
+            }
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+        }
+    }
+
+    public function getSamplingAppointment($id, $conId)
+    {
+        $uid = $this->getUidByConId($conId);
+        $uid = 2;
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $result =  DbAdmin::getSamplingAppointment(['id' => $id, 'uid' => $uid], '*', true);
+        $type = explode(',', $result['project_id']);
+        $sampling_data = [];
+        foreach ($type as $key => $value) {
+            $card = DbAdmin::getSamplingCard(['id' => $value], '*', true);
+            switch ($card['type']) {
+                case '1':
+                    array_push($sampling_data, "i·FISH循环异常细胞筛查");
+                    break;
+
+                default:
+                    array_push($sampling_data, "i·FISH循环异常细胞筛查");
+                    break;
+            }
+        }
+        $result['projects'] = join(',', $sampling_data);
+        return ['code' => '200', 'result' => $result];
     }
 }
