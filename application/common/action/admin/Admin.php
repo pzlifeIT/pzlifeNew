@@ -1815,13 +1815,13 @@ class Admin extends CommonIndex
             return ['code' => '3006', 'msg' => '错误的省份id'];
         }
         // $field = 'id,area_name,pid,level';
-        $where = ['city_id' => $city_id, 'level' => 2];
+        $where = ['id' => $city_id, 'level' => 2];
         $city  = DbProvinces::getAreaOne($field, $where);
         if (empty($city)) {
             return ['code' => '3004', 'msg' => '错误的市级id'];
         }
         // $field = 'id,area_name,pid,level';
-        $where = ['area_id' => $area_id];
+        $where = ['id' => $area_id];
         $area  = DbProvinces::getAreaOne($field, $where);
         if (empty($area) || $area['level'] != '3') {
             return ['code' => '3005', 'msg' => '错误的区级id'];
