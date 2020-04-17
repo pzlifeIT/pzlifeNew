@@ -266,8 +266,12 @@ class Wap extends CommonIndex
         }
     }
 
-    public function samplingReport($card_number, $passwd, $mobile, $from_id = '')
+    public function samplingReport($conId, $card_number, $passwd, $mobile, $from_id = '')
     {
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
         $card = DbAdmin::getSamplingCard(['card_number' => $card_number, 'passwd' => $passwd], '*', true);
         if (empty($card)) {
             return ['code' => '3001', 'msg' => '该卡不存在'];
@@ -289,6 +293,7 @@ class Wap extends CommonIndex
         }
         $data = [];
         $data = [
+            'uid' => $uid,
             'card_number' => $card_number,
             'type' => $card['type'],
             'goods_id' => $goods_id,
@@ -306,9 +311,13 @@ class Wap extends CommonIndex
         }
     }
 
-    public function getsamplingReport($mobile)
+    public function getsamplingReport($conId)
     {
-        $result = DbAdmin::getSamplingReport(['mobile' => $mobile, 'status' => 1], '*', false);
+        $uid = $this->getUidByConId($conId);
+        if (empty($uid)) {
+            return ['code' => '3002'];
+        }
+        $result = DbAdmin::getSamplingReport(['uid' => $uid, 'status' => 1], '*', false);
         return ['code' => '200', 'data' => $result];
     }
 
