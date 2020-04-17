@@ -1786,6 +1786,7 @@ class Admin extends CommonIndex
         $data = [];
         $data = [
             'province_id' => $province_id,
+            'sup_admin_id' => $sup_admin_id,
             'city_id' => $city_id,
             'area_id' => $area_id,
             'name' => $name,

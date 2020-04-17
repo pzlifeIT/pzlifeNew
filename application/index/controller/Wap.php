@@ -337,7 +337,7 @@ class Wap extends MyController
         $my_illness      = trim($this->request->post('my_illness'));
         $health_type      = trim($this->request->post('health_type'));
         $project_id = explode(',', $project_id);
-        if (empty($mobile) || empty($name) || empty($sex) || empty($age) || empty($idenity_type) || empty($idenity_nmber) || empty($blood_sampling_id) || empty($project_id) || empty($is_illness) || empty($is_had_illness) || empty($illness) || empty($had_illness_time) || empty($relation) || empty($my_illness) || empty($health_type)) {
+        if (empty($mobile) || empty($name) || empty($sex) || empty($age) || empty($idenity_type) || empty($idenity_nmber) || empty($blood_sampling_id) || empty($project_id) || empty($is_illness) || empty($is_had_illness)) {
             return ['code' => '3001', 'msg' => '参数为空'];
         }
         $result = $this->app->wap->addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type);

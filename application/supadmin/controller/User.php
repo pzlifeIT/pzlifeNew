@@ -4,11 +4,12 @@ namespace app\supadmin\controller;
 
 use app\supadmin\SupAdminController;
 
-class User extends SupAdminController {
+class User extends SupAdminController
+{
     protected $beforeActionList = [
-//        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin', //所有方法的前置操作
+        'isLogin' => ['except' => 'login'], //除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -23,7 +24,8 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function login() {
+    public function login()
+    {
         $apiName = classBasename($this) . '/' . __function__;
         $mobile  = trim($this->request->post('mobile'));
         $passwd  = trim($this->request->post('passwd'));
@@ -31,7 +33,7 @@ class User extends SupAdminController {
             return ['code' => '3001'];
         }
         $result = $this->app->user->login($mobile, $passwd);
-//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -49,11 +51,12 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function getSupUser() {
+    public function getSupUser()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $supConId = trim($this->request->post('sup_con_id'));
         $result   = $this->app->user->getSupUser($supConId);
-//        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
+        //        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -74,7 +77,8 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function addPromote() {
+    public function addPromote()
+    {
         $apiName    = classBasename($this) . '/' . __function__;
         $supConId   = trim($this->request->post('sup_con_id'));
         $title      = trim($this->request->post('title'));
@@ -84,16 +88,16 @@ class User extends SupAdminController {
         $shareCount = trim($this->request->post('share_count'));
         $bgImage    = trim($this->request->post('bg_image'));
         if (empty($title)) {
-            return ['code' => '3001'];//title不能为空
+            return ['code' => '3001']; //title不能为空
         }
         if (empty($shareTitle)) {
-            return ['code' => '3002'];//share_title不能为空
+            return ['code' => '3002']; //share_title不能为空
         }
         // if (empty($bigImage)) {
         //     return ['code' => '3003'];//big_image未上传
         // }
         if (empty($shareImage)) {
-            return ['code' => '3004'];//share_image未上传
+            return ['code' => '3004']; //share_image未上传
         }
         // if (empty($bgImage)) {
         //     return ['code' => '3005'];//bg_image未上传
@@ -104,7 +108,7 @@ class User extends SupAdminController {
         $shareCount = 0;
         // $shareCount = intval($shareCount);
         $result     = $this->app->user->addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage, $supConId);
-//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -126,7 +130,8 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function editPromote() {
+    public function editPromote()
+    {
         $apiName    = classBasename($this) . '/' . __function__;
         $supConId   = trim($this->request->post('sup_con_id'));
         $id         = trim($this->request->post('id'));
@@ -137,10 +142,10 @@ class User extends SupAdminController {
         $shareCount = trim($this->request->post('share_count'));
         $bgImage    = trim($this->request->post('bg_image'));
         if (empty($title)) {
-            return ['code' => '3001'];//title不能为空
+            return ['code' => '3001']; //title不能为空
         }
         if (empty($shareTitle)) {
-            return ['code' => '3002'];//share_title不能为空
+            return ['code' => '3002']; //share_title不能为空
         }
         // if (!is_numeric($shareCount) || $shareCount < 0) {
         //     return ['code' => '3009'];//share_count有误
@@ -148,7 +153,7 @@ class User extends SupAdminController {
         $shareCount = 0;
         $shareCount = intval($shareCount);
         $result     = $this->app->user->editPromote($id, $title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage);
-//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -173,13 +178,14 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function getPromoteList() {
+    public function getPromoteList()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $supConId = trim($this->request->post('sup_con_id'));
         $page     = trim($this->request->post('page'));
         $pageNum  = trim($this->request->post('page_num'));
         if (!is_numeric($page) || $page < 1) {
-            return ['code' => '3001'];//page错误
+            return ['code' => '3001']; //page错误
         }
         if (!is_numeric($pageNum) || $pageNum < 1) {
             $pageNum = 10;
@@ -187,7 +193,7 @@ class User extends SupAdminController {
         $page    = intval($page);
         $pageNum = intval($pageNum);
         $result  = $this->app->user->getPromoteList($page, $pageNum, $supConId);
-//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -211,16 +217,17 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function getPromoteInfo() {
+    public function getPromoteInfo()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $supConId = trim($this->request->post('sup_con_id'));
         $id       = trim($this->request->post('id'));
         if (!is_numeric($id) || $id < 1) {
-            return ['code' => '3001'];//id错误
+            return ['code' => '3001']; //id错误
         }
         $id     = intval($id);
         $result = $this->app->user->getPromoteInfo($id, $supConId);
-//        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 
@@ -238,7 +245,8 @@ class User extends SupAdminController {
      * @return array
      * @author zyr
      */
-    public function resetPassword() {
+    public function resetPassword()
+    {
         $apiName    = classBasename($this) . '/' . __function__;
         $supConId   = trim($this->request->post('sup_con_id'));
         $passwd     = trim($this->request->post('passwd'));
@@ -254,7 +262,40 @@ class User extends SupAdminController {
             return ['code' => '3003']; //老密码不能为空
         }
         $result = $this->app->user->resetPassword($supConId, $passwd, $newPasswd1);
-//        $this->apiLog($apiName, [$cmsConId, $passwd, $newPasswd1], $result['code'], $cmsConId);
+        //        $this->apiLog($apiName, [$cmsConId, $passwd, $newPasswd1], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取此抽血点预约信息
+     * @apiDescription   getSamplingAppointment
+     * @apiGroup         supadmin_user
+     * @apiName          getSamplingAppointment
+     * @apiParam (入参) {String} sup_con_id
+     * @apiParam (入参) {Int} page 页数
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:列表为空 / 3001:page错误
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:title不能为空 / 3002:share_title不能为空 / 3003:big_image未上传 / 3004:share_image未上传 / 3005:bg_image未上传 / 3006:big_image图片没有上传过 / 3007:share_image图片没有上传过 / 3008:bg_image图片没有上传过 / 3009:share_count有误 / 3010:添加失败
+     * @apiSampleRequest /supadmin/user/getSamplingAppointment
+     * @return array
+     * @author zyr
+     */
+    public function getSamplingAppointment()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $supConId = trim($this->request->post('sup_con_id'));
+        $page     = trim($this->request->post('page'));
+        $pageNum  = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result  = $this->app->user->getSamplingAppointment($page, $pageNum, $supConId);
+        //        $this->apiLog($apiName, [$adminName, $passwd], $result['code'], '');
         return $result;
     }
 }

@@ -8,7 +8,8 @@ use app\facade\DbSup;
 use Config;
 use think\Db;
 
-class User extends CommonIndex {
+class User extends CommonIndex
+{
     private $supCipherUserKey = 'suppass'; //用户密码加密key
 
     /**
@@ -18,7 +19,8 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function login($mobile, $passwd) {
+    public function login($mobile, $passwd)
+    {
         $getPass  = getPassword($passwd, $this->supCipherUserKey, Config::get('conf.cipher_algo')); //用户填写的密码
         $supAdmin = DbGoods::getSupAdmin(['mobile' => $mobile, 'status' => 1], 'id,sup_passwd', true);
         if (empty($supAdmin)) {
@@ -42,7 +44,8 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getSupUser($supConId) {
+    public function getSupUser($supConId)
+    {
         $supId          = $this->getUidByConId($supConId);
         $supInfo        = DbGoods::getSupAdmin(['id' => $supId], 'id,sup_name,mobile,uid', true);
         $supInfo['uid'] = enUid($supInfo['uid']);
@@ -61,19 +64,20 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage, $supConId) {
+    public function addPromote($title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage, $supConId)
+    {
         $supAdminId    = $this->getUidByConId($supConId);
         $newBigImage   = filtraImage(Config::get('qiniu.domain'), $bigImage);
         $newShareImage = filtraImage(Config::get('qiniu.domain'), $shareImage);
         // $newBgImage    = filtraImage(Config::get('qiniu.domain'), $bgImage);
-        $logBigImage   = DbImage::getLogImage($newBigImage, 2);//判断时候有未完成的图片
-        $logShareImage = DbImage::getLogImage($newShareImage, 2);//判断时候有未完成的图片
+        $logBigImage   = DbImage::getLogImage($newBigImage, 2); //判断时候有未完成的图片
+        $logShareImage = DbImage::getLogImage($newShareImage, 2); //判断时候有未完成的图片
         // $logBgImage    = DbImage::getLogImage($newBgImage, 2);//判断时候有未完成的图片
-        if (empty($logBigImage)) {//图片不存在
-            return ['code' => '3006'];//big_image图片没有上传过
+        if (empty($logBigImage)) { //图片不存在
+            return ['code' => '3006']; //big_image图片没有上传过
         }
-        if (empty($logShareImage)) {//图片不存在
-            return ['code' => '3007'];//share_image图片没有上传过
+        if (empty($logShareImage)) { //图片不存在
+            return ['code' => '3007']; //share_image图片没有上传过
         }
         // if (empty($logBgImage)) {//图片不存在
         //     return ['code' => '3008'];//bg_image图片没有上传过
@@ -94,7 +98,7 @@ class User extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3010'];//修改失败
+            return ['code' => '3010']; //修改失败
         }
     }
 
@@ -110,10 +114,11 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function editPromote($id, $title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage) {
+    public function editPromote($id, $title, $bigImage, $shareTitle, $shareImage, $shareCount, $bgImage)
+    {
         $promote = DbSup::getSupPromote(['id' => $id], 'id', true);
         if (empty($promote)) {
-            return ['code' => '3009'];//推广活动不存在
+            return ['code' => '3009']; //推广活动不存在
         }
         $data = [
             'title'       => $title,
@@ -122,17 +127,17 @@ class User extends CommonIndex {
         ];
         if (!empty($bigImage)) {
             $newBigImage = filtraImage(Config::get('qiniu.domain'), $bigImage);
-            $logBigImage = DbImage::getLogImage($newBigImage, 2);//判断时候有未完成的图片
-            if (empty($logBigImage)) {//图片不存在
-                return ['code' => '3006'];//big_image图片没有上传过
+            $logBigImage = DbImage::getLogImage($newBigImage, 2); //判断时候有未完成的图片
+            if (empty($logBigImage)) { //图片不存在
+                return ['code' => '3006']; //big_image图片没有上传过
             }
             $data['big_image'] = $newBigImage;
         }
         if (!empty($shareImage)) {
             $newShareImage = filtraImage(Config::get('qiniu.domain'), $shareImage);
-            $logShareImage = DbImage::getLogImage($newShareImage, 2);//判断时候有未完成的图片
-            if (empty($logShareImage)) {//图片不存在
-                return ['code' => '3007'];//share_image图片没有上传过
+            $logShareImage = DbImage::getLogImage($newShareImage, 2); //判断时候有未完成的图片
+            if (empty($logShareImage)) { //图片不存在
+                return ['code' => '3007']; //share_image图片没有上传过
             }
             $data['share_image'] = $newShareImage;
         }
@@ -151,7 +156,7 @@ class User extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3010'];//修改失败
+            return ['code' => '3010']; //修改失败
         }
     }
 
@@ -163,7 +168,8 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPromoteList($page, $pageNum, $supConId) {
+    public function getPromoteList($page, $pageNum, $supConId)
+    {
         $supAdminId = $this->getUidByConId($supConId);
         $offset     = $pageNum * ($page - 1);
         $field      = 'id,title,big_image,share_title,share_image,share_count,bg_image';
@@ -182,7 +188,8 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function getPromoteInfo($id, $supConId) {
+    public function getPromoteInfo($id, $supConId)
+    {
         $supAdminId  = $this->getUidByConId($supConId);
         $field       = 'id,title,big_image,share_title,share_image,share_count,bg_image';
         $where       = ['id' => $id, 'sup_id' => $supAdminId];
@@ -201,11 +208,12 @@ class User extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function resetPassword($supConId, $passwd, $newPasswd) {
+    public function resetPassword($supConId, $passwd, $newPasswd)
+    {
         $supAdminId = $this->getUidByConId($supConId);
         $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd', true);
         if ($adminInfo['sup_passwd'] !== getPassword($passwd, $this->supCipherUserKey, Config::get('conf.cipher_algo'))) {
-            return ['code' => '3001'];//密码错误
+            return ['code' => '3001']; //密码错误
         }
         Db::startTrans();
         try {
@@ -218,9 +226,20 @@ class User extends CommonIndex {
         }
     }
 
-    private function createSupConId() {
+    private function createSupConId()
+    {
         $supConId = uniqid(date('ymdHis'));
         $supConId = hash_hmac('ripemd128', $supConId, 'sup');
         return $supConId;
+    }
+
+    public function getSamplingAppointment($page, $pageNum, $supConId)
+    {
+        $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
+        $where = ['sup_admin_id' => $supAdminId];
     }
 }
