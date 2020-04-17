@@ -455,8 +455,8 @@ class Wap extends MyController
             return ['3002'];
         }
         $provinceId = intval($provinceId);
-        $result     = $this->app->provinces->getArea($provinceId, 2);
-        $this->apiLog($apiName, [$cmsConId, $provinceId], $result['code'], $cmsConId);
+        $result     = $this->app->wap->getArea($provinceId, 2);
+        // $this->apiLog($apiName, [$cmsConId, $provinceId], $result['code'], $cmsConId);
         return $result;
     }
 
@@ -483,8 +483,8 @@ class Wap extends MyController
             return ['3002'];
         }
         $cityId = intval($cityId);
-        $result = $this->app->provinces->getArea($cityId, 3);
-        $this->apiLog($apiName, [$cmsConId, $cityId], $result['code'], $cmsConId);
+        $result = $this->app->wap->getArea($cityId, 3);
+        // $this->apiLog($apiName, [$cmsConId, $cityId], $result['code'], $cmsConId);
         return $result;
     }
 }
