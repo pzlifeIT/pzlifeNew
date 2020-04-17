@@ -320,6 +320,17 @@ class Wap extends CommonIndex
             return ['code' => '3002'];
         }
         $result = DbAdmin::getSamplingReport(['uid' => $uid, 'status' => 1], '*', false);
+        foreach ($result as $key => $value) {
+            switch ($value['type']) {
+                case '1':
+                    $result[$key]['name'] = 'i·FISH循环异常细胞筛查';
+                    break;
+
+                default:
+                    $result[$key]['name'] = 'i·FISH循环异常细胞筛查';
+                    break;
+            }
+        }
         return ['code' => '200', 'data' => $result];
     }
 
