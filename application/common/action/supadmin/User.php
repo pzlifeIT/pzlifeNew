@@ -279,5 +279,33 @@ class User extends CommonIndex
         if (empty($adminInfo)) {
             return ['code' => '3001', '该用户不存在']; //密码错误
         }
+        $result = fadmin::getSamplingAppointment([['id', '=', $id]], '*', true);
+        if (empty($result)) {
+            return ['code' => '3002', 'msg' => '该记录不存在'];
+        }
+        $blood_sampling_ids = fadmin::getBloodSamplingAddress(['sup_admin_id' => $supAdminId], 'id', false);
+        $ids = [];
+        foreach ($blood_sampling_ids as $key => $value) {
+            $ids[] = $value['id'];
+        }
+        if (!in_array($result['blood_sampling_id'], $ids)) {
+            return ['code' => '3003', "msg" => '该预约记录不属于此抽血点'];
+        }
+        $type = explode(',', $result['project_id']);
+        $sampling_data = [];
+        foreach ($type as $key => $value) {
+            $card = fadmin::getSamplingCard(['id' => $value], '*', true);
+            switch ($card['type']) {
+                case '1':
+                    array_push($sampling_data, [$tvalue => "i·FISH循环异常细胞筛查"]);
+                    break;
+
+                default:
+                    array_push($sampling_data,  [$tvalue => "i·FISH循环异常细胞筛查"]);
+                    break;
+            }
+        }
+        $result['projects'] = join(',', $sampling_data);
+        return ['code' => '200', 'result' => $result];
     }
 }
