@@ -1625,6 +1625,7 @@ class Admin extends AdminController
      * @apiGroup         admin_admin
      * @apiName          addBloodSampling
      * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} sup_admin_id
      * @apiParam (入参) {Int} province_id 省id
      * @apiParam (入参) {int} city_id 市id
      * @apiParam (入参) {int}  name 抽血点名称
@@ -1644,6 +1645,7 @@ class Admin extends AdminController
             return ['code' => '3100'];
         }
         $cms_con_id = trim($this->request->post('cms_con_id'));
+        $sup_admin_id = trim($this->request->post('sup_admin_id'));
         $province_id  = trim($this->request->post('province_id'));
         $city_id  = trim($this->request->post('city_id'));
         $area_id  = trim($this->request->post('area_id'));
@@ -1657,7 +1659,7 @@ class Admin extends AdminController
         if (empty($name) || empty($address)) {
             return ['code' => '3002', 'msg' => '信息填写不完整'];
         }
-        $result = $this->app->admin->addBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude);
+        $result = $this->app->admin->addBloodSampling($sup_admin_id, $province_id, $city_id, $area_id, $name, $address, $longitude, $latitude);
         // $this->apiLog($apiName, [$cmsConId, $type, $password], $result['code'], $cmsConId);
         return $result;
     }

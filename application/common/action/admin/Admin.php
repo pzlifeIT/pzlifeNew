@@ -1761,7 +1761,7 @@ class Admin extends CommonIndex
         return $str;
     }
 
-    public function addBloodSampling($province_id, $city_id, $area_id, $name, $address, $longitude, $latitude)
+    public function addBloodSampling($sup_admin_id, $province_id, $city_id, $area_id, $name, $address, $longitude, $latitude)
     {
         /* 判断省市区ID是否合法 */
         $field    = 'id,area_name,pid,level';
