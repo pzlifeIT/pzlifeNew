@@ -243,14 +243,14 @@ class User extends CommonIndex
             return ['code' => '3001', '该用户不存在']; //密码错误
         }
         $where = ['sup_admin_id' => $supAdminId];
-        $blood_sampling_ids = DbAdmin::addBloodSamplingAddress($where, 'id', false);
+        $blood_sampling_ids = DbAdmin::getBloodSamplingAddress($where, 'id', false);
         $ids = [];
         foreach ($blood_sampling_ids as $key => $value) {
             $ids[] = $value['id'];
         }
         $offset = ($page - 1) * $pageNum;
-        $result = DbAdmin::getSamplingAppointment([['id', 'in', join(',', $ids)]], '*', false, '', $offset . ',' . $pageNum);
-        $total = DbAdmin::countSamplingAppointment([['id', 'in', join(',', $ids)]]);
+        $result = DbAdmin::getSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]], '*', false, '', $offset . ',' . $pageNum);
+        $total = DbAdmin::countSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]]);
         foreach ($result as $key => $value) {
             $type = explode(',', $value['project_id']);
             $sampling_data = [];
@@ -269,5 +269,14 @@ class User extends CommonIndex
             $result[$key]['projects'] = $sampling_data;
         }
         return ['code' => '200', 'data' => $result];
+    }
+
+    public function getSamplingAppointmentInfo($id, $supConId)
+    {
+        $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
     }
 }
