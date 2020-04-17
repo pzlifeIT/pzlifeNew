@@ -6,6 +6,7 @@ use app\common\db\user\DbAdmin;
 use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbSup;
+use app\facade\DbAdmin as fadmin;
 use Config;
 use think\Db;
 use Zxing\Result;
@@ -243,19 +244,19 @@ class User extends CommonIndex
             return ['code' => '3001', '该用户不存在']; //密码错误
         }
         $where = ['sup_admin_id' => $supAdminId];
-        $blood_sampling_ids = DbAdmin::getBloodSamplingAddress($where, 'id', false);
+        $blood_sampling_ids = fadmin::getBloodSamplingAddress($where, 'id', false);
         $ids = [];
         foreach ($blood_sampling_ids as $key => $value) {
             $ids[] = $value['id'];
         }
         $offset = ($page - 1) * $pageNum;
-        $result = DbAdmin::getSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]], '*', false, '', $offset . ',' . $pageNum);
-        $total = DbAdmin::countSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]]);
+        $result = fadmin::getSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]], '*', false, '', $offset . ',' . $pageNum);
+        $total = fadmin::countSamplingAppointment([['blood_sampling_id', 'in', join(',', $ids)]]);
         foreach ($result as $key => $value) {
             $type = explode(',', $value['project_id']);
             $sampling_data = [];
             foreach ($type as $tkey => $tvalue) {
-                $card = DbAdmin::getSamplingCard(['id' => $tvalue], '*', true);
+                $card = fadmin::getSamplingCard(['id' => $tvalue], '*', true);
                 switch ($card['type']) {
                     case '1':
                         array_push($sampling_data, [$tvalue => "i·FISH循环异常细胞筛查"]);
