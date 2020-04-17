@@ -297,15 +297,47 @@ class User extends CommonIndex
             $card = fadmin::getSamplingCard(['id' => $value], '*', true);
             switch ($card['type']) {
                 case '1':
-                    array_push($sampling_data, [$tvalue => "i·FISH循环异常细胞筛查"]);
+                    array_push($sampling_data, [$value => "i·FISH循环异常细胞筛查"]);
                     break;
 
                 default:
-                    array_push($sampling_data,  [$tvalue => "i·FISH循环异常细胞筛查"]);
+                    array_push($sampling_data,  [$value => "i·FISH循环异常细胞筛查"]);
                     break;
             }
         }
         $result['projects'] = join(',', $sampling_data);
         return ['code' => '200', 'result' => $result];
+    }
+
+    public function verifySamplingAppointment($id, $time, $supConId)
+    {
+        $supAdminId = $this->getUidByConId($supConId);
+        if ($time - time() > 60) {
+            return ['code' => '3001', 'msg' => '该二维码已过期，请用户刷新'];
+        }
+        $result = fadmin::getSamplingAppointment([['id', '=', $id]], '*', true);
+        if (empty($result)) {
+            return ['code' => '3002', 'msg' => '该记录不存在'];
+        }
+        if ($result['status'] != 1) {
+            return ['code' => '3002', 'msg' => '该预约已被使用'];
+        }
+        $blood_sampling_ids = fadmin::getBloodSamplingAddress(['sup_admin_id' => $supAdminId], 'id', false);
+        $ids = [];
+        foreach ($blood_sampling_ids as $key => $value) {
+            $ids[] = $value['id'];
+        }
+        if (!in_array($result['blood_sampling_id'], $ids)) {
+            return ['code' => '3003', "msg" => '该预约记录不属于此抽血点'];
+        }
+        Db::startTrans();
+        try {
+            DbAdmin::editSamplingAppointment(['status' => 2], $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+        }
     }
 }
