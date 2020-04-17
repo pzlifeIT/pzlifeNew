@@ -293,7 +293,7 @@ class Wap extends CommonIndex
             return ['code' => '3002'];
         }
         foreach ($project_id as $key => $value) {
-            $card = DbAdmin::getSamplingCard(['id' => $value, 'status' => 1], '*', true);
+            $card = DbAdmin::getSamplingReport(['id' => $value, 'status' => 1], '*', true);
             if (empty($card)) {
                 return ['code' => '3003', 'msg' => '存在未核验激活项目卡'];
             }
@@ -339,7 +339,7 @@ class Wap extends CommonIndex
             return ['code' => '3002'];
         }
         foreach ($project_id as $key => $value) {
-            $card = DbAdmin::getSamplingCard(['id' => $value, 'status' => 1], '*', true);
+            $card = DbAdmin::getSamplingReport(['id' => $value, 'status' => 1], '*', true);
             if (empty($card)) {
                 return ['code' => '3003', 'msg' => '存在未激活或已使用项目卡'];
             }
