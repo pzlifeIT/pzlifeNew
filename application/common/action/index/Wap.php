@@ -319,12 +319,12 @@ class Wap extends CommonIndex
         ];
         Db::startTrans();
         try {
-            DbAdmin::addSamplingAppointment($data);
+            $id = DbAdmin::addSamplingAppointment($data);
             foreach ($project_id as $key => $value) {
                 DbAdmin::editSamplingReport(['status' => 2], $value);
             }
             Db::commit();
-            return ['code' => '200'];
+            return ['code' => '200', 'id' => $id];
         } catch (\Exception $e) {
             Db::rollback();
             return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
