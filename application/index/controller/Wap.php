@@ -17,7 +17,7 @@ class Wap extends MyController
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,samplingReport,getBloodSamplingAddress'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -228,6 +228,7 @@ class Wap extends MyController
      * @apiDescription  samplingReport
      * @apiGroup         index_wap
      * @apiName          samplingReport
+     * @apiParam (入参) {String} con_id 用户登录ID
      * @apiParam (入参) {Number} card_number 卡号
      * @apiParam (入参) {Number} passwd 密码
      * @apiParam (入参) {Number} mobile 手机号
@@ -239,12 +240,20 @@ class Wap extends MyController
      */
     public function samplingReport()
     {
+
+        $conId      = trim($this->request->post('con_id'));
         $card_number = trim($this->request->post('card_number'));
         $passwd = trim($this->request->post('passwd'));
         $mobile = trim($this->request->post('mobile'));
         $from_id = trim($this->request->post('from_id'));
         if (empty($card_number) || empty($passwd) || empty($mobile)) {
             return ['code' => '3000', 'msg' => '信息不完整，请填写信息'];
+        }
+        if (empty($conId)) {
+            return ['code' => '3002'];
+        }
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
         }
         $result = $this->app->wap->samplingReport($card_number, $passwd, $mobile, $from_id);
         return $result;
