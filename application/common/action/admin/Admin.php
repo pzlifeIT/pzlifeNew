@@ -1870,6 +1870,17 @@ class Admin extends CommonIndex
             array_push($where, ['area_id', '=', $area_id]);
         }
         $result = DbAdmin::getBloodSamplingAddress($where, '*', false, '', $offset . ',' . $pageNum);
+        foreach ($result as $key => $value) {
+            if ($value['province_id']) {
+                $result[$key]['province_name'] = DbProvinces::getAreaOne('*', ['id' => $value['province_id']])['area_name'];
+            }
+            if ($value['city_id']) {
+                $result[$key]['city_name'] = DbProvinces::getAreaOne('*', ['id' => $value['city_id'], 'level' => 2])['area_name'];
+            }
+            if ($value['area_id']) {
+                $result[$key]['area_name'] = DbProvinces::getAreaOne('*', ['id' => $value['area_id']])['area_name'];
+            }
+        }
         $total = DbAdmin::countBloodSamplingAddress($where);
         return ['code' => '200', 'total' => $total, 'result' => $result];
     }
