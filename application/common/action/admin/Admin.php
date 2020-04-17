@@ -1800,6 +1800,7 @@ class Admin extends CommonIndex
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
+            exception($e);
             return ['code' => '3007']; //删除失败
         }
     }
