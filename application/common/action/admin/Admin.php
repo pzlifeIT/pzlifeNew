@@ -1785,7 +1785,7 @@ class Admin extends CommonIndex
         }
         $data = [];
         $data = [
-            'province' => $province_id,
+            'province_id' => $province_id,
             'city_id' => $city_id,
             'area_id' => $area_id,
             'name' => $name,
@@ -1800,7 +1800,6 @@ class Admin extends CommonIndex
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            exception($e);
             return ['code' => '3007']; //删除失败
         }
     }
