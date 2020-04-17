@@ -6,6 +6,8 @@ namespace app\common\action\index;
 use app\common\action\index\CommonIndex;
 use app\facade\DbSup;
 use app\facade\DbAdmin;
+use app\facade\DbProvinces;
+use third\PHPTree;
 use config;
 use Env;
 use think\Db;
@@ -243,5 +245,21 @@ class Wap extends CommonIndex
         $result = DbAdmin::getBloodSamplingAddress($where, '*', false);
         $total = DbAdmin::countBloodSamplingAddress($where);
         return ['code' => '200', 'total' => $total, 'result' => $result];
+    }
+
+    public function getProvinceCity()
+    {
+        $field  = 'id,area_name,pid';
+        $where  = [
+            'level' => [1, 2],
+        ];
+        $result = DbProvinces::getAreaInfo($field, $where);
+        if (empty($result)) {
+            return ['code' => '3000'];
+        }
+        $phptree = new PHPTree($result);
+        $phptree->setParam('pk', 'id');
+        $result = $phptree->listTree();
+        return ['code' => '200', 'data' => $result];
     }
 }

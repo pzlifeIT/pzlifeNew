@@ -17,7 +17,7 @@ class Wap extends MyController
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,getProvinceCity'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -256,6 +256,29 @@ class Wap extends MyController
         $city_id  = trim($this->request->post('city_id'));
         $area_id  = trim($this->request->post('area_id'));
         $result = $this->app->wap->getBloodSampling($province_id, $city_id, $area_id);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 省市列表
+     * @apiDescription   getProvinceCity
+     * @apiGroup         admin_provinces
+     * @apiName          getProvinceCity
+     * @apiParam (入参) {String} cms_con_id
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /index/wap/getProvinceCity
+     * @author zyr
+     */
+    public function getProvinceCity()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $result = $this->app->wap->getProvinceCity();
+        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
+        //        $this->addLog($result['code'],__function__);//接口请求日志
         return $result;
     }
 }
