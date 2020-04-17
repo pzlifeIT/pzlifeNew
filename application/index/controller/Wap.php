@@ -213,7 +213,7 @@ class Wap extends MyController
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->wap->samplingReport($card_number, $passwd, $mobile, $from_id);
+        $result = $this->app->wap->samplingReport($conId, $card_number, $passwd, $mobile, $from_id);
         return $result;
     }
 
@@ -222,7 +222,7 @@ class Wap extends MyController
      * @apiDescription  getsamplingReport
      * @apiGroup         index_wap
      * @apiName          getsamplingReport
-     * @apiParam (入参) {Number} mobile 手机号
+     * @apiParam (入参) {String} con_id 用户登录ID
      * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
      * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
      * @apiSampleRequest /index/wap/getsamplingReport
@@ -230,11 +230,14 @@ class Wap extends MyController
      */
     public function getsamplingReport()
     {
-        $mobile = trim($this->request->post('mobile'));
-        if (checkMobile($mobile) == false) {
-            return ['code' => '3001', 'msg' => '手机号格式错误'];
+        $conId      = trim($this->request->post('con_id'));
+        if (empty($conId)) {
+            return ['code' => '3002'];
         }
-        $result = $this->app->wap->getsamplingReport($mobile);
+        if (strlen($conId) != 32) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->wap->getsamplingReport($conId);
         return $result;
     }
     /**
@@ -264,7 +267,6 @@ class Wap extends MyController
      * @apiDescription   getProvinceCity
      * @apiGroup         index_wap
      * @apiName          getProvinceCity
-     * @apiParam (入参) {String} cms_con_id
      * @apiSuccess (返回) {String} code 200:成功 / 3000:省市区列表为空
      * @apiSuccess (返回) {Array} data 结果
      * @apiSuccess (data) {String} area_name 名称
@@ -275,9 +277,9 @@ class Wap extends MyController
     public function getProvinceCity()
     {
         $apiName  = classBasename($this) . '/' . __function__;
-        $cmsConId = trim($this->request->post('cms_con_id'));
+        // $conId = trim($this->request->post('conId'));
         $result = $this->app->wap->getProvinceCity();
-        $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
+        // $this->apiLog($apiName, [$cmsConId], $result['code'], $cmsConId);
         //        $this->addLog($result['code'],__function__);//接口请求日志
         return $result;
     }
