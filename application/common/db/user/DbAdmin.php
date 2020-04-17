@@ -14,6 +14,7 @@ use app\common\model\User;
 use app\common\model\SamplingCard;
 use app\common\model\SamplingReport;
 use app\common\model\BloodSamplingAddress;
+use app\common\model\SamplingAppointment;
 use think\Db;
 
 class DbAdmin
@@ -372,5 +373,29 @@ class DbAdmin
     public function countBloodSamplingAddress($where)
     {
         return BloodSamplingAddress::where($where)->count();
+    }
+
+    public function getSamplingAppointment($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
+        $obj = SamplingAppointment::field($field)->where($where);
+        return $this->getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addSamplingAppointment($data)
+    {
+        $SamplingAppointment = new SamplingAppointment();
+        $SamplingAppointment->save($data);
+        return $SamplingAppointment->id;
+    }
+
+    public function editSamplingAppointment($data, $id)
+    {
+        $SamplingAppointment = new SamplingAppointment();
+        return $SamplingAppointment->save($data, ['id' => $id]);
+    }
+
+    public function countSamplingAppointment($where)
+    {
+        return SamplingAppointment::where($where)->count();
     }
 }

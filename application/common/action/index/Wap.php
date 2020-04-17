@@ -199,8 +199,8 @@ class Wap extends CommonIndex
             return ['code' => '3003', 'msg' => '手机号格式错误'];
         }
         switch ($card['type']) {
-            case '1':
-                $goods_id = 2056;
+            case '4':
+                $goods_id = 2156;
                 break;
 
             default:
