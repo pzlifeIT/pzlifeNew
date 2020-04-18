@@ -2777,7 +2777,6 @@ class User extends CommonIndex {
         $get_token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $appid . '&secret=' . $secret . '&code=' . $code . '&grant_type=authorization_code';
         $res           = sendRequest($get_token_url);
         $result        = json_decode($res, true);
-        print_r($result);die;
         if (empty($result['openid'])) {
             return false;
         }
