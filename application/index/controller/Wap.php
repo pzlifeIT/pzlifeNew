@@ -249,12 +249,12 @@ class Wap extends MyController
         if (empty($card_number) || empty($passwd) || empty($mobile)) {
             return ['code' => '3000', 'msg' => '信息不完整，请填写信息'];
         }
-        /*  if (empty($conId)) {
+         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $result = $this->app->wap->samplingReport($conId, $card_number, $passwd, $mobile, $from_id);
         return $result;
     }
@@ -314,12 +314,12 @@ class Wap extends MyController
     public function getsamplingReport()
     {
         $conId      = trim($this->request->post('con_id'));
-        /*  if (empty($conId)) {
+         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $result = $this->app->wap->getsamplingReport($conId);
         return $result;
     }
@@ -398,12 +398,12 @@ class Wap extends MyController
     public function addSamplingAppointment()
     {
         $conId      = trim($this->request->post('con_id'));
-        /* if (empty($conId)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $mobile      = trim($this->request->post('mobile'));
         $name      = trim($this->request->post('name'));
         $sex      = trim($this->request->post('sex'));
@@ -459,12 +459,12 @@ class Wap extends MyController
     public function editSamplingAppointment()
     {
         $conId      = trim($this->request->post('con_id'));
-        /* if (empty($conId)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $id      = trim($this->request->post('id'));
         $mobile      = trim($this->request->post('mobile'));
         $name      = trim($this->request->post('name'));
@@ -504,12 +504,12 @@ class Wap extends MyController
     public function getSamplingAppointment()
     {
         $conId      = trim($this->request->post('con_id'));
-        /* if (empty($conId)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $id      = trim($this->request->post('id'));
         $result = $this->app->wap->getSamplingAppointment($id, $conId);
         return $result;

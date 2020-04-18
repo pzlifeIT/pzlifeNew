@@ -269,7 +269,6 @@ class Wap extends CommonIndex
     public function samplingReport($conId, $card_number, $passwd, $mobile, $from_id = '')
     {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -315,7 +314,6 @@ class Wap extends CommonIndex
     public function getsamplingReport($conId)
     {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -366,7 +364,6 @@ class Wap extends CommonIndex
     public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
     {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -412,7 +409,6 @@ class Wap extends CommonIndex
     public function editSamplingAppointment($id, $conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
     {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
@@ -467,7 +463,6 @@ class Wap extends CommonIndex
     public function getSamplingAppointment($id, $conId)
     {
         $uid = $this->getUidByConId($conId);
-        $uid = 2;
         if (empty($uid)) {
             return ['code' => '3002'];
         }
