@@ -277,13 +277,15 @@ class Wap extends CommonIndex
         if (empty($result)) {
             return ['code' => '3000'];
         }
+        print_r($result);
+        die;
         $phptree = new PHPTree($result);
         $phptree->setParam('pk', 'id');
         $result = $phptree->listTree();
         return ['code' => '200', 'data' => $result];
     }
 
-    public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
+    public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type, $appointment_time)
     {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -313,6 +315,7 @@ class Wap extends CommonIndex
             'my_illness' => $my_illness,
             'relation' => $relation,
             'health_type' => $health_type,
+            'appointment_time' => $appointment_time,
         ];
         Db::startTrans();
         try {
@@ -435,5 +438,9 @@ class Wap extends CommonIndex
             return ['code' => '3000'];
         }
         return ['code' => '200', 'data' => $result];
+    }
+
+    public function getCheckBloodAddress()
+    {
     }
 }

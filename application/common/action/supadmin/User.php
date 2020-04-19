@@ -312,7 +312,7 @@ class User extends CommonIndex
     public function verifySamplingAppointment($id, $time, $supConId)
     {
         $supAdminId = $this->getUidByConId($supConId);
-        if ($time - time() > 60) {
+        if ($time - time() > 86400) {
             return ['code' => '3001', 'msg' => '该二维码已过期，请用户刷新'];
         }
         $result = fadmin::getSamplingAppointment([['id', '=', $id]], '*', true);
