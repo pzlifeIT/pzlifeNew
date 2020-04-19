@@ -348,9 +348,17 @@ class Wap extends CommonIndex
     public function getProvinceCity()
     {
         $field  = 'id,area_name,pid';
+
+        $province = DbAdmin::getBloodSamplingAddress([], 'province_id', false);
+        $ids = [];
+        foreach ($province as $key => $value) {
+            $ids[] = $value['province_id'];
+        }
         $where  = [
-            'level' => [1, 2],
+            ['level', 'in', '1,2'],
+            ['id', 'in', join(',', $ids)],
         ];
+
         $result = DbProvinces::getAreaInfo($field, $where);
         if (empty($result)) {
             return ['code' => '3000'];
@@ -361,7 +369,7 @@ class Wap extends CommonIndex
         return ['code' => '200', 'data' => $result];
     }
 
-    public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type)
+    public function addSamplingAppointment($conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type, $appointment_time)
     {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
@@ -391,6 +399,7 @@ class Wap extends CommonIndex
             'my_illness' => $my_illness,
             'relation' => $relation,
             'health_type' => $health_type,
+            'appointment_time' => $appointment_time,
         ];
         Db::startTrans();
         try {
@@ -513,5 +522,9 @@ class Wap extends CommonIndex
             return ['code' => '3000'];
         }
         return ['code' => '200', 'data' => $result];
+    }
+
+    public function getCheckBloodAddress()
+    {
     }
 }

@@ -4,11 +4,12 @@ namespace app\admin\controller;
 
 use app\admin\AdminController;
 
-class Subject extends AdminController {
+class Subject extends AdminController
+{
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
-//        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
-//        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
+        //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
+        //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
     /**
@@ -27,22 +28,23 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/addsubject
      * @author zyr
      */
-    public function addSubject() {
+    public function addSubject()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $statusArr = [1, 2];//1.启用  2.停用
-        $is_integral_showArr = [1, 2];//1.启用  2.停用
+        $statusArr = [1, 2]; //1.启用  2.停用
+        $is_integral_showArr = [1, 2]; //1.启用  2.停用
         $pid       = trim($this->request->post('pid'));
         $subject   = trim($this->request->post('subject'));
         $status    = trim($this->request->post('status'));
         $is_integral_show    = trim($this->request->post('is_integral_show'));
         $image     = trim($this->request->post('image'));
         $share_image     = trim($this->request->post('share_image'));
-        $status    = empty($status) ? 1 : intval($status);//默认添加时为启用
-        $is_integral_show    = empty($is_integral_show) ? 1 : intval($is_integral_show);//默认添加时为启用
+        $status    = empty($status) ? 1 : intval($status); //默认添加时为启用
+        $is_integral_show    = empty($is_integral_show) ? 1 : intval($is_integral_show); //默认添加时为启用
         if (!in_array($status, $statusArr)) {
             return ["code" => '3001'];
         }
@@ -77,13 +79,14 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/editsubject
      * @author zyr
      */
-    public function editSubject() {
+    public function editSubject()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $statusArr = [0, 1, 2];//1.启用  2.停用
+        $statusArr = [0, 1, 2]; //1.启用  2.停用
         $id        = trim($this->request->post('id'));
         $subject   = trim($this->request->post('subject'));
         $status    = trim($this->request->post('status'));
@@ -97,7 +100,7 @@ class Subject extends AdminController {
         if (!in_array($status, $statusArr)) {
             return ["code" => '3001'];
         }
-        if (!in_array($is_integral_show, [1,2])) {
+        if (!in_array($is_integral_show, [1, 2]) && !empty($is_integral_show)) {
             return ["code" => '3008'];
         }
         if (!is_numeric($id)) {
@@ -129,14 +132,15 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/getallsubject
      * @author zyr
      */
-    public function getAllSubject() {
+    public function getAllSubject()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
         $stype    = trim($this->request->post('stype'));
         $stype    = empty($stype) ? 1 : $stype;
         if (!in_array($stype, $stypeArr)) {
-            return ['code' => '3001'];//stype参数有误
+            return ['code' => '3001']; //stype参数有误
         }
         $result = $this->app->subject->getAllSubject(intval($stype));
         $this->apiLog($apiName, [$cmsConId, $stype], $result['code'], $cmsConId);
@@ -155,7 +159,8 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/subjectgoodsassoc
      * @author zyr
      */
-    public function subjectGoodsAssoc() {
+    public function subjectGoodsAssoc()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -187,7 +192,8 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/getgoodssubject
      * @author zyr
      */
-    public function getGoodsSubject() {
+    public function getGoodsSubject()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $stypeArr = [1, 2];
@@ -221,7 +227,8 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/getsubjectdetail
      * @author zyr
      */
-    public function getSubjectDetail() {
+    public function getSubjectDetail()
+    {
         $apiName   = classBasename($this) . '/' . __function__;
         $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
         $subjectId = trim($this->request->post('subject_id'));
@@ -244,7 +251,8 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/delgoodssubject
      * @author zyr
      */
-    public function delGoodsSubject() {
+    public function delGoodsSubject()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
@@ -271,7 +279,8 @@ class Subject extends AdminController {
      * @apiSampleRequest /admin/subject/delgoodssubjectassoc
      * @author zyr
      */
-    public function delGoodsSubjectAssoc() {
+    public function delGoodsSubjectAssoc()
+    {
         $apiName  = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {

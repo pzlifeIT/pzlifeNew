@@ -17,7 +17,7 @@ class Wap extends MyController
     }
     protected $beforeActionList = [
         //        'isLogin', //所有方法的前置操作
-        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,getProvinceCity,getCity,getArea,getBloodSamplingAddress,getsamplingReport,addSamplingAppointment,editSamplingAppointment,getSamplingAppointment'], //除去login其他方法都进行isLogin前置操作
+        'isLogin' => ['except' => 'getSupPromote,getJsapiTicket,getProvinceCity,getCity,getArea,getBloodSamplingAddress,getsamplingReport,addSamplingAppointment,editSamplingAppointment,getSamplingAppointment,getCheckBloodAddress'], //除去login其他方法都进行isLogin前置操作
         //        'three'   => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
@@ -440,6 +440,7 @@ class Wap extends MyController
      * @apiParam (入参) {String} age 年龄 
      * @apiParam (入参) {String} idenity_type 证件类型，1,身份证 
      * @apiParam (入参) {String} idenity_nmber 证件号码
+     * @apiParam (入参) {String} appointment_time 预约时间
      * @apiParam (入参) {String} blood_sampling_id 采样点id
      * @apiParam (入参) {String} project_id 预约项目激活卡id，多张卡用,连接
      * @apiParam (入参) {String} is_illness 是否有家族病史, 1:没有,2：有
@@ -472,6 +473,7 @@ class Wap extends MyController
         $age      = trim($this->request->post('age'));
         $idenity_type      = trim($this->request->post('idenity_type'));
         $idenity_nmber      = trim($this->request->post('idenity_nmber'));
+        $appointment_time      = trim($this->request->post('appointment_time'));
         $blood_sampling_id      = trim($this->request->post('blood_sampling_id'));
         $project_id      = trim($this->request->post('project_id'));
         $is_illness      = trim($this->request->post('is_illness'));
@@ -485,7 +487,7 @@ class Wap extends MyController
         if (empty($mobile) || empty($name) || empty($sex) || empty($age) || empty($idenity_type) || empty($idenity_nmber) || empty($blood_sampling_id) || empty($project_id) || empty($is_illness) || empty($is_had_illness) || empty($illness) || empty($had_illness_time) || empty($relation) || empty($my_illness) || empty($health_type)) {
             return ['code' => '3001', 'msg' => '参数为空'];
         }
-        $result = $this->app->wap->editSamplingAppointment($id, $conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type);
+        $result = $this->app->wap->editSamplingAppointment($id, $conId, $mobile, $name, $sex, $age, $idenity_type, $blood_sampling_id, $project_id, $is_illness, $idenity_nmber, $is_had_illness, $had_illness_time, $illness, $relation, $my_illness, $health_type, $appointment_time);
         return $result;
     }
 
@@ -554,7 +556,7 @@ class Wap extends MyController
      * @apiSuccess (返回) {String} data 结果
      * @apiSuccess (data) {String} area_name 名称
      * @apiSuccess (data) {Number} pid 父级id
-     * @apiSampleRequest /index/wap//getArea
+     * @apiSampleRequest /index/wap/getArea
      * @author zyr
      */
     public function getArea()
@@ -568,6 +570,24 @@ class Wap extends MyController
         $cityId = intval($cityId);
         $result = $this->app->wap->getArea($cityId, 3);
         // $this->apiLog($apiName, [$cmsConId, $cityId], $result['code'], $cmsConId);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 获取抽血点可选择地区
+     * @apiDescription   getCheckBloodAddress
+     * @apiGroup         index_wap
+     * @apiName          getCheckBloodAddress
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:区列表空 / 3001:市级id不存在 / 3002:市级id只能是数字
+     * @apiSuccess (返回) {String} data 结果
+     * @apiSuccess (data) {String} area_name 名称
+     * @apiSuccess (data) {Number} pid 父级id
+     * @apiSampleRequest /index/wap/getCheckBloodAddress
+     * @author zyr
+     */
+    public function getCheckBloodAddress()
+    {
+        $result = $this->app->wap->getCheckBloodAddress();
         return $result;
     }
 }
