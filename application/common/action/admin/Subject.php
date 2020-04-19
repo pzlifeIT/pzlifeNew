@@ -153,6 +153,8 @@ class Subject extends CommonIndex
                 //                }
             }
         }
+        print_r($data);
+        die;
         Db::startTrans();
         try {
             $flag = false;
