@@ -440,7 +440,7 @@ class Suppliers extends CommonIndex
         //     return ['code' => '3004'];
         // }
         $data = [
-            'uid'        => $user['id'],
+            // 'uid'        => $user['id'],
             'sup_name'   => $supName,
             'sup_passwd' => getPassword('111111', $this->supCipherUserKey, Config::get('conf.cipher_algo')),
             'mobile'     => $mobile,
