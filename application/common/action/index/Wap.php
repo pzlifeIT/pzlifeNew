@@ -401,6 +401,7 @@ class Wap extends CommonIndex
             Db::commit();
             return ['code' => '200', 'id' => $id];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
         }
