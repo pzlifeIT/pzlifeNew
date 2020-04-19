@@ -270,15 +270,21 @@ class Wap extends CommonIndex
     public function getProvinceCity()
     {
         $field  = 'id,area_name,pid';
+
+        $province = DbAdmin::getBloodSamplingAddress([], 'province_id', false);
+        $ids = [];
+        foreach ($province as $key => $value) {
+            $ids[] = $value['province_id'];
+        }
         $where  = [
-            'level' => [1, 2],
+            ['level', 'in', '1,2'],
+            ['id', 'in', join(',', $ids)],
         ];
+
         $result = DbProvinces::getAreaInfo($field, $where);
         if (empty($result)) {
             return ['code' => '3000'];
         }
-        print_r($result);
-        die;
         $phptree = new PHPTree($result);
         $phptree->setParam('pk', 'id');
         $result = $phptree->listTree();
