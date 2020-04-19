@@ -398,12 +398,12 @@ class Wap extends MyController
     public function addSamplingAppointment()
     {
         $conId      = trim($this->request->post('con_id'));
-        /*  if (empty($conId)) {
+        if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
-        } */
+        }
         $mobile      = trim($this->request->post('mobile'));
         $name      = trim($this->request->post('name'));
         $sex      = trim($this->request->post('sex'));
