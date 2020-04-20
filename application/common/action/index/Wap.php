@@ -390,6 +390,7 @@ class Wap extends CommonIndex
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
+            exception($e);
             return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
         }
     }
@@ -446,6 +447,7 @@ class Wap extends CommonIndex
             $where2  = [
                 ['level', 'in', '2'],
                 ['id', 'in', join(',', $ids)],
+                ['pid', '=', $pid],
             ];
         } elseif ($level == 3) {
             $province = DbAdmin::getBloodSamplingAddress([], 'area_id', false);
@@ -456,6 +458,7 @@ class Wap extends CommonIndex
             $where2  = [
                 ['level', 'in', '3'],
                 ['id', 'in', join(',', $ids)],
+                ['pid', '=', $pid],
             ];
         }
 
