@@ -306,6 +306,7 @@ class Wap extends MyController
      * @apiGroup         index_wap
      * @apiName          getsamplingReport
      * @apiParam (入参) {String} con_id 用户登录ID
+     * @apiParam (入参) {String} status 状态 1:已核验  2:已预约
      * @apiSuccess (返回) {String} code 200:成功 / 3000:发送失败 /  3001:con_id长度只能是32位 / 3002:缺少con_id / 3003:promote_id有误 / 3004:手机号错误 / 3005:本次活动该手机号已报名参加 / 3006:请填写姓名
      * @apiSuccess (返回) {String} is_share 1 未达成分享目标； 2 已达成分享目标
      * @apiSampleRequest /index/wap/getsamplingReport
@@ -314,13 +315,14 @@ class Wap extends MyController
     public function getsamplingReport()
     {
         $conId      = trim($this->request->post('con_id'));
+        $status      = trim($this->request->post('status'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
         if (strlen($conId) != 32) {
             return ['code' => '3001'];
         }
-        $result = $this->app->wap->getsamplingReport($conId);
+        $result = $this->app->wap->getsamplingReport($conId, $status);
         return $result;
     }
     /**

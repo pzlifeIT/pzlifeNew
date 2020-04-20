@@ -311,13 +311,13 @@ class Wap extends CommonIndex
         }
     }
 
-    public function getsamplingReport($conId)
+    public function getsamplingReport($conId, $status)
     {
         $uid = $this->getUidByConId($conId);
         if (empty($uid)) {
             return ['code' => '3002'];
         }
-        $result = DbAdmin::getSamplingReport(['uid' => $uid, 'status' => 1], '*', false);
+        $result = DbAdmin::getSamplingReport(['uid' => $uid, 'status' => $status], '*', false);
         foreach ($result as $key => $value) {
             switch ($value['type']) {
                 case '1':
