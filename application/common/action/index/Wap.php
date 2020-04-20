@@ -515,10 +515,28 @@ class Wap extends CommonIndex
         if (empty($province)) { //判断省市是否存在
             return ['code' => '3001'];
         }
-        $where2 = [
-            'pid'   => $pid,
-            'level' => $level,
-        ];
+        if ($level == 2) {
+            $province = DbAdmin::getBloodSamplingAddress([], 'city_id', false);
+            $ids = [];
+            foreach ($province as $key => $value) {
+                $ids[] = $value['city_id'];
+            }
+            $where2  = [
+                ['level', 'in', '2'],
+                ['id', 'in', join(',', $ids)],
+            ];
+        } elseif ($level == 3) {
+            $province = DbAdmin::getBloodSamplingAddress([], 'area_id', false);
+            $ids = [];
+            foreach ($province as $key => $value) {
+                $ids[] = $value['area_id'];
+            }
+            $where2  = [
+                ['level', 'in', '3'],
+                ['id', 'in', join(',', $ids)],
+            ];
+        }
+
         $result = DbProvinces::getAreaInfo($field, $where2);
         if (empty($result)) { //获取下级列表
             return ['code' => '3000'];
