@@ -304,6 +304,7 @@ class Wap extends CommonIndex
             }
         }
         $data = [];
+        $safe_code = $this->getRandomString(6);
         $data = [
             'uid' => $uid,
             'mobile' => $mobile,
@@ -322,6 +323,7 @@ class Wap extends CommonIndex
             'relation' => $relation,
             'health_type' => $health_type,
             'appointment_time' => $appointment_time,
+            'safe_code' => $safe_code,
         ];
         Db::startTrans();
         try {
@@ -330,7 +332,7 @@ class Wap extends CommonIndex
                 DbAdmin::editSamplingReport(['status' => 2], $value);
             }
             Db::commit();
-            return ['code' => '200', 'id' => $id];
+            return ['code' => '200', 'id' => $id, 'safe_code' => $safe_code];
         } catch (\Exception $e) {
             exception($e);
             Db::rollback();
@@ -448,5 +450,23 @@ class Wap extends CommonIndex
 
     public function getCheckBloodAddress()
     {
+    }
+    /**
+     * 生成数字随机组合
+     * @param $len
+     * @param string $chars
+     * @return mixed
+     * @author rzc
+     */
+    function getRandomString($len, $chars = null)
+    {
+        if (is_null($chars)) {
+            $chars = "0123456789";
+        }
+        mt_srand(10000000 * (float) microtime());
+        for ($i = 0, $str = '', $lc = strlen($chars) - 1; $i < $len; $i++) {
+            $str .= $chars[mt_rand(0, $lc)];
+        }
+        return $str;
     }
 }
