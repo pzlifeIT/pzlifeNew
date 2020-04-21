@@ -25,14 +25,7 @@ class SupAdminController extends Controller {
             header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
         }
         if (Config::get('deploy') == 'production') {//生产环境
-            $allow_origin = array(
-                'https://supapi.pzlive.vip',
-                'https://wap.pzlive.vip',
-            );
-            $origin       = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-            if (in_array($origin, $allow_origin)) {
-                header('Access-Control-Allow-Origin:' . $origin);
-            }
+            header('Access-Control-Allow-Origin:*');
             header("Access-Control-Allow-Methods:GET,POST");
             header('Access-Control-Allow-Headers:content-type,token,id');
             header("Access-Control-Request-Headers: Origin, X-Requested-With, content-Type, Accept, Authorization");
