@@ -26,7 +26,8 @@ class SupAdminController extends Controller {
         }
         if (Config::get('deploy') == 'production') {//生产环境
             $allow_origin = array(
-                'https://sup.pzlive.vip',
+                'https://supdev.pzlive.vip',
+                'https://wap.pzlive.vip',
             );
             $origin       = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
             if (in_array($origin, $allow_origin)) {
