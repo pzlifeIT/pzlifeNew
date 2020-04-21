@@ -7,7 +7,7 @@ use app\index\MyController;
 class User extends MyController {
     protected $beforeActionList = [
 //        'isLogin',//所有方法的前置操作
-        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead,wxaccredit,wxregister,getUser'], //除去getFirstCate其他方法都进行second前置操作
+        'isLogin' => ['except' => 'login,quickLogin,register,resetPassword,sendVercode,loginUserByWx,getUserRead,wxaccredit,wxregister'], //除去getFirstCate其他方法都进行second前置操作
         //        'three'  => ['only' => 'hello,data'],//只有hello,data方法进行three前置操作
     ];
 
