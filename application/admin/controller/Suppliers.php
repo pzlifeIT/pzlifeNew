@@ -613,9 +613,9 @@ class Suppliers extends AdminController
         if (empty($supName)) {
             return ['code' => '3001']; //账号不能为空
         }
-        if (!checkMobile($mobile)) {
-            return ['code' => '3002']; //手机格式有误
-        }
+        // if (!checkMobile($mobile)) {
+        //     return ['code' => '3002']; //手机格式有误
+        // }
         $result = $this->app->suppliers->addSupplierAdmin($mobile, $supName);
         $this->apiLog($apiName, [$cmsConId, $mobile, $supName], $result['code'], $cmsConId);
         return $result;
