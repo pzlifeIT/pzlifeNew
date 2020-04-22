@@ -335,7 +335,7 @@ class User extends CommonIndex
         }
         Db::startTrans();
         try {
-            DbAdmin::editSamplingAppointment(['status' => 2], $id);
+            fadmin::editSamplingAppointment(['status' => 2], $id);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
