@@ -309,7 +309,7 @@ class User extends CommonIndex
         return ['code' => '200', 'result' => $result];
     }
 
-    public function verifySamplingAppointment($id, $time, $supConId)
+    public function verifySamplingAppointment($id, $time, $supConId, $safe_code)
     {
         $supAdminId = $this->getUidByConId($supConId);
         if ($time - time() > 86400) {
@@ -321,6 +321,9 @@ class User extends CommonIndex
         }
         if ($result['status'] != 1) {
             return ['code' => '3002', 'msg' => '该预约已被使用'];
+        }
+        if ($result['safe_code'] != $safe_code) {
+            return ['code' => '3006', 'msg' => '安全码错误'];
         }
         $blood_sampling_ids = fadmin::getBloodSamplingAddress(['sup_admin_id' => $supAdminId], 'id', false);
         $ids = [];
@@ -337,7 +340,7 @@ class User extends CommonIndex
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+            return ['code' => '3005', 'msg' => '验证失败']; //添加失败
         }
     }
 }
