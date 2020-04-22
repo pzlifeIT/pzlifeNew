@@ -339,6 +339,7 @@ class User extends CommonIndex
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ['code' => '3005', 'msg' => '验证失败']; //添加失败
         }
