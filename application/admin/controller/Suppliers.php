@@ -624,7 +624,7 @@ class Suppliers extends AdminController
     }
 
     /**
-     * @api              {post} / 供应商管理员列表
+     * @api              {post} / 供应商管理员列表（一级账户）
      * @apiDescription   supplierAdminList
      * @apiGroup         admin_Suppliers
      * @apiName          supplierAdminList
@@ -658,6 +658,42 @@ class Suppliers extends AdminController
         return $result;
     }
 
+     /**
+     * @api              {post} / 供应商管理员列表（二级账户）
+     * @apiDescription   supplierSonAdminList
+     * @apiGroup         admin_Suppliers
+     * @apiName          supplierSonAdminList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} sup_id  一级账户id
+     * @apiParam (入参) {Int} page 页码
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page错误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} id 编号
+     * @apiSuccess (data) {String} sup_name 名称
+     * @apiSuccess (data) {String} mobile 手机
+     * @apiSampleRequest /admin/suppliers/supplierSonAdminList
+     * @author zyr
+     */
+    public function supplierSonAdminList()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $sup_id  = trim($this->request->post('sup_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->suppliers->supplierSonAdminList($page, $pageNum, $sup_id);
+        $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
 
     /**
      * @api              {post} / 获取抽血点预约列表

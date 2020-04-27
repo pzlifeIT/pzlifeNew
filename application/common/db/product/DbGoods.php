@@ -1205,6 +1205,11 @@ class DbGoods {
         $supAdmin->save($data);
         return $supAdmin->id;
     }
+    public function editSupAdmin($data,$id){
+        $supAdmin  =new SupAdmin();
+        // $supAdmin->save($data);
+        return $supAdmin->save($data,['id' => $id]);
+    }
 
     public function getSheetOption($where, $field, $row = false, $orderBy = '', $limit = ''){
         $obj = SheetOption::field($field)->where($where);

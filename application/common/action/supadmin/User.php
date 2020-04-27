@@ -351,4 +351,39 @@ class User extends CommonIndex
             return ['code' => '3005', 'msg' => '验证失败']; //添加失败
         }
     }
+
+    public function supplierSonAdminList($page, $pageNum, $supConId){
+        $offset = $pageNum * ($page - 1);
+        $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd,sup_id', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
+        $total  = DbGoods::getSupAdminCount(['sup_id' => $supAdminId]);
+        if ($total < 1) {
+            return ['code' => '3000', 'data' => '', 'total' => 0];
+        }
+        $supAdmin = DbGoods::getSupAdmin(['sup_id' => $supAdminId], 'id,sup_name,mobile,status', false, '', $offset . ',' . $pageNum);
+        return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
+    }
+
+    public function updateSupplierSonAdmin($id, $status, $supConId){
+        $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd,sup_id', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
+        $son = DbGoods::getSupAdmin(['id' => $supAdminId, 'id' =>$id], 'id,sup_passwd,sup_id', true);
+        Db::startTrans();
+        try {
+            DbGoods::editSupAdmin(['status' => $status], $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            exception($e);
+            Db::rollback();
+            return ['code' => '3005', 'msg' => '验证失败']; //添加失败
+        }
+        
+    }
 }

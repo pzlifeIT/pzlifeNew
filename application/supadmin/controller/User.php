@@ -344,4 +344,71 @@ class User extends SupAdminController
         $result  = $this->app->user->verifySamplingAppointment($id, $time, $supConId, $safe_code);
         return $result;
     }
+
+         /**
+     * @api              {post} / 供应商管理员列表（二级账户）
+     * @apiDescription   supplierSonAdminList
+     * @apiGroup         supadmin_user
+     * @apiName          supplierSonAdminList
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} page 页码
+     * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:page错误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} id 编号
+     * @apiSuccess (data) {String} sup_name 名称
+     * @apiSuccess (data) {String} mobile 手机
+     * @apiSampleRequest /supadmin/user/supplierSonAdminList
+     * @author zyr
+     */
+    public function supplierSonAdminList()
+    {
+        $apiName  = classBasename($this) . '/' . __function__;
+        $supConId = trim($this->request->post('sup_con_id'));
+        $page    = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
+        if (!is_numeric($page) || $page < 1) {
+            return ['code' => '3001']; //page错误
+        }
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 10;
+        }
+        $page    = intval($page);
+        $pageNum = intval($pageNum);
+        $result = $this->app->user->supplierSonAdminList($page, $pageNum, $supConId);
+        // $this->apiLog($apiName, [$cmsConId, $page, $pageNum], $result['code'], $cmsConId);
+        return $result;
+    }
+
+             /**
+     * @api              {post} / 修改二级账户状态
+     * @apiDescription   updateSupplierSonAdmin
+     * @apiGroup         supadmin_user
+     * @apiName          updateSupplierSonAdmin
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Int} id 记录id
+     * @apiParam (入参) {Int} status 1.启用 2.停用
+     * @apiSuccess (返回) {String} code 200:成功 / 3001:id错误
+     * @apiSuccess (返回) {Array} data 结果
+     * @apiSuccess (data) {Int} id 编号
+     * @apiSuccess (data) {String} sup_name 名称
+     * @apiSuccess (data) {String} mobile 手机
+     * @apiSampleRequest /supadmin/user/updateSupplierSonAdmin
+     * @author zyr
+     */
+    public function updateSupplierSonAdmin(){
+        $apiName  = classBasename($this) . '/' . __function__;
+        $supConId = trim($this->request->post('sup_con_id'));
+        $id    = trim($this->request->post('id'));
+        $status    = trim($this->request->post('status'));
+        if (!is_numeric($id) || $id < 1) {
+            return ['code' => '3001']; //page错误
+        }
+        $id    = intval($id);
+        if (!in_array($status,[1,2])) {
+            return ['code' => '3002'];
+        }
+        $result = $this->app->user->updateSupplierSonAdmin($id, $status, $supConId);
+        return $result;
+    }
 }
