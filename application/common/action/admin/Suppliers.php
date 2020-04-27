@@ -435,9 +435,12 @@ class Suppliers extends CommonIndex
         if (!empty($supAdmin)) {
             return ['code' => '3003']; //账号名称已存在
         }
-        $user = DbUser::getUserInfo(['mobile' => $mobile], 'id', true);
+        $user = DbUser::getUserInfo(['mobile' => $mobile], 'id,pid', true);
         if (!empty($user)) {
             return ['code' => '3004',"msg" =>'该手机号已添加过'];
+        }
+        if ($user['pid'] != 0) {
+            return ['code' => '3006',"msg" =>'子账户无法继续添加子账户'];
         }
         $data = [
             // 'uid'        => $user['id'],
@@ -468,6 +471,16 @@ class Suppliers extends CommonIndex
             return ['code' => '3000', 'data' => '', 'total' => 0];
         }
         $supAdmin = DbGoods::getSupAdmin(['status' => 1], 'id,sup_name,mobile', false, '', $offset . ',' . $pageNum);
+        return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
+    }
+
+    public function supplierSonAdminList($page, $pageNum, $sup_id){
+        $offset = $pageNum * ($page - 1);
+        $total  = DbGoods::getSupAdminCount(['sup_id' => $sup_id]);
+        if ($total < 1) {
+            return ['code' => '3000', 'data' => '', 'total' => 0];
+        }
+        $supAdmin = DbGoods::getSupAdmin(['sup_id' => $sup_id], 'id,sup_name,mobile,status', false, '', $offset . ',' . $pageNum);
         return ['code' => '200', 'data' => $supAdmin, 'total' => $total];
     }
 }
