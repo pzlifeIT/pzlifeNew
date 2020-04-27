@@ -328,6 +328,7 @@ class User extends SupAdminController
      * @apiParam (入参) {String} sup_con_id
      * @apiParam (入参) {Int} id 
      * @apiParam (入参) {Int} time 
+     * @apiParam (入参) {Int} safe_code 
      * @apiSuccess (返回) {String} code 200:成功 / 3001:title不能为空 / 3002:share_title不能为空 / 3003:big_image未上传 / 3004:share_image未上传 / 3005:bg_image未上传 / 3006:big_image图片没有上传过 / 3007:share_image图片没有上传过 / 3008:bg_image图片没有上传过 / 3009:share_count有误 / 3010:添加失败
      * @apiSampleRequest /supadmin/user/verifySamplingAppointment
      * @return array
@@ -339,7 +340,8 @@ class User extends SupAdminController
         $supConId = trim($this->request->post('sup_con_id'));
         $id = trim($this->request->post('id'));
         $time = trim($this->request->post('time'));
-        $result  = $this->app->user->verifySamplingAppointment($id, $time, $supConId);
+        $safe_code = trim($this->request->post('safe_code'));
+        $result  = $this->app->user->verifySamplingAppointment($id, $time, $supConId, $safe_code);
         return $result;
     }
 }

@@ -309,9 +309,13 @@ class User extends CommonIndex
         return ['code' => '200', 'result' => $result];
     }
 
-    public function verifySamplingAppointment($id, $time, $supConId)
+    public function verifySamplingAppointment($id, $time, $supConId, $safe_code)
     {
         $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd,sup_id', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
         if ($time - time() > 86400) {
             return ['code' => '3001', 'msg' => '该二维码已过期，请用户刷新'];
         }
@@ -321,6 +325,12 @@ class User extends CommonIndex
         }
         if ($result['status'] != 1) {
             return ['code' => '3002', 'msg' => '该预约已被使用'];
+        }
+        if ($result['safe_code'] != $safe_code) {
+            return ['code' => '3006', 'msg' => '安全码错误'];
+        }
+        if ($adminInfo['sup_id'] !=0) {
+            $supAdminId = $adminInfo['sup_id'];
         }
         $blood_sampling_ids = fadmin::getBloodSamplingAddress(['sup_admin_id' => $supAdminId], 'id', false);
         $ids = [];
@@ -332,12 +342,13 @@ class User extends CommonIndex
         }
         Db::startTrans();
         try {
-            DbAdmin::editSamplingAppointment(['status' => 2], $id);
+            fadmin::editSamplingAppointment(['status' => 2], $id);
             Db::commit();
             return ['code' => '200'];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
-            return ['code' => '3005', 'Errormsg' => 'add false']; //添加失败
+            return ['code' => '3005', 'msg' => '验证失败']; //添加失败
         }
     }
 }

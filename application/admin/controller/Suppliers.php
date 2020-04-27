@@ -595,6 +595,7 @@ class Suppliers extends AdminController
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Int} mobile  手机号
      * @apiParam (入参) {String} sup_name 登录账号
+     * @apiParam (入参) {String} sup_id 母账户id ，若创建母账户则为0
      * @apiSuccess (返回) {String} code 200:成功 / 3001:账号不能为空 / 3002:手机号格式有误 / 3003:账号名称已存在 / 3004:未注册用户不能添加 / 3005:添加失败
      * @apiSuccess (返回) {Array} data 结果
      * @apiSuccess (data) {String} area_name 名称
@@ -610,13 +611,14 @@ class Suppliers extends AdminController
         }
         $supName = trim($this->request->post('sup_name'));
         $mobile  = trim($this->request->post('mobile'));
+        $sup_id  = trim($this->request->post('sup_id'));
         if (empty($supName)) {
             return ['code' => '3001']; //账号不能为空
         }
-        if (!checkMobile($mobile)) {
-            return ['code' => '3002']; //手机格式有误
-        }
-        $result = $this->app->suppliers->addSupplierAdmin($mobile, $supName);
+        // if (!checkMobile($mobile)) {
+        //     return ['code' => '3002']; //手机格式有误
+        // }
+        $result = $this->app->suppliers->addSupplierAdmin($mobile, $supName, $sup_id);
         $this->apiLog($apiName, [$cmsConId, $mobile, $supName], $result['code'], $cmsConId);
         return $result;
     }

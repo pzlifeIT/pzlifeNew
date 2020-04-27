@@ -429,7 +429,7 @@ class Suppliers extends CommonIndex
      * @return array
      * @author zyr
      */
-    public function addSupplierAdmin($mobile, $supName)
+    public function addSupplierAdmin($mobile, $supName, $sup_id = 0)
     {
         $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
         if (!empty($supAdmin)) {
@@ -445,12 +445,16 @@ class Suppliers extends CommonIndex
             'sup_passwd' => getPassword('111111', $this->supCipherUserKey, Config::get('conf.cipher_algo')),
             'mobile'     => $mobile,
         ];
+        if ($sup_id) {
+            $data['sup_id'] = $sup_id;
+        }
         Db::startTrans();
         try {
             DbGoods::addSupAdmin($data);
             Db::commit();
             return ["code" => '200'];
         } catch (\Exception $e) {
+            exception($e);
             Db::rollback();
             return ["code" => "3005"];
         }
