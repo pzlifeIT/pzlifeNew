@@ -312,6 +312,10 @@ class User extends CommonIndex
     public function verifySamplingAppointment($id, $time, $supConId, $safe_code)
     {
         $supAdminId = $this->getUidByConId($supConId);
+        $adminInfo  = DbGoods::getSupAdmin(['id' => $supAdminId, 'status' => 1], 'id,sup_passwd,sup_id', true);
+        if (empty($adminInfo)) {
+            return ['code' => '3001', '该用户不存在']; //密码错误
+        }
         if ($time - time() > 86400) {
             return ['code' => '3001', 'msg' => '该二维码已过期，请用户刷新'];
         }
@@ -324,6 +328,9 @@ class User extends CommonIndex
         }
         if ($result['safe_code'] != $safe_code) {
             return ['code' => '3006', 'msg' => '安全码错误'];
+        }
+        if ($adminInfo['sup_id'] !=0) {
+            $supAdminId = $adminInfo['sup_id'];
         }
         $blood_sampling_ids = fadmin::getBloodSamplingAddress(['sup_admin_id' => $supAdminId], 'id', false);
         $ids = [];
