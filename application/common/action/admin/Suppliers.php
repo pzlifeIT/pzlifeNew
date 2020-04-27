@@ -435,10 +435,10 @@ class Suppliers extends CommonIndex
         if (!empty($supAdmin)) {
             return ['code' => '3003']; //账号名称已存在
         }
-        // $user = DbUser::getUserInfo(['mobile' => $mobile], 'id', true);
-        // if (empty($user)) {
-        //     return ['code' => '3004'];
-        // }
+        $user = DbUser::getUserInfo(['mobile' => $mobile], 'id', true);
+        if (!empty($user)) {
+            return ['code' => '3004',"msg" =>'该手机号已添加过'];
+        }
         $data = [
             // 'uid'        => $user['id'],
             'sup_name'   => $supName,
