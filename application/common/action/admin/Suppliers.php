@@ -439,7 +439,7 @@ class Suppliers extends CommonIndex
         if (!empty($user)) {
             return ['code' => '3004',"msg" =>'该手机号已添加过'];
         }
-        if ($user['pid'] != 0) {
+        if ($user['pid'] != 0 && $sup_id) {
             return ['code' => '3006',"msg" =>'子账户无法继续添加子账户'];
         }
         $data = [
