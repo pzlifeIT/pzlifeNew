@@ -431,17 +431,23 @@ class Suppliers extends CommonIndex
      */
     public function addSupplierAdmin($mobile, $supName, $sup_id = 0)
     {
-        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id', true);
+        $supAdmin = DbGoods::getSupAdmin(['sup_name' => $supName], 'id,mobile', true);
         if (!empty($supAdmin)) {
             return ['code' => '3003']; //账号名称已存在
         }
-        $user = DbUser::getUserInfo(['mobile' => $mobile], 'id,pid', true);
+   /*      $user = DbUser::getUserInfo(['mobile' => $mobile], 'id,pid', true);
         if (!empty($user)) {
             return ['code' => '3004',"msg" =>'该手机号已添加过'];
+        } */
+        if (!empty($supAdmin)) {
+            if ($supAdmin['mobile']  == $mobile) {
+                return ['code' => '3004',"msg" =>'该手机号已添加过'];
+            }
+            if ($supAdmin['pid'] != 0 && $sup_id) {
+                return ['code' => '3006',"msg" =>'子账户无法继续添加子账户'];
+            }
         }
-        if ($user['pid'] != 0 && $sup_id) {
-            return ['code' => '3006',"msg" =>'子账户无法继续添加子账户'];
-        }
+        
         $data = [
             // 'uid'        => $user['id'],
             'sup_name'   => $supName,
