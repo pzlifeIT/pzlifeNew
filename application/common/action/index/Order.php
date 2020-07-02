@@ -1032,6 +1032,7 @@ class Order extends CommonIndex {
         }
         $prefix   = $this->prefix;
         $carts    = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        print_r($carts);die;
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
         }, $carts);
