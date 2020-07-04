@@ -1045,7 +1045,7 @@ class Order extends CommonIndex {
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
         }, $new_cart);
-        print_r($cartList);die;
+        print_r($skuIdList);die;
         $diff     = array_diff($skuIdList, $cartList);
         if (empty($diff)) {
             return true;
