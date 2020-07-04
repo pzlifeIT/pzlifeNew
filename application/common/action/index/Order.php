@@ -469,9 +469,10 @@ class Order extends CommonIndex {
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
-        $summary = $this->summary($uid, $skuIdList, $cityId, $userCouponId);
         
-        print_r($summary);die;
+        
+        print_r($balance);die;
+        $summary = $this->summary($uid, $skuIdList, $cityId, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
         }
