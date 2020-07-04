@@ -773,8 +773,9 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function summary($uid, $skuIdList, $cityId, $userCouponId) {
+        print_r($skuIdList);die;
         $cart = $this->getCartGoods($skuIdList, $uid);
-        print_r($cart);die;
+        
         if ($cart === false) {
             return ['code' => '3005'];
         }
