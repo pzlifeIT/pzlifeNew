@@ -773,7 +773,6 @@ class Order extends CommonIndex {
      * @author zyr
      */
     private function summary($uid, $skuIdList, $cityId, $userCouponId) {
-        print_r($skuIdList);die;
         $cart = $this->getCartGoods($skuIdList, $uid);
         
         if ($cart === false) {
@@ -1016,9 +1015,18 @@ class Order extends CommonIndex {
         if (!empty($diff)) {
             return false;
         }
-        $buyList = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
+        // $buyList = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
+        $newbuyList = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        // print_r($buyList);
+        $buyListnew = [];
+        foreach($newbuyList as $key=> $v){
+            if (in_array($key,$skuIdListNew)) {
+                $buyListnew[$key] = $v;
+            }
+        }
+        // print_r($buyList);die;
         $result  = [];
-        foreach ($buyList as $key => $val) {
+        foreach ($buyListnew as $key => $val) {
             $cartRow          = json_decode($val, true);
             $cartRow['sum']   = array_sum($cartRow['track']);
             $cartRow['shops'] = array_keys($cartRow['track']);
