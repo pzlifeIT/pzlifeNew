@@ -1032,12 +1032,19 @@ class Order extends CommonIndex {
         }
         $prefix   = $this->prefix;
         // $carts    = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        $carts = [];
         $carts    = $this->redis->hgetall($this->redisCartUserKey . $uid);
-        print_r($carts);die;
+        $new_cart = [];
+        // print_r($carts);die;
+        if (!empty($carts)) {
+            foreach ($carts as $key => $value) {
+                $new_cart[] = $key;
+            }
+        }
         // print_r($this->redis->hKeys($this->redisCartUserKey . $uid));die;
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
-        }, $carts);
+        }, $new_cart);
         $diff     = array_diff($skuIdList, $cartList);
         if (empty($diff)) {
             return true;
