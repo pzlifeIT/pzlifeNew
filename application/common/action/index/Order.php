@@ -567,6 +567,7 @@ class Order extends CommonIndex {
         $summary['supplier_list']      = $supplier;
         $summary['balance']            = $balance;
         $summary['default_address_id'] = $defaultAddressId;
+        print_r($summary);die;
         return $summary;
     }
 
