@@ -470,8 +470,6 @@ class Order extends CommonIndex {
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
         
-        
-        print_r($balance);die;
         $summary = $this->summary($uid, $skuIdList, $cityId, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
@@ -776,6 +774,7 @@ class Order extends CommonIndex {
      */
     private function summary($uid, $skuIdList, $cityId, $userCouponId) {
         $cart = $this->getCartGoods($skuIdList, $uid);
+        print_r($cart);die;
         if ($cart === false) {
             return ['code' => '3005'];
         }
