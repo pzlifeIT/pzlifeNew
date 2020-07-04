@@ -1002,8 +1002,14 @@ class Order extends CommonIndex {
         $skuIdListNew = array_map(function ($v) use ($prefix) {
             return $prefix . $v;
         }, $skuIdList);
-        $keys = $this->redis->hKeys($this->redisCartUserKey . $uid);
-        $diff = array_diff($skuIdListNew, $keys);
+        // $keys = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        // $diff = array_diff($skuIdListNew, $keys);
+        $keys = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        $new_key = [];
+        foreach ($keys as $key => $value) {
+            $new_key[] = $key;
+        }
+        $diff = array_diff($skuIdListNew, $new_key);
         if (!empty($diff)) {
             return false;
         }
