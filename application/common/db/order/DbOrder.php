@@ -2,21 +2,25 @@
 
 namespace app\common\db\order;
 
+use app\common\model\BuyTeams;
+use app\common\model\BuyTeamsMember;
 use app\common\model\LogBonus;
 use app\common\model\LogIntegral;
-use app\common\model\LogTrading;
-use app\common\model\Orders;
-use app\common\model\OrderChild;
-use app\common\model\OrderGoods;
-use app\common\model\MemberOrder;
-use app\common\model\OrderExpress;
 use app\common\model\LogPay;
+use app\common\model\LogTrading;
+use app\common\model\MemberOrder;
+use app\common\model\OrderChild;
+use app\common\model\OrderExpress;
+use app\common\model\OrderGoods;
 use app\common\model\OrderGoodsSheet;
+use app\common\model\Orders;
 use think\Db;
 
-class DbOrder {
+class DbOrder
+{
 
-    public function __construct() {
+    public function __construct()
+    {
     }
 
     /**
@@ -24,13 +28,15 @@ class DbOrder {
      * @param $data
      * @return int
      */
-    public function addOrder($data) {
+    public function addOrder($data)
+    {
         $order = new Orders();
         $order->save($data);
         return $order->id;
     }
 
-    public function updataOrder($data, $id) {
+    public function updataOrder($data, $id)
+    {
         $order = new Orders();
         return $order->save($data, ['id' => $id]);
     }
@@ -44,7 +50,8 @@ class DbOrder {
      * @return array
      */
 
-    public function getOrder($field, $where, $row = false, $limit = false) {
+    public function getOrder($field, $where, $row = false, $limit = false)
+    {
         $obj = Orders::field($field)->where($where);
         if ($row === true) {
             return $obj->findOrEmpty()->toArray();
@@ -52,9 +59,10 @@ class DbOrder {
         return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
     }
 
-    public function getOrderList($field, $where, $row = false,$orderBy = '', $sc = '',$limit = '') {
+    public function getOrderList($field, $where, $row = false, $orderBy = '', $sc = '', $limit = '')
+    {
         $obj = Orders::field($field)->with([
-            'user' => function ($query){
+            'user' => function ($query) {
                 $query->field('id,nick_name,avatar,user_identity');
             },
         ])->where($where);
@@ -68,7 +76,8 @@ class DbOrder {
      * @return array
      * @author zyr
      */
-    public function getOrderDetail($where, $field) {
+    public function getOrderDetail($where, $field)
+    {
         return Db::table('pz_orders')
             ->field($field)
             ->alias('o')
@@ -84,7 +93,8 @@ class DbOrder {
      * @return float
      * @author zyr
      */
-    public function getOrderDetailSum($uid, $toMonth = 0) {
+    public function getOrderDetailSum($uid, $toMonth = 0)
+    {
         return Db::table('pz_orders')
             ->alias('o')
             ->join(['pz_order_child' => 'oc'], 'o.id=oc.order_id')
@@ -99,18 +109,21 @@ class DbOrder {
             ])->sum('pay_money');
     }
 
-    public function addOrderChilds($data) {
+    public function addOrderChilds($data)
+    {
         $order = new OrderChild();
         return $order->saveAll($data);
     }
 
-    public function addOneOrderChild($data) {
+    public function addOneOrderChild($data)
+    {
         $order = new OrderChild();
         $order->save($data);
-        return  $order->id;
+        return $order->id;
     }
 
-    public function getOrderCount($where) {
+    public function getOrderCount($where)
+    {
         $obj = Orders::where($where);
         return $obj->count();
     }
@@ -121,7 +134,8 @@ class DbOrder {
      * @param $field
      * @return array
      */
-    public function getOrderChild($field, $where, $row = false, $distinct = false) {
+    public function getOrderChild($field, $where, $row = false, $distinct = false)
+    {
         $obj = OrderChild::field($field)->where($where);
         if ($distinct === true) {
             $obj = $obj->distinct(true);
@@ -132,12 +146,14 @@ class DbOrder {
         return $obj->select()->toArray();
     }
 
-    public function addOrderGoods($data) {
+    public function addOrderGoods($data)
+    {
         $orderGoods = new OrderGoods();
         return $orderGoods->saveAll($data);
     }
 
-    public function addOneOrderGood($data) {
+    public function addOneOrderGood($data)
+    {
         $orderGoods = new OrderGoods();
         $orderGoods->save($data);
         return $orderGoods->id;
@@ -151,7 +167,8 @@ class DbOrder {
      * @param $row
      * @return array
      */
-    public function getOrderGoods($field, $where, $group = false, $distinct = false, $row = false) {
+    public function getOrderGoods($field, $where, $group = false, $distinct = false, $row = false)
+    {
         $obj = OrderGoods::field($field)->where($where);
 
         if ($distinct === true) {
@@ -175,7 +192,8 @@ class DbOrder {
      * @param $row
      * @return array
      */
-    public function getOrderExpress($field, $where, $group = false, $distinct = false, $row = false) {
+    public function getOrderExpress($field, $where, $group = false, $distinct = false, $row = false)
+    {
         $obj = OrderExpress::field($field)->where($where);
 
         if ($distinct === true) {
@@ -195,13 +213,15 @@ class DbOrder {
      * @param $data
      * @return array
      */
-    public function addOrderExpress($data) {
+    public function addOrderExpress($data)
+    {
         $OrderExpress = new OrderExpress;
         $OrderExpress->save($data);
         return $OrderExpress->id;
     }
 
-    public function updateOrderExpress($data, $id) {
+    public function updateOrderExpress($data, $id)
+    {
         $OrderExpress = new OrderExpress;
 
         return $OrderExpress->save($data, ['id' => $id]);
@@ -212,7 +232,8 @@ class DbOrder {
      * @param $data
      * @return array
      */
-    public function addMemberOrder($data) {
+    public function addMemberOrder($data)
+    {
         $MemberOrder = new MemberOrder;
         $MemberOrder->save($data);
         return $MemberOrder->id;
@@ -224,7 +245,8 @@ class DbOrder {
      * @param $where
      * @return array
      */
-    public function updateMemberOrder($data, $where) {
+    public function updateMemberOrder($data, $where)
+    {
         $MemberOrder = new MemberOrder;
         return $MemberOrder->save($data, $where);
     }
@@ -235,13 +257,12 @@ class DbOrder {
      * @return array
      */
     /*     public function getMemberOrder($field,$where,$row = false,$limit = false){
-            $obj = MemberOrder::field($field)->where($where);
-            if ($row === true){
-                return $obj->findOrEmpty()->toArray();
-            }
-            return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
-        } */
-
+    $obj = MemberOrder::field($field)->where($where);
+    if ($row === true){
+    return $obj->findOrEmpty()->toArray();
+    }
+    return $obj->order('id', 'desc')->limit($limit)->select()->toArray();
+    } */
 
     /**
      * @param $where
@@ -253,17 +274,19 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '',$limit = '') {
+    public function getMemberOrder($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '')
+    {
         $obj = MemberOrder::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $sc, $limit);
     }
 
-    public function getMemberOrders($where, $field, $row = false, $orderBy = '', $sc = '',$limit = '') {
+    public function getMemberOrders($where, $field, $row = false, $orderBy = '', $sc = '', $limit = '')
+    {
         $obj = MemberOrder::field($field)->with([
-            'user' => function ($query){
+            'user' => function ($query) {
                 $query->field('id,nick_name,avatar,user_identity');
             },
-            'fromuser' => function ($query){
+            'fromuser' => function ($query) {
                 $query->field('id,nick_name,avatar,user_identity');
             },
         ])->where($where);
@@ -275,7 +298,8 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function countMemberOrder($where){
+    public function countMemberOrder($where)
+    {
         return MemberOrder::where($where)->count();
     }
 
@@ -289,33 +313,39 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    public function getLogPay($where, $field, $row = false, $orderBy = '', $limit = '') {
+    public function getLogPay($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
         $obj = LogPay::field($field)->where($where);
         return $this->getResult($obj, $row, $orderBy, $limit);
     }
 
-    public function addLogPay($data) {
+    public function addLogPay($data)
+    {
         $logPay = new LogPay();
         $logPay->save($data);
         return $logPay->id;
     }
 
-    public function updateLogPay($data, $id) {
+    public function updateLogPay($data, $id)
+    {
         $logPay = new LogPay();
         return $logPay->save($data, ['id' => $id]);
     }
 
-    public function updateLogBonus($data, $where) {
+    public function updateLogBonus($data, $where)
+    {
         $logBonus = new LogBonus();
         return $logBonus->save($data, $where);
     }
 
-    public function updateLogIntegral($data, $where) {
+    public function updateLogIntegral($data, $where)
+    {
         $logIntegral = new LogIntegral();
         return $logIntegral->save($data, $where);
     }
 
-    public function addLogTrading($data) {
+    public function addLogTrading($data)
+    {
         $logTrading = new LogTrading();
         $logTrading->save($data);
         return $logTrading->id;
@@ -330,7 +360,8 @@ class DbOrder {
      * @return mixed
      * @author zyr
      */
-    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '') {
+    private function getResult($obj, $row = false, $orderBy = '', $sc = '', $limit = '')
+    {
         if (!empty($orderBy) && !empty($sc)) {
             $obj = $obj->order($orderBy, $sc);
         }
@@ -354,7 +385,8 @@ class DbOrder {
      * @param $row
      * @return array
      */
-    public function getOrderGoodsGroup($goods_name) {
+    public function getOrderGoodsGroup($goods_name)
+    {
         $result = Db::query("SELECT
         SUM(`og`.`goods_num`) AS `goods_num`,
         SUM(`og`.`goods_price`) AS `goods_price`,
@@ -366,7 +398,7 @@ class DbOrder {
         INNER JOIN pz_orders AS o ON `oc`.`order_id` = `o`.`id`
         WHERE
         `o`.`order_status` IN (4, 5, 6) AND
-        `og`.`goods_name` = '".$goods_name."' 
+        `og`.`goods_name` = '" . $goods_name . "'
         GROUP BY
 		`oc`.`order_id`,
 		`og`.`order_child_id`,
@@ -378,7 +410,7 @@ class DbOrder {
         return $result;
     }
 
-    /** 
+    /**
      * @param $where
      * @param $field
      * @param bool $row
@@ -388,27 +420,32 @@ class DbOrder {
      * @return mixed
      * @author rzc
      */
-    public function getOrderGoodsSheet($where, $field, $row = false, $orderBy = '', $limit = '') {
+    public function getOrderGoodsSheet($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
         $obj = OrderGoodsSheet::field($field)->where($where);
         return getResult($obj, $row, $orderBy, $limit);
     }
 
-    public function addOrderGoodsSheet($data){
+    public function addOrderGoodsSheet($data)
+    {
         $OrderGoodsSheet = new OrderGoodsSheet;
         $OrderGoodsSheet->save($data);
         return $OrderGoodsSheet->id;
     }
 
-    public function saveAllOrderGoodsSheet($data){
+    public function saveAllOrderGoodsSheet($data)
+    {
         $OrderGoodsSheet = new OrderGoodsSheet;
         return $OrderGoodsSheet->saveAll($data);
     }
 
-    public function saveOrderGoodsSheet($data, $id){
+    public function saveOrderGoodsSheet($data, $id)
+    {
         $OrderGoodsSheet = new OrderGoodsSheet;
-        return $OrderGoodsSheet->save($data,['id' => $id]);
+        return $OrderGoodsSheet->save($data, ['id' => $id]);
     }
-    public function getDeliveryOrderDetail($where, $field, $limit, $orderBy) {
+    public function getDeliveryOrderDetail($where, $field, $limit, $orderBy)
+    {
         return Db::table('pz_orders')
             ->field($field)
             ->alias('o')
@@ -417,6 +454,46 @@ class DbOrder {
             ->where($where)->order($orderBy)->limit($limit)->select();
     }
 
+    public function getBuyTeams($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
+        $obj = BuyTeams::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function countBuyTeams($where)
+    {
+        return BuyTeams::where($where)->count();
+    }
+
+    public function addBuyTeams($data)
+    {
+        $OrderGoodsSheet = new BuyTeams;
+        $OrderGoodsSheet->save($data);
+        return $OrderGoodsSheet->id;
+    }
+
+    public function updateBuyTeams($data, $id)
+    {
+        $logPay = new BuyTeams();
+        return $logPay->save($data, ['id' => $id]);
+    }
+
+    public function getBuyTeamsMember($where, $field, $row = false, $orderBy = '', $limit = '')
+    {
+        $obj = BuyTeamsMember::field($field)->where($where);
+        return getResult($obj, $row, $orderBy, $limit);
+    }
+
+    public function addBuyTeamsMember($data)
+    {
+        $OrderGoodsSheet = new BuyTeamsMember;
+        $OrderGoodsSheet->save($data);
+        return $OrderGoodsSheet->id;
+    }
+
+    public function updateBuyTeamsMember($data, $id)
+    {
+        $logPay = new BuyTeamsMember();
+        return $logPay->save($data, ['id' => $id]);
+    }
 }
-
-

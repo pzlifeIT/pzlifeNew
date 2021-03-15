@@ -4,7 +4,8 @@ namespace app\admin\controller;
 
 use app\admin\AdminController;
 
-class Goods extends AdminController {
+class Goods extends AdminController
+{
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
         //        'isLogin' => ['except' => 'login'],//除去login其他方法都进行isLogin前置操作
@@ -44,26 +45,27 @@ class Goods extends AdminController {
      * @author wujunjie
      * 2018/12/26-18:04
      */
-    public function getGoodsList() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $cmsConId      = trim($this->request->post('cms_con_id'));
-        $page          = trim(input("post.page"));
-        $pageNum       = trim(input("post.page_num"));
-        $cateName      = trim(input("post.cate_name"));
-        $goodsName     = trim(input("post.goods_name"));
-        $goodsType     = trim(input("post.goods_type"));
-        $supplierName  = trim(input("post.supplier_name"));
+    public function getGoodsList()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id'));
+        $page = trim(input("post.page"));
+        $pageNum = trim(input("post.page_num"));
+        $cateName = trim(input("post.cate_name"));
+        $goodsName = trim(input("post.goods_name"));
+        $goodsType = trim(input("post.goods_type"));
+        $supplierName = trim(input("post.supplier_name"));
         $supplierTitle = trim(input("post.supplier_title"));
-        $status        = trim(input("post.status"));
-        $goodsId       = trim(input("post.goods_id"));
-        $page          = empty($page) ? 1 : $page;
-        $pageNum       = empty($pageNum) ? 10 : $pageNum;
-        $goodsType     = empty($goodsType) ? 0 : $goodsType;
-        $status        = empty($status) ? 0 : $status;
-        $goodsId       = empty($goodsId) ? 0 : $goodsId;
+        $status = trim(input("post.status"));
+        $goodsId = trim(input("post.goods_id"));
+        $page = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $goodsType = empty($goodsType) ? 0 : $goodsType;
+        $status = empty($status) ? 0 : $status;
+        $goodsId = empty($goodsId) ? 0 : $goodsId;
 
         $goodsTypeAttr = [0, 1, 2]; //0为不查询
-        $statusAttr    = [0, 1, 2]; //0为不查询
+        $statusAttr = [0, 1, 2]; //0为不查询
         if (!is_numeric($page)) {
             return ["code" => '3001'];
         }
@@ -107,24 +109,25 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function saveAddGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function saveAddGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $supplierId     = trim($this->request->post('supplier_id')); //供应商id
-        $cateId         = trim($this->request->post('cate_id')); //分类id
-        $goodsName      = trim($this->request->post('goods_name')); //商品名称
-        $goodsType      = trim($this->request->post('goods_type')); //商品类型
-        $targetUsers    = trim($this->request->post('target_users')); //适用人群
-        $subtitle       = trim($this->request->post('subtitle')); //标题
-        $image          = trim($this->request->post('image')); //商品标题图
-        $share_image    = trim($this->request->post('share_image')); //商品分享图片
-        $sheet_id       = trim($this->request->post('sheet_id')); //商品分享图片
-        $is_integral_sale       = trim($this->request->post('is_integral_sale')); //商品分享图片
-        $sheet_id       = $sheet_id ? $sheet_id : 1;
-        $goodsTypeArr   = [1, 2];
+        $supplierId = trim($this->request->post('supplier_id')); //供应商id
+        $cateId = trim($this->request->post('cate_id')); //分类id
+        $goodsName = trim($this->request->post('goods_name')); //商品名称
+        $goodsType = trim($this->request->post('goods_type')); //商品类型
+        $targetUsers = trim($this->request->post('target_users')); //适用人群
+        $subtitle = trim($this->request->post('subtitle')); //标题
+        $image = trim($this->request->post('image')); //商品标题图
+        $share_image = trim($this->request->post('share_image')); //商品分享图片
+        $sheet_id = trim($this->request->post('sheet_id')); //商品分享图片
+        $is_integral_sale = trim($this->request->post('is_integral_sale')); //商品分享图片
+        $sheet_id = $sheet_id ? $sheet_id : 1;
+        $goodsTypeArr = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001']; //供应商id只能为数字
@@ -141,7 +144,7 @@ class Goods extends AdminController {
         if (!empty($goodsType) && !in_array($goodsType, $goodsTypeArr)) {
             return ['code' => '3005']; //商品类型只能为数字
         }
-        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1,2])) {
+        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1, 2])) {
             return ['code' => '3005']; //商品类型只能为数字
         }
         if (!empty($targetUsers) && !in_array($targetUsers, $targetUsersArr)) {
@@ -149,8 +152,8 @@ class Goods extends AdminController {
         }
         $data = [
             'supplier_id' => intval($supplierId),
-            'cate_id'     => intval($cateId),
-            'goods_name'  => $goodsName,
+            'cate_id' => intval($cateId),
+            'goods_name' => $goodsName,
         ];
         if (!empty($image)) {
             $data['image'] = $image;
@@ -167,16 +170,16 @@ class Goods extends AdminController {
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
         }
-        if (!empty($sheet_id)){
+        if (!empty($sheet_id)) {
             $data['goods_sheet'] = intval($sheet_id);
         }
-        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+        if (!empty($giving_rights) && in_array($giving_rights, [1, 2, 3, 4])) {
             $data['giving_rights'] = $giving_rights;
         }
         if ($goodsType == 2 && $giving_rights != 1) {
             return ['code' => '3015'];
         }
-        if (!empty($is_integral_sale)){
+        if (!empty($is_integral_sale)) {
             $data['is_integral_sale'] = intval($is_integral_sale);
         }
         //调用方法存商品表
@@ -209,23 +212,24 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function saveUpdateGoods() {
-        $apiName        = classBasename($this) . '/' . __function__;
-        $cmsConId       = trim($this->request->post('cms_con_id')); //操作管理员
-        $goodsId        = trim($this->request->post('goods_id')); //商品id
-        $supplierId     = trim($this->request->post('supplier_id')); //供应商id
-        $cateId         = trim($this->request->post('cate_id')); //分类id
-        $goodsName      = trim($this->request->post('goods_name')); //商品名称
-        $goodsType      = trim($this->request->post('goods_type')); //商品类型
-        $targetUsers    = trim($this->request->post('target_users')); //适用人群
-        $subtitle       = trim($this->request->post('subtitle')); //标题
-        $image          = trim($this->request->post('image')); //商品标题图
-        $share_image    = trim($this->request->post('share_image')); //商品标题图
-        $giving_rights  = trim($this->request->post('giving_rights')); //商品赠送权益
-        $sheet_id       = trim($this->request->post('goods_sheet')); //商品分享图片
-        $is_integral_sale       = trim($this->request->post('is_integral_sale')); //商品分享图片
-        $sheet_id       = $sheet_id ? $sheet_id : 0;
-        $goodsTypeArr   = [1, 2];
+    public function saveUpdateGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $goodsId = trim($this->request->post('goods_id')); //商品id
+        $supplierId = trim($this->request->post('supplier_id')); //供应商id
+        $cateId = trim($this->request->post('cate_id')); //分类id
+        $goodsName = trim($this->request->post('goods_name')); //商品名称
+        $goodsType = trim($this->request->post('goods_type')); //商品类型
+        $targetUsers = trim($this->request->post('target_users')); //适用人群
+        $subtitle = trim($this->request->post('subtitle')); //标题
+        $image = trim($this->request->post('image')); //商品标题图
+        $share_image = trim($this->request->post('share_image')); //商品标题图
+        $giving_rights = trim($this->request->post('giving_rights')); //商品赠送权益
+        $sheet_id = trim($this->request->post('goods_sheet')); //商品分享图片
+        $is_integral_sale = trim($this->request->post('is_integral_sale')); //商品分享图片
+        $sheet_id = $sheet_id ? $sheet_id : 0;
+        $goodsTypeArr = [1, 2];
         $targetUsersArr = [1, 2, 3, 4];
         if (!is_numeric($supplierId)) {
             return ['code' => '3001']; //供应商id只能为数字
@@ -241,8 +245,8 @@ class Goods extends AdminController {
         }
         $data = [
             'supplier_id' => intval($supplierId),
-            'cate_id'     => intval($cateId),
-            'goods_name'  => $goodsName,
+            'cate_id' => intval($cateId),
+            'goods_name' => $goodsName,
         ];
         if (!empty($goodsType)) {
             $data['goods_type'] = intval($goodsType);
@@ -262,7 +266,7 @@ class Goods extends AdminController {
         if (!empty($share_image)) {
             $data['share_image'] = $share_image;
         }
-        if (!empty($giving_rights) && in_array($giving_rights,[1, 2, 3, 4])) {
+        if (!empty($giving_rights) && in_array($giving_rights, [1, 2, 3, 4])) {
             $data['giving_rights'] = $giving_rights;
         }
         if ($goodsType == 2 && $giving_rights != 1) {
@@ -272,15 +276,15 @@ class Goods extends AdminController {
         $data['goods_sheet'] = intval($sheet_id);
         // }
         // if (!empty($sheet_id)){
-            // $data['goods_sheet'] = intval($sheet_id);
-            // }
+        // $data['goods_sheet'] = intval($sheet_id);
+        // }
         if ($goodsType == 2 && $giving_rights != 1) {
             return ['code' => '3015'];
         }
-        
+
         //调用方法存商品表
         // print_r($data);die;
-        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1,2])) {
+        if (!empty($is_integral_sale) && !in_array($is_integral_sale, [1, 2])) {
             return ['code' => '3005']; //商品类型只能为数字
         }
         if (!empty($is_integral_sale)) {
@@ -319,10 +323,11 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function getGoodsSku() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function getGoodsSku()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        $skuId    = trim($this->request->post('sku_id'));
+        $skuId = trim($this->request->post('sku_id'));
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -354,24 +359,25 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function editGoodsSku() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function editGoodsSku()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $skuId         = trim($this->request->post('sku_id'));
-        $stock         = trim($this->request->post('stock')); //库存
-        $freightId     = trim($this->request->post('freight_id')); //运费模版
-        $marketPrice   = trim($this->request->post('market_price')); //市场价
-        $retailPrice   = trim($this->request->post('retail_price')); //零售价
-        $costPrice     = trim($this->request->post('cost_price')); //成本价
-        $marginPrice   = trim($this->request->post('margin_price')); //其他运费成本
+        $skuId = trim($this->request->post('sku_id'));
+        $stock = trim($this->request->post('stock')); //库存
+        $freightId = trim($this->request->post('freight_id')); //运费模版
+        $marketPrice = trim($this->request->post('market_price')); //市场价
+        $retailPrice = trim($this->request->post('retail_price')); //零售价
+        $costPrice = trim($this->request->post('cost_price')); //成本价
+        $marginPrice = trim($this->request->post('margin_price')); //其他运费成本
         $integralPrice = trim($this->request->post('integral_price')); //积分售价
         $integral_sale_stock = trim($this->request->post('integral_sale_stock')); //积分售价
-        $weight        = trim($this->request->post('weight')); //重量
-        $volume        = trim($this->request->post('volume')); //体积
-        $skuImage      = trim($this->request->post('sku_image')); //规格详情图
+        $weight = trim($this->request->post('weight')); //重量
+        $volume = trim($this->request->post('volume')); //体积
+        $skuImage = trim($this->request->post('sku_image')); //规格详情图
         if (!is_numeric($skuId) || !is_numeric($freightId)) { //id必须为数字
             return ['code' => '3001'];
         }
@@ -389,19 +395,19 @@ class Goods extends AdminController {
             return ['code' => '3004'];
         }
         $retailPrice = floatval($retailPrice);
-        $costPrice   = floatval($costPrice);
+        $costPrice = floatval($costPrice);
         if ($retailPrice < bcadd($costPrice, $marginPrice, 2)) {
             return ['code' => '3006']; //零售价不能小于成本价
         }
         $data = [
-            'stock'          => $stock,
-            'freight_id'     => $freightId,
-            'market_price'   => $marketPrice,
-            'retail_price'   => $retailPrice,
-            'cost_price'     => $costPrice,
-            'margin_price'   => $marginPrice,
+            'stock' => $stock,
+            'freight_id' => $freightId,
+            'market_price' => $marketPrice,
+            'retail_price' => $retailPrice,
+            'cost_price' => $costPrice,
+            'margin_price' => $marginPrice,
             'integral_price' => $integralPrice,
-            'sku_image'      => $skuImage,
+            'sku_image' => $skuImage,
         ];
         if (!empty($integral_sale_stock)) {
             $data['integral_sale_stock'] = intval($integral_sale_stock);
@@ -424,14 +430,15 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function addGoodsSpec() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function addGoodsSpec()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
         $goodsId = trim($this->request->post('goods_id')); //商品id
-        $attrId  = trim($this->request->post('attr_id')); //属性id
+        $attrId = trim($this->request->post('attr_id')); //属性id
         if (!is_numeric($goodsId)) {
             return ['code' => '3002']; //商品id必须为数字
         }
@@ -456,14 +463,15 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function delGoodsSpec() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function delGoodsSpec()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
         $goodsId = trim($this->request->post('goods_id')); //商品id
-        $attrId  = trim($this->request->post('attr_id')); //属性id
+        $attrId = trim($this->request->post('attr_id')); //属性id
         if (!is_numeric($goodsId)) {
             return ['code' => '3002']; //商品id必须为数字
         }
@@ -494,22 +502,23 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function addAudioSku() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function addAudioSku()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $goodsId       = trim($this->request->post('goods_id'));//商品id
-        $name          = trim($this->request->post('name'));//规格名称
-        $audioIdList   = trim($this->request->post('audio_id_list'));//audio主键
-        $marketPrice   = trim($this->request->post('market_price'));//市场价
-        $retailPrice   = trim($this->request->post('retail_price'));//零售价
-        $costPrice     = trim($this->request->post('cost_price'));//成本价
-        $integralPrice = trim($this->request->post('integral_price', 0));//积分售价
-        $endTime       = trim($this->request->post('end_time'));//结束时间(按小时记)
+        $goodsId = trim($this->request->post('goods_id')); //商品id
+        $name = trim($this->request->post('name')); //规格名称
+        $audioIdList = trim($this->request->post('audio_id_list')); //audio主键
+        $marketPrice = trim($this->request->post('market_price')); //市场价
+        $retailPrice = trim($this->request->post('retail_price')); //零售价
+        $costPrice = trim($this->request->post('cost_price')); //成本价
+        $integralPrice = trim($this->request->post('integral_price', 0)); //积分售价
+        $endTime = trim($this->request->post('end_time')); //结束时间(按小时记)
         if (!is_numeric($goodsId)) {
-            return ['code' => '3002'];//商品id必须为数字
+            return ['code' => '3002']; //商品id必须为数字
         }
         $audioIdList = explode(',', $audioIdList);
         $audioIdList = array_map(function ($v) {
@@ -521,19 +530,19 @@ class Goods extends AdminController {
         if (in_array(0, $audioIdList)) {
             return ['code' => '3001'];
         }
-        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || mb_strlen(floatval($marketPrice),'utf8') > 11 || mb_strlen(floatval($retailPrice),'utf8') > 11 || mb_strlen(floatval($costPrice),'utf8') > 11) {//价格必须为大于或等于0的数字
+        if (!is_numeric($marketPrice) || !is_numeric($retailPrice) || !is_numeric($costPrice) || floatval($marketPrice) < 0 || floatval($retailPrice) < 0 || floatval($costPrice) < 0 || mb_strlen(floatval($marketPrice), 'utf8') > 11 || mb_strlen(floatval($retailPrice), 'utf8') > 11 || mb_strlen(floatval($costPrice), 'utf8') > 11) { //价格必须为大于或等于0的数字
             return ['code' => '3004'];
         }
-        if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
+        if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($costPrice, 'utf8') > 10) { //积分必须为大于或等于0的数字
             return ['code' => '3005'];
         }
         $marketPrice = floatval($marketPrice);
         $retailPrice = floatval($retailPrice);
-        $costPrice   = floatval($costPrice);
+        $costPrice = floatval($costPrice);
         if (!is_numeric($endTime) || intval($endTime) < 0) {
             return ['code' => '3006'];
         }
-        if (empty($name) || mb_strlen($name,'utf8') > 30) {
+        if (empty($name) || mb_strlen($name, 'utf8') > 30) {
             return ['code' => '3009'];
         }
         //$audioIdList = implode(',', $audioIdList);
@@ -550,14 +559,15 @@ class Goods extends AdminController {
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} sku_id 音频sku_id
      * @apiParam (入参) {Number} goods_id 商品id
-     * @apiSuccess (返回) {String} code 200:成功 / 3002:商品id和sku_id必须为数字 / 
+     * @apiSuccess (返回) {String} code 200:成功 / 3002:商品id和sku_id必须为数字 /
      * @apiSampleRequest /admin/goods/getGoodsAudioSku
      * @return array
      * @author rzc
      */
-    public function getGoodsAudioSku(){
-        $sku_id        = trim($this->request->post('sku_id'));//商品id
-        $goodsId       = trim($this->request->post('goods_id'));//商品id
+    public function getGoodsAudioSku()
+    {
+        $sku_id = trim($this->request->post('sku_id')); //商品id
+        $goodsId = trim($this->request->post('goods_id')); //商品id
         if (!is_numeric($sku_id) || !is_numeric($goodsId) || intval($sku_id) < 1 || intval($goodsId) < 1) {
             return ['code' => '3002'];
         }
@@ -585,25 +595,26 @@ class Goods extends AdminController {
      * @return array
      * @author rzc
      */
-    public function saveAudioSku(){
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function saveAudioSku()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $sku_id        = trim($this->request->post('sku_id'));//商品id
-        $goodsId       = trim($this->request->post('goods_id'));//商品id
-        $name          = trim($this->request->post('name'));//规格名称
-        $audioIdList   = trim($this->request->post('audio_id_list'));//audio主键
-        $marketPrice   = trim($this->request->post('market_price'));//市场价
-        $retailPrice   = trim($this->request->post('retail_price'));//零售价
-        $costPrice     = trim($this->request->post('cost_price'));//成本价
-        $integralPrice = trim($this->request->post('integral_price', 0));//积分售价
-        $endTime       = trim($this->request->post('end_time'));//结束时间(按小时记)
+        $sku_id = trim($this->request->post('sku_id')); //商品id
+        $goodsId = trim($this->request->post('goods_id')); //商品id
+        $name = trim($this->request->post('name')); //规格名称
+        $audioIdList = trim($this->request->post('audio_id_list')); //audio主键
+        $marketPrice = trim($this->request->post('market_price')); //市场价
+        $retailPrice = trim($this->request->post('retail_price')); //零售价
+        $costPrice = trim($this->request->post('cost_price')); //成本价
+        $integralPrice = trim($this->request->post('integral_price', 0)); //积分售价
+        $endTime = trim($this->request->post('end_time')); //结束时间(按小时记)
         if (!is_numeric($goodsId) || !is_numeric($sku_id)) {
-            return ['code' => '3002'];//商品id必须为数字
+            return ['code' => '3002']; //商品id必须为数字
         }
-        if (!empty($audioIdList)){
+        if (!empty($audioIdList)) {
             $audioIdList = explode(',', $audioIdList);
             $audioIdList = array_map(function ($v) {
                 if (is_numeric($v) && intval($v) > 0) {
@@ -615,30 +626,30 @@ class Goods extends AdminController {
                 return ['code' => '3001'];
             }
         }
-        if (mb_strlen($marketPrice,'utf8') > 8) {}
-        if (!empty($marketPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0 || mb_strlen(floatval($marketPrice),'utf8') > 11) {
+        if (mb_strlen($marketPrice, 'utf8') > 8) {}
+        if (!empty($marketPrice)) { //价格必须为大于或等于0的数字
+            if (!is_numeric($marketPrice) || floatval($marketPrice) < 0 || mb_strlen(floatval($marketPrice), 'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
-        if (!empty($retailPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0 || mb_strlen(floatval($retailPrice),'utf8') > 11) {
+        if (!empty($retailPrice)) { //价格必须为大于或等于0的数字
+            if (!is_numeric($retailPrice) || floatval($retailPrice) < 0 || mb_strlen(floatval($retailPrice), 'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
-        if (!empty($costPrice)) {//价格必须为大于或等于0的数字
-            if (!is_numeric($costPrice) || floatval($costPrice) < 0 || mb_strlen(floatval($costPrice),'utf8') > 11) {
+        if (!empty($costPrice)) { //价格必须为大于或等于0的数字
+            if (!is_numeric($costPrice) || floatval($costPrice) < 0 || mb_strlen(floatval($costPrice), 'utf8') > 11) {
                 return ['code' => '3004'];
             }
         }
-        if (!empty($integralPrice)){
-            if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($integralPrice,'utf8') > 10) {//积分必须为大于或等于0的数字
+        if (!empty($integralPrice)) {
+            if (!is_numeric($integralPrice) || intval($integralPrice) < 0 || mb_strlen($integralPrice, 'utf8') > 10) { //积分必须为大于或等于0的数字
                 return ['code' => '3005'];
             }
         }
         $marketPrice = floatval($marketPrice);
         $retailPrice = floatval($retailPrice);
-        $costPrice   = floatval($costPrice);
+        $costPrice = floatval($costPrice);
         if (!empty($endTime)) {
             if (!is_numeric($endTime) || intval($endTime) < 0) {
                 return ['code' => '3006'];
@@ -651,7 +662,7 @@ class Goods extends AdminController {
         $result = $this->app->goods->saveAudioSku(intval($goodsId), intval($sku_id), $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name);
         if (!empty($audioIdList)) {
             $audioIdList = implode(',', $audioIdList);
-        }else{
+        } else {
             $audioIdList = '';
         }
         $this->apiLog($apiName, [$cmsConId, $goodsId, $sku_id, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name], $result['code'], $cmsConId);
@@ -709,14 +720,15 @@ class Goods extends AdminController {
      * @apiSampleRequest /admin/goods/getonegoods
      * @author zyr
      */
-    public function getOneGoods() {
-        $apiName      = classBasename($this) . '/' . __function__;
-        $cmsConId     = trim($this->request->post('cms_con_id')); //操作管理员
-        $getTypeArr   = [1, 2, 3, 4];
-        $id           = trim(input("post.id"));
-        $getType      = trim($this->request->post('get_type'));
-        $getType      = empty($getType) ? '1,2,3,4' : $getType;
-        $goodsType    = trim($this->request->post('goods_type', 1));
+    public function getOneGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $getTypeArr = [1, 2, 3, 4];
+        $id = trim(input("post.id"));
+        $getType = trim($this->request->post('get_type'));
+        $getType = empty($getType) ? '1,2,3,4' : $getType;
+        $goodsType = trim($this->request->post('goods_type', 1));
         $goodsTypeArr = [1, 2];
         if (!is_numeric($id)) {
             return ["code" => 3002];
@@ -761,16 +773,17 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function uploadGoodsImages() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function uploadGoodsImages()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
         $imageTypeArr = [1, 2]; //1.详情图 2.轮播图
-        $goodsId      = trim($this->request->post('goods_id'));
-        $imageType    = trim($this->request->post('image_type'));
-        $images       = $this->request->post('images');
+        $goodsId = trim($this->request->post('goods_id'));
+        $imageType = trim($this->request->post('image_type'));
+        $images = $this->request->post('images');
         if (!is_numeric($imageType) || !in_array(intval($imageType), $imageTypeArr)) {
             return ['code' => '3001']; //图片类型有误
         }
@@ -797,8 +810,9 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function delGoodsImage() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function delGoodsImage()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
@@ -825,11 +839,12 @@ class Goods extends AdminController {
      * @return array
      * @author zyr
      */
-    public function sortImageDetail() {
-        $apiName   = classBasename($this) . '/' . __function__;
-        $cmsConId  = trim($this->request->post('cms_con_id')); //操作管理员
+    public function sortImageDetail()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $imagePath = trim($this->request->post('image_path'));
-        $orderBy   = trim($this->request->post('order_by'));
+        $orderBy = trim($this->request->post('order_by'));
         if (empty($imagePath)) {
             return ['code' => '3001']; //图片不能为空
         }
@@ -854,13 +869,14 @@ class Goods extends AdminController {
      * @author wujunjie
      * 2019/1/8-10:13
      */
-    public function upDownGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function upDownGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $id   = trim(input("post.id"));
+        $id = trim(input("post.id"));
         $type = trim(input("post.type"));
         if (!is_numeric($id) || !is_numeric($type)) {
             return ["code" => '3002'];
@@ -883,13 +899,14 @@ class Goods extends AdminController {
      * @author wujunjie
      * 2019/1/8-10:13
      */
-    public function upDownIntegralGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function upDownIntegralGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         if ($this->checkPermissions($cmsConId, $apiName) === false) {
             return ['code' => '3100'];
         }
-        $id   = trim(input("post.id"));
+        $id = trim(input("post.id"));
         $is_integral_sale = trim(input("post.is_integral_sale"));
         if (!is_numeric($id) || !is_numeric($is_integral_sale)) {
             return ["code" => '3002'];
@@ -905,11 +922,12 @@ class Goods extends AdminController {
      * @apiGroup         admin_goods
      * @apiName          getSheetOption
      * @apiParam (入参) {String} cms_con_id
-     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiSuccess (返回) {String} code 200:成功
      * @apiSampleRequest /admin/goods/getSheetOption
      * @author rzc
      */
-    public function getSheetOption(){
+    public function getSheetOption()
+    {
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
         $result = $this->app->goods->getSheetOption();
         return $result;
@@ -927,12 +945,13 @@ class Goods extends AdminController {
      * @apiSampleRequest /admin/goods/getSheet
      * @author rzc
      */
-    public function getSheet(){
+    public function getSheet()
+    {
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        $page          = trim($this->request->post('page'));
-        $pageNum       = trim($this->request->post('pageNum'));
-        $page          = empty($page) ? 1 : $page;
-        $pageNum       = empty($pageNum) ? 10 : $pageNum;
+        $page = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('pageNum'));
+        $page = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
         $result = $this->app->goods->getSheet($page, $pageNum);
         return $result;
     }
@@ -949,18 +968,19 @@ class Goods extends AdminController {
      * @apiSampleRequest /admin/goods/addSheet
      * @author rzc
      */
-    public function addSheet(){
+    public function addSheet()
+    {
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        $name     = trim($this->request->post('name'));
-        $options  = trim($this->request->post('options'));
-        if (empty($name)){
+        $name = trim($this->request->post('name'));
+        $options = trim($this->request->post('options'));
+        if (empty($name)) {
             return ['code' => '3002'];
         }
-        if (empty($options)){
+        if (empty($options)) {
             return ['code' => '3003'];
         }
-        $options = explode(',',$options);
-        $result   = $this->app->goods->addSheet($name, $options);
+        $options = explode(',', $options);
+        $result = $this->app->goods->addSheet($name, $options);
         return $result;
     }
 
@@ -977,15 +997,16 @@ class Goods extends AdminController {
      * @apiSampleRequest /admin/goods/editSheet
      * @author rzc
      */
-    public function editSheet(){
+    public function editSheet()
+    {
         $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
-        $name     = trim($this->request->post('name'));
-        $options  = trim($this->request->post('options'));
-        $id       = trim($this->request->post('id'));
-        if (!empty($options)){
-            $options = explode(',',$options);
+        $name = trim($this->request->post('name'));
+        $options = trim($this->request->post('options'));
+        $id = trim($this->request->post('id'));
+        if (!empty($options)) {
+            $options = explode(',', $options);
         }
-        $result   = $this->app->goods->editSheet($name, $id, $options);
+        $result = $this->app->goods->editSheet($name, $id, $options);
         return $result;
     }
 
@@ -996,17 +1017,137 @@ class Goods extends AdminController {
      * @apiName          getSheetInfo
      * @apiParam (入参) {String} cms_con_id
      * @apiParam (入参) {Number} id 表格id
-     * @apiSuccess (返回) {String} code 200:成功 
+     * @apiSuccess (返回) {String} code 200:成功
      * @apiSampleRequest /admin/goods/getSheetInfo
      * @author rzc
      */
-    public function getSheetInfo(){
-        $id       = trim($this->request->post('id'));
-        if (empty($id) || !is_numeric($id) || intval($id) < 1){
+    public function getSheetInfo()
+    {
+        $id = trim($this->request->post('id'));
+        if (empty($id) || !is_numeric($id) || intval($id) < 1) {
             return ['code' => 3001];
         }
-        $result   = $this->app->goods->getSheetInfo($id);
+        $result = $this->app->goods->getSheetInfo($id);
         return $result;
     }
 
+    /**
+     * @api              {post} / 获取团购项目
+     * @apiDescription   getGrouponGoods
+     * @apiGroup         admin_goods
+     * @apiName          getGrouponGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} [page]
+     * @apiParam (入参) {Number} [pageNum]
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSampleRequest /admin/goods/getGrouponGoods
+     * @author rzc
+     */
+    public function getGrouponGoods()
+    {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $page = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('pageNum'));
+        $page = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        $result = $this->app->goods->getGrouponGoods($page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 添加团购项目
+     * @apiDescription   addGrouponGoods
+     * @apiGroup         admin_goods
+     * @apiName          addGrouponGoods
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} goods_id 商品id
+     * @apiParam (入参) {Number} reward 奖励金额
+     * @apiParam (入参) {Number} max_reward 分利金额上限
+     * @apiParam (入参) {Number} agent_num 升级成为代理所需要人数,不包括团长自己
+     * @apiParam (入参) {Number} officiacl_accounts 生成的公众号地址
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSampleRequest /admin/goods/addGrouponGoods
+     * @author rzc
+     */
+    public function addGrouponGoods()
+    {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $goods_id = trim($this->request->post('goods_id'));
+        $reward = trim($this->request->post('reward'));
+        $max_reward = trim($this->request->post('max_reward'));
+        $agent_num = trim($this->request->post('agent_num'));
+        $officiacl_accounts = trim($this->request->post('officiacl_accounts'));
+        if (!is_numeric($goods_id) || $goods_id < 0) {
+            return ['code' => '3001'];
+        }
+        if (!is_numeric($max_reward) || $max_reward < 0) {
+            return ['code' => '3002'];
+        }
+
+        if (!is_numeric($reward) || $reward < 0) {
+            return ['code' => '3003'];
+        }
+
+        if (!is_numeric($agent_num) || intval($agent_num) < 0) {
+            return ['code' => '3004'];
+        }
+        if (!is_numeric($officiacl_accounts) || intval($officiacl_accounts) < 0) {
+            return ['code' => '3005'];
+        }
+        intval($goods_id);
+        $result = $this->app->goods->addGrouponGoods($goods_id, $reward, $max_reward, $agent_num, $officiacl_accounts);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 列表查询本团购项目已开的团
+     * @apiDescription   getBuyTeams
+     * @apiGroup         admin_goods
+     * @apiName          getBuyTeams
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} groupon_goods_id 参与团购项目id
+     * @apiParam (入参) {Number} [page]
+     * @apiParam (入参) {Number} [pageNum]
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSampleRequest /admin/goods/getBuyTeams
+     * @author rzc
+     */
+    public function getBuyTeams()
+    {
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $groupon_goods_id = trim($this->request->post('groupon_goods_id'));
+        $page = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('pageNum'));
+        $page = empty($page) ? 1 : $page;
+        $pageNum = empty($pageNum) ? 10 : $pageNum;
+        if (!is_numeric($groupon_goods_id) || $groupon_goods_id < 0) {
+            return ['code' => '3001'];
+        }
+
+        $result = $this->app->goods->getBuyTeams($groupon_goods_id, $page, $pageNum);
+        return $result;
+    }
+
+    /**
+     * @api              {post} / 开通团长代理身份
+     * @apiDescription   openAgency
+     * @apiGroup         admin_goods
+     * @apiName          openAgency
+     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {Number} id 本次团购id
+     * @apiParam (入参) {Number} password 操作密码
+     * @apiSuccess (返回) {String} code 200:成功
+     * @apiSampleRequest /admin/goods/openAgency
+     * @author rzc
+     */
+    public function openAgency(){
+        $cmsConId = trim($this->request->post('cms_con_id')); //操作管理员
+        $id = trim($this->request->post('id'));
+        $password = trim($this->request->post('password'));
+        if (!is_numeric($id) || $id < 0) {
+            return ['code' => '3001'];
+        }
+        $result = $this->app->goods->openAgency($id,$password);
+        return $result;
+    }
 }

@@ -3,27 +3,29 @@
 namespace app\console\com;
 
 use app\console\Pzlife;
+use cache\Phpredis;
 use Config;
 use Env;
 use function Qiniu\json_decode;
-use think\Db;
-use cache\Phpredis;
 
-class WeChatGraphicMaterial extends Pzlife {
+class WeChatGraphicMaterial extends Pzlife
+{
     private $redis;
 
     //    private $connect;
-    
-        private function orderInit() {
-            $this->redis = Phpredis::getConn();
-    //        $this->connect = Db::connect(Config::get('database.db_config'));
-        }
+
+    private function orderInit()
+    {
+        $this->redis = Phpredis::getConn();
+        //        $this->connect = Db::connect(Config::get('database.db_config'));
+    }
 /**
-     * 获取微信素材接口
-     * @return array
-     * @author rzc
-     */
-    public function WxBatchgetMaterial() {
+ * 获取微信素材接口
+ * @return array
+ * @author rzc
+ */
+    public function WxBatchgetMaterial()
+    {
 
         //获取微信公众号access_token
         $access_token = $this->getWeiXinAccessTokenTencent();
@@ -31,9 +33,9 @@ class WeChatGraphicMaterial extends Pzlife {
             return ['code' => '4001'];
         }
         //接口POST请求方法
-        $news        = [];
-        $requestUrl  = 'https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=' . $access_token;
-        $type        = "news";
+        $news = [];
+        $requestUrl = 'https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=' . $access_token;
+        $type = "news";
         $requestData = [];
         $redisBatchgetMaterial = Config::get('redisKey.weixin.redisBatchgetMaterial');
         $count = 20;
@@ -41,15 +43,15 @@ class WeChatGraphicMaterial extends Pzlife {
         $offset = ($page - 1) * $count;
         do {
             $requestData = [
-                'type'   => $type,
+                'type' => $type,
                 'offset' => $offset,
-                'count'  => $count,
+                'count' => $count,
             ];
             $requsest_subject = json_decode($this->sendRequestWx($requestUrl, $requestData), true);
             if (!isset($requsest_subject['item'])) {
                 $requsest_subject = false;
             }
-           
+
             $WxBatchgetMaterial = $requsest_subject['item'];
             if (!empty($WxBatchgetMaterial)) {
                 foreach ($WxBatchgetMaterial as $wx => $BatchgetMaterial) {
@@ -59,28 +61,29 @@ class WeChatGraphicMaterial extends Pzlife {
                         unset($value['content']);
                         $value['create_time'] = date("Y-m-d H:i:s", $BatchgetMaterial['content']['create_time']);
                         $value['update_time'] = date("Y-m-d H:i:s", $BatchgetMaterial['content']['update_time']);
-                        $news[]               = $value;
-                        
+                        $news[] = $value;
+
                     }
-        
+
                 }
-                $page ++;
+                $page++;
             }
-            
+
         } while (!$requsest_subject);
-       
+
         if (empty($news)) {
             exit('news_is_null');
         }
-       foreach ($news as $n => $new) {
-            $this->redis->Zadd($redisBatchgetMaterial,$n,json_encode($new));
-       }
+        foreach ($news as $n => $new) {
+            $this->redis->Zadd($redisBatchgetMaterial, $n, json_encode($new));
+        }
         // print_r($WxBatchgetMaterial);die;
-        $redis_news = $this->redis->ZRANGE($redisBatchgetMaterial,0,10);
+        $redis_news = $this->redis->ZRANGE($redisBatchgetMaterial, 0, 10);
         print_r($redis_news);die;
     }
 
-    function sendRequestWx($requestUrl, $data = []) {
+    function sendRequestWx($requestUrl, $data = [])
+    {
         $curl = curl_init();
         $data = json_encode($data);
         curl_setopt($curl, CURLOPT_URL, $requestUrl);
@@ -96,31 +99,34 @@ class WeChatGraphicMaterial extends Pzlife {
         return $res;
     }
 
-        /**
+    /**
      * 获取微信公众号access_token
      * @return array
      * @author rzc
      */
-    protected function getWeiXinAccessTokenTencent() {
+    protected function getWeiXinAccessTokenTencent()
+    {
         $this->orderInit();
         $redisAccessTokenTencent = Config::get('redisKey.weixin.redisAccessTokenTencent');
         $access_token = $this->redis->get($redisAccessTokenTencent);
         if (empty($access_token)) {
             $appid = Env::get('weixin.weixin_appid');
             // $appid         = 'wx112088ff7b4ab5f3';
+            // $appid         = 'wxa8c604ce63485956';圆善科技小程序
             $secret = Env::get('weixin.weixin_secret');
             // $secret        = 'db7915c4a840421683be99c6d798757f';
+            // $secret        = 'b4310362266819ba072e605500d7a8e9';圆善科技小程序
             $requestUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $appid . '&secret=' . $secret;
             $requsest_subject = json_decode(sendRequest($requestUrl), true);
             if (!isset($requsest_subject['access_token'])) {
                 return false;
             }
-            $access_token     = $requsest_subject['access_token'];
-            
-            $this->redis->set($redisAccessTokenTencent,$access_token);
+            $access_token = $requsest_subject['access_token'];
+
+            $this->redis->set($redisAccessTokenTencent, $access_token);
             $this->redis->expire($redisAccessTokenTencent, 6600);
         }
-        
+
         return $access_token;
     }
 

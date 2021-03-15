@@ -3,22 +3,25 @@
 namespace app\common\action\admin;
 
 use app\facade\DbAudios;
+use app\facade\DbGoods;
 use app\facade\DbImage;
 use app\facade\DbLabel;
+use app\facade\DbOrder;
+use Config;
 use Overtrue\Pinyin\Pinyin;
 use think\Db;
-use app\facade\DbGoods;
-use Config;
 
-class Goods extends CommonIndex {
+class Goods extends CommonIndex
+{
     private $transformRedisKey;
     private $labelLibraryRedisKey;
     private $labelLibraryHeatRedisKey;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
-        $this->transformRedisKey        = Config::get('rediskey.label.redisLabelTransform');
-        $this->labelLibraryRedisKey     = Config::get('rediskey.label.redisLabelLibrary');
+        $this->transformRedisKey = Config::get('rediskey.label.redisLabelTransform');
+        $this->labelLibraryRedisKey = Config::get('rediskey.label.redisLabelLibrary');
         $this->labelLibraryHeatRedisKey = Config::get('rediskey.label.redisLabelLibraryHeat');
     }
 
@@ -35,23 +38,24 @@ class Goods extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '', $supplierTitle = '') {
+    public function goodsList(int $page, int $pageNum, $goodsId = 0, $status = 0, $goodsType = 0, $cateName = '', $goodsName = '', $supplierName = '', $supplierTitle = '')
+    {
         $offset = $pageNum * ($page - 1);
         //查找所有商品数据
         $where = [];
         if (!empty($cateName)) {
             $classIdArr = DbGoods::getGoodsClass('id', [['type_name', 'like', '%' . $cateName . '%'], ['tier', '=', '3']]);
-            $classId    = array_column($classIdArr, 'id');
+            $classId = array_column($classIdArr, 'id');
             array_push($where, ['cate_id', 'in', $classId]);
         }
         if (!empty($supplierName)) {
             $supplierArr = DbGoods::getSupplier('id', [['name', 'like', '%' . $supplierName . '%']]);
-            $supplierId  = array_column($supplierArr, 'id');
+            $supplierId = array_column($supplierArr, 'id');
             array_push($where, ['pz_goods.supplier_id', 'in', $supplierId]);
         }
         if (!empty($supplierTitle)) {
             $supplierArr = DbGoods::getSupplier('id', [['title', 'like', '%' . $supplierTitle . '%']]);
-            $supplierId  = array_column($supplierArr, 'id');
+            $supplierId = array_column($supplierArr, 'id');
             array_push($where, ['pz_goods.supplier_id', 'in', $supplierId]);
         }
         if (!empty($goodsName)) {
@@ -66,16 +70,16 @@ class Goods extends CommonIndex {
         if (!empty($goodsType)) {
             array_push($where, ['pz_goods.goods_type', '=', $goodsType]);
         }
-        $field      = "id,image,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,status,is_integral_sale";
+        $field = "id,image,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,status,is_integral_sale";
         $goods_data = DbGoods::getGoodsList($field, $where, $offset, $pageNum, 'id desc');
-        $total      = DbGoods::getGoodsListNum($where);
+        $total = DbGoods::getGoodsListNum($where);
         if (empty($goods_data)) {
             return ["msg" => "商品数据不存在", "code" => '3000'];
         }
         foreach ($goods_data as $gk => $gd) {
             $goods_data[$gk]['supplier'] = '';
             if (isset($gd['supplier'])) {
-                $goods_data[$gk]['supplier']       = $gd['supplier']['name'];
+                $goods_data[$gk]['supplier'] = $gd['supplier']['name'];
                 $goods_data[$gk]['supplier_title'] = $gd['supplier']['title'];
             }
             $goods_data[$gk]['cate'] = '';
@@ -88,7 +92,6 @@ class Goods extends CommonIndex {
         return ["code" => '200', "total" => $total, "data" => $goods_data];
     }
 
-
     /**
      * 保存商品基础信息(添加或更新)
      * @param $data
@@ -96,42 +99,43 @@ class Goods extends CommonIndex {
      * @return array
      * @author zyr
      */
-    public function saveGoods($data, $goodsId = 0) {
+    public function saveGoods($data, $goodsId = 0)
+    {
         $cate = DbGoods::getOneCate(['id' => $data['cate_id']], 'tier');
-        if ($cate['tier'] != 3) {//分类id不是三级
+        if ($cate['tier'] != 3) { //分类id不是三级
             return ['code' => '3007'];
         }
         $supplier = DbGoods::getOneSupplier(['id' => $data['supplier_id']], 'id');
-        if (empty($supplier)) {//供应商id不存在
+        if (empty($supplier)) { //供应商id不存在
             return ['code' => '3008'];
         }
         if ($data['goods_sheet']) {
-            $goods_sheet = DbGoods::getSheet(['id' => $data['goods_sheet']],'id',true);
-            if (empty($goods_sheet)){
+            $goods_sheet = DbGoods::getSheet(['id' => $data['goods_sheet']], 'id', true);
+            if (empty($goods_sheet)) {
                 return ['code' => '3013'];
             }
         }
 
         $logImage = [];
         $logShareImage = [];
-        if (!empty($goodsId)) {//更新操作
+        if (!empty($goodsId)) { //更新操作
             $goodsRepe = DbGoods::getOneGoods([['goods_name', '=', $data['goods_name']], ['id', '<>', $goodsId]], 'id');
-            if (!empty($goodsRepe)) {//商品name重复
+            if (!empty($goodsRepe)) { //商品name重复
                 return ['code' => '3006', 'goods_id' => $goodsRepe['id']];
             }
-            $goods       = DbGoods::getOneGoods(['id' => $goodsId], 'image,share_image');
+            $goods = DbGoods::getOneGoods(['id' => $goodsId], 'image,share_image');
             $oldLogImage = [];
-            if (!empty($data['image'])) {//提交了图片
-                $image    = filtraImage(Config::get('qiniu.domain'), $data['image']);
-                $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-                if (empty($logImage)) {//图片不存在
-                    return ['code' => '3010'];//图片没有上传过
+            if (!empty($data['image'])) { //提交了图片
+                $image = filtraImage(Config::get('qiniu.domain'), $data['image']);
+                $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+                if (empty($logImage)) { //图片不存在
+                    return ['code' => '3010']; //图片没有上传过
                 }
                 $oldImage = $goods['image'];
                 $oldImage = filtraImage(Config::get('qiniu.domain'), $oldImage);
-                if (!empty($oldImage)) {//之前有图片
-                    if (stripos($oldImage, 'http') === false) {//新版本图片
-                        $oldLogImage = DbImage::getLogImage($oldImage, 1);//之前在使用的图片日志
+                if (!empty($oldImage)) { //之前有图片
+                    if (stripos($oldImage, 'http') === false) { //新版本图片
+                        $oldLogImage = DbImage::getLogImage($oldImage, 1); //之前在使用的图片日志
                     }
                 }
                 $data['image'] = $image;
@@ -139,14 +143,14 @@ class Goods extends CommonIndex {
             $oldLogShareImage = [];
             if (!empty($data['share_image'])) {
                 $share_image = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
-                $logShareImage    = DbImage::getLogImage($share_image, 2); //判断时候有未完成的图片
-                if (empty($logShareImage)) {//分享图片不存在
-                    return ['code' => '3012'];//分享图片没有上传过
+                $logShareImage = DbImage::getLogImage($share_image, 2); //判断时候有未完成的图片
+                if (empty($logShareImage)) { //分享图片不存在
+                    return ['code' => '3012']; //分享图片没有上传过
                 }
                 $oldShareImage = $goods['share_image'];
                 if (!empty($oldShareImage)) {
-                    if (stripos($oldShareImage, 'http') === false) {//新版本图片
-                        $oldLogShareImage = DbImage::getLogImage($oldShareImage, 1);//之前在使用的图片日志
+                    if (stripos($oldShareImage, 'http') === false) { //新版本图片
+                        $oldLogShareImage = DbImage::getLogImage($oldShareImage, 1); //之前在使用的图片日志
                     }
                 }
                 $data['share_image'] = $share_image;
@@ -156,50 +160,50 @@ class Goods extends CommonIndex {
             try {
                 $updateRes = DbGoods::editGoods($data, $goodsId);
                 if (!empty($logImage)) {
-                    DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                    DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
                 }
                 if (!empty($oldLogImage)) {
-                    DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+                    DbImage::updateLogImageStatus($oldLogImage, 3); //更新状态为弃用
                 }
                 if (!empty($logShareImage)) {
-                    DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
+                    DbImage::updateLogImageStatus($logShareImage, 1); //更新状态为已完成
                 }
                 if (!empty($oldLogShareImage)) {
-                    DbImage::updateLogImageStatus($oldLogShareImage, 3);//更新状态为弃用
+                    DbImage::updateLogImageStatus($oldLogShareImage, 3); //更新状态为弃用
                 }
                 if ($updateRes) {
                     Db::commit();
                     return ['code' => '200'];
                 }
                 Db::rollback();
-                return ['code' => '3009'];//修改失败
+                return ['code' => '3009']; //修改失败
             } catch (\Exception $e) {
                 Db::rollback();
-                return ['code' => '3009'];//修改失败
+                return ['code' => '3009']; //修改失败
             }
-        } else {//添加操作
-            $image    = filtraImage(Config::get('qiniu.domain'), $data['image']);
-            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-            if (empty($logImage)) {//图片不存在
-                return ['code' => '3010'];//图片没有上传过
+        } else { //添加操作
+            $image = filtraImage(Config::get('qiniu.domain'), $data['image']);
+            $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+            if (empty($logImage)) { //图片不存在
+                return ['code' => '3010']; //图片没有上传过
             }
             if (isset($data['share_image'])) {
-                $share_image    = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
-                $logShareImage = DbImage::getLogImage($share_image, 2);//判断时候有未完成的图片
-                if (empty($logShareImage)) {//图片不存在
-                    return ['code' => '3012'];//图片没有上传过
+                $share_image = filtraImage(Config::get('qiniu.domain'), $data['share_image']);
+                $logShareImage = DbImage::getLogImage($share_image, 2); //判断时候有未完成的图片
+                if (empty($logShareImage)) { //图片不存在
+                    return ['code' => '3012']; //图片没有上传过
                 }
                 $data['share_image'] = $share_image;
             }
             Db::startTrans();
             try {
                 $data['image'] = $image;
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
-                DbImage::updateLogImageStatus($logShareImage, 1);//更新状态为已完成
-                $gId = DbGoods::addGoods($data);//添加后的商品id
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
+                DbImage::updateLogImageStatus($logShareImage, 1); //更新状态为已完成
+                $gId = DbGoods::addGoods($data); //添加后的商品id
                 if ($gId === false) {
                     Db::rollback();
-                    return ['code' => '3009'];//添加失败
+                    return ['code' => '3009']; //添加失败
                 }
                 Db::commit();
                 return ['code' => '200', 'goods_id' => $gId];
@@ -218,31 +222,32 @@ class Goods extends CommonIndex {
      * @param $volume
      * @return array
      */
-    public function editGoodsSku($skuId, $data, $weight, $volume) {
+    public function editGoodsSku($skuId, $data, $weight, $volume)
+    {
         $sku = DbGoods::getOneGoodsSku(['id' => $skuId], 'id,goods_id,sku_image', true);
         if (empty($sku)) {
-            return ['code' => '3007'];//skuid不存在
+            return ['code' => '3007']; //skuid不存在
         }
         if ($data['stock'] > 0) {
             if ($data['retail_price'] <= 0 || $data['cost_price'] <= 0) {
-                return ['code' => '3010'];//请填写零售价和成本价
+                return ['code' => '3010']; //请填写零售价和成本价
             }
         }
-        $goodsId  = $sku['goods_id'];
+        $goodsId = $sku['goods_id'];
         $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
         if ($goodsRow['status'] == 1) {
-            return ['code' => '3013'];//商品下架才能编辑
+            return ['code' => '3013']; //商品下架才能编辑
         }
-        $freightId    = $data['freight_id'];
+        $freightId = $data['freight_id'];
         $supplieStype = DbGoods::getSupplierFreight('stype', $freightId);
-        if ($supplieStype['stype'] == 2) {//重量
+        if ($supplieStype['stype'] == 2) { //重量
             if (!is_numeric($weight) || $weight <= 0) {
-                return ['code' => '3011'];//选择重量模版必须填写重量
+                return ['code' => '3011']; //选择重量模版必须填写重量
             }
         }
-        if ($supplieStype['stype'] == 3) {//体积
+        if ($supplieStype['stype'] == 3) { //体积
             if (!is_numeric($volume) || $volume <= 0) {
-                return ['code' => '3012'];//选择体积模版必须填写体积
+                return ['code' => '3012']; //选择体积模版必须填写体积
             }
         }
         $image = $data['sku_image'];
@@ -250,15 +255,15 @@ class Goods extends CommonIndex {
         $logImage = [];
         $oldImage = [];
         if (!empty($image)) {
-            $image    = filtraImage(Config::get('qiniu.domain'), $image);//去除域名
-            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-            if (empty($logImage)) {//图片不存在
-                return ['code' => '3005'];//图片没有上传过
+            $image = filtraImage(Config::get('qiniu.domain'), $image); //去除域名
+            $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+            if (empty($logImage)) { //图片不存在
+                return ['code' => '3005']; //图片没有上传过
             }
-            $oldImage          = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1);//之前在使用的图片日志
+            $oldImage = DbImage::getLogImage(filtraImage(Config::get('qiniu.domain'), $sku['sku_image']), 1); //之前在使用的图片日志
             $data['sku_image'] = $image;
         }
-        $supplierId     = $goodsRow['supplier_id'];//供应商id
+        $supplierId = $goodsRow['supplier_id']; //供应商id
         $supplierIdList = DbGoods::getSupplierFreights(['supid' => $supplierId, 'status' => 1], 'id');
         $supplierIdList = array_column($supplierIdList, 'id');
         if (!in_array($data['freight_id'], $supplierIdList)) {
@@ -269,10 +274,10 @@ class Goods extends CommonIndex {
         Db::startTrans();
         try {
             if (!empty($logImage)) {
-                DbImage::updateLogImageStatus($logImage, 1);//更新状态为已完成
+                DbImage::updateLogImageStatus($logImage, 1); //更新状态为已完成
             }
             if (!empty($oldImage)) {
-                DbImage::updateLogImageStatus($oldImage, 3);//更新状态为弃用
+                DbImage::updateLogImageStatus($oldImage, 3); //更新状态为弃用
             }
             DbGoods::editGoodsSku($data, $skuId);
             Db::commit();
@@ -289,30 +294,31 @@ class Goods extends CommonIndex {
      * @param $goodsId
      * @return array
      */
-    public function addGoodsSpec(int $attrId, int $goodsId) {
+    public function addGoodsSpec(int $attrId, int $goodsId)
+    {
         $checkRes = $this->checkGoods($attrId, $goodsId);
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
         $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
         if ($goodsRow['status'] == 1) {
-            return ['code' => '3013'];//商品下架才能编辑
+            return ['code' => '3013']; //商品下架才能编辑
         }
-        $specId       = $checkRes['spec_id'];
-        $relationArr  = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
-        $relationList = [];//现有的规格属性列表
+        $specId = $checkRes['spec_id'];
+        $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id'); //商品的类目属性关系
+        $relationList = []; //现有的规格属性列表
         foreach ($relationArr as $val) {
             if ($val['spec_id'] == $specId && $val['attr_id'] == $attrId) {
-                return ['code' => '3006'];//商品已有该规格属性
+                return ['code' => '3006']; //商品已有该规格属性
             }
             $relationList[$val['spec_id']][] = $val['attr_id'];
         }
         $relationList[$specId][] = $attrId;
-        $carte                   = $this->cartesian(array_values($relationList));
-        $skuWhere                = ['goods_id' => $goodsId, 'status' => 1];
-        $goodsSkuList            = DbGoods::getOneGoodsSku($skuWhere, 'id,spec,sku_image');
-        $delId                   = [];//需要删除的sku id
-        $delImage                = [];
+        $carte = $this->cartesian(array_values($relationList));
+        $skuWhere = ['goods_id' => $goodsId, 'status' => 1];
+        $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec,sku_image');
+        $delId = []; //需要删除的sku id
+        $delImage = [];
 //        print_r($goodsSkuList);die;
         foreach ($goodsSkuList as $sku) {
             if (in_array($sku['spec'], $carte)) {
@@ -374,33 +380,34 @@ class Goods extends CommonIndex {
      * @param $goodsId
      * @return array
      */
-    public function delGoodsSpec(int $attrId, int $goodsId) {
+    public function delGoodsSpec(int $attrId, int $goodsId)
+    {
         $checkRes = $this->checkGoods($attrId, $goodsId);
         if ($checkRes['code'] !== '200') {
             return $checkRes;
         }
         $goodsRow = DbGoods::getOneGoods(['id' => $goodsId], 'status,supplier_id');
         if ($goodsRow['status'] == 1) {
-            return ['code' => '3013'];//商品下架才能编辑
+            return ['code' => '3013']; //商品下架才能编辑
         }
-        $specId      = $checkRes['spec_id'];
-        $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id');//商品的类目属性关系
+        $specId = $checkRes['spec_id'];
+        $relationArr = DbGoods::getGoodsRelation(['goods_id' => $goodsId], 'spec_id,attr_id'); //商品的类目属性关系
         if (!in_array($attrId, array_column($relationArr, 'attr_id'))) {
-            return ['code' => '3006'];//该商品未绑定这个属性
+            return ['code' => '3006']; //该商品未绑定这个属性
         }
-        $relationList = [];//现有的规格属性列表
+        $relationList = []; //现有的规格属性列表
         foreach ($relationArr as $val) {
             if ($val['spec_id'] == $specId && $val['attr_id'] == $attrId) {
-                continue;//商品已有该规格属性,需要删除
-//                return ['code' => '3006'];
+                continue; //商品已有该规格属性,需要删除
+                //                return ['code' => '3006'];
             }
             $relationList[$val['spec_id']][] = $val['attr_id'];
         }
-        $carte        = $this->cartesian(array_values($relationList));
-        $skuWhere     = ['goods_id' => $goodsId, 'status' => 1];
+        $carte = $this->cartesian(array_values($relationList));
+        $skuWhere = ['goods_id' => $goodsId, 'status' => 1];
         $goodsSkuList = DbGoods::getOneGoodsSku($skuWhere, 'id,spec');
-        $delId        = [];//需要删除的sku id
-        $delImage     = [];
+        $delId = []; //需要删除的sku id
+        $delImage = [];
         foreach ($goodsSkuList as $sku) {
             if (!in_array($sku['spec'], $carte)) {
                 array_push($delId, ['id' => $sku['id'], 'status' => 2]);
@@ -423,7 +430,7 @@ class Goods extends CommonIndex {
             }
         }
         $delRelationId = DbGoods::getGoodsRelation(['goods_id' => $goodsId, 'attr_id' => $attrId], 'id');
-        $data          = [];
+        $data = [];
         foreach ($carte as $ca) {
             array_push($data, ['spec' => $ca, 'goods_id' => $goodsId]);
         }
@@ -469,30 +476,31 @@ class Goods extends CommonIndex {
      * @param $endTime
      * @return array
      */
-    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name) {
-        $where    = [["id", "=", $goodsId]];
-        $field    = "id,goods_type";
+    public function addAudioSku($goodsId, $audioIdList, $marketPrice, $retailPrice, $costPrice, $integralPrice, $endTime, $name)
+    {
+        $where = [["id", "=", $goodsId]];
+        $field = "id,goods_type";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != 2) {
             return ['code' => '3007'];
         }
         $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
-        if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+        if ($audioCount != count($audioIdList)) { //音频不存在无法添加
             return ['code' => '3003'];
         }
         $skuData = [
-            'goods_id'       => $goodsId,
-            'name'           => $name,
-            'market_price'   => $marketPrice,
-            'retail_price'   => $retailPrice,
-            'cost_price'     => $costPrice,
+            'goods_id' => $goodsId,
+            'name' => $name,
+            'market_price' => $marketPrice,
+            'retail_price' => $retailPrice,
+            'cost_price' => $costPrice,
             'integral_price' => $integralPrice,
-            'end_time'       => $endTime * 3600,
+            'end_time' => $endTime * 3600,
         ];
         Db::startTrans();
         try {
             $audioSkuId = DbAudios::saveAudioSku($skuData);
-            $relation   = [];
+            $relation = [];
             foreach ($audioIdList as $val) {
                 array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $audioSkuId]);
             }
@@ -502,17 +510,18 @@ class Goods extends CommonIndex {
         } catch (\Exception $e) {
             print_r($e);
             Db::rollback();
-            return ['code' => '3008'];//更新失败
+            return ['code' => '3008']; //更新失败
         }
     }
 
-    public function getGoodsAudioSku($sku_id, $goodsId){
+    public function getGoodsAudioSku($sku_id, $goodsId)
+    {
         $sku = DbAudios::getAudiosSku(['id' => $sku_id, 'goods_id' => $goodsId], '*', true);
-        if (empty($sku)){
+        if (empty($sku)) {
             return ['code' => '200', 'sku' => []];
         }
         $sku['end_time'] = $sku['end_time'] / 3600;
-        $sku['audioIdList'] = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'audio_pri_id');
+        $sku['audioIdList'] = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id], 'audio_pri_id');
         return ['code' => '200', 'sku' => $sku];
     }
 
@@ -529,9 +538,10 @@ class Goods extends CommonIndex {
      * @param $endTime
      * @return array
      */
-    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime = 0, $name = ''){
-        $where    = [["id", "=", $goodsId]];
-        $field    = "id,goods_type,status";
+    public function saveAudioSku($goodsId, $sku_id, $audioIdList = '', $marketPrice = 0, $retailPrice = 0, $costPrice = 0, $integralPrice = 0, $endTime = 0, $name = '')
+    {
+        $where = [["id", "=", $goodsId]];
+        $field = "id,goods_type,status";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != 2) {
             return ['code' => '3007'];
@@ -539,19 +549,19 @@ class Goods extends CommonIndex {
         if ($goodsOne['status'] == 1) {
             return ['code' => '3011'];
         }
-        if (!DbAudios::getAudiosSku(['id' => $sku_id], 'id', true)){
+        if (!DbAudios::getAudiosSku(['id' => $sku_id], 'id', true)) {
             return ['code' => '3009'];
         }
-        $relation   = [];
+        $relation = [];
         $delrelation = [];
-        if (!empty($audioIdList)){
+        if (!empty($audioIdList)) {
             $audioCount = DbAudios::countAudio([['id', 'in', $audioIdList]]);
-            if ($audioCount != count($audioIdList)) {//音频不存在无法添加
+            if ($audioCount != count($audioIdList)) { //音频不存在无法添加
                 return ['code' => '3003'];
             }
-            $has_relation = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id],'id');
+            $has_relation = DbAudios::getAudioSkuRelation(['audio_sku_id' => $sku_id], 'id');
             foreach ($has_relation as $value) {
-                array_push($delrelation,$value['id']);
+                array_push($delrelation, $value['id']);
             }
             foreach ($audioIdList as $val) {
                 array_push($relation, ['audio_pri_id' => $val, 'audio_sku_id' => $sku_id]);
@@ -591,7 +601,7 @@ class Goods extends CommonIndex {
         } catch (\Exception $e) {
             exception($e);
             Db::rollback();
-            return ['code' => '3008'];//更新失败
+            return ['code' => '3008']; //更新失败
         }
     }
 
@@ -600,18 +610,18 @@ class Goods extends CommonIndex {
      * @param $skuId
      * @return array
      */
-    public function getGoodsSku($skuId) {
+    public function getGoodsSku($skuId)
+    {
 //        $aaa = DbGoods::getGoodsSku(['id'=> 18], 'id,goods_name', 'goods_id,stock,spec');
-//        $aaa = DbGoods::getSpecAttr([['id', 'in', [1, 2, 3]]], 'id,spe_name', 'spec_id,attr_name', 'goods_id,spec_id');
-//        print_r($aaa);
-//        die;
-//        DbGoods::getOneGoodsSku(['goods_id'=>$goodsId],'goods_id');
+        //        $aaa = DbGoods::getSpecAttr([['id', 'in', [1, 2, 3]]], 'id,spe_name', 'spec_id,attr_name', 'goods_id,spec_id');
+        //        print_r($aaa);
+        //        die;
+        //        DbGoods::getOneGoodsSku(['goods_id'=>$goodsId],'goods_id');
 
 //        $goods = DbGoods::getGoods('id', '0,1', 'id', ['id' => $goodsId]);
-//        if (empty($goods)) {
-//            return ['code' => '3001'];
-//        }
-
+        //        if (empty($goods)) {
+        //            return ['code' => '3001'];
+        //        }
 
         $result = DbGoods::getSku(['id' => $skuId, 'status' => 1], 'id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image,integral_sale_stock');
         if (empty($result)) {
@@ -629,13 +639,14 @@ class Goods extends CommonIndex {
      * @author wujunjie
      * 2019/1/2-16:42
      */
-    public function getOneGoods($id, $getType, $goodsType) {
+    public function getOneGoods($id, $getType, $goodsType)
+    {
         //根据商品id找到商品表里面的基本数据
-        $where    = [["id", "=", $id]];
-        $field    = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image,giving_rights,goods_sheet,is_integral_sale";
+        $where = [["id", "=", $id]];
+        $field = "id,supplier_id,cate_id,goods_name,goods_type,target_users,title,subtitle,image,status,share_image,giving_rights,goods_sheet,is_integral_sale";
         $goodsOne = DbGoods::getOneGoods($where, $field);
         if ($goodsOne['goods_type'] != $goodsType) {
-            return ['code' => '3005'];//该商品不属于这个类型
+            return ['code' => '3005']; //该商品不属于这个类型
         }
         $goods_data = [];
         if (in_array(1, $getType)) {
@@ -643,24 +654,24 @@ class Goods extends CommonIndex {
             if (empty($goods_data)) {
                 return ["code" => 3000];
             }
-            $goodsClass                  = DbGoods::getTier($goods_data['cate_id']);
-            $goods_data['goods_class']   = $goodsClass['type_name'] ?? '';
+            $goodsClass = DbGoods::getTier($goods_data['cate_id']);
+            $goods_data['goods_class'] = $goodsClass['type_name'] ?? '';
             $goods_data['goods_name'] = htmlspecialchars_decode($goods_data['goods_name']);
         }
-        $supplier                    = DbGoods::getOneSupplier(['id' => $goodsOne['supplier_id']], 'name');
+        $supplier = DbGoods::getOneSupplier(['id' => $goodsOne['supplier_id']], 'name');
         $goods_data['supplier_name'] = '';
         $goods_data['supplier_name'] = $supplier['name'];
         //根据商品id找到商品图片表里面的数据
-        $imagesDetatil  = [];
+        $imagesDetatil = [];
         $imagesCarousel = [];
         if (in_array(3, $getType)) {
-            $where          = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
-            $field          = "goods_id,image_type,image_path,order_by";
-            $images_data    = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
-            $imagesDetatil  = [];//商品详情图
-            $imagesCarousel = [];//商品轮播图
+            $where = [["goods_id", "=", $id], ['image_type', 'in', [1, 2]]];
+            $field = "goods_id,image_type,image_path,order_by";
+            $images_data = DbGoods::getOneGoodsImage($where, $field, 'order_by asc,id asc');
+            $imagesDetatil = []; //商品详情图
+            $imagesCarousel = []; //商品轮播图
             foreach ($images_data as $im) {
-                if (stripos($im['image_path'], 'http') === false) {//新版本图片
+                if (stripos($im['image_path'], 'http') === false) { //新版本图片
                     $im['image_path'] = Config::get('qiniu.domain') . '/' . $im['image_path'];
                 }
                 if ($im['image_type'] == 1) {
@@ -688,13 +699,13 @@ class Goods extends CommonIndex {
             if ($goodsType == 1) {
                 $where = [["goods_id", "=", $id], ['status', '=', 1]];
                 $field = "id,goods_id,freight_id,stock,market_price,retail_price,cost_price,margin_price,integral_price,weight,volume,spec,sku_image,integral_sale_stock";
-                $sku   = DbGoods::getSku($where, $field);
+                $sku = DbGoods::getSku($where, $field);
             }
             if ($goodsType == 2) {
                 $sku = DbGoods::getAudioSkuRelation([['goods_id', '=', $id]]);
                 foreach ($sku as &$v) {
                     $v['end_time'] = $v['end_time'] / 3600;
-                    $v['audios']   = array_map(function ($var) {
+                    $v['audios'] = array_map(function ($var) {
                         unset($var['pivot']);
                         return $var;
                     }, $v['audios']);
@@ -703,7 +714,7 @@ class Goods extends CommonIndex {
             }
         }
         $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
-        $source_type         = [1, 2, 3, 4];
+        $source_type = [1, 2, 3, 4];
         foreach ($source_type as $st) {
             $key = $redisGoodsDetailKey . ':' . $st;
             $this->redis->del($key);
@@ -712,22 +723,22 @@ class Goods extends CommonIndex {
     }
 
 //    public function delGoods($id) {
-//        //开启事务
-//        Db::startTrans();
-//        try {
-//            //删除商品基本数据
-//            DbGoods::delGoods($id);
-//            DbGoods::delGoodsImage($id);
-//            DbGoods::delGoodsSku($id);
-//            DbGoods::delGoodsRelation($id);
-//            Db::commit();
-//            return ["msg" => "删除成功", "code" => 200];
-//        } catch (\Exception $e) {
-//            Db::rollback();
-//            return ["msg" => "删除失败", "code" => 3001];
-//        }
-//
-//    }
+    //        //开启事务
+    //        Db::startTrans();
+    //        try {
+    //            //删除商品基本数据
+    //            DbGoods::delGoods($id);
+    //            DbGoods::delGoodsImage($id);
+    //            DbGoods::delGoodsSku($id);
+    //            DbGoods::delGoodsRelation($id);
+    //            Db::commit();
+    //            return ["msg" => "删除成功", "code" => 200];
+    //        } catch (\Exception $e) {
+    //            Db::rollback();
+    //            return ["msg" => "删除失败", "code" => 3001];
+    //        }
+    //
+    //    }
 
     /**
      * 上传商品的轮播图和详情图
@@ -736,28 +747,29 @@ class Goods extends CommonIndex {
      * @param $images
      * @return array
      */
-    public function uploadGoodsImages($goodsId, $imageType, $images) {
+    public function uploadGoodsImages($goodsId, $imageType, $images)
+    {
         $goods = DbGoods::getOneGoods(['id' => $goodsId], 'id');
         if (empty($goods)) {
             return ['code' => '3004'];
         }
-        $data    = [];
+        $data = [];
         $logData = [];
         $orderBy = 0;
         foreach ($images as $img) {
-            $image    = filtraImage(Config::get('qiniu.domain'), $img);//去除域名
-            $logImage = DbImage::getLogImage($image, 2);//判断时候有未完成的图片
-            if (empty($logImage)) {//图片不存在
-                return ['code' => '3005'];//图片没有上传过
+            $image = filtraImage(Config::get('qiniu.domain'), $img); //去除域名
+            $logImage = DbImage::getLogImage($image, 2); //判断时候有未完成的图片
+            if (empty($logImage)) { //图片不存在
+                return ['code' => '3005']; //图片没有上传过
             }
-            $logImage['status'] = 1;//更新为完成状态
+            $logImage['status'] = 1; //更新为完成状态
             $orderBy++;
             $row = [
-                'goods_id'    => $goodsId,
+                'goods_id' => $goodsId,
                 'source_type' => 4,
-                'image_type'  => $imageType,
-                'image_path'  => $image,
-                'order_by'    => $orderBy,
+                'image_type' => $imageType,
+                'image_path' => $image,
+                'order_by' => $orderBy,
             ];
             array_push($logData, $logImage);
             array_push($data, $row);
@@ -766,7 +778,7 @@ class Goods extends CommonIndex {
         Db::startTrans();
         try {
             DbGoods::addGoodsImageList($data);
-            DbImage::updateLogImageStatusList($logData);//更新状态为已完成
+            DbImage::updateLogImageStatusList($logData); //更新状态为已完成
             Db::commit();
             return ["code" => '200'];
         } catch (\Exception $e) {
@@ -775,28 +787,28 @@ class Goods extends CommonIndex {
         }
     }
 
-
     /**
      * 删除商品详情和轮播图
      * @param $imagePath
      * @return array
      */
-    public function delGoodsImage($imagePath) {
-        $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要删除的图片
+    public function delGoodsImage($imagePath)
+    {
+        $imagePath = filtraImage(Config::get('qiniu.domain'), $imagePath); //要删除的图片
         $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id');
         if (empty($goodsImage)) {
             return ['code' => '3002'];
         }
         $goodsImageId = array_column($goodsImage, 'id');
         $goodsImageId = $goodsImageId[0];
-        $oldLogImage  = [];
-        if (stripos($imagePath, 'http') === false) {//新版本图片
-            $oldLogImage = DbImage::getLogImage($imagePath, 1);//之前在使用的图片日志
+        $oldLogImage = [];
+        if (stripos($imagePath, 'http') === false) { //新版本图片
+            $oldLogImage = DbImage::getLogImage($imagePath, 1); //之前在使用的图片日志
         }
         Db::startTrans();
         try {
             if (!empty($oldLogImage)) {
-                DbImage::updateLogImageStatus($oldLogImage, 3);//更新状态为弃用
+                DbImage::updateLogImageStatus($oldLogImage, 3); //更新状态为弃用
             }
             DbGoods::delGoodsImage($goodsImageId);
             Db::commit();
@@ -813,16 +825,17 @@ class Goods extends CommonIndex {
      * @param $orderBy
      * @return array
      */
-    public function sortImageDetail($imagePath, $orderBy) {
-        $imagePath  = filtraImage(Config::get('qiniu.domain'), $imagePath);//要排序的图片
+    public function sortImageDetail($imagePath, $orderBy)
+    {
+        $imagePath = filtraImage(Config::get('qiniu.domain'), $imagePath); //要排序的图片
         $goodsImage = DbGoods::getOneGoodsImage(['image_path' => $imagePath], 'id,order_by');
         if (empty($goodsImage)) {
             return ['code' => '3002'];
         }
         $goodsImageId = array_column($goodsImage, 'id');
         $goodsImageId = $goodsImageId[0];
-        $oldOrderBy   = $goodsImage[0]['order_by'];
-        if ($oldOrderBy == $orderBy) {//排序不改变无需更新
+        $oldOrderBy = $goodsImage[0]['order_by'];
+        if ($oldOrderBy == $orderBy) { //排序不改变无需更新
             return ["code" => '200'];
         }
         Db::startTrans();
@@ -844,11 +857,12 @@ class Goods extends CommonIndex {
      * @author zyr
      * 2019/1/8-10:13
      */
-    public function upDown(int $id, int $type) {
+    public function upDown(int $id, int $type)
+    {
         //判断传过来的id是否有效
-        $where     = [["id", "=", $id]];
-        $field     = "goods_name,cate_id,goods_type";
-        $res       = DbGoods::getOneGoods($where, $field);
+        $where = [["id", "=", $id]];
+        $field = "goods_name,cate_id,goods_type";
+        $res = DbGoods::getOneGoods($where, $field);
         $labelName = $res['goods_name'];
         if (empty($res)) {
             return ["code" => '3001'];
@@ -856,54 +870,54 @@ class Goods extends CommonIndex {
         if (empty($res['cate_id'])) {
             return ['code' => '3009'];
         }
-        $labelGoodsRelation    = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id');//该商品的所有标签
-        $labelGoodsRelationId  = array_column($labelGoodsRelation, 'label_lib_id');
-        $labelGoodsRelation2   = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他已上架的商品
+        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id'); //该商品的所有标签
+        $labelGoodsRelationId = array_column($labelGoodsRelation, 'label_lib_id');
+        $labelGoodsRelation2 = DbLabel::getLabelGoodsRelationByGoods([ //标签是否挂了其他已上架的商品
             ['gr.label_lib_id', 'in', $labelGoodsRelationId],
             ['gr.goods_id', '<>', $id],
             ['g.status', '=', '1'],
         ], 'gr.label_lib_id');
         $labelGoodsRelationId2 = empty($labelGoodsRelation2) ? [] : array_column($labelGoodsRelation2, 'label_lib_id');
-        $labelRelationId       = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
-        if ($type == 1) {// 上架
+        $labelRelationId = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
+        if ($type == 1) { // 上架
             $stockAll = 0;
-            $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $sku = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
                 $stockAll = bcadd($stockAll, $s['stock'], 2);
                 if ($s['stock'] > 0) {
                     if ($s['retail_price'] == 0) {
-                        return ['code' => '3004'];//请填写零售价
+                        return ['code' => '3004']; //请填写零售价
                     }
                     if ($s['cost_price'] == 0) {
-                        return ['code' => '3005'];//请填写成本价
+                        return ['code' => '3005']; //请填写成本价
                     }
                 }
             }
             if ($res['goods_type'] == 1) {
                 if ($stockAll <= 0) {
-                    return ['code' => '3003'];//没有可售库存
+                    return ['code' => '3003']; //没有可售库存
                 }
             }
             //1.详情图 2.轮播图
-            $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
+            $goodsImage = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
             $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
-            if (!in_array(1, $goodsImageType)) {//没有详情图
+            if (!in_array(1, $goodsImageType)) { //没有详情图
                 return ['code' => '3006'];
             }
-            if (!in_array(2, $goodsImageType)) {//没有轮播图
+            if (!in_array(2, $goodsImageType)) { //没有轮播图
                 return ['code' => '3007'];
             }
         } else {
             $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
-            $source_type         = [1, 2, 3, 4];
+            $source_type = [1, 2, 3, 4];
             foreach ($source_type as $st) {
                 $key = $redisGoodsDetailKey . ':' . $st;
                 $this->redis->del($key);
             }
             foreach ($labelRelationId as $lri) {
-                $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name', true);
+                $labelLib = DbLabel::getLabelLibrary(['id' => $lri], 'label_name', true);
                 $transList = $this->getTransformPinyin($labelLib['label_name']);
-                $delFlag   = false;
+                $delFlag = false;
                 foreach ($transList as $tlk => $tl) {
                     $labelKey = $this->redis->hGet($this->transformRedisKey, $tl);
                     if ($labelKey === false) {
@@ -931,19 +945,19 @@ class Goods extends CommonIndex {
                 }
             }
         }
-        $data       = [//修改状态
-            "status" => $type
+        $data = [ //修改状态
+            "status" => $type,
         ];
-        $flag       = false;
+        $flag = false;
         $labelLibId = 0;
         Db::startTrans();
         try {
             DbGoods::editGoods($data, $id);
             if ($type == 1) {
                 $labelRelationFlag = true;
-                $labelLib          = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
+                $labelLib = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
                 if (!empty($labelLib)) { //标签库有该标签
-                    $labelLibId         = $labelLib['id'];
+                    $labelLibId = $labelLib['id'];
                     $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelLibId, 'goods_id' => $id], 'id', true);
                     if (!empty($labelGoodsRelation)) { //标签已关联该商品
                         $labelRelationFlag = false;
@@ -951,7 +965,7 @@ class Goods extends CommonIndex {
                 }
                 if (empty($labelLibId)) { //标签库没有就添加
                     $labelLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
-                    $flag       = true;
+                    $flag = true;
                 } else {
                     if ($labelRelationFlag === true) {
                         DbLabel::modifyHeat($labelLibId);
@@ -969,7 +983,7 @@ class Goods extends CommonIndex {
         if ($type == 1) {
             if (!empty($labelRelationId)) {
                 foreach ($labelRelationId as $lri) {
-                    $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name,the_heat', true);
+                    $labelLib = DbLabel::getLabelLibrary(['id' => $lri], 'label_name,the_heat', true);
                     $transList = $this->getTransformPinyin($labelLib['label_name']);
                     $this->setTransform($transList, $lri);
                     $this->setLabelLibrary($lri, $labelLib['label_name']);
@@ -979,7 +993,7 @@ class Goods extends CommonIndex {
             if ($flag === true) {
                 $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
                 $this->setLabelLibrary($labelLibId, $labelName);
-                $this->setLabelHeat($labelLibId, true);//执行zAdd
+                $this->setLabelHeat($labelLibId, true); //执行zAdd
             }
         }
         return ["msg" => '成功', "code" => '200'];
@@ -993,11 +1007,12 @@ class Goods extends CommonIndex {
      * @author zyr
      * 2019/1/8-10:13
      */
-    public function upDownIntegralGoods(int $id, int $is_integral_sale) {
+    public function upDownIntegralGoods(int $id, int $is_integral_sale)
+    {
         //判断传过来的id是否有效
-        $where     = [["id", "=", $id]];
-        $field     = "goods_name,cate_id,goods_type";
-        $res       = DbGoods::getOneGoods($where, $field);
+        $where = [["id", "=", $id]];
+        $field = "goods_name,cate_id,goods_type";
+        $res = DbGoods::getOneGoods($where, $field);
         $labelName = $res['goods_name'];
         if (empty($res)) {
             return ["code" => '3001'];
@@ -1005,54 +1020,54 @@ class Goods extends CommonIndex {
         if (empty($res['cate_id'])) {
             return ['code' => '3009'];
         }
-        $labelGoodsRelation    = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id');//该商品的所有标签
-        $labelGoodsRelationId  = array_column($labelGoodsRelation, 'label_lib_id');
-        $labelGoodsRelation2   = DbLabel::getLabelGoodsRelationByGoods([//标签是否挂了其他已上架的商品
+        $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['goods_id' => $id], 'label_lib_id'); //该商品的所有标签
+        $labelGoodsRelationId = array_column($labelGoodsRelation, 'label_lib_id');
+        $labelGoodsRelation2 = DbLabel::getLabelGoodsRelationByGoods([ //标签是否挂了其他已上架的商品
             ['gr.label_lib_id', 'in', $labelGoodsRelationId],
             ['gr.goods_id', '<>', $id],
             ['g.status', '=', '1'],
         ], 'gr.label_lib_id');
         $labelGoodsRelationId2 = empty($labelGoodsRelation2) ? [] : array_column($labelGoodsRelation2, 'label_lib_id');
-        $labelRelationId       = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
-        if ($is_integral_sale == 1) {// 上架
+        $labelRelationId = array_diff($labelGoodsRelationId, $labelGoodsRelationId2);
+        if ($is_integral_sale == 1) { // 上架
             $stockAll = 0;
-            $sku      = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
+            $sku = DbGoods::getOneGoodsSku(['status' => '1', 'goods_id' => $id], 'id,stock,freight_id,retail_price,cost_price,sku_image');
             foreach ($sku as $s) {
                 $stockAll = bcadd($stockAll, $s['stock'], 2);
                 if ($s['stock'] > 0) {
                     if ($s['retail_price'] == 0) {
-                        return ['code' => '3004'];//请填写零售价
+                        return ['code' => '3004']; //请填写零售价
                     }
                     if ($s['cost_price'] == 0) {
-                        return ['code' => '3005'];//请填写成本价
+                        return ['code' => '3005']; //请填写成本价
                     }
                 }
             }
             if ($res['goods_type'] == 1) {
                 if ($stockAll <= 0) {
-                    return ['code' => '3003'];//没有可售库存
+                    return ['code' => '3003']; //没有可售库存
                 }
             }
             //1.详情图 2.轮播图
-            $goodsImage     = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
+            $goodsImage = DbGoods::getOneGoodsImage(['goods_id' => $id], 'id,image_type');
             $goodsImageType = array_unique(array_column($goodsImage, 'image_type'));
-            if (!in_array(1, $goodsImageType)) {//没有详情图
+            if (!in_array(1, $goodsImageType)) { //没有详情图
                 return ['code' => '3006'];
             }
-            if (!in_array(2, $goodsImageType)) {//没有轮播图
+            if (!in_array(2, $goodsImageType)) { //没有轮播图
                 return ['code' => '3007'];
             }
         } else {
             $redisGoodsDetailKey = Config::get('rediskey.index.redisGoodsDetail') . $id;
-            $source_type         = [1, 2, 3, 4];
+            $source_type = [1, 2, 3, 4];
             foreach ($source_type as $st) {
                 $key = $redisGoodsDetailKey . ':' . $st;
                 $this->redis->del($key);
             }
             foreach ($labelRelationId as $lri) {
-                $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name', true);
+                $labelLib = DbLabel::getLabelLibrary(['id' => $lri], 'label_name', true);
                 $transList = $this->getTransformPinyin($labelLib['label_name']);
-                $delFlag   = false;
+                $delFlag = false;
                 foreach ($transList as $tlk => $tl) {
                     $labelKey = $this->redis->hGet($this->transformRedisKey, $tl);
                     if ($labelKey === false) {
@@ -1080,19 +1095,19 @@ class Goods extends CommonIndex {
                 }
             }
         }
-        $data       = [//修改状态
-            "is_integral_sale" => $is_integral_sale
+        $data = [ //修改状态
+            "is_integral_sale" => $is_integral_sale,
         ];
-        $flag       = false;
+        $flag = false;
         $labelLibId = 0;
         Db::startTrans();
         try {
             DbGoods::editGoods($data, $id);
             if ($is_integral_sale == 1) {
                 $labelRelationFlag = true;
-                $labelLib          = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
+                $labelLib = DbLabel::getLabelLibrary(['label_name' => $labelName], 'id', true);
                 if (!empty($labelLib)) { //标签库有该标签
-                    $labelLibId         = $labelLib['id'];
+                    $labelLibId = $labelLib['id'];
                     $labelGoodsRelation = DbLabel::getLabelGoodsRelation(['label_lib_id' => $labelLibId, 'goods_id' => $id], 'id', true);
                     if (!empty($labelGoodsRelation)) { //标签已关联该商品
                         $labelRelationFlag = false;
@@ -1100,7 +1115,7 @@ class Goods extends CommonIndex {
                 }
                 if (empty($labelLibId)) { //标签库没有就添加
                     $labelLibId = DbLabel::addLabelLibrary(['label_name' => $labelName]);
-                    $flag       = true;
+                    $flag = true;
                 } else {
                     if ($labelRelationFlag === true) {
                         DbLabel::modifyHeat($labelLibId);
@@ -1118,7 +1133,7 @@ class Goods extends CommonIndex {
         if ($is_integral_sale == 1) {
             if (!empty($labelRelationId)) {
                 foreach ($labelRelationId as $lri) {
-                    $labelLib  = DbLabel::getLabelLibrary(['id' => $lri], 'label_name,the_heat', true);
+                    $labelLib = DbLabel::getLabelLibrary(['id' => $lri], 'label_name,the_heat', true);
                     $transList = $this->getTransformPinyin($labelLib['label_name']);
                     $this->setTransform($transList, $lri);
                     $this->setLabelLibrary($lri, $labelLib['label_name']);
@@ -1128,7 +1143,7 @@ class Goods extends CommonIndex {
             if ($flag === true) {
                 $this->setTransform($this->getTransformPinyin($labelName), $labelLibId);
                 $this->setLabelLibrary($labelLibId, $labelName);
-                $this->setLabelHeat($labelLibId, true);//执行zAdd
+                $this->setLabelHeat($labelLibId, true); //执行zAdd
             }
         }
         return ["msg" => '成功', "code" => '200'];
@@ -1140,45 +1155,47 @@ class Goods extends CommonIndex {
      * @param $goodsId
      * @return array
      */
-    private function checkGoods($attrId, $goodsId) {
+    private function checkGoods($attrId, $goodsId)
+    {
         $goodsAttrOne = DbGoods::getOneAttr(['id' => $attrId], 'spec_id,attr_name');
         if (empty($goodsAttrOne)) {
-            return ['code' => '3003'];//属性不存在
+            return ['code' => '3003']; //属性不存在
         }
-        $specId   = $goodsAttrOne['spec_id'];
+        $specId = $goodsAttrOne['spec_id'];
         $goodsOne = DbGoods::getOneGoods(['id' => $goodsId], 'id,cate_id');
         if (empty($goodsOne)) {
-            return ['code' => '3004'];//商品不存在
+            return ['code' => '3004']; //商品不存在
         }
         $goodsSpecOne = DbGoods::getOneSpec(['id' => $specId], 'id,cate_id');
         if (empty($goodsSpecOne)) {
-            return ['code' => '3005'];//规格为空
+            return ['code' => '3005']; //规格为空
         }
         if ($goodsSpecOne['cate_id'] != $goodsOne['cate_id']) {
-            return ['code' => '3009'];//提交的属性分类和商品分类不同
+            return ['code' => '3009']; //提交的属性分类和商品分类不同
         }
         return ['code' => '200', 'spec_id' => $specId];
     }
 
-    private function cartesian($sets) {
-        $result = [];// 保存结果
+    private function cartesian($sets)
+    {
+        $result = []; // 保存结果
         if (count($sets) == 1) {
             foreach ($sets[0] as $s) {
                 $result[] = $s;
             }
         }
-        for ($i = 0, $count = count($sets); $i < $count - 1; $i++) {// 循环遍历集合数据
-            if ($i == 0) {// 初始化
+        for ($i = 0, $count = count($sets); $i < $count - 1; $i++) { // 循环遍历集合数据
+            if ($i == 0) { // 初始化
                 $result = $sets[$i];
             }
-            $tmp = array();// 保存临时数据
+            $tmp = array(); // 保存临时数据
             // 结果与下一个集合计算笛卡尔积
             foreach ($result as $res) {
                 foreach ($sets[$i + 1] as $set) {
                     $tmp[] = $res . ',' . $set;
                 }
             }
-            $result = $tmp;// 将笛卡尔积写入结果
+            $result = $tmp; // 将笛卡尔积写入结果
         }
         foreach ($result as &$r) {
             $v = $r;
@@ -1191,17 +1208,18 @@ class Goods extends CommonIndex {
         return $result;
     }
 
-    private function getTransformPinyin($name) {
+    private function getTransformPinyin($name)
+    {
         if (empty($name)) {
             return [];
         }
-        $pinyin       = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
+        $pinyin = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
         $withoutTone2 = implode('', $pinyin->convert($name, PINYIN_UMLAUT_V));
-        $withoutTone  = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
-        $ucWord       = $pinyin->abbr($name, '');
-        $ucWord2      = $pinyin->abbr($name, '', PINYIN_KEEP_NUMBER);
-        $ucWord3      = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
-        $data         = [
+        $withoutTone = $pinyin->permalink($name, '', PINYIN_UMLAUT_V);
+        $ucWord = $pinyin->abbr($name, '');
+        $ucWord2 = $pinyin->abbr($name, '', PINYIN_KEEP_NUMBER);
+        $ucWord3 = $pinyin->abbr($name, '', PINYIN_KEEP_ENGLISH);
+        $data = [
             strtolower($name), //全名
             strtolower($withoutTone), //包含非中文的全拼音
             strtolower($withoutTone2), //不包含非中文的全拼音
@@ -1218,7 +1236,8 @@ class Goods extends CommonIndex {
      * @param $labelLibId 标签库id
      * @author zyr
      */
-    private function setTransform($trans, $labelLibId) {
+    private function setTransform($trans, $labelLibId)
+    {
         $redisKey = $this->transformRedisKey;
         foreach ($trans as $t) {
             if (!$this->redis->hSetNx($redisKey, $t, json_encode([$labelLibId]))) {
@@ -1237,12 +1256,14 @@ class Goods extends CommonIndex {
      * @param $name 标签名
      * @author zyr
      */
-    private function setLabelLibrary($labelLibId, $name) {
+    private function setLabelLibrary($labelLibId, $name)
+    {
         $redisKey = $this->labelLibraryRedisKey;
         $this->redis->hSetNx($redisKey, $labelLibId, $name);
     }
 
-    private function setLabelHeat($labelLibId, $heat) {
+    private function setLabelHeat($labelLibId, $heat)
+    {
         $redisKey = $this->labelLibraryHeatRedisKey;
         if ($heat === true) {
             $this->redis->zAdd($redisKey, 1, $labelLibId);
@@ -1251,7 +1272,8 @@ class Goods extends CommonIndex {
         }
     }
 
-    public function getSheetOption(){
+    public function getSheetOption()
+    {
         $data = [
             [
                 'name' => 'name',
@@ -1543,37 +1565,38 @@ class Goods extends CommonIndex {
             ],
         ];
         // DbGoods::saveAllSheetOption($data);
-        $result = DbGoods::getSheetOption([],'*');
-        return ['code' => 200,'options' => $result];
+        $result = DbGoods::getSheetOption([], '*');
+        return ['code' => 200, 'options' => $result];
     }
 
-    public function getSheet($page, $pageNum){
+    public function getSheet($page, $pageNum)
+    {
         $offset = $pageNum * ($page - 1);
-        $result = DbGoods::getSheet([],'*',$offset.','.$pageNum);
+        $result = DbGoods::getSheet([], '*', $offset . ',' . $pageNum);
         if (!empty($result)) {
             foreach ($result as $key => $value) {
                 $options = [];
-                $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $value['id']],'*');
+                $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $value['id']], '*');
                 foreach ($sheet_options as $sheet => $option) {
                     $options[] = $option['sheet_option']['title'];
                 }
                 // print_r($sheet_options);die;
-                $result[$key]['options'] = join('，',$options);
+                $result[$key]['options'] = join('，', $options);
             }
         }
         return ['code' => '200', 'sheetlist' => $result];
     }
 
-
-    public function addSheet($name, $options){
-        if (DbGoods::getSheet(['name' => $name], 'id',true)) {
+    public function addSheet($name, $options)
+    {
+        if (DbGoods::getSheet(['name' => $name], 'id', true)) {
             return ['code' => '3001'];
         }
-        
+
         Db::startTrans();
         try {
             $sheet_id = DbGoods::addSheet(['name' => $name]);
-            if ($sheet_id && $options){
+            if ($sheet_id && $options) {
                 $sheet_options = [];
                 foreach ($options as $key => $value) {
                     $sheet_options[$key]['option_id'] = $value;
@@ -1585,22 +1608,23 @@ class Goods extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//领取失败
+            return ['code' => '3005']; //领取失败
         }
     }
 
-    public function editSheet($name = '', $id, $options = []){
+    public function editSheet($name = '', $id, $options = [])
+    {
         if (!empty($name)) {
-            if (DbGoods::getSheet([['name' , '=', $name],['id','<>',$id]], 'id',true)) {
+            if (DbGoods::getSheet([['name', '=', $name], ['id', '<>', $id]], 'id', true)) {
                 return ['code' => '3001'];
             }
         }
         Db::startTrans();
         try {
-            if (!empty($name)){
-                DbGoods::saveSheet(['name' => $name],$id);
+            if (!empty($name)) {
+                DbGoods::saveSheet(['name' => $name], $id);
             }
-            if ($id && $options){
+            if ($id && $options) {
                 DbGoods::delSheetOptionRelation(['sheet_id' => $id]);
                 $sheet_options = [];
                 foreach ($options as $key => $value) {
@@ -1613,22 +1637,95 @@ class Goods extends CommonIndex {
             return ['code' => '200'];
         } catch (\Exception $e) {
             Db::rollback();
-            return ['code' => '3005'];//领取失败
+            return ['code' => '3005']; //领取失败
         }
-       
+
     }
 
-    public function getSheetInfo($id){
-        $sheet = DbGoods::getSheet([['id','=',$id]], 'id,name,create_time',true);
+    public function getSheetInfo($id)
+    {
+        $sheet = DbGoods::getSheet([['id', '=', $id]], 'id,name,create_time', true);
         if (empty($sheet)) {
-            return ['code' => '200', 'sheet' =>[]];
+            return ['code' => '200', 'sheet' => []];
         }
-        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']],'*');
+        $sheet_options = DbGoods::getSheetOptionRelation(['sheet_id' => $sheet['id']], '*');
         $sheet_optionsList = [];
         foreach ($sheet_options as $key => $value) {
             $sheet_optionsList[] = $value['sheet_option'];
         }
         $sheet['options'] = $sheet_optionsList;
-        return ['code' => '200', 'sheet' =>$sheet];
+        return ['code' => '200', 'sheet' => $sheet];
+    }
+
+    public function getGrouponGoods($page, $pageNum)
+    {
+        $offset = $pageNum * ($page - 1);
+        $result = DbGoods::getGrouponGoods([], '*', false, '', $offset . ',' . $pageNum);
+        foreach ($result as $key => $value) {
+            $goods = DbGoods::getOneGoods(['id' => $value['goods_id']], 'goods_name');
+            $result[$key]['goods_name'] = $goods['goods_name'];
+        }
+        $total = DbGoods::countGrouponGoods([]);
+        return ['code' => '200', 'total' => $total, 'result' => $result];
+    }
+
+    public function addGrouponGoods($goods_id, $reward, $max_reward, $agent_num, $officiacl_accounts)
+    {
+        $goods = DbGoods::getOneGoods(['id' => $goods_id], '*');
+        if (empty($goods)) {
+            return ['code' => '3001'];
+        }
+        $groupongoods = DbGoods::getGrouponGoods(['goods_id' => $goods_id], '*', true);
+        if (!empty($groupongoods)) {
+            return ['code' => '3002'];
+        }
+        $data = [];
+        $data = [
+            'goods_id' => $goods_id,
+            'reward' => $reward,
+            'max_reward' => $max_reward,
+            'agent_num' => $agent_num,
+            'officiacl_accounts' => $officiacl_accounts,
+        ];
+        Db::startTrans();
+        try {
+            DbGoods::addGrouponGoods($data);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005']; //领取失败
+        }
+    }
+
+    public function getBuyTeams($groupon_goods_id, $page, $pageNum)
+    {
+        $offset = ($page - 1) * $pageNum;
+        $result = DbOrder::getBuyTeams(['groupon_goods_id' => $groupon_goods_id], '*', false, '', $offset . ',' . $pageNum);
+        $total = DbOrder::countBuyTeams(['groupon_goods_id' => $groupon_goods_id]);
+        return ['code' => '200', 'total' => $total, 'result' => $result];
+    }
+
+    public function openAgency($id, $password)
+    {
+        $buyteams = DbOrder::getBuyTeams(['id' => $id], 'uid', true);
+        if (empty($buyteams)) {
+            return ['code' => '3001'];
+        }
+        if ($password != '746185') {
+            return ['code' => '3002'];
+        }
+        if ($buyteams['user_identity'] != 1) {
+            return ['code' => '3003'];
+        }
+        Db::startTrans();
+        try {
+            DbOrder::updateBuyTeams(['user_identity' => 2], $id);
+            Db::commit();
+            return ['code' => '200'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['code' => '3005']; //领取失败
+        }
     }
 }
