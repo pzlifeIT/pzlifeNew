@@ -470,6 +470,7 @@ class Order extends CommonIndex {
         }
         $balance = DbUser::getUserInfo(['id' => $uid, 'balance_freeze' => 2], 'balance', true);
         $balance = $balance['balance'] ?? 0;
+        
         $summary = $this->summary($uid, $skuIdList, $cityId, $userCouponId);
         if ($summary['code'] != '200') {
             return $summary;
@@ -774,6 +775,7 @@ class Order extends CommonIndex {
      */
     private function summary($uid, $skuIdList, $cityId, $userCouponId) {
         $cart = $this->getCartGoods($skuIdList, $uid);
+        
         if ($cart === false) {
             return ['code' => '3005'];
         }
@@ -1003,14 +1005,29 @@ class Order extends CommonIndex {
         $skuIdListNew = array_map(function ($v) use ($prefix) {
             return $prefix . $v;
         }, $skuIdList);
-        $keys = $this->redis->hKeys($this->redisCartUserKey . $uid);
-        $diff = array_diff($skuIdListNew, $keys);
+        // $keys = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        // $diff = array_diff($skuIdListNew, $keys);
+        $keys = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        $new_key = [];
+        foreach ($keys as $key => $value) {
+            $new_key[] = $key;
+        }
+        $diff = array_diff($skuIdListNew, $new_key);
         if (!empty($diff)) {
             return false;
         }
-        $buyList = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
+        // $buyList = $this->redis->hMGet($this->redisCartUserKey . $uid, $skuIdListNew);
+        $newbuyList = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        // print_r($buyList);
+        $buyListnew = [];
+        foreach($newbuyList as $key=> $v){
+            if (in_array($key,$skuIdListNew)) {
+                $buyListnew[$key] = $v;
+            }
+        }
+        // print_r($buyList);die;
         $result  = [];
-        foreach ($buyList as $key => $val) {
+        foreach ($buyListnew as $key => $val) {
             $cartRow          = json_decode($val, true);
             $cartRow['sum']   = array_sum($cartRow['track']);
             $cartRow['shops'] = array_keys($cartRow['track']);
@@ -1032,7 +1049,17 @@ class Order extends CommonIndex {
             return false;
         }
         $prefix   = $this->prefix;
-        $carts    = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        // $carts    = $this->redis->hKeys($this->redisCartUserKey . $uid);
+        $carts = [];
+        $carts    = $this->redis->hgetall($this->redisCartUserKey . $uid);
+        $new_cart = [];
+        // print_r($carts);die;
+        if (!empty($carts)) {
+            foreach ($carts as $key => $value) {
+                $new_cart[] = $key;
+            }
+        }
+        // print_r($this->redis->hKeys($this->redisCartUserKey . $uid));die;
         $cartList = array_map(function ($v) use ($prefix) {
             return str_replace($prefix, '', $v);
         }, $carts);

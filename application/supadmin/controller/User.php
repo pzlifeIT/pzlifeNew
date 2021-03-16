@@ -350,7 +350,7 @@ class User extends SupAdminController
      * @apiDescription   supplierSonAdminList
      * @apiGroup         supadmin_user
      * @apiName          supplierSonAdminList
-     * @apiParam (入参) {String} cms_con_id
+     * @apiParam (入参) {String} sup_con_id
      * @apiParam (入参) {Int} page 页码
      * @apiParam (入参) {Int} [page_num] 每页条数(默认10)
      * @apiSuccess (返回) {String} code 200:成功 / 3001:page错误
