@@ -1,8 +1,10 @@
 <?php
 namespace app\index\controller;
+
 use app\index\MyController;
 
-class Goods extends MyController {
+class Goods extends MyController
+{
     /**
      * @api              {post} / 分类商品列表
      * @apiDescription   getCategoryGoods
@@ -29,11 +31,12 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getCategoryGoods
      * @author rzc
      */
-    public function getCategoryGoods() {
-        $apiName   = classBasename($this) . '/' . __function__;
-        $cate_id   = trim($this->request->post('cate_id'));
-        $page      = trim($this->request->post('page'));
-        $page_num  = trim($this->request->post('page_num'));
+    public function getCategoryGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $cate_id = trim($this->request->post('cate_id'));
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
         $goodslist = $this->app->goods->getCategoryGoods($cate_id, $page, $page_num);
         $this->apiLog($apiName, [$cate_id, $page, $page_num], $goodslist['code'], '');
         return $goodslist;
@@ -94,11 +97,12 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getGoods
      * @author rzc
      */
-    public function getGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function getGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $goods_id = trim($this->request->post('goods_id'));
-        $source   = trim($this->request->post('source'));
-        $result   = $this->app->goods->getGoodsinfo($goods_id, intval($source));
+        $source = trim($this->request->post('source'));
+        $result = $this->app->goods->getGoodsinfo($goods_id, intval($source));
         $this->apiLog($apiName, [$goods_id, $source], $result['code'], '');
         return $result;
     }
@@ -128,11 +132,12 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getSubjectGoods
      * @author rzc
      */
-    public function getSubjectGoods() {
-        $apiName    = classBasename($this) . '/' . __function__;
+    public function getSubjectGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $subject_id = trim($this->request->post('subject_id'));
-        $page       = trim($this->request->post('page'));
-        $page_num   = trim($this->request->post('page_num'));
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
         if (!is_numeric($subject_id) || empty($subject_id)) {
             return ['code' => '3001'];
         }
@@ -167,12 +172,13 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getSearchGoods
      * @author rzc
      */
-    public function getSearchGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
-        $search   = trim($this->request->post('search'));
-        $page     = trim($this->request->post('page'));
+    public function getSearchGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $search = trim($this->request->post('search'));
+        $page = trim($this->request->post('page'));
         $page_num = trim($this->request->post('page_num'));
-        $page     = $page ? $page : 1;
+        $page = $page ? $page : 1;
         $page_num = $page_num ? $page_num : 10;
         if (empty($search)) {
             return ['code' => '3002'];
@@ -211,17 +217,18 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getsearchgoodsbylabel
      * @author zyr
      */
-    public function getSearchGoodsByLabel() {
-        $apiName   = classBasename($this) . '/' . __function__;
+    public function getSearchGoodsByLabel()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $labelName = trim($this->request->post('label_name')); //标签id
-        $page      = trim($this->request->post('page'));
-        $pageNum   = trim($this->request->post('page_num'));
+        $page = trim($this->request->post('page'));
+        $pageNum = trim($this->request->post('page_num'));
         if (empty($labelName)) {
             return ['code' => '3001']; //搜索内容不能空
         }
-        $page    = is_numeric($page) ? $page : 1;
+        $page = is_numeric($page) ? $page : 1;
         $pageNum = is_numeric($pageNum) ? $pageNum : 10;
-        $result  = $this->app->goods->getSearchGoodsByLabel(strtolower($labelName), $page, $pageNum);
+        $result = $this->app->goods->getSearchGoodsByLabel(strtolower($labelName), $page, $pageNum);
         $this->apiLog($apiName, [$labelName, $page, $pageNum], $result['code'], '');
         return $result;
     }
@@ -238,10 +245,11 @@ class Goods extends MyController {
      * @return array
      * @author zyr
      */
-    public function searchLabel() {
-        $apiName       = classBasename($this) . '/' . __function__;
+    public function searchLabel()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $searchContent = trim($this->request->post('search_content')); //搜索内容
-        $result        = $this->app->goods->searchLabel(strtolower($searchContent));
+        $result = $this->app->goods->searchLabel(strtolower($searchContent));
         $this->apiLog($apiName, [$searchContent], $result['code'], '');
         return $result;
     }
@@ -265,9 +273,10 @@ class Goods extends MyController {
      * @return array
      * @author zyr
      */
-    public function goodsRecommend() {
-        $apiName  = classBasename($this) . '/' . __function__;
-        $goodsId  = trim($this->request->post('goods_id'));
+    public function goodsRecommend()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $goodsId = trim($this->request->post('goods_id'));
         $goodsNum = trim($this->request->post('goods_num'));
         if (!is_numeric($goodsId)) {
             return ['code' => '3001'];
@@ -275,9 +284,9 @@ class Goods extends MyController {
         if ($goodsId < 1) {
             return ['code' => '3001'];
         }
-        $goodsId  = intval($goodsId);
+        $goodsId = intval($goodsId);
         $goodsNum = is_numeric($goodsNum) ? intval($goodsNum) : 6;
-        $result   = $this->app->goods->goodsRecommend($goodsId, $goodsNum);
+        $result = $this->app->goods->goodsRecommend($goodsId, $goodsNum);
         $this->apiLog($apiName, [$goodsId, $goodsNum], $result['code'], '');
         return $result;
     }
@@ -302,54 +311,55 @@ class Goods extends MyController {
      * @return array
      * @author rzc
      */
-    public function getDifengTicketScenicList() {
-        $key      = trim($this->request->post('key'));
-        $page     = trim($this->request->post('key'));
+    public function getDifengTicketScenicList()
+    {
+        $key = trim($this->request->post('key'));
+        $page = trim($this->request->post('key'));
         $pageSize = trim($this->request->post('pageSize'));
-        $page     = is_numeric($page) ? $page : 1;
+        $page = is_numeric($page) ? $page : 1;
         $pageSize = is_numeric($pageSize) ? $pageSize : 10;
         //笛风SecretKey
         $SecretKey = 'aaaaaaaa';
-        $apiKey    = 'tickettest';
-    
+        $apiKey = 'tickettest';
+
         $request = [];
-        if (!empty($key)){
+        if (!empty($key)) {
             $request['key'] = $key;
         }
-        if (!empty($page)){
+        if (!empty($page)) {
             $request['page'] = $page;
         }
-        if (!empty($pageSize)){
+        if (!empty($pageSize)) {
             $request['pageSize'] = $pageSize;
         }
         $request['apiKey'] = $apiKey;
         $timestamp = date('Y-m-d H:i:s');
         $request['timestamp'] = $timestamp;
         ksort($request);
-        
-        $str       = '';
+
+        $str = '';
         $i = '';
         foreach ($request as $rkey => $value) {
             if ($rkey == 'timestamp') {
                 $i = "&amp;";
             }
-            $str.= $i.$rkey.'='.$value;
+            $str .= $i . $rkey . '=' . $value;
             $i = '&';
         }
         // echo '请求参数拼接字符串：'.$str.'</br>';
-        $sign = $SecretKey . '&' . $str . '&' . $SecretKey;//
+        $sign = $SecretKey . '&' . $str . '&' . $SecretKey; //
         // echo '请求参数拼接SecretKey：'.$sign.'</br>';
-        $sign = strtoupper(md5($sign));//MD5加密并大写转换
+        $sign = strtoupper(md5($sign)); //MD5加密并大写转换
         // echo 'sign参数MD5加密并大写转换：'.$sign.'</br>';
         // print_r($sign);die;
         $data = [
-            'apiKey'    => $apiKey,
-            'data'      => [
-                'key'      => $key,
-                'page'     => $page,
+            'apiKey' => $apiKey,
+            'data' => [
+                'key' => $key,
+                'page' => $page,
                 'pageSize' => $pageSize,
             ],
-            'sign'      => $sign,
+            'sign' => $sign,
             'timestamp' => $timestamp,
         ];
         // echo "请求报文：";
@@ -361,7 +371,8 @@ class Goods extends MyController {
         return json_decode($result, true);
     }
 
-    function sendRequest2($requestUrl, $data = []) {
+    public function sendRequest2($requestUrl, $data = [])
+    {
         $curl = curl_init();
         $data = json_encode($data);
         curl_setopt($curl, CURLOPT_URL, $requestUrl);
@@ -376,7 +387,7 @@ class Goods extends MyController {
         curl_close($curl);
         return $res;
     }
-    
+
     /**
      * @api              {post} / 积分专题商品列表
      * @apiDescription   getIntegralSubjectGoods
@@ -401,11 +412,12 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getIntegralSubjectGoods
      * @author rzc
      */
-    public function getIntegralSubjectGoods(){
-        $apiName    = classBasename($this) . '/' . __function__;
+    public function getIntegralSubjectGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $subject_id = trim($this->request->post('subject_id'));
-        $page       = trim($this->request->post('page'));
-        $page_num   = trim($this->request->post('page_num'));
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
         if (!is_numeric($subject_id) || empty($subject_id)) {
             return ['code' => '3001'];
         }
@@ -414,7 +426,7 @@ class Goods extends MyController {
         return $goodslist;
     }
 
-        /**
+    /**
      * @api              {post} / 商品详情
      * @apiDescription   getIntegralGoods
      * @apiGroup         index_Goods
@@ -467,12 +479,46 @@ class Goods extends MyController {
      * @apiSampleRequest /index/goods/getIntegralGoods
      * @author rzc
      */
-    public function getIntegralGoods() {
-        $apiName  = classBasename($this) . '/' . __function__;
+    public function getIntegralGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
         $goods_id = trim($this->request->post('goods_id'));
-        $source   = trim($this->request->post('source'));
-        $result   = $this->app->goods->getIntegralGoodsinfo($goods_id, intval($source));
+        $source = trim($this->request->post('source'));
+        $result = $this->app->goods->getIntegralGoodsinfo($goods_id, intval($source));
         $this->apiLog($apiName, [$goods_id, $source], $result['code'], '');
         return $result;
+    }
+
+    /**
+     * @api              {post} / 团购商品列表
+     * @apiDescription   getGrouponGoods
+     * @apiGroup         index_Goods
+     * @apiName          getGrouponGoods
+     * @apiParam (入参) {Number} [page] 页码 (默认:1)
+     * @apiParam (入参) {Number}  [page_num] 每页显示数量 (默认:10)
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.参数必须是数字 / 3002.参数不存在
+     * @apiSuccess (返回) {Number} total 总条数
+     * @apiSuccess (返回) {Array} data 分类数据
+     * @apiSuccess (data) {String} id 商品ID
+     * @apiSuccess (data) {String} supplier_id 供应商ID
+     * @apiSuccess (data) {String} subject_id 分类ID
+     * @apiSuccess (data) {String} goods_name 商品名称
+     * @apiSuccess (data) {String} goods_type 商品类型 1.普通(正常发货)商品 2.虚拟商品
+     * @apiSuccess (data) {String} title 主标题
+     * @apiSuccess (data) {String} subtitle 副标题
+     * @apiSuccess (data) {String} image 商品标题图
+     * @apiSuccess (data) {String} min_market_price 价值
+     * @apiSuccess (data) {String} min_integral_price 最低规格兑换所需积分
+     * @apiSampleRequest /index/goods/getGrouponGoods
+     * @author rzc
+     */
+    public function getGrouponGoods()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $page = trim($this->request->post('page'));
+        $page_num = trim($this->request->post('page_num'));
+        $goodslist = $this->app->goods->getGrouponGoods($page, $page_num);
+        $this->apiLog($apiName, [$page, $page_num], $goodslist['code'], '');
+        return $goodslist;
     }
 }

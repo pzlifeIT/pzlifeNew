@@ -4,7 +4,8 @@ namespace app\index\controller;
 
 use app\index\MyController;
 
-class Order extends MyController {
+class Order extends MyController
+{
     protected $beforeActionList = [
         'isLogin', //所有方法的前置操作
         //        'isLogin' => ['except' => ''],//除去getFirstCate其他方法都进行second前置操作
@@ -57,15 +58,16 @@ class Order extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserOrderList() {
+    public function getUserOrderList()
+    {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId = trim($this->request->post('con_id'));
         // $con_id = 1;
         $order_status = $this->request->post('orderStatus');
-        $page         = trim($this->request->post('page'));
-        $pagenum      = trim($this->request->post('pagenum'));
-        $page         = $page ? $page : 1;
-        $pagenum      = $pagenum ? $pagenum : 10;
+        $page = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pagenum'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
         // if (empty($con_id)) {
         //     return ['code' => '3002'];
         // }
@@ -143,9 +145,10 @@ class Order extends MyController {
      * @return array
      * @author rzc
      */
-    public function getUserOrderInfo() {
+    public function getUserOrderInfo()
+    {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId = trim($this->request->post('con_id'));
         // $con_id = 1;
         $order_no = trim($this->request->post('order_no'));
         if (empty($order_no)) {
@@ -207,14 +210,15 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/quicksettlement
      * @author zyr
      */
-    public function quickSettlement() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('num'));
+    public function quickSettlement()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $skuId = trim($this->request->post('sku_id'));
+        $num = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $userCouponId  = trim($this->request->post('user_coupon_id'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -232,9 +236,9 @@ class Order extends MyController {
             $num = 1;
         }
         $userCouponId = intval($userCouponId);
-        $num          = intval($num);
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result       = $this->app->order->quickSettlement($conId, $buid, $skuId, $num, $userAddressId, $userCouponId);
+        $num = intval($num);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result = $this->app->order->quickSettlement($conId, $buid, $skuId, $num, $userAddressId, $userCouponId);
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $userCouponId], $result['code'], $conId);
         return $result;
     }
@@ -257,16 +261,17 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/quickcreateorder
      * @author zyr
      */
-    public function quickCreateOrder() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('num'));
+    public function quickCreateOrder()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $skuId = trim($this->request->post('sku_id'));
+        $num = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $payType       = trim($this->request->post('pay_type'));
-        $userCouponId  = trim($this->request->post('user_coupon_id'));
-        $payTypeArr    = [1, 2];
+        $payType = trim($this->request->post('pay_type'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
+        $payTypeArr = [1, 2];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -288,9 +293,9 @@ class Order extends MyController {
             return ['code' => '3008'];
         }
         $userCouponId = intval($userCouponId);
-        $num          = intval($num);
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result       = $this->app->order->quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
+        $num = intval($num);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result = $this->app->order->quickCreateOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
@@ -345,12 +350,13 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/createsettlement
      * @author zyr
      */
-    public function createSettlement() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+    public function createSettlement()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $skuIdList = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $userCouponId  = trim($this->request->post('user_coupon_id'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -368,7 +374,7 @@ class Order extends MyController {
             return ['code' => '3003'];
         }
         $userCouponId = intval($userCouponId);
-        $result       = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId), $userCouponId);
+        $result = $this->app->order->createSettlement($conId, $skuIdList, intval($userAddressId), $userCouponId);
         $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId, $userCouponId], $result['code'], $conId);
         return $result;
     }
@@ -388,14 +394,15 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/createorder
      * @author zyr
      */
-    public function createOrder() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+    public function createOrder()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $skuIdList = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $payType       = trim($this->request->post('pay_type'));
-        $userCouponId  = trim($this->request->post('user_coupon_id'));
-        $payTypeArr    = [1, 2];
+        $payType = trim($this->request->post('pay_type'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
+        $payTypeArr = [1, 2];
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -415,7 +422,7 @@ class Order extends MyController {
             return ['code' => '3008'];
         }
         $userCouponId = intval($userCouponId);
-        $result       = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType), $userCouponId);
+        $result = $this->app->order->createOrder($conId, $skuIdList, intval($userAddressId), intval($payType), $userCouponId);
         $this->apiLog($apiName, [$conId, $skuIdList, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
@@ -431,9 +438,10 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/cancelorder
      * @author zyr
      */
-    public function cancelOrder() {
+    public function cancelOrder()
+    {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -460,9 +468,10 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/confirmOrder
      * @author rzc
      */
-    public function confirmOrder() {
+    public function confirmOrder()
+    {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -493,13 +502,14 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/createMemberOrder
      * @author rzc
      */
-    public function createMemberOrder() {
-        $apiName   = classBasename($this) . '/' . __function__;
-        $conId     = trim($this->request->post('con_id'));
+    public function createMemberOrder()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
         $user_type = trim($this->request->post('user_type'));
-        $pay_type  = trim($this->request->post('pay_type'));
+        $pay_type = trim($this->request->post('pay_type'));
         $parent_id = trim($this->request->post('parent_id'));
-        $actype    = trim($this->request->post('actype'));
+        $actype = trim($this->request->post('actype'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -510,7 +520,7 @@ class Order extends MyController {
             return ['code' => 3003];
         }
         $old_parent_id = $parent_id;
-        $parent_id     = deUid($parent_id);
+        $parent_id = deUid($parent_id);
         if ($actype != 1) {
             $actype = 2;
         }
@@ -531,9 +541,10 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/getOrderSubpackage
      * @author rzc
      */
-    public function getOrderSubpackage() {
+    public function getOrderSubpackage()
+    {
         $apiName = classBasename($this) . '/' . __function__;
-        $conId   = trim($this->request->post('con_id'));
+        $conId = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -575,12 +586,13 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/getExpressLog
      * @author rzc
      */
-    public function getExpressLog() {
-        $apiName     = classBasename($this) . '/' . __function__;
-        $conId       = trim($this->request->post('con_id'));
+    public function getExpressLog()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
         $express_key = trim($this->request->post('express_key'));
-        $express_no  = trim($this->request->post('express_no'));
-        $orderNo     = trim($this->request->post('order_no'));
+        $express_no = trim($this->request->post('express_no'));
+        $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
         }
@@ -603,8 +615,9 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/sendModelMessage
      * @author rzc
      */
-    public function sendModelMessage() {
-        $conId   = trim($this->request->post('con_id'));
+    public function sendModelMessage()
+    {
+        $conId = trim($this->request->post('con_id'));
         $orderNo = trim($this->request->post('order_no'));
         if (empty($conId)) {
             return ['code' => '3002'];
@@ -669,12 +682,13 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/quickSettlementAudio
      * @author rzc
      */
-    public function quickSettlementAudio() {
-        $conId        = trim($this->request->post('con_id'));
-        $buid         = trim($this->request->post('buid'));
-        $sku_id       = trim($this->request->post('sku_id'));
-        $goods_id     = trim($this->request->post('goods_id'));
-        $num          = trim($this->request->post('num'));
+    public function quickSettlementAudio()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $sku_id = trim($this->request->post('sku_id'));
+        $goods_id = trim($this->request->post('goods_id'));
+        $num = trim($this->request->post('num'));
         $userCouponId = trim($this->request->post('user_coupon_id'));
         if (empty($sku_id) || !is_numeric($sku_id) || intval($sku_id) < 1) {
             return ['code' => '3001'];
@@ -685,7 +699,7 @@ class Order extends MyController {
         if (empty($num) || !is_numeric($num) || intval($num) < 1) {
             return ['code' => '3003'];
         }
-        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickSettlementAudio($conId, $buid, intval($sku_id), intval($num), intval($goods_id), intval($userCouponId));
         return $result;
     }
@@ -708,13 +722,14 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/quickCreateAudioOrder
      * @author rzc
      */
-    public function quickCreateAudioOrder() {
-        $conId        = trim($this->request->post('con_id'));
-        $buid         = trim($this->request->post('buid'));
-        $sku_id       = trim($this->request->post('sku_id'));
-        $goods_id     = trim($this->request->post('goods_id'));
-        $payType      = trim($this->request->post('pay_type'));
-        $num          = trim($this->request->post('num'));
+    public function quickCreateAudioOrder()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $sku_id = trim($this->request->post('sku_id'));
+        $goods_id = trim($this->request->post('goods_id'));
+        $payType = trim($this->request->post('pay_type'));
+        $num = trim($this->request->post('num'));
         $userCouponId = trim($this->request->post('user_coupon_id'));
         if (empty($sku_id) || !is_numeric($sku_id) || intval($sku_id) < 1) {
             return ['code' => '3001'];
@@ -728,7 +743,7 @@ class Order extends MyController {
         if (!in_array($payType, [1, 2])) {
             return ['code' => '3008'];
         }
-        $buid   = empty(deUid($buid)) ? 1 : deUid($buid);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
         $result = $this->app->order->quickCreateAudioOrder($conId, $buid, intval($sku_id), intval($num), intval($goods_id), $payType, intval($userCouponId));
         return $result;
     }
@@ -740,13 +755,14 @@ class Order extends MyController {
      * @apiName          isOrderSheet
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {Number} order_no 订单号
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号
      * @apiSampleRequest /index/order/isOrderSheet
      * @author rzc
      */
-    public function isOrderSheet(){
-        $conId       = trim($this->request->post('con_id'));
-        $orderNo     = trim($this->request->post('order_no'));
+    public function isOrderSheet()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
         if (empty($orderNo)) {
             return ['code' => '3001'];
         }
@@ -762,7 +778,7 @@ class Order extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} order_no 订单号
      * @apiParam (入参) {String} from 表单信息
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 /
      * @apiSampleRequest /index/order/submitOrderSheet
      * @apiParamExample {json} Request Example
      *  POST /index/order/submitOrderSheet
@@ -784,14 +800,15 @@ class Order extends MyController {
      *  }
      * @author rzc
      */
-    public function submitOrderSheet(){
-        $conId       = trim($this->request->post('con_id'));
-        $orderNo     = trim($this->request->post('order_no'));
-        $from     = $this->request->post('from');
+    public function submitOrderSheet()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
+        $from = $this->request->post('from');
         if (empty($orderNo)) {
             return ['code' => '3001'];
         }
-        if (empty($from)){
+        if (empty($from)) {
             return ['code' => '3009'];
         }
         // $from = json_decode($from);
@@ -807,21 +824,22 @@ class Order extends MyController {
      * @apiParam (入参) {String} con_id
      * @apiParam (入参) {String} order_no 订单号
      * @apiParam (入参) {Number} [goods_id] 商品，传入，视为查详情
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.orderNo未收到订单号
      * @apiSampleRequest /index/order/getOrderSheet
      * @author rzc
      */
-    public function getOrderSheet(){
-        $conId       = trim($this->request->post('con_id'));
-        $orderNo     = trim($this->request->post('order_no'));
-        $goods_id    = trim($this->request->post('goods_id'));
+    public function getOrderSheet()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $orderNo = trim($this->request->post('order_no'));
+        $goods_id = trim($this->request->post('goods_id'));
         if (empty($orderNo)) {
             return ['code' => '3001'];
         }
         $result = $this->app->order->getOrderSheet($orderNo, $goods_id);
         return $result;
     }
-    /** 
+    /**
      * @api              {post} / 获取凑单商品
      * @apiDescription   getAddOnItems
      * @apiGroup         index_order
@@ -830,23 +848,24 @@ class Order extends MyController {
      * @apiParam (入参) {Number} sku_id_list 此供应商已进入结算页的商品skuID
      * @apiParam (入参) {Number} supplier_id 供应商ID
      * @apiParam (入参) {Number} user_address_id 用户地址ID
-     * @apiParam (入参) {Number} [page] 页码 默认1  
+     * @apiParam (入参) {Number} [page] 页码 默认1
      * @apiParam (入参) {Number} [pagenum] 每页展示条数 默认10
-     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:未查询到该地址 / 3005:传入skuid中有商品未加入购物车 / 3006:商品不支持配送 / 
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 / 3004:未查询到该地址 / 3005:传入skuid中有商品未加入购物车 / 3006:商品不支持配送 /
      * @apiSuccess (返回) {String} order_no 订单号
      * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
      * @apiSampleRequest /index/order/getAddOnItems
      * @author rzc
      */
-    public function getAddOnItems() {
-        $conId         = trim($this->request->post('con_id'));
-        $supplier_id   = trim($this->request->post('supplier_id'));
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+    public function getAddOnItems()
+    {
+        $conId = trim($this->request->post('con_id'));
+        $supplier_id = trim($this->request->post('supplier_id'));
+        $skuIdList = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $page          = trim($this->request->post('page'));
-        $pagenum       = trim($this->request->post('pagenum'));
-        $page          = $page ? $page : 1;
-        $pagenum       = $pagenum ? $pagenum : 10;
+        $page = trim($this->request->post('page'));
+        $pagenum = trim($this->request->post('pagenum'));
+        $page = $page ? $page : 1;
+        $pagenum = $pagenum ? $pagenum : 10;
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -908,12 +927,13 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/quickIntegralSettlement
      * @author RZC
      */
-    public function quickIntegralSettlement(){
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('num'));
+    public function quickIntegralSettlement()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $skuId = trim($this->request->post('sku_id'));
+        $num = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
         // $userCouponId  = trim($this->request->post('user_coupon_id'));
         if (!is_numeric($skuId)) {
@@ -933,10 +953,10 @@ class Order extends MyController {
             $num = 1;
         }
         // $userCouponId = intval($userCouponId);
-        $num          = intval($num);
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
+        $num = intval($num);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
         // $result       = $this->app->order->quickIntegralSettlement($conId, $buid, $skuId, $num, $userAddressId, $userCouponId);
-        $result       = $this->app->order->quickIntegralSettlement($conId, $buid, $skuId, $num, $userAddressId);
+        $result = $this->app->order->quickIntegralSettlement($conId, $buid, $skuId, $num, $userAddressId);
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId], $result['code'], $conId);
         return $result;
     }
@@ -954,20 +974,21 @@ class Order extends MyController {
      * @apiParam (入参) {Number} [num] 购买数量
      * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3010:该商品钻石会员及以上身份专享  / 3011:该商品创业店主及以上身份专享 / 3012:该商品合伙人及以上身份专享 / 3013:用户优惠券不可使用
      * @apiSuccess (返回) {String} order_no 订单号
-     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(积分) 
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(积分)
      * @apiSampleRequest /index/order/quickCreateIntegralOrder
      * @author zyr
      */
-    public function quickCreateIntegralOrder() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $buid          = trim($this->request->post('buid'));
-        $skuId         = trim($this->request->post('sku_id'));
-        $num           = trim($this->request->post('num'));
+    public function quickCreateIntegralOrder()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $buid = trim($this->request->post('buid'));
+        $skuId = trim($this->request->post('sku_id'));
+        $num = trim($this->request->post('num'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $payType       = trim($this->request->post('pay_type'));
-        $userCouponId  = trim($this->request->post('user_coupon_id'));
-        $payTypeArr    = [3];
+        $payType = trim($this->request->post('pay_type'));
+        $userCouponId = trim($this->request->post('user_coupon_id'));
+        $payTypeArr = [3];
         if (!is_numeric($skuId)) {
             return ['code' => '3001'];
         }
@@ -989,9 +1010,9 @@ class Order extends MyController {
             return ['code' => '3008'];
         }
         $userCouponId = intval($userCouponId);
-        $num          = intval($num);
-        $buid         = empty(deUid($buid)) ? 1 : deUid($buid);
-        $result       = $this->app->order->quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
+        $num = intval($num);
+        $buid = empty(deUid($buid)) ? 1 : deUid($buid);
+        $result = $this->app->order->quickCreateIntegralOrder($conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId);
         $this->apiLog($apiName, [$conId, $buid, $skuId, $num, $userAddressId, $payType, $userCouponId], $result['code'], $conId);
         return $result;
     }
@@ -1037,10 +1058,11 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/createIntegralSettlement
      * @author rzc
      */
-    public function createIntegralSettlement(){
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+    public function createIntegralSettlement()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $skuIdList = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
@@ -1058,12 +1080,12 @@ class Order extends MyController {
         if (!is_numeric($userAddressId)) {
             return ['code' => '3003'];
         }
-        $result       = $this->app->order->createIntegralSettlement($conId, $skuIdList, intval($userAddressId));
+        $result = $this->app->order->createIntegralSettlement($conId, $skuIdList, intval($userAddressId));
         $this->apiLog($apiName, [$conId, $skuIdList, $userAddressId], $result['code'], $conId);
         return $result;
     }
 
-        /**
+    /**
      * @api              {post} / 积分商城创建订单
      * @apiDescription   createIntegralOrder
      * @apiGroup         index_order
@@ -1078,13 +1100,14 @@ class Order extends MyController {
      * @apiSampleRequest /index/order/createIntegralOrder
      * @author zyr
      */
-    public function createIntegralOrder() {
-        $apiName       = classBasename($this) . '/' . __function__;
-        $conId         = trim($this->request->post('con_id'));
-        $skuIdList     = trim($this->request->post('sku_id_list'));
+    public function createIntegralOrder()
+    {
+        $apiName = classBasename($this) . '/' . __function__;
+        $conId = trim($this->request->post('con_id'));
+        $skuIdList = trim($this->request->post('sku_id_list'));
         $userAddressId = trim($this->request->post('user_address_id'));
-        $payType       = trim($this->request->post('pay_type'));
-        $payTypeArr    = [3];
+        $payType = trim($this->request->post('pay_type'));
+        $payTypeArr = [3];
         if (!is_array($skuIdList)) {
             $skuIdList = explode(',', $skuIdList);
         }
@@ -1103,8 +1126,24 @@ class Order extends MyController {
         if (!in_array($payType, $payTypeArr)) {
             return ['code' => '3008'];
         }
-        $result       = $this->app->order->createIntegralOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
-        $this->apiLog($apiName, [$conId, $skuIdList, $payType, ], $result['code'], $conId);
+        $result = $this->app->order->createIntegralOrder($conId, $skuIdList, intval($userAddressId), intval($payType));
+        $this->apiLog($apiName, [$conId, $skuIdList, $payType], $result['code'], $conId);
         return $result;
     }
+
+    /**
+     * @api              {post} / 购买团购商品完成后开团/参团
+     * @apiDescription   createIntegralOrder
+     * @apiGroup         index_order
+     * @apiName          createIntegralOrder
+     * @apiParam (入参) {String} con_id
+     * @apiParam (入参) {Number} sku_id_list skuid列表
+     * @apiParam (入参) {Number} user_address_id 用户选择的地址(user_address的id)
+     * @apiParam (入参) {Number} pay_type 支付方式  3 积分支付
+     * @apiSuccess (返回) {String} code 200:成功 / 3000:未获取到数据 / 3001.skuid错误 / 3002.con_id错误 /3003:地址id错误 / 3004:商品售罄 / 3005:商品未加入购物车 / 3006:商品不支持配送 / 3007:商品库存不够 / 3008:支付方式错误 / 3009:创建失败 / 3013:用户优惠券不可使用
+     * @apiSuccess (返回) {String} order_no 订单号
+     * @apiSuccess (返回) {Int} is_pay 1.已完成支付(商券) 2.需要发起第三方支付
+     * @apiSampleRequest /index/order/createIntegralOrder
+     * @author zyr
+     */
 }
